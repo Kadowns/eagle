@@ -12,6 +12,7 @@
 #include "Window.h"
 
 _EAGLE_BEGIN
+
 class Application {
 
 public:

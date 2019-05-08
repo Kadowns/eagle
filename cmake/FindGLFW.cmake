@@ -9,10 +9,11 @@ target_include_directories(GLFW
         )
 
 message("Including ${CMAKE_HOME_DIRECTORY}/external/glfw/include!")
-if (wIN32)
+if (WIN32)
     set_target_properties(GLFW PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/external/glfw/lib-vc2015/glfw3.lib)
+    message("Properties included! ${CMAKE_HOME_DIRECTORY}/external/glfw/lib-vc2015/glfw3.lib")
 endif ()
-
+return()
 if (UNIX AND NOT APPLE)
     set_target_properties(GLFW PROPERTIES IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/external/glfw/lib-unix/libglfw3.a)
     find_package(X11 REQUIRED)
