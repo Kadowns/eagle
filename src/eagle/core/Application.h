@@ -5,9 +5,6 @@
 #ifndef EAGLE_APPLICATION_H
 #define EAGLE_APPLICATION_H
 
-#include <string>
-#include <vector>
-
 #include "Core.h"
 #include "Window.h"
 

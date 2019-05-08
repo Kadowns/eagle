@@ -5,8 +5,8 @@
 #ifndef EAGLE_WINDOW_H
 #define EAGLE_WINDOW_H
 
-#include <string>
 #include "Core.h"
+
 
 struct GLFWwindow;
 
