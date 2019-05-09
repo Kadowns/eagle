@@ -14,7 +14,7 @@ set(CORE_INCLUDE
 set(CORE_SOURCE
         core/source/Application.cpp
         core/source/Window.cpp
-        core/stdafx.cpp
+        core/source/stdafx.cpp
         )
 
 set(CORE_ALL ${CORE_INCLUDE} ${CORE_SOURCE})
@@ -37,4 +37,4 @@ set(EAGLE_ALL ${CORE_ALL} ${RENDERER_ALL})
 create_module(eagle_s STATIC "${EAGLE_ALL}")
 target_link_libraries(eagle_s GLFW plog Vulkan::Vulkan)
 
-add_precompiled_header(eagle_s core/stdafx.h core/stdafx.cpp)
+add_precompiled_header(eagle_s core/stdafx.h core/source/stdafx.cpp)
