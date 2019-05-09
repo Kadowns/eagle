@@ -11,6 +11,7 @@ function(create_module NAME MODE SOURCES)
             $<BUILD_INTERFACE:${CMAKE_HOME_DIRECTORY}/src/>
             $<INSTALL_INTERFACE:include>
     )
+
     set_target_properties(
             ${NAME}
             PROPERTIES

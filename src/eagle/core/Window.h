@@ -7,8 +7,7 @@
 
 #include "Core.h"
 
-
-struct GLFWwindow;
+#include "../renderer/RenderingContext.h"
 
 _EAGLE_BEGIN
 
@@ -25,14 +24,14 @@ public:
     void refresh();
 
     bool should_close();
+    uint32_t width();
+    uint32_t height();
 
 private:
 
     std::string m_name;
-    int m_width, m_height;
 
-    GLFWwindow* m_window;
-
+    RenderingContext* m_context;
 };
 
 _EAGLE_END
