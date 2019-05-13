@@ -5,22 +5,34 @@
 #ifndef EAGLE_APPLICATION_H
 #define EAGLE_APPLICATION_H
 
+#include <memory>
 #include "Core.h"
-#include "Window.h"
 
 _EAGLE_BEGIN
+
+class Window;
+class RenderingContext;
+
+struct AppConfig {
+    std::string appName;
+    Window* windowType;
+};
 
 class Application {
 
 public:
 
-    Application(const std::string&  name, int windowWidth, int windowHeight);
+    static Application& instance();
+
+    Application(const AppConfig& config);
 
     void run();
 
 private:
 
-    Window m_window;
+    static Application* m_instance;
+
+    Window* m_window;
 
 };
 

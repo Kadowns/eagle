@@ -3,35 +3,18 @@
 //
 
 
-#include "../Window.h"
-
-#include "eagle/renderer/VulkanContext.h"
+#include "eagle/core/Window.h"
+#include "eagle/renderer/RenderingContext.h"
 
 _EAGLE_BEGIN
 
-Window::Window(const std::string &name, int width, int height) :
-    m_name(name) {
-    m_context = new VulkanContext(width, height);
+Window::Window(RenderingContext* renderingContext) :
+    m_context(renderingContext){
 }
 
 Window::~Window() = default;
 
-void Window::init() {
 
-    m_context->init(m_name);
-}
-
-void Window::refresh() {
-    m_context->refresh();
-}
-
-void Window::deinit() {
-    m_context->deinit();
-}
-
-bool Window::should_close() {
-    return m_context->should_terminate_context();
-}
 
 uint32_t Window::width() {
     return m_context->width();

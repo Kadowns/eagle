@@ -7,29 +7,27 @@
 
 #include "Core.h"
 
-#include "../renderer/RenderingContext.h"
-
 _EAGLE_BEGIN
+
+class RenderingContext;
 
 class Window {
 
 public:
 
-    Window(const std::string &name, int width, int height);
+    Window(RenderingContext* renderingContext);
 
     ~Window();
 
-    void init();
-    void deinit();
-    void refresh();
+    virtual void init() = 0;
+    virtual void deinit() = 0;
+    virtual void refresh() = 0;
+    virtual bool should_close() = 0;
 
-    bool should_close();
     uint32_t width();
     uint32_t height();
 
-private:
-
-    std::string m_name;
+protected:
 
     RenderingContext* m_context;
 };

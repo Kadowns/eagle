@@ -9,11 +9,15 @@ set(CORE_INCLUDE
         core/Core.h
         core/Application.h
         core/Window.h
+        core/DefaultWindow.h
+        core/stdafx.h
         )
 
 set(CORE_SOURCE
         core/source/Application.cpp
         core/source/Window.cpp
+        core/source/DefaultWindow.cpp
+        core/source/Core.cpp
         core/source/stdafx.cpp
         )
 
@@ -22,12 +26,12 @@ set(CORE_ALL ${CORE_INCLUDE} ${CORE_SOURCE})
 
 set(RENDERER_INCLUDE
         renderer/RenderingContext.h
-        renderer/VulkanContext.h
+        renderer/vulkan/VulkanContext.h
         )
 
 set(RENDERER_SOURCE
         renderer/source/RenderingContext.cpp
-        renderer/source/VulkanContext.cpp
+        renderer/source/vulkan/VulkanContext.cpp
         )
 
 set(RENDERER_ALL ${RENDERER_INCLUDE} ${RENDERER_SOURCE})

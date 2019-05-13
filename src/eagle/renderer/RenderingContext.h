@@ -17,11 +17,10 @@ public:
 
     virtual ~RenderingContext() = default;
 
-    virtual void init(const std::string& windownName) = 0;
+    virtual void init() = 0;
     virtual void refresh() = 0;
     virtual void deinit() = 0;
 
-    virtual bool should_terminate_context() = 0;
     uint32_t width() const;
     uint32_t height() const;
 
