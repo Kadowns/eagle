@@ -3,6 +3,7 @@
 //
 
 
+#include "eagle/core/Log.h"
 #include "eagle/core/Application.h"
 #include "../Window.h"
 #include "../DefaultWindow.h"
@@ -22,12 +23,12 @@ Application::Application(const AppConfig& config) :
 
 void Application::run() {
 
-    plog::init(plog::verbose, "log.txt", 0, 1);
-    LOGV << "Logger initialized!";
+    Log::init();
+    EG_TRACE_F("Initializing application {0}", EAGLE_GET_INFO(EAGLE_APP_NAME));
 
     m_window->init();
 
-    LOGV << "Initializing main loop!";
+
     while(!m_window->should_close()){
         m_window->refresh();
     }

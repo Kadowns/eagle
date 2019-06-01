@@ -27,6 +27,7 @@
 #   Vulkan_INCLUDE_DIR    - the Vulkan include directory
 #   Vulkan_LIBRARY        - the path to the Vulkan library
 #
+
 if(WIN32)
     find_path(Vulkan_INCLUDE_DIR
             NAMES vulkan/vulkan.h
@@ -34,6 +35,7 @@ if(WIN32)
             "$ENV{VULKAN_SDK}/Include"
             )
 
+    message(STATUS $ENV{VULKAN_SDK}/Include)
     if(CMAKE_SIZEOF_VOID_P EQUAL 8)
         find_library(Vulkan_LIBRARY
                 NAMES vulkan-1
@@ -41,6 +43,7 @@ if(WIN32)
                 "$ENV{VULKAN_SDK}/Lib"
                 "$ENV{VULKAN_SDK}/Bin"
                 )
+        message(STATUS "void_p is 8")
     elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
         find_library(Vulkan_LIBRARY
                 NAMES vulkan-1
@@ -49,8 +52,10 @@ if(WIN32)
                 "$ENV{VULKAN_SDK}/Bin32"
                 NO_SYSTEM_ENVIRONMENT_PATH
                 )
+        message(STATUS "void_p is 4")
     endif()
 else()
+    message(STATUS "wait what")
     find_path(Vulkan_INCLUDE_DIR
             NAMES vulkan/vulkan.h
             PATHS
@@ -64,6 +69,8 @@ endif()
 set(Vulkan_LIBRARIES ${Vulkan_LIBRARY})
 set(Vulkan_INCLUDE_DIRS ${Vulkan_INCLUDE_DIR})
 
+message(STATUS "library${Vulkan_LIBRARY}")
+message(STATUS "include dir${Vulkan_INCLUDE_DIR}")
 #include(${CMAKE_CURRENT_LIST_DIR}/FindPackageHandleStandardArgs.cmake)
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Vulkan

@@ -20,6 +20,7 @@ public:
     virtual void init() = 0;
     virtual void refresh() = 0;
     virtual void deinit() = 0;
+    virtual void set_window_handle(void* window) = 0;
 
     uint32_t width() const;
     uint32_t height() const;
