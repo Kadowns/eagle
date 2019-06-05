@@ -1,4 +1,3 @@
-cmake-build-debug/
-cmake-build-debug-mingw64---gcc/
-cmake-build-debug-mingw64---clang/
+cmake-builds/*
+!cmake-builds/README.txt
 .idea/
