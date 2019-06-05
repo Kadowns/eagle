@@ -7,21 +7,13 @@
 
 
 #include <vector>
+#include <memory>
 #include <functional>
-
-#include <vulkan/vulkan.h>
 
 #include "eagle/renderer/RenderingContext.h"
 
-#define VK_CALL m_callInfo.fileName = FILE_BASENAME; m_callInfo.funcName = __FUNCTION__; m_callInfo.line = __LINE__;
-
-#define VK_CALL_IF(result) VK_CALL if (result != VK_SUCCESS)
-
-#define TRACE_ARGS FILE_BASENAME, __FUNCTION__, __LINE__
-
-#define VK_ASSERT(result, message) if (result != VK_SUCCESS) { EG_ERROR(message); throw std::runtime_error(message);}
-
-struct GLFWwindow;
+#include "VulkanCore.h"
+#include "VulkanShader.h"
 
 _EAGLE_BEGIN
 
@@ -54,16 +46,10 @@ protected:
         std::vector<VkPresentModeKHR> presentModes;
     };
 
-    struct VkCallInfo {
-        std::string fileName;
-        std::string funcName;
-        int line;
-    };
-
 
 public:
 
-    VulkanContext(uint32_t width, uint32_t height);
+    VulkanContext();
 
     virtual ~VulkanContext();
 
@@ -73,7 +59,7 @@ public:
 
     virtual void deinit() override;
 
-    virtual void set_window_handle(void *window) override;
+    virtual void set_window(Window *window) override;
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
             VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -96,6 +82,20 @@ protected:
 
     virtual void create_surface();
 
+    virtual void create_swapchain();
+
+    virtual void create_swapchain_images();
+
+    virtual void create_render_pass();
+
+    virtual void create_command_pool();
+
+    virtual void create_framebuffers();
+
+    virtual void allocate_command_buffers();
+
+    virtual void create_sync_objects();
+
     bool validation_layers_supported();
 
     std::vector<const char *> get_required_extensions();
@@ -108,16 +108,42 @@ protected:
 
     SwapChainSupportDetails query_swapchain_support(VkPhysicalDevice device);
 
-    GLFWwindow *m_windowHandle;
+    VkSurfaceFormatKHR choose_swap_surface_format(const std::vector<VkSurfaceFormatKHR> &formats);
+
+    VkPresentModeKHR choose_swap_present_mode(const std::vector<VkPresentModeKHR>& presentModes);
+
+    VkExtent2D choose_swap_extent(const VkSurfaceCapabilitiesKHR& capabilities);
+
+    void record_command_buffer(uint32_t index);
+
+    Window* m_window;
 
     VkInstance m_instance;
     VkSurfaceKHR m_surface;
     VkPhysicalDevice m_physicalDevice;
     VkDevice m_device;
 
-    VkDebugUtilsMessengerEXT m_debugCallback;
-    VkCallInfo m_callInfo;
+    VkDebugUtilsMessengerEXT m_debugMessenger;
     VkQueue m_graphicsQueue;
+    VkFormat m_swapchainFormat;
+    VkExtent2D m_swapchainExtent;
+    VkSwapchainKHR m_swapchain;
+    VkRenderPass m_renderPass;
+    std::vector<VkImage> m_swapchainImages;
+    std::vector<VkImageView> m_swapchainImageViews;
+    std::vector<VkFramebuffer> m_framebuffers;
+
+    VkCommandPool m_commandPool;
+    std::vector<VkCommandBuffer> m_commandBuffers;
+    std::vector<VkSemaphore> m_imageAvailableSemaphores;
+    std::vector<VkSemaphore> m_renderFinishedSemaphores;
+    std::vector<VkFence> m_inFlightFences;
+    VkQueue m_presentQueue;
+
+
+    std::shared_ptr<VulkanShader> shader;
+
+    uint32_t m_currentFrame = 0;
 
 
     const std::vector<const char *> validationLayers = {
@@ -127,6 +153,8 @@ protected:
     const std::vector<const char*> deviceExtensions = {
             VK_KHR_SWAPCHAIN_EXTENSION_NAME
     };
+
+    const int MAX_FRAMES_IN_FLIGHT = 2;
 
 };
 

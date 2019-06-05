@@ -10,14 +10,14 @@ set(CORE_INCLUDE
         core/Core.h
         core/Application.h
         core/Window.h
-        core/DefaultWindow.h
+        core/WindowGLFW.h
         core/Log.h
         )
 
 set(CORE_SOURCE
         core/source/Application.cpp
         core/source/Window.cpp
-        core/source/DefaultWindow.cpp
+        core/source/WindowGLFW.cpp
         core/source/Core.cpp
         core/source/Log.cpp
         )
@@ -29,11 +29,16 @@ set(CORE_ALL ${CORE_INCLUDE} ${CORE_SOURCE})
 set(RENDERER_INCLUDE
         renderer/RenderingContext.h
         renderer/vulkan/VulkanContext.h
+        renderer/vulkan/VulkanCore.h
+        renderer/vulkan/VulkanHelper.h
+        renderer/vulkan/VulkanShader.h
         )
 
 set(RENDERER_SOURCE
-        renderer/source/RenderingContext.cpp
         renderer/source/vulkan/VulkanContext.cpp
+        renderer/source/vulkan/VulkanHelper.cpp
+        renderer/source/vulkan/VulkanCore.cpp
+        renderer/source/vulkan/VulkanShader.cpp
         )
 
 set(RENDERER_ALL ${RENDERER_INCLUDE} ${RENDERER_SOURCE})

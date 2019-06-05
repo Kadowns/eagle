@@ -1,15 +1,21 @@
 #include <eagle/core/Application.h>
 #include <eagle/renderer/vulkan/VulkanContext.h>
-#include <eagle/core/DefaultWindow.h>
+#include <eagle/core/WindowGLFW.h>
+#include <iostream>
 
 int main() {
 
     Eagle::AppConfig config = {};
     config.appName = "Dummy";
-    config.windowType = new Eagle::DefaultWindow(new Eagle::VulkanContext(1280, 720));
+    config.windowType = new Eagle::WindowGLFW(new Eagle::VulkanContext(), 1280, 720);
 
     Eagle::Application app(config);
-    app.run();
+    try{
+        app.run();
+    }catch(std::exception& e){
+        std::cerr << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
 
-    return 0;
+    return EXIT_SUCCESS;
 }

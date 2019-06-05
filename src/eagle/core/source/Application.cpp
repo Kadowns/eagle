@@ -6,7 +6,7 @@
 #include "eagle/core/Log.h"
 #include "eagle/core/Application.h"
 #include "../Window.h"
-#include "../DefaultWindow.h"
+#include "eagle/core/WindowGLFW.h"
 
 _EAGLE_BEGIN
 

@@ -38,14 +38,14 @@ _EAGLE_END
 #define EG_DEBUG_F(message, ...)    Eagle::Log::core_log(FILE_BASENAME, __FUNCTION__, __LINE__, spdlog::level::debug, message, __VA_ARGS__)
 #define EG_WARNING_F(message, ...)  Eagle::Log::core_log(FILE_BASENAME, __FUNCTION__, __LINE__, spdlog::level::warn, message, __VA_ARGS__)
 #define EG_ERROR_F(message, ...)    Eagle::Log::core_log(FILE_BASENAME, __FUNCTION__, __LINE__, spdlog::level::err, message, __VA_ARGS__)
-#define EG_FATAL_f(message, ...)    Eagle::Log::core_log(FILE_BASENAME, __FUNCTION__, __LINE__, spdlog::level::fatal, message, __VA_ARGS__)
+#define EG_FATAL_f(message, ...)    Eagle::Log::core_log(FILE_BASENAME, __FUNCTION__, __LINE__, spdlog::level::critical, message, __VA_ARGS__)
 
 #define EG_TRACE(message)    Eagle::Log::core_log(FILE_BASENAME, __FUNCTION__, __LINE__, spdlog::level::trace, message)
 #define EG_INFO(message)     Eagle::Log::core_log(FILE_BASENAME, __FUNCTION__, __LINE__, spdlog::level::info, message)
 #define EG_DEBUG(message)    Eagle::Log::core_log(FILE_BASENAME, __FUNCTION__, __LINE__, spdlog::level::debug, message)
 #define EG_WARNING(message)  Eagle::Log::core_log(FILE_BASENAME, __FUNCTION__, __LINE__, spdlog::level::warn, message)
 #define EG_ERROR(message)    Eagle::Log::core_log(FILE_BASENAME, __FUNCTION__, __LINE__, spdlog::level::err, message)
-#define EG_FATAL(message)    Eagle::Log::core_log(FILE_BASENAME, __FUNCTION__, __LINE__, spdlog::level::fatal, message)
+#define EG_FATAL(message)    Eagle::Log::core_log(FILE_BASENAME, __FUNCTION__, __LINE__, spdlog::level::critical, message)
 
 
 #define DEBUG_TRACE(...)        Eagle::Log::client_log(FILE_BASENAME, __FUNCTION__, __LINE__, __VA_ARGS__, spdlog::level::trace)
