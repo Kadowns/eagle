@@ -33,12 +33,12 @@ enum EVENT_CATEGORY {
 
 #define EVENT_CLASS_CATEGORY(category) virtual int get_category_flags() const override { return category; }
 
+class EventDispatcher;
+
 class Event {
 public:
     Event() = default;
     virtual ~Event() = default;
-
-    bool Handled = false;
 
     virtual EVENT_TYPE get_event_type() const = 0;
 
@@ -47,6 +47,11 @@ public:
     bool is_in_category(EVENT_CATEGORY category) {
         return get_category_flags() & category;
     }
+
+    bool is_handled() { return m_handled; }
+private:
+    friend class EventDispatcher;
+    bool m_handled = false;
 };
 
 class EventDispatcher {
@@ -60,7 +65,7 @@ public:
     template<typename T>
     bool dispatch(PFN_EventHandle<T> func) {
         if (m_Event.get_event_type() == T::get_static_type()) {
-            m_Event.Handled = func(*(T *) &m_Event);
+            m_Event.m_handled = func(*(T *) &m_Event);
             return true;
         }
         return false;

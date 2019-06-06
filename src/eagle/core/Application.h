@@ -10,6 +10,7 @@
 #include "Core.h"
 #include "LayerStack.h"
 #include "events/Event.h"
+#include "events/WindowEvents.h"
 #include "Log.h"
 
 
@@ -32,14 +33,18 @@ public:
     static Application& instance();
 
     explicit Application(const ApplicationCreateInfo& config);
+     ~Application() = default;
 
     void run();
     void handle_event(Event& e);
     void layer_emplace_back(std::shared_ptr<Layer> layer);
     void layer_emplace_front(std::shared_ptr<Layer> layer);
+    void layer_emplace(std::vector<std::shared_ptr<Layer>> layers);
     void layer_pop(std::shared_ptr<Layer> layer);
 
 private:
+
+    bool window_close_event(WindowCloseEvent& e);
 
     static Application* m_instance;
 

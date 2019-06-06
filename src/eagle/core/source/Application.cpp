@@ -18,21 +18,21 @@ Application& Application::instance() {
 }
 
 Application::Application(const ApplicationCreateInfo& config) :
-    m_window(config.windowType),
-    m_layerStack(config.layers){
+    m_window(config.windowType){
     EAGLE_SET_INFO(EAGLE_APP_NAME, config.appName);
     Log::init(config.coreLogLevel, config.clientLogLevel);
+
+    m_layerStack.emplace(config.layers);
 }
 
 void Application::handle_event(Event& e){
 
-    if (e.get_event_type() == WindowCloseEvent::get_static_type()){
-        m_shouldClose = true;
-    }
+    EventDispatcher dispatcher(e);
+    dispatcher.dispatch<WindowCloseEvent>(BIND_EVENT_FN(Application::window_close_event));
 
     for (auto& layer : m_layerStack){
         layer->handle_event(e);
-        if (e.Handled)
+        if (e.is_handled())
             break;
     }
 }
@@ -44,6 +44,8 @@ void Application::run() {
     m_window->init();
     size_t identifier = m_window->add_event_listener(BIND_EVENT_FN(Application::handle_event));
 
+    m_layerStack.init();
+
     while(!m_shouldClose){
         m_window->handle_events();
 
@@ -54,9 +56,12 @@ void Application::run() {
         m_window->refresh();
     }
 
+    m_layerStack.deinit();
+
     m_window->remove_event_listener(identifier);
 
     m_window->deinit();
+    EG_CORE_TRACE("Application terminated!");
 
 }
 
@@ -70,6 +75,15 @@ void Application::layer_emplace_front(std::shared_ptr<Layer> layer) {
 
 void Application::layer_pop(std::shared_ptr<Layer> layer) {
     m_layerStack.pop_layer(layer);
+}
+
+bool Application::window_close_event(WindowCloseEvent& e) {
+    m_shouldClose = true;
+    return false;
+}
+
+void Application::layer_emplace(std::vector<std::shared_ptr<Layer>> layers) {
+    m_layerStack.emplace(layers);
 }
 
 _EAGLE_END

@@ -8,7 +8,7 @@
 #include "eagle/renderer/vulkan/VulkanHelper.h"
 #include "eagle/core/Window.h"
 #include "eagle/core/Log.h"
-#include "eagle/core/events/WindowEvents.h"
+
 
 
 #include <GLFW/glfw3.h>
@@ -18,7 +18,7 @@ _EAGLE_BEGIN
 
 bool VulkanContext::enableValidationLayers = true;
 
-VulkanContext::VulkanContext() {
+VulkanContext::VulkanContext() { // NOLINT(cppcoreguidelines-pro-type-member-init)
     EAGLE_SET_INFO(EAGLE_RENDERING_CONTEXT, "Vulkan");
 }
 
@@ -28,7 +28,7 @@ void VulkanContext::init(Window* window) {
     EG_CORE_TRACE("Initializing vulkan context!");
 
     m_window = window;
-    m_eventListenerIdentifier = m_window->add_event_listener(BIND_EVENT_FN(VulkanContext::window_resized));
+    m_eventListenerIdentifier = m_window->add_event_listener(BIND_EVENT_FN(VulkanContext::handle_event));
 
     create_instance();
     create_debug_callback();
@@ -41,24 +41,20 @@ void VulkanContext::init(Window* window) {
     create_framebuffers();
     create_command_pool();
     allocate_command_buffers();
-    VulkanShader::VulkanShaderCreateInfo shaderCreateInfo = {};
-    shaderCreateInfo.device = m_device;
-    shaderCreateInfo.extent = m_swapchainExtent;
-    shaderCreateInfo.renderPass = m_renderPass;
-
-    shader = std::make_shared<VulkanShader>("shaders/vert.spv", "shaders/frag.spv", shaderCreateInfo);
-
     create_sync_objects();
 
     EG_CORE_TRACE("Vulkan ready!");
 }
 
-void VulkanContext::window_resized(Event& e) {
+void VulkanContext::handle_event(Event &e) {
+    EventDispatcher dispatcher(e);
+    dispatcher.dispatch<WindowResizedEvent>(BIND_EVENT_FN(VulkanContext::window_resized));
+}
 
-    if (e.get_event_type() == WindowResizedEvent::get_static_type()) {
-        EG_CORE_TRACE("Event was of type WINDOW_RESIZED!");
-        m_windowResized = true;
-    }
+bool VulkanContext::window_resized(WindowResizedEvent& e) {
+    EG_CORE_TRACE("Vulkan received event of type WINDOW_RESIZED!");
+    m_windowResized = true;
+    return false;
 }
 
 void VulkanContext::deinit() {
@@ -840,9 +836,12 @@ void VulkanContext::record_command_buffer(uint32_t index) {
 
     VK_CALL vkCmdBeginRenderPass(m_commandBuffers[index], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    VK_CALL vkCmdBindPipeline(m_commandBuffers[index], VK_PIPELINE_BIND_POINT_GRAPHICS, shader->get_pipeline());
+    for (auto& shader : m_shaders){
 
-    VK_CALL vkCmdDraw(m_commandBuffers[index], 3, 1, 0, 0);
+        shader->bind_command_buffer(m_commandBuffers[index]);
+        shader->bind();
+        VK_CALL vkCmdDraw(m_commandBuffers[index], 3, 1, 0, 0);
+    }
 
     VK_CALL vkCmdEndRenderPass(m_commandBuffers[index]);
 
@@ -872,7 +871,10 @@ void VulkanContext::recreate_swapchain() {
     createInfo.extent = m_swapchainExtent;
     createInfo.renderPass = m_renderPass;
 
-    shader->create_pipeline(createInfo);
+    for (auto& shader : m_shaders){
+        shader->set_vulkan_info(createInfo);
+        shader->create_pipeline();
+    }
 }
 
 void VulkanContext::cleanup_swapchain() {
@@ -883,7 +885,9 @@ void VulkanContext::cleanup_swapchain() {
 
     VK_CALL vkFreeCommandBuffers(m_device, m_commandPool, static_cast<uint32_t>(m_commandBuffers.size()), m_commandBuffers.data());
 
-    shader->cleanup_pipeline();
+    for (auto& shader : m_shaders){
+        shader->cleanup_pipeline();
+    }
 
     VK_CALL vkDestroyRenderPass(m_device, m_renderPass, nullptr);
 
@@ -892,6 +896,18 @@ void VulkanContext::cleanup_swapchain() {
     }
 
     VK_CALL vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
+}
+
+std::shared_ptr<Shader> VulkanContext::handle_create_shader(const std::string &vertFilePath,
+                                                            const std::string &fragFilePath) {
+    VulkanShader::VulkanShaderCreateInfo createInfo = {};
+    createInfo.device = m_device;
+    createInfo.extent = m_swapchainExtent;
+    createInfo.renderPass = m_renderPass;
+
+    auto shader = std::make_shared<VulkanShader>(vertFilePath, fragFilePath, createInfo);
+    m_shaders.emplace_back(shader);
+    return shader;
 }
 
 

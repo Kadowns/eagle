@@ -32,6 +32,7 @@ set(CORE_ALL ${CORE_INCLUDE} ${CORE_SOURCE})
 
 set(RENDERER_INCLUDE
         renderer/RenderingContext.h
+        renderer/Shader.h
         renderer/vulkan/VulkanContext.h
         renderer/vulkan/VulkanCore.h
         renderer/vulkan/VulkanHelper.h
@@ -39,6 +40,8 @@ set(RENDERER_INCLUDE
         )
 
 set(RENDERER_SOURCE
+        renderer/source/RenderingContext.cpp
+        renderer/source/Shader.cpp
         renderer/source/vulkan/VulkanContext.cpp
         renderer/source/vulkan/VulkanHelper.cpp
         renderer/source/vulkan/VulkanCore.cpp

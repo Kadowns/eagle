@@ -8,20 +8,18 @@
 _EAGLE_BEGIN
 
 VulkanShader::VulkanShader(const std::string& vertFileName, const std::string& fragFileName, const VulkanShaderCreateInfo& createInfo) :
+    Shader(vertFileName, fragFileName),
     m_cleared(true){
-    m_vertShaderCode = load_shader(vertFileName);
-    m_fragShaderCode = load_shader(fragFileName);
-    create_pipeline(createInfo);
+    set_vulkan_info(createInfo);
+    create_pipeline();
 }
 
 VulkanShader::~VulkanShader() {
     cleanup_pipeline();
 }
 
-void VulkanShader::create_pipeline(const VulkanShaderCreateInfo &createInfo) {
+void VulkanShader::create_pipeline() {
     EG_CORE_TRACE("Creating shader pipeline!");
-
-    m_createInfo = createInfo;
 
     VkShaderModule vertShaderModule = create_shader_module(m_vertShaderCode);
     VkShaderModule fragShaderModule = create_shader_module(m_fragShaderCode);
@@ -75,7 +73,7 @@ void VulkanShader::create_pipeline(const VulkanShaderCreateInfo &createInfo) {
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
     rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizer.lineWidth = 1.0f;
-    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+    rasterizer.cullMode = VK_CULL_MODE_NONE;
     rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -167,26 +165,13 @@ VkPipelineLayout& VulkanShader::get_layout() {
     return m_pipelineLayout;
 }
 
-
-std::vector<char> VulkanShader::load_shader(const std::string& fileName) {
-
-    auto path = std::string(PROJECT_ROOT + fileName);
-    EG_CORE_DEBUG_F("File path: {0}", path);
-
-    std::ifstream file(PROJECT_ROOT + fileName, std::ios::ate | std::ios::binary);
-
-    if (!file.is_open()) {
-        throw std::runtime_error("failed to open file!");
-    }
-
-    size_t fileSize = (size_t) file.tellg();
-    std::vector<char> buffer(fileSize);
-    file.seekg(0);
-    file.read(buffer.data(), fileSize);
-
-    file.close();
-
-    return buffer;
+void VulkanShader::bind() {
+    VK_CALL vkCmdBindPipeline(m_cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
 }
+
+void VulkanShader::bind_command_buffer(VkCommandBuffer cmd) {
+    m_cmd = cmd;
+}
+
 
 _EAGLE_END

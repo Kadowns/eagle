@@ -2,12 +2,11 @@
 #define EAGLE_VULKANSHADER_H
 
 #include "VulkanCore.h"
-
-#include <vector>
+#include "eagle/renderer/Shader.h"
 
 _EAGLE_BEGIN
 
-class VulkanShader {
+class VulkanShader : public Shader {
 
 public:
 
@@ -20,21 +19,24 @@ public:
     VulkanShader(const std::string& vertFileName, const std::string& fragFileName, const VulkanShaderCreateInfo& createInfo);
     ~VulkanShader();
 
-    void create_pipeline(const VulkanShaderCreateInfo &createInfo);
-    void cleanup_pipeline();
+    inline void set_vulkan_info(const VulkanShaderCreateInfo& info){ m_createInfo = info; }
+
+    void bind_command_buffer(VkCommandBuffer cmd);
+
+    virtual void bind() override;
+    virtual void create_pipeline() override;
+    virtual void cleanup_pipeline() override;
 
     VkPipeline& get_pipeline();
     VkPipelineLayout& get_layout();
 
 private:
 
-    static std::vector<char> load_shader(const std::string& fileName);
-
     VkShaderModule create_shader_module(const std::vector<char>& code);
 
-    std::vector<char> m_vertShaderCode, m_fragShaderCode;
-
     VulkanShaderCreateInfo m_createInfo;
+
+    VkCommandBuffer m_cmd;
 
     VkPipelineLayout m_pipelineLayout;
     VkPipeline m_graphicsPipeline;

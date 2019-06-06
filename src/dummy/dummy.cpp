@@ -8,6 +8,10 @@ public:
 
     virtual void handle_attach() override {
         EG_TRACE("Example layer attached!");
+
+        Eagle::RenderingContext::create_shader("shaders/shader_vert.spv", "shaders/shader_frag.spv");
+        Eagle::RenderingContext::create_shader("shaders/shader_two_vert.spv", "shaders/shader_frag.spv");
+
     }
 
     virtual void handle_update() override {
@@ -30,7 +34,7 @@ Eagle::ApplicationCreateInfo Eagle::create_application_info() {
     config.appName = "Dummy";
     config.windowType = new Eagle::WindowGLFW(new Eagle::VulkanContext(), 1280, 720);
     config.layers.push_back(std::make_shared<ExampleLayer>());
-    config.coreLogLevel = Eagle::Log::WARN;
+    config.coreLogLevel = Eagle::Log::TRACE;
     config.clientLogLevel = Eagle::Log::INFO;
     return config;
 }

@@ -10,7 +10,7 @@
 #include <memory>
 #include <functional>
 
-#include "eagle/core/events/Event.h"
+#include "eagle/core/events/WindowEvents.h"
 #include "eagle/renderer/RenderingContext.h"
 
 #include "VulkanCore.h"
@@ -54,11 +54,11 @@ public:
 
     virtual ~VulkanContext();
 
+    //inherited via RenderingContext
     virtual void init(Window *window) override;
-
     virtual void refresh() override;
-
     virtual void deinit() override;
+    //------
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
             VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -119,8 +119,13 @@ protected:
 
     void record_command_buffer(uint32_t index);
 
-    void window_resized(Event& e);
+    void handle_event(Event& e);
 
+    bool window_resized(WindowResizedEvent& e);
+
+    //inherited via RenderingContext
+    virtual std::shared_ptr<Shader>
+    handle_create_shader(const std::string &vertFilePath, const std::string &fragFilePath) override;
 
 
     Window* m_window;
@@ -148,7 +153,7 @@ protected:
     VkQueue m_presentQueue;
 
 
-    std::shared_ptr<VulkanShader> shader;
+    std::vector<std::shared_ptr<VulkanShader>> m_shaders;
 
     uint32_t m_currentFrame = 0;
 

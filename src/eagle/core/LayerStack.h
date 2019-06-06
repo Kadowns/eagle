@@ -18,10 +18,15 @@ class LayerStack {
 public:
 
     explicit LayerStack(const std::vector<std::shared_ptr<Layer>>& initialLayers);
-    ~LayerStack();
+    LayerStack() = default;
+    ~LayerStack() = default;
 
+
+    void init();
+    void deinit();
     void emplace_back(std::shared_ptr<Layer> layer);
     void emplace_front(std::shared_ptr<Layer> layer);
+    void emplace(const std::vector<std::shared_ptr<Layer>>& layers);
     void pop_layer(std::shared_ptr<Layer> layer);
 
 
@@ -31,6 +36,8 @@ public:
 private:
 
     std::vector<std::shared_ptr<Layer>> m_layers;
+
+    bool m_initialized = false;
 
 };
 
