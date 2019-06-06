@@ -17,45 +17,40 @@ Application& Application::instance() {
     return *m_instance;
 }
 
-Application::Application(const AppConfig& config) :
+Application::Application(const ApplicationCreateInfo& config) :
     m_window(config.windowType),
-    m_shouldClose(false){
+    m_layerStack(config.layers){
     EAGLE_SET_INFO(EAGLE_APP_NAME, config.appName);
+    Log::init(config.coreLogLevel, config.clientLogLevel);
 }
 
 void Application::handle_event(Event& e){
-    switch(e.get_event_type()){
-        case EVENT_TYPE::WINDOW_CLOSE: m_shouldClose = true; break;
-        case EVENT_TYPE::WINDOW_RESIZE:break;
-        case EVENT_TYPE::WINDOW_FOCUS: EG_TRACE("Window focused!"); break;
-        case EVENT_TYPE::WINDOW_LOST_FOCUS: EG_TRACE("Window lost focus!");break;
-        case EVENT_TYPE::WINDOW_MOVED:break;
-        case EVENT_TYPE::KEY_PRESSED:break;
-        case EVENT_TYPE::KEY_RELEASED:break;
-        case EVENT_TYPE::KEY_TYPED:break;
-        case EVENT_TYPE::MOUSE_BUTTON_PRESSED:break;
-        case EVENT_TYPE::MOUSE_BUTTON_RELEASED:break;
-        case EVENT_TYPE::MOUSE_MOVE: {
-            MouseMoveEvent& mouse = *(MouseMoveEvent*)&e;
-            EG_TRACE_F("Mouse on position: x:{0}-y:{1}", mouse.get_x(), mouse.get_y());
-        }
-        break;
 
-        case EVENT_TYPE::MOUSE_SCROLLED:break;
-        default: throw std::runtime_error("Invalid event type!");
+    if (e.get_event_type() == WindowCloseEvent::get_static_type()){
+        m_shouldClose = true;
+    }
+
+    for (auto& layer : m_layerStack){
+        layer->handle_event(e);
+        if (e.Handled)
+            break;
     }
 }
 
 void Application::run() {
 
-    Log::init();
-    EG_TRACE_F("Initializing {0}", EAGLE_GET_INFO(EAGLE_APP_NAME));
+    EG_CORE_TRACE_F("Initializing {0}", EAGLE_GET_INFO(EAGLE_APP_NAME));
 
     m_window->init();
     size_t identifier = m_window->add_event_listener(BIND_EVENT_FN(Application::handle_event));
 
     while(!m_shouldClose){
         m_window->handle_events();
+
+        for (auto& layer : m_layerStack){
+            layer->handle_update();
+        }
+
         m_window->refresh();
     }
 
@@ -63,6 +58,18 @@ void Application::run() {
 
     m_window->deinit();
 
+}
+
+void Application::layer_emplace_back(std::shared_ptr<Layer> layer) {
+    m_layerStack.emplace_back(layer);
+}
+
+void Application::layer_emplace_front(std::shared_ptr<Layer> layer) {
+    m_layerStack.emplace_front(layer);
+}
+
+void Application::layer_pop(std::shared_ptr<Layer> layer) {
+    m_layerStack.pop_layer(layer);
 }
 
 _EAGLE_END

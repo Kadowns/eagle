@@ -19,7 +19,7 @@ VulkanShader::~VulkanShader() {
 }
 
 void VulkanShader::create_pipeline(const VulkanShaderCreateInfo &createInfo) {
-    EG_TRACE("Creating shader pipeline!");
+    EG_CORE_TRACE("Creating shader pipeline!");
 
     m_createInfo = createInfo;
 
@@ -132,7 +132,7 @@ void VulkanShader::create_pipeline(const VulkanShaderCreateInfo &createInfo) {
 
     m_cleared = false;
 
-    EG_TRACE("Shader pipeline created!");
+    EG_CORE_TRACE("Shader pipeline created!");
 }
 
 void VulkanShader::cleanup_pipeline(){
@@ -144,7 +144,7 @@ void VulkanShader::cleanup_pipeline(){
 
 VkShaderModule VulkanShader::create_shader_module(const std::vector<char> &code) {
 
-    EG_TRACE("Creating shader module!");
+    EG_CORE_TRACE("Creating shader module!");
 
     VkShaderModuleCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -171,7 +171,7 @@ VkPipelineLayout& VulkanShader::get_layout() {
 std::vector<char> VulkanShader::load_shader(const std::string& fileName) {
 
     auto path = std::string(PROJECT_ROOT + fileName);
-    EG_DEBUG_F("File path: {0}", path);
+    EG_CORE_DEBUG_F("File path: {0}", path);
 
     std::ifstream file(PROJECT_ROOT + fileName, std::ios::ate | std::ios::binary);
 

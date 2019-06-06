@@ -19,7 +19,7 @@ WindowGLFW::WindowGLFW(RenderingContext* context, uint32_t width, uint32_t heigh
 
 void WindowGLFW::init() {
 
-    EG_TRACE("Initializing glfw window!");
+    EG_CORE_TRACE("Initializing glfw window!");
 
     if (!glfwInit()){
         throw std::runtime_error("Failed to initialize glfw!");
@@ -39,7 +39,7 @@ void WindowGLFW::init() {
 
     m_context->init(this);
 
-    EG_TRACE("Setting up GLFW callbacks!");
+    EG_CORE_TRACE("Setting up GLFW callbacks!");
 
     glfwSetWindowUserPointer(m_window, &m_windowData);
 
@@ -73,7 +73,7 @@ void WindowGLFW::init() {
         data.eventQueue.emplace(std::make_unique<MouseMoveEvent>((float)x, (float)y));
     });
 
-    EG_TRACE("Window initialized!");
+    EG_CORE_TRACE("Window initialized!");
 }
 
 void WindowGLFW::deinit() {
@@ -101,13 +101,13 @@ void WindowGLFW::handle_events() {
 }
 
 size_t WindowGLFW::add_event_listener(PFN_EventCallback callback) {
-    EG_TRACE("Added event listener!");
+    EG_CORE_TRACE("Added event listener!");
     m_eventListeners.emplace_back(std::make_pair(++m_listenerIdentifier, callback));
     return m_listenerIdentifier;
 }
 
 void WindowGLFW::remove_event_listener(size_t identifier) {
-    EG_TRACE("Removed event listener!");
+    EG_CORE_TRACE("Removed event listener!");
     m_eventListeners.erase(std::remove_if(m_eventListeners.begin(), m_eventListeners.end(), [identifier](Listener listener){ // NOLINT(bugprone-inaccurate-erase)
         return listener.first == identifier;
     }));

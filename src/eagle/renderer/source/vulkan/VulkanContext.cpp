@@ -25,7 +25,7 @@ VulkanContext::VulkanContext() {
 VulkanContext::~VulkanContext() = default;
 
 void VulkanContext::init(Window* window) {
-    EG_TRACE("Initializing vulkan context!");
+    EG_CORE_TRACE("Initializing vulkan context!");
 
     m_window = window;
     m_eventListenerIdentifier = m_window->add_event_listener(BIND_EVENT_FN(VulkanContext::window_resized));
@@ -50,20 +50,20 @@ void VulkanContext::init(Window* window) {
 
     create_sync_objects();
 
-    EG_TRACE("Vulkan ready!");
+    EG_CORE_TRACE("Vulkan ready!");
 }
 
 void VulkanContext::window_resized(Event& e) {
 
     if (e.get_event_type() == WindowResizedEvent::get_static_type()) {
-        EG_TRACE("Event was of type WINDOW_RESIZED!");
+        EG_CORE_TRACE("Event was of type WINDOW_RESIZED!");
         m_windowResized = true;
     }
 }
 
 void VulkanContext::deinit() {
 
-    EG_TRACE("Terminating vulkan!");
+    EG_CORE_TRACE("Terminating vulkan!");
 
     VK_CALL vkDeviceWaitIdle(m_device);
 
@@ -89,7 +89,7 @@ void VulkanContext::deinit() {
 
     m_window->remove_event_listener(m_eventListenerIdentifier);
 
-    EG_TRACE("Vulkan terminated!");
+    EG_CORE_TRACE("Vulkan terminated!");
 }
 
 void VulkanContext::refresh() {
@@ -160,7 +160,7 @@ void VulkanContext::refresh() {
 
 void VulkanContext::create_instance() {
 
-    EG_TRACE("Creating vulkan instance!");
+    EG_CORE_TRACE("Creating vulkan instance!");
 
     if (enableValidationLayers && !validation_layers_supported()) {
         throw std::runtime_error("validation layers requested, but not available!");
@@ -204,12 +204,12 @@ void VulkanContext::create_instance() {
         throw std::runtime_error("failed to create instance!");
     }
 
-    EG_TRACE("Vulkan instance created!");
+    EG_CORE_TRACE("Vulkan instance created!");
 }
 
 void VulkanContext::create_debug_callback() {
 
-    EG_TRACE("Setting up debug callback!");
+    EG_CORE_TRACE("Setting up debug callback!");
 
     if (!enableValidationLayers) return;
 
@@ -223,26 +223,26 @@ void VulkanContext::create_debug_callback() {
     VK_CALL_ASSERT(CreateDebugUtilsMessengerEXT( m_instance, &createInfo, nullptr, &m_debugMessenger)){
         throw std::runtime_error("failed to setup debug callback!");
     }
-    EG_TRACE("Debug callback ready!");
+    EG_CORE_TRACE("Debug callback ready!");
 }
 
 void VulkanContext::create_surface() {
 
-    EG_TRACE("Creating window surface!");
+    EG_CORE_TRACE("Creating window surface!");
     VK_CALL_ASSERT(glfwCreateWindowSurface( m_instance, (GLFWwindow*) m_window->get_native_window(), nullptr, &m_surface)){
         throw std::runtime_error("failed to create window surface!");
     }
-    EG_TRACE("Window surface created!");
+    EG_CORE_TRACE("Window surface created!");
 }
 
 void VulkanContext::bind_physical_device() {
 
-    EG_TRACE("Selecting physical device!");
+    EG_CORE_TRACE("Selecting physical device!");
 
     //verifica quantas placas de video suportam a vulkan no pc
     uint32_t deviceCount = 0;
     VK_CALL vkEnumeratePhysicalDevices(m_instance, &deviceCount, nullptr);
-    EG_INFO_F("Number of supporting devices: {0}", deviceCount);
+    EG_CORE_INFO_F("Number of supporting devices: {0}", deviceCount);
 
     //se n�o houver nenhuma placa de video que suporta, para o programa
     if (deviceCount == 0) {
@@ -273,12 +273,12 @@ void VulkanContext::bind_physical_device() {
         throw std::runtime_error("no suitable GPU found!");
     }
 
-    EG_TRACE("Physical device selected!");
+    EG_CORE_TRACE("Physical device selected!");
 }
 
 int VulkanContext::evaluate_device(VkPhysicalDevice device) {
 
-    EG_TRACE("Evaluating device!");
+    EG_CORE_TRACE("Evaluating device!");
     VkPhysicalDeviceProperties physicalDeviceProperties = {};
 
     VK_CALL vkGetPhysicalDeviceProperties(device, &physicalDeviceProperties);
@@ -325,14 +325,14 @@ int VulkanContext::evaluate_device(VkPhysicalDevice device) {
 
     score += physicalDeviceProperties.limits.maxImageDimension2D;
 
-    EG_TRACE_F("Device suitable! score:{0}", score);
+    EG_CORE_TRACE_F("Device suitable! score:{0}", score);
 
     return score;
 }
 
 
 bool VulkanContext::validation_layers_supported(){
-    EG_TRACE("Checking validation layer support!");
+    EG_CORE_TRACE("Checking validation layer support!");
     uint32_t layerCount;
     VK_CALL vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
@@ -357,7 +357,7 @@ bool VulkanContext::validation_layers_supported(){
 }
 
 std::vector<const char *> VulkanContext::get_required_extensions() {
-    EG_TRACE("Getting required extensions!");
+    EG_CORE_TRACE("Getting required extensions!");
     uint32_t glfwExtensionCount = 0;
     const char** glfwExtensions;
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -381,26 +381,26 @@ VkBool32 VulkanContext::debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT me
 
     switch(messageSeverity){
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-            Log::core_log(info.fileName.c_str(), info.funcName.c_str(), info.line, spdlog::level::trace, pCallbackData->pMessage);
+            Log::core_log(info.fileName.c_str(), info.funcName.c_str(), info.line, Log::TRACE, pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-            Log::core_log(info.fileName.c_str(), info.funcName.c_str(), info.line, spdlog::level::info, pCallbackData->pMessage);
+            Log::core_log(info.fileName.c_str(), info.funcName.c_str(), info.line, Log::INFO, pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-            Log::core_log(info.fileName.c_str(), info.funcName.c_str(), info.line, spdlog::level::warn, pCallbackData->pMessage);
+            Log::core_log(info.fileName.c_str(), info.funcName.c_str(), info.line, Log::WARN, pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-            Log::core_log(info.fileName.c_str(), info.funcName.c_str(), info.line, spdlog::level::err, pCallbackData->pMessage);
+            Log::core_log(info.fileName.c_str(), info.funcName.c_str(), info.line, Log::ERR, pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_FLAG_BITS_MAX_ENUM_EXT:
-            Log::core_log(info.fileName.c_str(), info.funcName.c_str(), info.line, spdlog::level::critical, pCallbackData->pMessage);
+            Log::core_log(info.fileName.c_str(), info.funcName.c_str(), info.line, Log::CRITICAL, pCallbackData->pMessage);
             break;
     }
     return VK_FALSE;
 }
 
 VulkanContext::QueueFamilyIndices VulkanContext::find_family_indices(VkPhysicalDevice device) {
-    EG_TRACE("Finding queue family indices!");
+    EG_CORE_TRACE("Finding queue family indices!");
     QueueFamilyIndices indices;
 
     uint32_t queueFamilyCount = 0;
@@ -432,7 +432,7 @@ VulkanContext::QueueFamilyIndices VulkanContext::find_family_indices(VkPhysicalD
 
 bool VulkanContext::check_device_extension_support(VkPhysicalDevice device) {
 
-    EG_TRACE("Checking device extensions!");
+    EG_CORE_TRACE("Checking device extensions!");
 
     uint32_t extensionCount;
     VK_CALL vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
@@ -456,7 +456,7 @@ bool VulkanContext::check_device_extension_support(VkPhysicalDevice device) {
 
 VulkanContext::SwapChainSupportDetails VulkanContext::query_swapchain_support(VkPhysicalDevice device) {
 
-    EG_TRACE("Querying swapchain support!");
+    EG_CORE_TRACE("Querying swapchain support!");
     SwapChainSupportDetails details;
 
     VK_CALL vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_surface, &details.capabilities);
@@ -485,7 +485,7 @@ VulkanContext::SwapChainSupportDetails VulkanContext::query_swapchain_support(Vk
 }
 
 void VulkanContext::create_logical_device() {
-    EG_TRACE("Creating logical device!");
+    EG_CORE_TRACE("Creating logical device!");
     QueueFamilyIndices indices = find_family_indices(m_physicalDevice);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -528,30 +528,30 @@ void VulkanContext::create_logical_device() {
     VK_CALL vkGetDeviceQueue(m_device, indices.graphicsFamily.value(), 0, &m_graphicsQueue);
     VK_CALL vkGetDeviceQueue(m_device, indices.presentFamily.value(), 0, &m_presentQueue);
 
-    EG_TRACE("Logical device created!");
+    EG_CORE_TRACE("Logical device created!");
 }
 
 VkSurfaceFormatKHR VulkanContext::choose_swap_surface_format(const std::vector<VkSurfaceFormatKHR> &formats) {
 
     if (formats.size() == 1 && formats[0].format == VK_FORMAT_UNDEFINED) {
-        EG_INFO("Swapchain surface format: VK_FORMAT_UNDEFINED");
+        EG_CORE_INFO("Swapchain surface format: VK_FORMAT_UNDEFINED");
         return {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
     }
 
     for (const auto& availableFormat : formats) {
         if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-            EG_INFO("Swapchain surface format: VK_FORMAT_B8G8R8A8_UNORM");
+            EG_CORE_INFO("Swapchain surface format: VK_FORMAT_B8G8R8A8_UNORM");
             return availableFormat;
         }
     }
 
-    EG_INFO_F("Swapchain surface format: {0}", formats[0].format);
+    EG_CORE_INFO_F("Swapchain surface format: {0}", formats[0].format);
     return formats[0];
 }
 
 void VulkanContext::create_swapchain() {
 
-    EG_TRACE("Creating swapchain!");
+    EG_CORE_TRACE("Creating swapchain!");
     //Verifica o suporte de swapChains
     SwapChainSupportDetails swapChainSupport = query_swapchain_support(m_physicalDevice);
 
@@ -616,32 +616,32 @@ void VulkanContext::create_swapchain() {
     VK_CALL vkGetSwapchainImagesKHR(m_device, m_swapchain, &imageCount, nullptr);
     m_swapchainImages.resize(imageCount);
 
-    EG_INFO_F("Number of swapchain images: {0}", m_swapchainImages.size());
+    EG_CORE_INFO_F("Number of swapchain images: {0}", m_swapchainImages.size());
 
     //efetivamente pega as imagens
     VK_CALL vkGetSwapchainImagesKHR(m_device, m_swapchain, &imageCount, m_swapchainImages.data());
-    EG_TRACE("Swapchain created!");
+    EG_CORE_TRACE("Swapchain created!");
 }
 
 VkPresentModeKHR VulkanContext::choose_swap_present_mode(const std::vector<VkPresentModeKHR> &presentModes) {
     VkPresentModeKHR bestMode = VK_PRESENT_MODE_FIFO_KHR;
     for (const auto& availablePresentMode : presentModes) {
         if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-            EG_INFO("Swapchain present mode: VK_PRESENT_MODE_MAILBOX_KHR");
+            EG_CORE_INFO("Swapchain present mode: VK_PRESENT_MODE_MAILBOX_KHR");
             return availablePresentMode;
         }
         else if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
-            EG_INFO("Swapchain present mode: VK_PRESENT_MODE_IMMEDIATE_KHR");
+            EG_CORE_INFO("Swapchain present mode: VK_PRESENT_MODE_IMMEDIATE_KHR");
             bestMode = availablePresentMode;
         }
     }
-    EG_INFO("Swapchain present mode: VK_PRESENT_MODE_FIFO_KHR");
+    EG_CORE_INFO("Swapchain present mode: VK_PRESENT_MODE_FIFO_KHR");
     return  bestMode;
 }
 
 VkExtent2D VulkanContext::choose_swap_extent(const VkSurfaceCapabilitiesKHR &capabilities) {
     if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
-        EG_INFO_F("Swap extent: width:{0} height:{1}", capabilities.currentExtent.width, capabilities.currentExtent.height);
+        EG_CORE_INFO_F("Swap extent: width:{0} height:{1}", capabilities.currentExtent.width, capabilities.currentExtent.height);
         return capabilities.currentExtent;
     }
     else {
@@ -649,13 +649,13 @@ VkExtent2D VulkanContext::choose_swap_extent(const VkSurfaceCapabilitiesKHR &cap
         actualExtent.width = std::clamp<uint32_t>(m_window->get_width(),capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
         actualExtent.height = std::clamp<uint32_t>(m_window->get_height(),capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
 
-        EG_INFO_F("Swap extent: width:{0} height:{1}", actualExtent.width, actualExtent.height);
+        EG_CORE_INFO_F("Swap extent: width:{0} height:{1}", actualExtent.width, actualExtent.height);
         return actualExtent;
     }
 }
 
 void VulkanContext::create_swapchain_images() {
-    EG_INFO("Create swapchain images!");
+    EG_CORE_INFO("Create swapchain images!");
 
     m_swapchainImageViews.resize(m_swapchainImages.size());
 
@@ -676,12 +676,12 @@ void VulkanContext::create_swapchain_images() {
         );
     }
 
-    EG_INFO("Swapchain images created!");
+    EG_CORE_INFO("Swapchain images created!");
 }
 
 void VulkanContext::create_render_pass() {
 
-    EG_TRACE("Creating render pass!");
+    EG_CORE_TRACE("Creating render pass!");
     VkAttachmentDescription colorAttachment = {};
     colorAttachment.format = m_swapchainFormat;
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -722,12 +722,12 @@ void VulkanContext::create_render_pass() {
         throw std::runtime_error("failed to create render pass!");
     }
 
-    EG_TRACE("Render pass created!");
+    EG_CORE_TRACE("Render pass created!");
 }
 
 void VulkanContext::create_command_pool() {
 
-    EG_TRACE("Creating command pool!");
+    EG_CORE_TRACE("Creating command pool!");
 
     QueueFamilyIndices queueFamilyIndices = find_family_indices(m_physicalDevice);
 
@@ -740,16 +740,16 @@ void VulkanContext::create_command_pool() {
         throw std::runtime_error("failed to create command pool!");
     }
 
-    EG_TRACE("Command pool created!");
+    EG_CORE_TRACE("Command pool created!");
 }
 
 void VulkanContext::create_framebuffers() {
 
-    EG_TRACE("Creating framebuffers!");
+    EG_CORE_TRACE("Creating framebuffers!");
 
     m_framebuffers.resize(m_swapchainImages.size());
 
-    EG_INFO_F("Number of framebuffers: {0}", m_framebuffers.size());
+    EG_CORE_INFO_F("Number of framebuffers: {0}", m_framebuffers.size());
 
     for (size_t i = 0; i < m_swapchainImageViews.size(); i++) {
         VkImageView attachments[] = {
@@ -769,12 +769,12 @@ void VulkanContext::create_framebuffers() {
             throw std::runtime_error("failed to create framebuffer!");
         }
     }
-    EG_TRACE("Framebuffers created!");
+    EG_CORE_TRACE("Framebuffers created!");
 }
 
 void VulkanContext::allocate_command_buffers() {
 
-    EG_TRACE("Allocating primary command buffers!");
+    EG_CORE_TRACE("Allocating primary command buffers!");
 
     m_commandBuffers.resize(m_swapchainImages.size());
     VkCommandBufferAllocateInfo allocInfo = {};
@@ -787,12 +787,12 @@ void VulkanContext::allocate_command_buffers() {
         throw std::runtime_error("failed to allocate command buffers!");
     }
 
-    EG_TRACE("Primary command buffers allocated!");
+    EG_CORE_TRACE("Primary command buffers allocated!");
 }
 
 void VulkanContext::create_sync_objects() {
 
-    EG_TRACE("Creating sync objects!");
+    EG_CORE_TRACE("Creating sync objects!");
 
     m_imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     m_renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -814,7 +814,7 @@ void VulkanContext::create_sync_objects() {
         }
     }
 
-    EG_TRACE("Sync objects created!");
+    EG_CORE_TRACE("Sync objects created!");
 }
 
 void VulkanContext::record_command_buffer(uint32_t index) {

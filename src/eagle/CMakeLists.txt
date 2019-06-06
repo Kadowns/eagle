@@ -1,5 +1,4 @@
 include(${CMAKE_MODULE_PATH}/Eagle.cmake)
-include(${CMAKE_MODULE_PATH}/DefineFileNames.cmake)
 
 find_package(GLFW REQUIRED)
 find_package(SPDLOG REQUIRED)
@@ -12,6 +11,8 @@ set(CORE_INCLUDE
         core/Window.h
         core/WindowGLFW.h
         core/Log.h
+        core/Layer.h
+        core/LayerStack.h
         core/events/Event.h
         core/events/WindowEvents.h
         )
@@ -22,6 +23,7 @@ set(CORE_SOURCE
         core/source/WindowGLFW.cpp
         core/source/Core.cpp
         core/source/Log.cpp
+        core/source/LayerStack.cpp
         )
 
 
@@ -45,7 +47,7 @@ set(RENDERER_SOURCE
 
 set(RENDERER_ALL ${RENDERER_INCLUDE} ${RENDERER_SOURCE})
 
-set(EAGLE_ALL ${CORE_ALL} ${RENDERER_ALL})
+set(EAGLE_ALL Eagle.h ${CORE_ALL} ${RENDERER_ALL})
 
 create_module(eagle_s STATIC "${EAGLE_ALL}")
 
