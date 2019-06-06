@@ -17,10 +17,9 @@ public:
     RenderingContext() = default;
 
     virtual ~RenderingContext() = default;
-    virtual void init() = 0;
+    virtual void init(Window *window) = 0;
     virtual void refresh() = 0;
     virtual void deinit() = 0;
-    virtual void set_window(Window *window) = 0;
 
 };
 

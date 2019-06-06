@@ -13,6 +13,8 @@
 #define EAGLE_GET_INFO(key) Eagle::EagleInfo::get_info(key)
 #define EAGLE_SET_INFO(key, value) Eagle::EagleInfo::set_info(key, value)
 
+#define BIT(x) (1 << x)
+
 _EAGLE_BEGIN
 enum EAGLE_KEY{
     EAGLE_APP_NAME = 0,

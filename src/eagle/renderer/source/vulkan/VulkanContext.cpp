@@ -8,6 +8,7 @@
 #include "eagle/renderer/vulkan/VulkanHelper.h"
 #include "eagle/core/Window.h"
 #include "eagle/core/Log.h"
+#include "eagle/core/events/WindowEvents.h"
 
 
 #include <GLFW/glfw3.h>
@@ -23,8 +24,12 @@ VulkanContext::VulkanContext() {
 
 VulkanContext::~VulkanContext() = default;
 
-void VulkanContext::init() {
+void VulkanContext::init(Window* window) {
     EG_TRACE("Initializing vulkan context!");
+
+    m_window = window;
+    m_eventListenerIdentifier = m_window->add_event_listener(BIND_EVENT_FN(VulkanContext::window_resized));
+
     create_instance();
     create_debug_callback();
     create_surface();
@@ -42,13 +47,18 @@ void VulkanContext::init() {
     shaderCreateInfo.renderPass = m_renderPass;
 
     shader = std::make_shared<VulkanShader>("shaders/vert.spv", "shaders/frag.spv", shaderCreateInfo);
-    for (uint32_t i = 0; i < m_commandBuffers.size(); i++){
-        record_command_buffer(i);
-    }
+
     create_sync_objects();
 
-
     EG_TRACE("Vulkan ready!");
+}
+
+void VulkanContext::window_resized(Event& e) {
+
+    if (e.get_event_type() == WindowResizedEvent::get_static_type()) {
+        EG_TRACE("Event was of type WINDOW_RESIZED!");
+        m_windowResized = true;
+    }
 }
 
 void VulkanContext::deinit() {
@@ -57,6 +67,8 @@ void VulkanContext::deinit() {
 
     VK_CALL vkDeviceWaitIdle(m_device);
 
+    cleanup_swapchain();
+
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         VK_CALL vkDestroySemaphore(m_device, m_renderFinishedSemaphores[i], nullptr);
         VK_CALL vkDestroySemaphore(m_device, m_imageAvailableSemaphores[i], nullptr);
@@ -64,20 +76,6 @@ void VulkanContext::deinit() {
     }
 
     VK_CALL vkDestroyCommandPool(m_device, m_commandPool, nullptr);
-
-    for (size_t i = 0; i < m_framebuffers.size(); i++){
-        VK_CALL vkDestroyFramebuffer(m_device, m_framebuffers[i], nullptr);
-    }
-
-    shader.reset();
-
-    VK_CALL vkDestroyRenderPass(m_device, m_renderPass, nullptr);
-
-    for (size_t i = 0; i < m_swapchainImageViews.size(); i++){
-        VK_CALL vkDestroyImageView(m_device, m_swapchainImageViews[i], nullptr);
-    }
-
-    VK_CALL vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
 
     VK_CALL vkDestroyDevice(m_device, nullptr);
 
@@ -89,17 +87,29 @@ void VulkanContext::deinit() {
 
     VK_CALL vkDestroyInstance(m_instance, nullptr);
 
-    EG_TRACE("Vulkan terminated!");
+    m_window->remove_event_listener(m_eventListenerIdentifier);
 
+    EG_TRACE("Vulkan terminated!");
 }
 
 void VulkanContext::refresh() {
 
     VK_CALL vkWaitForFences(m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
-    VK_CALL vkResetFences(m_device, 1, &m_inFlightFences[m_currentFrame]);
+    //VK_CALL vkResetFences(m_device, 1, &m_inFlightFences[m_currentFrame]);
 
+    VkResult result;
     uint32_t imageIndex;
-    VK_CALL vkAcquireNextImageKHR(m_device, m_swapchain, std::numeric_limits<uint64_t>::max(), m_imageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &imageIndex);
+    VK_CALL result = vkAcquireNextImageKHR(m_device, m_swapchain, std::numeric_limits<uint64_t>::max(), m_imageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+    if (result == VK_ERROR_OUT_OF_DATE_KHR){
+        recreate_swapchain();
+        return;
+    } else if (result != VK_SUCCESS  && result != VK_SUBOPTIMAL_KHR){
+        throw std::runtime_error("failed to acquire swapchain image!");
+    }
+
+
+    record_command_buffer(imageIndex);
 
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -117,6 +127,8 @@ void VulkanContext::refresh() {
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
+    VK_CALL vkResetFences(m_device, 1, &m_inFlightFences[m_currentFrame]);
+
     VK_CALL_ASSERT(vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame])) {
         throw std::runtime_error("failed to submit draw command buffer!");
     }
@@ -133,10 +145,17 @@ void VulkanContext::refresh() {
 
     presentInfo.pImageIndices = &imageIndex;
 
-    VK_CALL vkQueuePresentKHR(m_presentQueue, &presentInfo);
+    VK_CALL result = vkQueuePresentKHR(m_presentQueue, &presentInfo);
+
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_windowResized){
+        m_windowResized = false;
+        recreate_swapchain();
+
+    } else if (result != VK_SUCCESS){
+        throw std::runtime_error("failed to present swapchain image!");
+    }
 
     m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
-
 }
 
 void VulkanContext::create_instance() {
@@ -210,7 +229,7 @@ void VulkanContext::create_debug_callback() {
 void VulkanContext::create_surface() {
 
     EG_TRACE("Creating window surface!");
-    VK_CALL_ASSERT(glfwCreateWindowSurface( m_instance, (GLFWwindow*)m_window->get_window_handle(), nullptr, &m_surface)){
+    VK_CALL_ASSERT(glfwCreateWindowSurface( m_instance, (GLFWwindow*) m_window->get_native_window(), nullptr, &m_surface)){
         throw std::runtime_error("failed to create window surface!");
     }
     EG_TRACE("Window surface created!");
@@ -311,10 +330,6 @@ int VulkanContext::evaluate_device(VkPhysicalDevice device) {
     return score;
 }
 
-void VulkanContext::set_window(Window *window) {
-    m_window = window;
-    EG_TRACE("Window handle set!");
-}
 
 bool VulkanContext::validation_layers_supported(){
     EG_TRACE("Checking validation layer support!");
@@ -719,6 +734,7 @@ void VulkanContext::create_command_pool() {
     VkCommandPoolCreateInfo poolInfo = {};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+    poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
     VK_CALL_ASSERT(vkCreateCommandPool(m_device, &poolInfo, nullptr, &m_commandPool)) {
         throw std::runtime_error("failed to create command pool!");
@@ -833,6 +849,49 @@ void VulkanContext::record_command_buffer(uint32_t index) {
     VK_CALL_ASSERT(vkEndCommandBuffer(m_commandBuffers[index])) {
         throw std::runtime_error("failed to record command buffer!");
     }
+}
+
+void VulkanContext::recreate_swapchain() {
+    VK_CALL vkDeviceWaitIdle(m_device);
+
+    //Waits until window is visible
+    while(m_window->is_minimized()){
+        m_window->wait_native_events();
+    }
+
+    cleanup_swapchain();
+
+    create_swapchain();
+    create_swapchain_images();
+    create_render_pass();
+    create_framebuffers();
+    allocate_command_buffers();
+
+    VulkanShader::VulkanShaderCreateInfo createInfo = {};
+    createInfo.device = m_device;
+    createInfo.extent = m_swapchainExtent;
+    createInfo.renderPass = m_renderPass;
+
+    shader->create_pipeline(createInfo);
+}
+
+void VulkanContext::cleanup_swapchain() {
+
+    for (size_t i = 0; i < m_framebuffers.size(); i++){
+        VK_CALL vkDestroyFramebuffer(m_device, m_framebuffers[i], nullptr);
+    }
+
+    VK_CALL vkFreeCommandBuffers(m_device, m_commandPool, static_cast<uint32_t>(m_commandBuffers.size()), m_commandBuffers.data());
+
+    shader->cleanup_pipeline();
+
+    VK_CALL vkDestroyRenderPass(m_device, m_renderPass, nullptr);
+
+    for (size_t i = 0; i < m_swapchainImageViews.size(); i++){
+        VK_CALL vkDestroyImageView(m_device, m_swapchainImageViews[i], nullptr);
+    }
+
+    VK_CALL vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
 }
 
 

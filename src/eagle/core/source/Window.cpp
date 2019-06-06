@@ -3,15 +3,15 @@
 //
 
 
+#include <eagle/core/Window.h>
 #include "eagle/core/Window.h"
 #include "eagle/renderer/RenderingContext.h"
 
 _EAGLE_BEGIN
 
 Window::Window(RenderingContext* renderingContext, uint32_t width, uint32_t height) :
-    m_context(renderingContext),
-    m_width(width),
-    m_height(height){
+    m_context(renderingContext), m_windowData(width, height){
+
 }
 
 Window::~Window() = default;
@@ -19,11 +19,11 @@ Window::~Window() = default;
 
 
 uint32_t Window::get_width() {
-    return m_width;
+    return m_windowData.width;
 }
 
 uint32_t Window::get_height() {
-    return m_height;
+    return m_windowData.height;
 }
 
 _EAGLE_END

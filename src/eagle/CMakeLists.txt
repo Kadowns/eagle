@@ -12,6 +12,8 @@ set(CORE_INCLUDE
         core/Window.h
         core/WindowGLFW.h
         core/Log.h
+        core/events/Event.h
+        core/events/WindowEvents.h
         )
 
 set(CORE_SOURCE

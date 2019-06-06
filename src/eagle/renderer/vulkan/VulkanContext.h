@@ -10,6 +10,7 @@
 #include <memory>
 #include <functional>
 
+#include "eagle/core/events/Event.h"
 #include "eagle/renderer/RenderingContext.h"
 
 #include "VulkanCore.h"
@@ -53,13 +54,11 @@ public:
 
     virtual ~VulkanContext();
 
-    virtual void init() override;
+    virtual void init(Window *window) override;
 
     virtual void refresh() override;
 
     virtual void deinit() override;
-
-    virtual void set_window(Window *window) override;
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
             VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -96,6 +95,10 @@ protected:
 
     virtual void create_sync_objects();
 
+    virtual void recreate_swapchain();
+
+    virtual void cleanup_swapchain();
+
     bool validation_layers_supported();
 
     std::vector<const char *> get_required_extensions();
@@ -115,6 +118,10 @@ protected:
     VkExtent2D choose_swap_extent(const VkSurfaceCapabilitiesKHR& capabilities);
 
     void record_command_buffer(uint32_t index);
+
+    void window_resized(Event& e);
+
+
 
     Window* m_window;
 
@@ -144,6 +151,10 @@ protected:
     std::shared_ptr<VulkanShader> shader;
 
     uint32_t m_currentFrame = 0;
+
+    size_t m_eventListenerIdentifier;
+
+    bool m_windowResized = false;
 
 
     const std::vector<const char *> validationLayers = {

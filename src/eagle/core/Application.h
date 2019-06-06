@@ -7,6 +7,7 @@
 
 #include <memory>
 #include "Core.h"
+#include "events/Event.h"
 
 _EAGLE_BEGIN
 
@@ -24,15 +25,18 @@ public:
 
     static Application& instance();
 
-    Application(const AppConfig& config);
+    explicit Application(const AppConfig& config);
 
     void run();
+    void handle_event(Event& e);
 
 private:
 
     static Application* m_instance;
 
     std::unique_ptr<Window> m_window;
+
+    bool m_shouldClose;
 
 };
 

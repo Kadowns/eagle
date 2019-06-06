@@ -7,16 +7,24 @@
 
 _EAGLE_BEGIN
 
-VulkanShader::VulkanShader(const std::string& vertFileName, const std::string& fragFileName, const VulkanShaderCreateInfo& createInfo)
-    : m_createInfo(createInfo) {
+VulkanShader::VulkanShader(const std::string& vertFileName, const std::string& fragFileName, const VulkanShaderCreateInfo& createInfo) :
+    m_cleared(true){
+    m_vertShaderCode = load_shader(vertFileName);
+    m_fragShaderCode = load_shader(fragFileName);
+    create_pipeline(createInfo);
+}
 
+VulkanShader::~VulkanShader() {
+    cleanup_pipeline();
+}
+
+void VulkanShader::create_pipeline(const VulkanShaderCreateInfo &createInfo) {
     EG_TRACE("Creating shader pipeline!");
 
-    auto vertShaderCode = load_shader(vertFileName);
-    auto fragShaderCode = load_shader(fragFileName);
+    m_createInfo = createInfo;
 
-    VkShaderModule vertShaderModule = create_shader_module(vertShaderCode);
-    VkShaderModule fragShaderModule = create_shader_module(fragShaderCode);
+    VkShaderModule vertShaderModule = create_shader_module(m_vertShaderCode);
+    VkShaderModule fragShaderModule = create_shader_module(m_fragShaderCode);
 
     VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -122,12 +130,16 @@ VulkanShader::VulkanShader(const std::string& vertFileName, const std::string& f
     VK_CALL vkDestroyShaderModule(m_createInfo.device, fragShaderModule, nullptr);
     VK_CALL vkDestroyShaderModule(m_createInfo.device, vertShaderModule, nullptr);
 
+    m_cleared = false;
+
     EG_TRACE("Shader pipeline created!");
 }
 
-VulkanShader::~VulkanShader() {
+void VulkanShader::cleanup_pipeline(){
+    if (m_cleared){ return; }
     VK_CALL vkDestroyPipeline(m_createInfo.device, m_graphicsPipeline, nullptr);
     VK_CALL vkDestroyPipelineLayout(m_createInfo.device, m_pipelineLayout, nullptr);
+    m_cleared = true;
 }
 
 VkShaderModule VulkanShader::create_shader_module(const std::vector<char> &code) {
