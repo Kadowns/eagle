@@ -24,6 +24,7 @@ public:
     void bind_command_buffer(VkCommandBuffer cmd);
 
     virtual void bind() override;
+    virtual void compile() override;
     virtual void create_pipeline() override;
     virtual void cleanup_pipeline() override;
 

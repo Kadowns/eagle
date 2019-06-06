@@ -18,6 +18,7 @@ public:
     virtual ~Shader() = default;
 
     virtual void bind() = 0;
+    virtual void compile() = 0;
     virtual void create_pipeline() = 0;
     virtual void cleanup_pipeline() = 0;
 

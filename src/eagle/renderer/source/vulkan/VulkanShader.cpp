@@ -173,5 +173,9 @@ void VulkanShader::bind_command_buffer(VkCommandBuffer cmd) {
     m_cmd = cmd;
 }
 
+void VulkanShader::compile() {
+    //TODO -- implement glslang compiler
+}
+
 
 _EAGLE_END
