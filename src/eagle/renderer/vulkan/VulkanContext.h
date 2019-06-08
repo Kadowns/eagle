@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <memory>
+#include <optional>
 #include <functional>
 
 #include "eagle/core/events/WindowEvents.h"
@@ -15,6 +16,8 @@
 
 #include "VulkanCore.h"
 #include "VulkanShader.h"
+#include "VulkanVertexBuffer.h"
+#include "VulkanIndexBuffer.h"
 
 _EAGLE_BEGIN
 
@@ -47,6 +50,11 @@ protected:
         std::vector<VkPresentModeKHR> presentModes;
     };
 
+    struct VulkanDrawFrameInfo {
+        bool invalidFrame = false;
+        uint32_t imageIndex;
+    };
+
 
 public:
 
@@ -56,6 +64,8 @@ public:
 
     //inherited via RenderingContext
     virtual void init(Window *window) override;
+    virtual void begin_draw() override;
+    virtual void end_draw() override;
     virtual void refresh() override;
     virtual void deinit() override;
     //------
@@ -124,8 +134,23 @@ protected:
     bool window_resized(WindowResizedEvent& e);
 
     //inherited via RenderingContext
-    virtual std::shared_ptr<Shader>
+    virtual std::weak_ptr<Shader>
     handle_create_shader(const std::string &vertFilePath, const std::string &fragFilePath) override;
+
+    virtual std::weak_ptr<VertexBuffer>
+    handle_create_vertex_buffer(std::vector<float> &vertices, size_t stride) override;
+
+    virtual void
+    handle_bind_shader(std::shared_ptr<Shader> shader) override;
+
+    virtual void
+    handle_draw_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer) override;
+
+    virtual void
+    handle_draw_indexed_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer, std::shared_ptr<IndexBuffer> indexBuffer) override;
+
+    virtual std::weak_ptr<IndexBuffer>
+    handle_create_index_buffer(std::vector<uint32_t> &indices) override;
 
 
     Window* m_window;
@@ -151,8 +176,10 @@ protected:
     std::vector<VkSemaphore> m_renderFinishedSemaphores;
     std::vector<VkFence> m_inFlightFences;
     VkQueue m_presentQueue;
+    VulkanDrawFrameInfo m_drawInfo;
 
-
+    std::vector<std::shared_ptr<VulkanVertexBuffer>> m_vertexBuffers;
+    std::vector<std::shared_ptr<VulkanIndexBuffer>> m_indexBuffers;
     std::vector<std::shared_ptr<VulkanShader>> m_shaders;
 
     uint32_t m_currentFrame = 0;
@@ -160,6 +187,7 @@ protected:
     size_t m_eventListenerIdentifier;
 
     bool m_windowResized = false;
+    bool m_drawInitialized = false;
 
 
     const std::vector<const char *> validationLayers = {

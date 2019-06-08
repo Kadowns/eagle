@@ -53,6 +53,12 @@ void Application::run() {
             layer->handle_update();
         }
 
+        m_window->begin_draw();
+        for (auto& layer : m_layerStack){
+            layer->handle_draw();
+        }
+        m_window->end_draw();
+
         m_window->refresh();
     }
 

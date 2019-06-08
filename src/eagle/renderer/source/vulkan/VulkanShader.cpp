@@ -1,5 +1,6 @@
 
 #include "eagle/renderer/vulkan/VulkanShader.h"
+#include "eagle/renderer/vulkan/VulkanVertexLayout.h"
 #include "eagle/core/Log.h"
 
 #include <fstream>
@@ -38,10 +39,16 @@ void VulkanShader::create_pipeline() {
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
+    VulkanVertexLayout vertexLayout({VERTEX_COMPONENT_VEC2, VERTEX_COMPONENT_VEC3});
+    VkVertexInputBindingDescription inputBinding = vertexLayout.get_binding_description();
+    std::vector<VkVertexInputAttributeDescription> inputAttributes = vertexLayout.get_attribute_descriptions();
+
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount = 0;
-    vertexInputInfo.vertexAttributeDescriptionCount = 0;
+    vertexInputInfo.vertexBindingDescriptionCount = 1;
+    vertexInputInfo.pVertexBindingDescriptions = &inputBinding;
+    vertexInputInfo.vertexAttributeDescriptionCount = inputAttributes.size();
+    vertexInputInfo.pVertexAttributeDescriptions = inputAttributes.data();
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

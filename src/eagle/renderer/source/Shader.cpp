@@ -12,7 +12,7 @@ _EAGLE_BEGIN
 
 std::vector<char> Shader::load_shader(const std::string &fileName) {
     auto path = std::string(PROJECT_ROOT + fileName);
-    EG_CORE_DEBUG_F("File path: {0}", path);
+    EG_CORE_DEBUG_F("Shader file path: {0}", path);
 
     std::ifstream file(PROJECT_ROOT + fileName, std::ios::ate | std::ios::binary);
 

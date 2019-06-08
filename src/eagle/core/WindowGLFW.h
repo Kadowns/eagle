@@ -20,6 +20,8 @@ public:
 
     virtual void init() override;
     virtual void deinit() override;
+    virtual void begin_draw() override;
+    virtual void end_draw() override;
     virtual void refresh() override;
 
     virtual void handle_events() override;

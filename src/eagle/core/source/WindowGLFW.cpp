@@ -108,9 +108,12 @@ size_t WindowGLFW::add_event_listener(PFN_EventCallback callback) {
 
 void WindowGLFW::remove_event_listener(size_t identifier) {
     EG_CORE_TRACE("Removed event listener!");
-    m_eventListeners.erase(std::remove_if(m_eventListeners.begin(), m_eventListeners.end(), [identifier](Listener listener){ // NOLINT(bugprone-inaccurate-erase)
+    auto listener = std::find_if(m_eventListeners.begin(), m_eventListeners.end(),[identifier](Listener listener){
         return listener.first == identifier;
-    }));
+    });
+    if (listener != m_eventListeners.end()){
+        m_eventListeners.erase(listener);
+    }
 }
 
 bool WindowGLFW::is_minimized() {
@@ -119,6 +122,14 @@ bool WindowGLFW::is_minimized() {
 
 void WindowGLFW::wait_native_events() {
     glfwWaitEvents();
+}
+
+void WindowGLFW::begin_draw() {
+    m_context->begin_draw();
+}
+
+void WindowGLFW::end_draw() {
+    m_context->end_draw();
 }
 
 

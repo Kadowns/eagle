@@ -7,6 +7,8 @@
 
 #include "eagle/core/Core.h"
 #include "Shader.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
 
 _EAGLE_BEGIN
 
@@ -19,17 +21,39 @@ public:
     virtual ~RenderingContext() = default;
 
     virtual void init(Window *window) = 0;
+    virtual void begin_draw() = 0;
+    virtual void end_draw() = 0;
     virtual void refresh() = 0;
     virtual void deinit() = 0;
 
-    static std::shared_ptr<Shader> create_shader(const std::string &vertFilePath, const std::string &fragFilePath);
+    static std::weak_ptr<Shader> create_shader(const std::string &vertFilePath, const std::string &fragFilePath);
+    static std::weak_ptr<VertexBuffer> create_vertex_buffer(std::vector<float> &vertices, size_t stride);
+    static std::weak_ptr<IndexBuffer> create_index_buffer(std::vector<uint32_t>& indices);
+    static void bind_shader(std::shared_ptr<Shader> shader);
+    static void draw_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer);
+    static void draw_indexed_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer, std::shared_ptr<IndexBuffer> indexBuffer);
 
 protected:
 
     static std::unique_ptr<RenderingContext> m_currentRenderer;
 
-    virtual std::shared_ptr<Shader> handle_create_shader(const std::string &vertFilePath,
-                                                         const std::string &fragFilePath) = 0;
+    virtual std::weak_ptr<Shader>
+    handle_create_shader(const std::string &vertFilePath, const std::string &fragFilePath) = 0;
+
+    virtual std::weak_ptr<VertexBuffer>
+    handle_create_vertex_buffer(std::vector<float> &vertices, size_t stride) = 0;
+
+    virtual std::weak_ptr<IndexBuffer>
+    handle_create_index_buffer(std::vector<uint32_t> &indices) = 0;
+
+    virtual void
+    handle_bind_shader(std::shared_ptr<Shader> shader) = 0;
+
+    virtual void
+    handle_draw_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer) = 0;
+
+    virtual void
+    handle_draw_indexed_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer, std::shared_ptr<IndexBuffer> indexBuffer) = 0;
 
 };
 

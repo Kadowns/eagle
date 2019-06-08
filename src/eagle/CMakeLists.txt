@@ -3,6 +3,7 @@ include(${CMAKE_MODULE_PATH}/Eagle.cmake)
 find_package(GLFW REQUIRED)
 find_package(SPDLOG REQUIRED)
 find_package(Vulkan REQUIRED)
+find_package(GLM REQUIRED)
 
 
 set(CORE_INCLUDE
@@ -33,10 +34,16 @@ set(CORE_ALL ${CORE_INCLUDE} ${CORE_SOURCE})
 set(RENDERER_INCLUDE
         renderer/RenderingContext.h
         renderer/Shader.h
+        renderer/VertexBuffer.h
+        renderer/IndexBuffer.h
         renderer/vulkan/VulkanContext.h
         renderer/vulkan/VulkanCore.h
         renderer/vulkan/VulkanHelper.h
         renderer/vulkan/VulkanShader.h
+        renderer/vulkan/VulkanBuffer.h
+        renderer/vulkan/VulkanVertexLayout.h
+        renderer/vulkan/VulkanVertexBuffer.h
+        renderer/vulkan/VulkanIndexBuffer.h
         )
 
 set(RENDERER_SOURCE
@@ -46,6 +53,10 @@ set(RENDERER_SOURCE
         renderer/source/vulkan/VulkanHelper.cpp
         renderer/source/vulkan/VulkanCore.cpp
         renderer/source/vulkan/VulkanShader.cpp
+        renderer/source/vulkan/VulkanBuffer.cpp
+        renderer/source/vulkan/VulkanVertexLayout.cpp
+        renderer/source/vulkan/VulkanVertexBuffer.cpp
+        renderer/source/vulkan/VulkanIndexBuffer.cpp
         )
 
 set(RENDERER_ALL ${RENDERER_INCLUDE} ${RENDERER_SOURCE})
@@ -56,4 +67,4 @@ create_module(eagle_s STATIC "${EAGLE_ALL}")
 
 define_file_basename_for_sources(eagle_s)
 
-target_link_libraries(eagle_s GLFW spdlog Vulkan::Vulkan)
+target_link_libraries(eagle_s GLFW spdlog Vulkan::Vulkan glm)

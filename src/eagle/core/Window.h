@@ -30,6 +30,8 @@ public:
 
     virtual void init() = 0;
     virtual void deinit() = 0;
+    virtual void begin_draw() = 0;
+    virtual void end_draw() = 0;
     virtual void refresh() = 0;
     virtual void handle_events() = 0;
 

@@ -13,16 +13,16 @@ extern Eagle::ApplicationCreateInfo Eagle::create_application_info();
 int main(){
 
     Eagle::ApplicationCreateInfo createInfo = Eagle::create_application_info();
-    Eagle::Application app(createInfo);
+    std::unique_ptr<Eagle::Application> app = std::make_unique<Eagle::Application>(createInfo);
 
     try{
-        app.run();
+        app->run();
     }catch(std::exception& e){
         std::cerr << e.what() << std::endl;
-        return EXIT_FAILURE;
+        return 1;
     }
 
-    return EXIT_SUCCESS;
+    return 0;
 }
 
 #endif //EAGLE_MAIN_CPP
