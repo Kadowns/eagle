@@ -59,6 +59,8 @@ void LayerStack::init() {
 
     if (m_initialized) return;
 
+    EG_CORE_TRACE("Initializing layer stack!");
+
     m_initialized = true;
     for (auto& layer : m_layers){
         layer->handle_attach();
@@ -68,9 +70,12 @@ void LayerStack::init() {
 void LayerStack::deinit() {
     if (!m_initialized) return;
 
+    EG_CORE_TRACE("Deinitializing layer stack!");
+
     for (auto& layer : m_layers){
-        pop_layer(layer);
+        layer->handle_deattach();
     }
+    m_layers.clear();
 
     m_initialized = false;
 }

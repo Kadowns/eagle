@@ -1,6 +1,6 @@
 
 #include "eagle/renderer/vulkan/VulkanShader.h"
-#include "eagle/renderer/vulkan/VulkanVertexLayout.h"
+#include "eagle/renderer/ShaderItemLayout.h"
 #include "eagle/core/Log.h"
 
 #include <fstream>
@@ -10,8 +10,8 @@ _EAGLE_BEGIN
 
 VulkanShader::VulkanShader(const std::string& vertFileName, const std::string& fragFileName, const VulkanShaderCreateInfo& createInfo) :
     Shader(vertFileName, fragFileName),
-    m_cleared(true){
-    set_vulkan_info(createInfo);
+    m_cleared(true),
+    m_createInfo(createInfo){
     create_pipeline();
 }
 
@@ -21,6 +21,24 @@ VulkanShader::~VulkanShader() {
 
 void VulkanShader::create_pipeline() {
     EG_CORE_TRACE("Creating shader pipeline!");
+
+    m_layoutBindings.emplace_back(create_descriptor_set_layout_binding(
+            0,
+            VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            1,
+            VK_SHADER_STAGE_VERTEX_BIT,
+            nullptr
+            ));
+    m_uniformLayouts["mvp"] = ShaderItemLayout({SHADER_ITEM_COMPONENT_MAT4});
+
+    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo = {};
+    descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    descriptorSetLayoutInfo.bindingCount = static_cast<uint32_t>(m_layoutBindings.size());
+    descriptorSetLayoutInfo.pBindings = m_layoutBindings.data();
+
+    VK_CALL_ASSERT(vkCreateDescriptorSetLayout(m_createInfo.device, &descriptorSetLayoutInfo, nullptr, &m_descriptorSetLayout)) {
+        throw std::runtime_error("failed to create descriptor set layout!");
+    }
 
     VkShaderModule vertShaderModule = create_shader_module(m_vertShaderCode);
     VkShaderModule fragShaderModule = create_shader_module(m_fragShaderCode);
@@ -39,9 +57,9 @@ void VulkanShader::create_pipeline() {
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
-    VulkanVertexLayout vertexLayout({VERTEX_COMPONENT_VEC2, VERTEX_COMPONENT_VEC3});
-    VkVertexInputBindingDescription inputBinding = vertexLayout.get_binding_description();
-    std::vector<VkVertexInputAttributeDescription> inputAttributes = vertexLayout.get_attribute_descriptions();
+    ShaderItemLayout vertexLayout({SHADER_ITEM_COMPONENT_VEC2, SHADER_ITEM_COMPONENT_VEC3});
+    VkVertexInputBindingDescription inputBinding = get_binding_description(vertexLayout);
+    std::vector<VkVertexInputAttributeDescription> inputAttributes = get_attribute_descriptions(vertexLayout);
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -80,7 +98,7 @@ void VulkanShader::create_pipeline() {
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
     rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizer.lineWidth = 1.0f;
-    rasterizer.cullMode = VK_CULL_MODE_NONE;
+    rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT;
     rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -106,8 +124,9 @@ void VulkanShader::create_pipeline() {
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 0;
     pipelineLayoutInfo.pushConstantRangeCount = 0;
+    pipelineLayoutInfo.setLayoutCount = 1;
+    pipelineLayoutInfo.pSetLayouts = &m_descriptorSetLayout;
 
     VK_CALL_ASSERT(vkCreatePipelineLayout(m_createInfo.device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout)) {
         throw std::runtime_error("failed to create pipeline layout!");
@@ -146,6 +165,60 @@ void VulkanShader::cleanup_pipeline(){
     VK_CALL vkDestroyPipelineLayout(m_createInfo.device, m_pipelineLayout, nullptr);
     m_cleared = true;
 }
+
+VkDescriptorSetLayoutBinding VulkanShader::create_descriptor_set_layout_binding(
+        uint32_t binding,
+        VkDescriptorType type,
+        uint32_t descriptorCount,
+        VkShaderStageFlags flags,
+        const VkSampler * pImmutableSamplers) {
+
+    VkDescriptorSetLayoutBinding descriptorBinding = {};
+    descriptorBinding.binding = binding;
+    descriptorBinding.descriptorType = type;
+    descriptorBinding.descriptorCount = descriptorCount;
+    descriptorBinding.stageFlags = flags;
+    descriptorBinding.pImmutableSamplers = pImmutableSamplers;
+    return descriptorBinding;
+}
+
+VkVertexInputBindingDescription VulkanShader::get_binding_description(const ShaderItemLayout& layout) {
+    VkVertexInputBindingDescription bindingDescription = {};
+    bindingDescription.binding = 0;
+    bindingDescription.stride = layout.stride();
+    bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+    return bindingDescription;
+}
+
+std::vector<VkVertexInputAttributeDescription> VulkanShader::get_attribute_descriptions(const ShaderItemLayout& layout) {
+    std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+    attributeDescriptions.resize(layout.count());
+    uint32_t offset = 0;
+    for (uint8_t i = 0; i < layout.count(); i++) {
+        attributeDescriptions[i].binding = 0;
+        attributeDescriptions[i].location = i;
+        attributeDescriptions[i].format = component_format(layout[i]);
+        attributeDescriptions[i].offset = offset;
+        offset += layout.offset(layout[i]);
+    }
+
+    return attributeDescriptions;
+}
+
+VkFormat VulkanShader::component_format(const SHADER_ITEM_COMPONENT &component) {
+    switch (component) {
+        case SHADER_ITEM_COMPONENT_FLOAT:
+            return VK_FORMAT_R32_SFLOAT;
+        case SHADER_ITEM_COMPONENT_VEC2:
+            return VK_FORMAT_R32G32_SFLOAT;
+        case SHADER_ITEM_COMPONENT_VEC3:
+            return VK_FORMAT_R32G32B32_SFLOAT;
+        default:
+            return VK_FORMAT_R32G32B32A32_SFLOAT;
+    }
+}
+
 
 VkShaderModule VulkanShader::create_shader_module(const std::vector<char> &code) {
 

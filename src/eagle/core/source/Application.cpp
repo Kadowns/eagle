@@ -54,8 +54,8 @@ void Application::run() {
         }
 
         m_window->begin_draw();
-        for (auto& layer : m_layerStack){
-            layer->handle_draw();
+        for (auto layer = m_layerStack.end(); layer != m_layerStack.begin();){
+            (*--layer)->handle_draw();
         }
         m_window->end_draw();
 

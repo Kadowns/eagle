@@ -41,7 +41,7 @@ set(RENDERER_INCLUDE
         renderer/vulkan/VulkanHelper.h
         renderer/vulkan/VulkanShader.h
         renderer/vulkan/VulkanBuffer.h
-        renderer/vulkan/VulkanVertexLayout.h
+        renderer/ShaderItemLayout.h
         renderer/vulkan/VulkanVertexBuffer.h
         renderer/vulkan/VulkanIndexBuffer.h
         )
@@ -54,7 +54,7 @@ set(RENDERER_SOURCE
         renderer/source/vulkan/VulkanCore.cpp
         renderer/source/vulkan/VulkanShader.cpp
         renderer/source/vulkan/VulkanBuffer.cpp
-        renderer/source/vulkan/VulkanVertexLayout.cpp
+        renderer/source/ShaderItemLayout.cpp
         renderer/source/vulkan/VulkanVertexBuffer.cpp
         renderer/source/vulkan/VulkanIndexBuffer.cpp
         )

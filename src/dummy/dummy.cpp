@@ -59,10 +59,10 @@ class ExampleOverlay : public Eagle::Layer {
 
         m_shader = Eagle::RenderingContext::create_shader("shaders/shader_vert.spv", "shaders/shader_frag.spv");
         std::vector<float> vertices = {
-                -1.0f, -1.0f, 1.0f, 0.0f, 1.0f,
-                -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-                0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-                0.0f, -1.0f, 0.0f, 1.0f, 1.0f
+                -1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+                -1.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+                1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+                1.0f, 0.0f, 0.0f, 1.0f, 1.0f
         };
         m_vertexBuffer = Eagle::RenderingContext::create_vertex_buffer(vertices, 5);
 
@@ -76,9 +76,6 @@ class ExampleOverlay : public Eagle::Layer {
         Eagle::RenderingContext::bind_shader(m_shader.lock());
         Eagle::RenderingContext::draw_indexed_vertex_buffer(m_vertexBuffer.lock(), m_indexBuffer.lock());
     }
-
-
-
 };
 
 
@@ -86,8 +83,8 @@ Eagle::ApplicationCreateInfo Eagle::create_application_info() {
     Eagle::ApplicationCreateInfo config = {};
     config.appName = "Dummy";
     config.windowType = new Eagle::WindowGLFW(new Eagle::VulkanContext(), 1280, 720);
+    //config.layers.push_back(std::make_shared<ExampleOverlay>());
     config.layers.push_back(std::make_shared<ExampleLayer>());
-    config.layers.push_back(std::make_shared<ExampleOverlay>());
     config.coreLogLevel = Eagle::Log::TRACE;
     config.clientLogLevel = Eagle::Log::INFO;
     return config;

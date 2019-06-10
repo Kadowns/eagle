@@ -35,6 +35,14 @@ Shader::Shader(const std::string &vertFileName, const std::string &fragFileName)
     m_fragShaderCode(load_shader(fragFileName)){
 }
 
+ShaderItemLayout Shader::get_shader_item(const std::string &name) {
+    auto item = m_uniformLayouts.find(name);
+    if (item == m_uniformLayouts.end()){
+        throw std::runtime_error("invalid uniform name: " + name);
+    }
+    return (*item).second;
+}
+
 _EAGLE_END
 
 
