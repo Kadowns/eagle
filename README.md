@@ -8,4 +8,4 @@ The motivation behind this is simply learning.
 - Milestones:
   - 2019/06/04 - First vulkan triangle!
   - 2019/06/08 - Vertex and Index buffers!
-
+  - 2019/06/12 - First cube! and UI overlay prototype

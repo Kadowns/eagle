@@ -22,7 +22,8 @@ enum SHADER_ITEM_COMPONENT {
 class ShaderItemLayout {
 
 public:
-    ShaderItemLayout(std::vector<SHADER_ITEM_COMPONENT> components);
+    ShaderItemLayout() = default;
+    explicit ShaderItemLayout(std::vector<SHADER_ITEM_COMPONENT> components);
     ~ShaderItemLayout() = default;
 
     size_t stride() const;

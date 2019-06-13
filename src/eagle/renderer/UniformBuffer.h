@@ -11,24 +11,17 @@
 
 _EAGLE_BEGIN
 
-enum UNIFORM_BUFFER_USAGE {
-    UNIFORM_BUFFER_USAGE_DATA   = BIT(1),
-    UNIFORM_BUFFER_USAGE_IMAGE  = BIT(2)
-};
-
 class UniformBuffer {
 
 public:
 
-    explicit UniformBuffer(UNIFORM_BUFFER_USAGE usageFlags);
+    explicit UniformBuffer(const ShaderItemLayout& layout );
     virtual ~UniformBuffer();
 
     virtual void flush(void *data, uint32_t bufferIndex) = 0;
-
-    inline UNIFORM_BUFFER_USAGE get_usage_flags() { return m_usageFlags;}
-
+    virtual size_t size() = 0;
 protected:
-    UNIFORM_BUFFER_USAGE m_usageFlags;
+    ShaderItemLayout m_layout;
 
 };
 

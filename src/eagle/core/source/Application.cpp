@@ -20,8 +20,10 @@ Application& Application::instance() {
 Application::Application(const ApplicationCreateInfo& config) :
     m_window(config.windowType){
     EAGLE_SET_INFO(EAGLE_APP_NAME, config.appName);
-    Log::init(config.coreLogLevel, config.clientLogLevel);
 
+    m_instance = this;
+
+    Log::init(config.coreLogLevel, config.clientLogLevel);
     m_layerStack.emplace(config.layers);
 }
 
@@ -90,6 +92,18 @@ bool Application::window_close_event(WindowCloseEvent& e) {
 
 void Application::layer_emplace(std::vector<std::shared_ptr<Layer>> layers) {
     m_layerStack.emplace(layers);
+}
+
+float Application::get_window_aspect() {
+    return (float)get_window_width() / get_window_height();
+}
+
+uint32_t Application::get_window_width() {
+    return m_instance->m_window->get_width();
+}
+
+uint32_t Application::get_window_height() {
+    return m_instance->m_window->get_height();
 }
 
 _EAGLE_END

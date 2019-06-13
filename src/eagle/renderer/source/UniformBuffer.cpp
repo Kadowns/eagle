@@ -6,8 +6,8 @@
 
 _EAGLE_BEGIN
 
-UniformBuffer::UniformBuffer(Eagle::UNIFORM_BUFFER_USAGE usageFlags)
-    : m_usageFlags(usageFlags) {
+UniformBuffer::UniformBuffer(const ShaderItemLayout& layout):
+    m_layout(layout){
 
 }
 

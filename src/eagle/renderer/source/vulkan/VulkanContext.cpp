@@ -66,6 +66,9 @@ void VulkanContext::deinit() {
     m_indexBuffers.clear();
 
     cleanup_swapchain();
+    m_descriptorSets.clear();
+    m_uniformBuffers.clear();
+    m_shaders.clear();
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         VK_CALL vkDestroySemaphore(m_device, m_renderFinishedSemaphores[i], nullptr);
@@ -860,6 +863,8 @@ void VulkanContext::create_sync_objects() {
 
 
 void VulkanContext::recreate_swapchain() {
+    EG_CORE_TRACE("Recreating swapchain!");
+
     VK_CALL vkDeviceWaitIdle(m_device);
 
     //Waits until window is visible
@@ -884,6 +889,17 @@ void VulkanContext::recreate_swapchain() {
         shader->set_vulkan_info(createInfo);
         shader->create_pipeline();
     }
+
+    for (auto& uniformBuffer : m_uniformBuffers){
+        uniformBuffer->create_uniform_buffer();
+    }
+
+    for (auto& descriptorSet : m_descriptorSets){
+        descriptorSet->create_descriptor_pool();
+        descriptorSet->create_descriptor_sets();
+    }
+
+    EG_CORE_TRACE("Swapchain recreated!");
 }
 
 void VulkanContext::cleanup_swapchain() {
@@ -894,6 +910,14 @@ void VulkanContext::cleanup_swapchain() {
     }
 
     VK_CALL vkFreeCommandBuffers(m_device, m_commandPool, static_cast<uint32_t>(m_commandBuffers.size()), m_commandBuffers.data());
+
+    for (auto& descriptorSet : m_descriptorSets){
+        descriptorSet->cleanup();
+    }
+
+    for (auto& uniformBuffer : m_uniformBuffers){
+        uniformBuffer->cleanup();
+    }
 
     for (auto& shader : m_shaders){
         shader->cleanup_pipeline();
@@ -945,6 +969,29 @@ VulkanContext::handle_create_index_buffer(std::vector<uint32_t> &indices) {
     return m_indexBuffers.back();
 }
 
+std::weak_ptr<UniformBuffer>
+VulkanContext::handle_create_uniform_buffer(const ShaderItemLayout &layout) {
+    VulkanUniformBufferCreateInfo createInfo = {};
+    createInfo.device = m_device;
+    createInfo.physicalDevice = m_physicalDevice;
+    createInfo.bufferCount = m_swapchainImages.size();
+    m_uniformBuffers.emplace_back(std::make_shared<VulkanUniformBuffer>(createInfo, layout));
+    return m_uniformBuffers.back();
+}
+
+std::weak_ptr<DescriptorSet>
+VulkanContext::handle_create_descriptor_set(std::shared_ptr<Shader> shader,
+                                            const std::vector<std::shared_ptr<UniformBuffer>> &uniformBuffers) {
+    VulkanDescriptorSetCreateInfo createInfo = {};
+    createInfo.device = m_device;
+    createInfo.bufferCount = m_swapchainImages.size();
+    std::vector<std::shared_ptr<VulkanUniformBuffer>> vulkanUniformBuffers(uniformBuffers.size());
+    for (size_t i = 0; i < uniformBuffers.size(); i++){
+        vulkanUniformBuffers[i] = std::static_pointer_cast<VulkanUniformBuffer>(uniformBuffers[i]);
+    }
+    m_descriptorSets.emplace_back(std::make_shared<VulkanDescriptorSet>(std::static_pointer_cast<VulkanShader>(shader), vulkanUniformBuffers, createInfo));
+    return m_descriptorSets.back();
+}
 
 void
 VulkanContext::handle_draw_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer) {
@@ -954,10 +1001,7 @@ VulkanContext::handle_draw_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuf
         return;
     }
 
-    std::shared_ptr<VulkanVertexBuffer> vulkanVertexBuffer = std::dynamic_pointer_cast<VulkanVertexBuffer>(vertexBuffer);
-    if (vulkanVertexBuffer == nullptr){
-        throw std::runtime_error("incompatible vertex buffer type!");
-    }
+    std::shared_ptr<VulkanVertexBuffer> vulkanVertexBuffer = std::static_pointer_cast<VulkanVertexBuffer>(vertexBuffer);
 
     VkBuffer buffers[] = {vulkanVertexBuffer->get_buffer().get_native_buffer()};
     VkDeviceSize offsets[] = {0};
@@ -966,17 +1010,16 @@ VulkanContext::handle_draw_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuf
     VK_CALL vkCmdDraw(m_commandBuffers[m_drawInfo.imageIndex], vulkanVertexBuffer->get_vertices_count(), 1, 0, 0);
 }
 
-void VulkanContext::handle_bind_shader(std::shared_ptr<Shader> shader) {
+void
+VulkanContext::handle_bind_shader(std::shared_ptr<Shader> shader) {
 
     if (!m_drawInitialized){
         EG_CORE_ERROR("Bind shader called outside of draw range!");
         return;
     }
 
-    std::shared_ptr<VulkanShader> vulkanShader = std::dynamic_pointer_cast<VulkanShader>(shader);
-    if (!vulkanShader){
-        throw std::runtime_error("incompatible shader type!");
-    }
+    std::shared_ptr<VulkanShader> vulkanShader = std::static_pointer_cast<VulkanShader>(shader);
+
     vulkanShader->bind_command_buffer(m_commandBuffers[m_drawInfo.imageIndex]);
     vulkanShader->bind();
 }
@@ -988,14 +1031,9 @@ VulkanContext::handle_draw_indexed_vertex_buffer(std::shared_ptr<VertexBuffer> v
         EG_CORE_ERROR("Draw indexed vertex buffer called outside of draw range!");
         return;
     }
-    std::shared_ptr<VulkanVertexBuffer> vulkanVertexBuffer = std::dynamic_pointer_cast<VulkanVertexBuffer>(vertexBuffer);
-    if (vulkanVertexBuffer == nullptr){
-        throw std::runtime_error("incompatible vertex buffer type!");
-    }
-    std::shared_ptr<VulkanIndexBuffer> vulkanIndexBuffer = std::dynamic_pointer_cast<VulkanIndexBuffer>(indexBuffer);
-    if (vulkanIndexBuffer == nullptr){
-        throw std::runtime_error("incompatible index buffer type!");
-    }
+    std::shared_ptr<VulkanVertexBuffer> vulkanVertexBuffer = std::static_pointer_cast<VulkanVertexBuffer>(vertexBuffer);
+
+    std::shared_ptr<VulkanIndexBuffer> vulkanIndexBuffer = std::static_pointer_cast<VulkanIndexBuffer>(indexBuffer);
 
     VkBuffer vertexBuffers[] = {vulkanVertexBuffer->get_buffer().get_native_buffer()};
     VkDeviceSize offsets[] = {0};
@@ -1007,6 +1045,34 @@ VulkanContext::handle_draw_indexed_vertex_buffer(std::shared_ptr<VertexBuffer> v
     VK_CALL vkCmdDrawIndexed(m_commandBuffers[m_drawInfo.imageIndex], vulkanIndexBuffer->get_indices_count(), 1, 0, 0, 0);
 
 }
+
+void
+VulkanContext::handle_bind_descriptor_set(std::shared_ptr<DescriptorSet> descriptorSet) {
+
+    if (!m_drawInitialized){
+        EG_CORE_ERROR("Draw vertex buffer called outside of draw range!");
+        return;
+    }
+
+    std::shared_ptr<VulkanDescriptorSet> vulkanDescriptorSet = std::static_pointer_cast<VulkanDescriptorSet>(descriptorSet);
+
+    VulkanDescriptorSetDrawInfo info = {};
+    info.bufferIndex = m_drawInfo.imageIndex;
+    info.commandBuffer = m_commandBuffers[m_drawInfo.imageIndex];
+    vulkanDescriptorSet->set_draw_info(info);
+    vulkanDescriptorSet->bind();
+}
+
+void VulkanContext::handle_flush_uniform_buffer_data(std::shared_ptr<UniformBuffer> uniformBuffer, void *data) {
+
+    if (!m_drawInitialized){
+        EG_CORE_ERROR("Draw vertex buffer called outside of draw range!");
+        return;
+    }
+    std::shared_ptr<VulkanUniformBuffer> vulkanUniformBuffer = std::static_pointer_cast<VulkanUniformBuffer>(uniformBuffer);
+    vulkanUniformBuffer->flush(data, m_drawInfo.imageIndex);
+}
+
 
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
                                       const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,

@@ -12,15 +12,16 @@ VulkanShader::VulkanShader(const std::string& vertFileName, const std::string& f
     Shader(vertFileName, fragFileName),
     m_cleared(true),
     m_createInfo(createInfo){
+    create_descriptor_set_layout();
     create_pipeline();
 }
 
 VulkanShader::~VulkanShader() {
+    VK_CALL vkDestroyDescriptorSetLayout(m_createInfo.device, m_descriptorSetLayout, nullptr);
     cleanup_pipeline();
 }
 
-void VulkanShader::create_pipeline() {
-    EG_CORE_TRACE("Creating shader pipeline!");
+void VulkanShader::create_descriptor_set_layout() {
 
     m_layoutBindings.emplace_back(create_descriptor_set_layout_binding(
             0,
@@ -28,8 +29,9 @@ void VulkanShader::create_pipeline() {
             1,
             VK_SHADER_STAGE_VERTEX_BIT,
             nullptr
-            ));
+    ));
     m_uniformLayouts["mvp"] = ShaderItemLayout({SHADER_ITEM_COMPONENT_MAT4});
+
 
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo = {};
     descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -39,6 +41,10 @@ void VulkanShader::create_pipeline() {
     VK_CALL_ASSERT(vkCreateDescriptorSetLayout(m_createInfo.device, &descriptorSetLayoutInfo, nullptr, &m_descriptorSetLayout)) {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
+}
+
+void VulkanShader::create_pipeline() {
+    EG_CORE_TRACE("Creating shader pipeline!");
 
     VkShaderModule vertShaderModule = create_shader_module(m_vertShaderCode);
     VkShaderModule fragShaderModule = create_shader_module(m_fragShaderCode);
@@ -57,7 +63,7 @@ void VulkanShader::create_pipeline() {
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
-    ShaderItemLayout vertexLayout({SHADER_ITEM_COMPONENT_VEC2, SHADER_ITEM_COMPONENT_VEC3});
+    ShaderItemLayout vertexLayout({SHADER_ITEM_COMPONENT_VEC3, SHADER_ITEM_COMPONENT_VEC3});
     VkVertexInputBindingDescription inputBinding = get_binding_description(vertexLayout);
     std::vector<VkVertexInputAttributeDescription> inputAttributes = get_attribute_descriptions(vertexLayout);
 
@@ -98,8 +104,8 @@ void VulkanShader::create_pipeline() {
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
     rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizer.lineWidth = 1.0f;
-    rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT;
-    rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+    rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
 
     VkPipelineMultisampleStateCreateInfo multisampling = {};
@@ -257,5 +263,12 @@ void VulkanShader::compile() {
     //TODO -- implement glslang compiler
 }
 
+const std::vector<VkDescriptorSetLayoutBinding> &VulkanShader::get_descriptor_set_layout_bindings() {
+    return m_layoutBindings;
+}
+
+VkDescriptorSetLayout const & VulkanShader::get_descriptor_set_layout() {
+    return m_descriptorSetLayout;
+}
 
 _EAGLE_END

@@ -43,6 +43,10 @@ public:
     void layer_emplace(std::vector<std::shared_ptr<Layer>> layers);
     void layer_pop(std::shared_ptr<Layer> layer);
 
+    static float get_window_aspect();
+    static uint32_t get_window_width();
+    static uint32_t get_window_height();
+
 private:
 
     bool window_close_event(WindowCloseEvent& e);

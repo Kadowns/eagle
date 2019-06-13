@@ -54,8 +54,10 @@ VulkanBuffer::copy_to(void* data, VkDeviceSize size) {
 }
 
 VkResult
-VulkanBuffer::create_buffer(VkPhysicalDevice physicalDevice, VkDevice device, VulkanBuffer &buffer, VkDeviceSize size,
+VulkanBuffer::create_buffer(VkPhysicalDevice physicalDevice, VkDevice device, std::shared_ptr<VulkanBuffer> &buffer,
+                            VkDeviceSize size,
                             const VulkanBufferCreateInfo &info, void *data) {
+    buffer = std::make_shared<VulkanBuffer>(device, info);
     VkResult result;
     VkBufferCreateInfo bufferInfo = {};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -63,12 +65,12 @@ VulkanBuffer::create_buffer(VkPhysicalDevice physicalDevice, VkDevice device, Vu
     bufferInfo.usage = info.usageFlags;
     bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if ((result = vkCreateBuffer(device, &bufferInfo, nullptr, &buffer.get_native_buffer())) != VK_SUCCESS) {
+    if ((result = vkCreateBuffer(device, &bufferInfo, nullptr, &buffer->get_native_buffer())) != VK_SUCCESS) {
         return result;
     }
 
     VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(device, buffer.get_native_buffer(), &memRequirements);
+    vkGetBufferMemoryRequirements(device, buffer->get_native_buffer(), &memRequirements);
 
     VkMemoryAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -78,19 +80,19 @@ VulkanBuffer::create_buffer(VkPhysicalDevice physicalDevice, VkDevice device, Vu
             );
 
     //TODO --- implementar solução top de alocação de memória (ver vulkan tutorial)
-    if ((result = vkAllocateMemory(device, &allocInfo, nullptr, &buffer.get_memory())) != VK_SUCCESS) {
+    if ((result = vkAllocateMemory(device, &allocInfo, nullptr, &buffer->get_memory())) != VK_SUCCESS) {
         return result;
     }
 
     if (data != nullptr) {
-        if ((result = buffer.map()) != VK_SUCCESS) {
+        if ((result = buffer->map()) != VK_SUCCESS) {
             return result;
         }
-        memcpy(buffer.get_data(), data, size);
-        buffer.unmap();
+        memcpy(buffer->get_data(), data, size);
+        buffer->unmap();
     }
 
-    return buffer.bind();
+    return buffer->bind();
 
 }
 

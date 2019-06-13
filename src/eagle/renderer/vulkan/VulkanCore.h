@@ -43,4 +43,5 @@ _EAGLE_END
 
 #define VK_CALL_ASSERT(result) VK_CALL if (result != VK_SUCCESS)
 
+
 #endif //EAGLE_VULKANCORE_H
