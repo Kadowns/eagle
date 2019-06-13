@@ -18,6 +18,8 @@
 #include "VulkanShader.h"
 #include "VulkanVertexBuffer.h"
 #include "VulkanIndexBuffer.h"
+#include "VulkanUniformBuffer.h"
+#include "VulkanDescriptorSet.h"
 
 _EAGLE_BEGIN
 
@@ -127,8 +129,6 @@ protected:
 
     VkExtent2D choose_swap_extent(const VkSurfaceCapabilitiesKHR& capabilities);
 
-    void record_command_buffer(uint32_t index);
-
     void handle_event(Event& e);
 
     bool window_resized(WindowResizedEvent& e);
@@ -140,6 +140,16 @@ protected:
     virtual std::weak_ptr<VertexBuffer>
     handle_create_vertex_buffer(std::vector<float> &vertices, size_t stride) override;
 
+    virtual std::weak_ptr<IndexBuffer>
+    handle_create_index_buffer(std::vector<uint32_t> &indices) override;
+
+    virtual std::weak_ptr<UniformBuffer>
+    handle_create_uniform_buffer(const ShaderItemLayout& layout) override;
+
+    virtual std::weak_ptr<DescriptorSet>
+    handle_create_descriptor_set(std::shared_ptr<Shader> shader,
+                                 const std::vector<std::shared_ptr<UniformBuffer>> &uniformBuffers) override;
+
     virtual void
     handle_bind_shader(std::shared_ptr<Shader> shader) override;
 
@@ -149,9 +159,13 @@ protected:
     virtual void
     handle_draw_indexed_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer, std::shared_ptr<IndexBuffer> indexBuffer) override;
 
-    virtual std::weak_ptr<IndexBuffer>
-    handle_create_index_buffer(std::vector<uint32_t> &indices) override;
+    virtual void
+    handle_flush_uniform_buffer_data(std::shared_ptr<UniformBuffer> uniformBuffer, void* data) override;
 
+    virtual void
+    handle_bind_descriptor_set(std::shared_ptr<DescriptorSet> descriptorSet) override;
+
+protected:
 
     Window* m_window;
 
@@ -180,6 +194,8 @@ protected:
 
     std::vector<std::shared_ptr<VulkanVertexBuffer>> m_vertexBuffers;
     std::vector<std::shared_ptr<VulkanIndexBuffer>> m_indexBuffers;
+    std::vector<std::shared_ptr<VulkanUniformBuffer>> m_uniformBuffers;
+    std::vector<std::shared_ptr<VulkanDescriptorSet>> m_descriptorSets;
     std::vector<std::shared_ptr<VulkanShader>> m_shaders;
 
     uint32_t m_currentFrame = 0;

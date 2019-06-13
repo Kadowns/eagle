@@ -36,27 +36,35 @@ set(RENDERER_INCLUDE
         renderer/Shader.h
         renderer/VertexBuffer.h
         renderer/IndexBuffer.h
+        renderer/UniformBuffer.h
+        renderer/ShaderItemLayout.h
+        renderer/DescriptorSet.h
         renderer/vulkan/VulkanContext.h
         renderer/vulkan/VulkanCore.h
         renderer/vulkan/VulkanHelper.h
         renderer/vulkan/VulkanShader.h
         renderer/vulkan/VulkanBuffer.h
-        renderer/ShaderItemLayout.h
         renderer/vulkan/VulkanVertexBuffer.h
         renderer/vulkan/VulkanIndexBuffer.h
+        renderer/vulkan/VulkanUniformBuffer.h
+        renderer/vulkan/VulkanDescriptorSet.h
         )
 
 set(RENDERER_SOURCE
         renderer/source/RenderingContext.cpp
         renderer/source/Shader.cpp
+        renderer/source/ShaderItemLayout.cpp
+        renderer/source/UniformBuffer.cpp
+        renderer/source/DescriptorSet.cpp
         renderer/source/vulkan/VulkanContext.cpp
         renderer/source/vulkan/VulkanHelper.cpp
         renderer/source/vulkan/VulkanCore.cpp
         renderer/source/vulkan/VulkanShader.cpp
         renderer/source/vulkan/VulkanBuffer.cpp
-        renderer/source/ShaderItemLayout.cpp
         renderer/source/vulkan/VulkanVertexBuffer.cpp
         renderer/source/vulkan/VulkanIndexBuffer.cpp
+        renderer/source/vulkan/VulkanUniformBuffer.cpp
+        renderer/source/vulkan/VulkanDescriptorSet.cpp
         )
 
 set(RENDERER_ALL ${RENDERER_INCLUDE} ${RENDERER_SOURCE})

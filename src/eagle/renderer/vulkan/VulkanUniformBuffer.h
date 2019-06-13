@@ -13,8 +13,6 @@ _EAGLE_BEGIN
 struct VulkanUniformBufferCreateInfo{
     VkDevice device;
     VkPhysicalDevice physicalDevice;
-    ShaderItemLayout layout;
-    VkDescriptorSetLayoutBinding layoutBindings;
     size_t bufferCount;
 };
 
@@ -22,16 +20,20 @@ class VulkanUniformBuffer : public UniformBuffer {
 
 public:
 
-    explicit VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createInfo,
-                                 UNIFORM_BUFFER_USAGE usageFlags);
+    explicit VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createInfo, const ShaderItemLayout& layout);
     virtual ~VulkanUniformBuffer();
 
     virtual void flush(void *data, uint32_t bufferIndex) override;
-    virtual void bind() override;
+    virtual size_t size() override;
+    inline std::vector<std::shared_ptr<VulkanBuffer>>& get_buffers() { return m_buffers; }
+    void create_uniform_buffer();
+    void cleanup();
+
 private:
 
-    std::vector<VulkanBuffer> m_buffers;
+    std::vector<std::shared_ptr<VulkanBuffer>> m_buffers;
     VulkanUniformBufferCreateInfo m_info;
+    bool m_cleared = true;
 };
 
 _EAGLE_END

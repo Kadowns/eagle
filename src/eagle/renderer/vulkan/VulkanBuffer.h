@@ -5,6 +5,8 @@
 #ifndef EAGLE_VULKANBUFFER_H
 #define EAGLE_VULKANBUFFER_H
 
+#include <memory>
+
 #include "VulkanCore.h"
 
 _EAGLE_BEGIN
@@ -19,7 +21,7 @@ class VulkanBuffer {
 
 public:
 
-    //VulkanBuffer() = default;
+    VulkanBuffer() = default;
     VulkanBuffer(VkDevice device, const VulkanBufferCreateInfo& createInfo);
     ~VulkanBuffer();
 
@@ -35,7 +37,8 @@ public:
 
 
     static VkResult
-    create_buffer(VkPhysicalDevice physicalDevice, VkDevice device, VulkanBuffer &buffer, VkDeviceSize size,
+    create_buffer(VkPhysicalDevice physicalDevice, VkDevice device, std::shared_ptr<VulkanBuffer> &buffer,
+                  VkDeviceSize size,
                   const VulkanBufferCreateInfo &info, void *data = nullptr);
 
     static void

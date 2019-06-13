@@ -17,27 +17,25 @@ VulkanVertexBuffer::VulkanVertexBuffer(VkDevice device, VulkanVertexBufferCreate
     createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
     createBufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
-    VulkanBuffer stagingBuffer(m_device, createBufferInfo);
+    std::shared_ptr<VulkanBuffer> stagingBuffer;
     VK_CALL VulkanBuffer::create_buffer(createInfo.physicalDevice, m_device, stagingBuffer, bufferSize, createBufferInfo, m_vertices.data());
 
 
     createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
     createBufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 
-
-    m_buffer = std::make_shared<VulkanBuffer>(device, createBufferInfo);
-    VK_CALL VulkanBuffer::create_buffer(createInfo.physicalDevice, m_device, *m_buffer, bufferSize, createBufferInfo);
+    VK_CALL VulkanBuffer::create_buffer(createInfo.physicalDevice, m_device, m_buffer, bufferSize, createBufferInfo);
 
     VK_CALL VulkanBuffer::copy_buffer(
             device,
             createInfo.commandPool,
             createInfo.graphicsQueue,
-            stagingBuffer.get_native_buffer(),
+            stagingBuffer->get_native_buffer(),
             m_buffer->get_native_buffer(),
             bufferSize,
             0);
 
-    stagingBuffer.destroy();
+    stagingBuffer->destroy();
 }
 
 VulkanVertexBuffer::~VulkanVertexBuffer() {

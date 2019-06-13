@@ -9,6 +9,8 @@
 #include "Shader.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include "UniformBuffer.h"
+#include "DescriptorSet.h"
 
 _EAGLE_BEGIN
 
@@ -29,8 +31,14 @@ public:
     static std::weak_ptr<Shader> create_shader(const std::string &vertFilePath, const std::string &fragFilePath);
     static std::weak_ptr<VertexBuffer> create_vertex_buffer(std::vector<float> &vertices, size_t stride);
     static std::weak_ptr<IndexBuffer> create_index_buffer(std::vector<uint32_t>& indices);
+    static std::weak_ptr<UniformBuffer> create_uniform_buffer(const ShaderItemLayout& layout);
+    static std::weak_ptr<DescriptorSet> create_descriptor_set(
+                                            std::shared_ptr<Shader> shader,
+                                            const std::vector<std::shared_ptr<UniformBuffer>> &uniformBuffers);
     static void bind_shader(std::shared_ptr<Shader> shader);
+    static void bind_descriptor_set(std::shared_ptr<DescriptorSet> descriptorSet);
     static void draw_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer);
+    static void flush_uniform_buffer_data(std::shared_ptr<UniformBuffer> uniformBuffer, void* data);
     static void draw_indexed_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer, std::shared_ptr<IndexBuffer> indexBuffer);
 
 protected:
@@ -46,6 +54,13 @@ protected:
     virtual std::weak_ptr<IndexBuffer>
     handle_create_index_buffer(std::vector<uint32_t> &indices) = 0;
 
+    virtual std::weak_ptr<UniformBuffer>
+    handle_create_uniform_buffer(const ShaderItemLayout& layout) = 0;
+
+    virtual std::weak_ptr<DescriptorSet>
+    handle_create_descriptor_set(std::shared_ptr<Shader> shader,
+                                 const std::vector<std::shared_ptr<UniformBuffer>> &uniformBuffers) = 0;
+
     virtual void
     handle_bind_shader(std::shared_ptr<Shader> shader) = 0;
 
@@ -54,6 +69,12 @@ protected:
 
     virtual void
     handle_draw_indexed_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer, std::shared_ptr<IndexBuffer> indexBuffer) = 0;
+
+    virtual void
+    handle_flush_uniform_buffer_data(std::shared_ptr<UniformBuffer> uniformBuffer, void* data) = 0;
+
+    virtual void
+    handle_bind_descriptor_set(std::shared_ptr<DescriptorSet> descriptorSet) = 0;
 
 };
 

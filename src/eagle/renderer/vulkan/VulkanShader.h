@@ -38,7 +38,13 @@ public:
 
     VkPipelineLayout &get_layout();
 
+    const std::vector<VkDescriptorSetLayoutBinding>& get_descriptor_set_layout_bindings();
+
+    VkDescriptorSetLayout const & get_descriptor_set_layout();
+
 private:
+
+    void create_descriptor_set_layout();
 
     VkShaderModule create_shader_module(const std::vector<char> &code);
 
