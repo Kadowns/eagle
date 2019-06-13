@@ -30,8 +30,7 @@ void VulkanShader::create_descriptor_set_layout() {
             VK_SHADER_STAGE_VERTEX_BIT,
             nullptr
     ));
-    m_uniformLayouts["mvp"] = ShaderItemLayout({SHADER_ITEM_COMPONENT_MAT4});
-
+    m_uniformLayouts.insert(std::map< std::string, ShaderItemLayout>::value_type ( "mvp", ShaderItemLayout({SHADER_ITEM_COMPONENT_MAT4}) ));
 
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo = {};
     descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
