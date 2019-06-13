@@ -17,6 +17,7 @@ public:
     std::weak_ptr<Eagle::UniformBuffer> m_uniformBuffer;
     std::weak_ptr<Eagle::DescriptorSet> m_descriptorSet;
 
+
     glm::mat4 view, proj, model;
 
     glm::quat rotation;

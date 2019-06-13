@@ -16,6 +16,7 @@ private:
     std::weak_ptr<Eagle::UniformBuffer> m_uniformBuffer;
     std::weak_ptr<Eagle::DescriptorSet> m_descriptorSet;
 
+
     glm::mat4 proj, model;
 
 public:
@@ -37,7 +38,10 @@ public:
 
         m_uniformBuffer = Eagle::RenderingContext::create_uniform_buffer(m_shader.lock()->get_shader_item("mvp"));
 
+
+
         m_descriptorSet = Eagle::RenderingContext::create_descriptor_set(m_shader.lock(), {m_uniformBuffer.lock()});
+
 
         //view = glm::lookAt(glm::vec3(0.0f, 3.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         proj = glm::ortho(0.0f, (float)Eagle::Application::get_window_width(), 0.0f, (float)Eagle::Application::get_window_height());
