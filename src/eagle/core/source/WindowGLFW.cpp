@@ -37,7 +37,7 @@ void WindowGLFW::init() {
 
     glfwMakeContextCurrent(m_window);
 
-    m_context->init(this);
+    m_windowData.context->init(this);
 
     EG_CORE_TRACE("Setting up GLFW callbacks!");
 
@@ -48,41 +48,50 @@ void WindowGLFW::init() {
         auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
         data.width = width;
         data.height = height;
-        data.eventQueue.emplace(std::make_unique<WindowResizedEvent>(width, height));
+        data.eventCallback(std::make_shared<WindowResizedEvent>(width, height));
+        data.context->handle_window_resized(width, height);
     });
 
     //window focus
     glfwSetWindowFocusCallback(m_window, [](GLFWwindow* window, int focused){
         auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
         if (focused == GLFW_TRUE){
-            data.eventQueue.emplace(std::make_unique<WindowFocusEvent>());
+            data.eventCallback(std::make_shared<WindowFocusEvent>());
         } else{
-            data.eventQueue.emplace(std::make_unique<WindowLostFocusEvent>());
+            data.eventCallback(std::make_shared<WindowLostFocusEvent>());
         }
     });
 
     //window close
     glfwSetWindowCloseCallback(m_window, [](GLFWwindow* window){
         auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
-        data.eventQueue.emplace(std::make_unique<WindowCloseEvent>());
+        data.eventCallback(std::make_shared<WindowCloseEvent>());
     });
 
     //mouse move
     glfwSetCursorPosCallback(m_window, [](GLFWwindow* window, double x, double y){
         auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
-        data.eventQueue.emplace(std::make_unique<MouseMoveEvent>((float)x, (float)y));
+        data.mouseX = static_cast<uint32_t>(x);
+        data.mouseY = static_cast<uint32_t>(y);
+        data.eventCallback(std::make_shared<MouseMoveEvent>(x, y));
+    });
+
+    //mouse click
+    glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int x, int y, int key){
+        auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
+        data.eventCallback(std::make_shared<MouseClickEvent>(data.mouseX, data.mouseY, key));
     });
 
     EG_CORE_TRACE("Window initialized!");
 }
 
 void WindowGLFW::deinit() {
-    m_context->deinit();
+    m_windowData.context->deinit();
     glfwTerminate();
 }
 
 void WindowGLFW::refresh() {
-    m_context->refresh();
+    m_windowData.context->refresh();
 }
 
 void* WindowGLFW::get_native_window() {
@@ -91,29 +100,6 @@ void* WindowGLFW::get_native_window() {
 
 void WindowGLFW::handle_events() {
     glfwPollEvents();
-    while (!m_windowData.eventQueue.empty()) {
-        auto& e = m_windowData.eventQueue.front();
-        for (const auto& it : m_eventListeners){
-            it.second(*e);
-        }
-        m_windowData.eventQueue.pop();
-    }
-}
-
-size_t WindowGLFW::add_event_listener(PFN_EventCallback callback) {
-    EG_CORE_TRACE("Added event listener!");
-    m_eventListeners.emplace_back(std::make_pair(++m_listenerIdentifier, callback));
-    return m_listenerIdentifier;
-}
-
-void WindowGLFW::remove_event_listener(size_t identifier) {
-    EG_CORE_TRACE("Removed event listener!");
-    auto listener = std::find_if(m_eventListeners.begin(), m_eventListeners.end(),[identifier](Listener listener){
-        return listener.first == identifier;
-    });
-    if (listener != m_eventListeners.end()){
-        m_eventListeners.erase(listener);
-    }
 }
 
 bool WindowGLFW::is_minimized() {
@@ -125,11 +111,15 @@ void WindowGLFW::wait_native_events() {
 }
 
 void WindowGLFW::begin_draw() {
-    m_context->begin_draw();
+    m_windowData.context->begin_draw();
 }
 
 void WindowGLFW::end_draw() {
-    m_context->end_draw();
+    m_windowData.context->end_draw();
+}
+
+void WindowGLFW::set_event_callback(Window::PFN_EventCallback callback) {
+    m_windowData.eventCallback = callback;
 }
 
 

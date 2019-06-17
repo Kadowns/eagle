@@ -6,6 +6,7 @@
 #define EAGLE_OVERLAYTEST_H
 
 #include <eagle/Eagle.h>
+#include "DummyEvents.h"
 
 class OverlayTest : public Eagle::Layer {
 private:
@@ -21,7 +22,7 @@ private:
 
 public:
     virtual void handle_attach() override {
-        m_shader = Eagle::RenderingContext::create_shader("shaders/shader_vert.spv", "shaders/shader_frag.spv");
+        m_shader = Eagle::RenderingContext::create_shader("shaders/shader.vert", "shaders/shader.frag");
 
         std::vector<float> vertices = {
                 0.0f, 0.0f, 0.0f, 1.0f, 0.8f, 0.8, // 0
@@ -68,6 +69,28 @@ public:
 
     virtual void handle_event(Eagle::Event &e) override {
 
+        Eagle::EventDispatcher dispatcher(e);
+        dispatcher.dispatch<Eagle::MouseClickEvent>(BIND_EVENT_FN(OverlayTest::handle_mouse_click));
+    }
+
+    bool handle_mouse_click(Eagle::MouseClickEvent& e){
+
+        if (intersects(
+                glm::vec2(e.get_x(), e.get_y()),
+                glm::vec2(0, Eagle::Application::get_window_height() - 128),
+                glm::vec2(Eagle::Application::get_window_width(), Eagle::Application::get_window_height()))){
+            EG_INFO_F("Mouse clicked success! {0} , {1}", e.get_x(), e.get_y());
+
+            Eagle::Application::instance().event_emplace_back(std::make_shared<ButtonClickedEvent>());
+            return true;
+        }
+        EG_INFO_F("Mouse clicked failed! {0} , {1}", e.get_x(), e.get_y());
+        return false;
+    }
+
+
+    bool intersects(glm::vec2 point, glm::vec2 min, glm::vec2 max){
+        return point.x > min.x && point.x < max.x && point.y > min.y && point.y < max.y;
     }
 
 };

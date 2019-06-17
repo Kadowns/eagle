@@ -16,7 +16,7 @@ _EAGLE_BEGIN
 class Shader {
 
 public:
-    Shader(const std::string& vertFileName, const std::string& fragFileName);
+    Shader();
     virtual ~Shader() = default;
 
     virtual void bind() = 0;
@@ -27,9 +27,6 @@ public:
 
 protected:
 
-    static std::vector<char> load_shader(const std::string& fileName);
-
-    std::vector<char> m_vertShaderCode, m_fragShaderCode;
     std::map<std::string, ShaderItemLayout> m_uniformLayouts;
 
 };

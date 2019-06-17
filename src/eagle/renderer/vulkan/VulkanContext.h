@@ -70,6 +70,7 @@ public:
     virtual void end_draw() override;
     virtual void refresh() override;
     virtual void deinit() override;
+    virtual void handle_window_resized(int width, int height) override;
     //------
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(

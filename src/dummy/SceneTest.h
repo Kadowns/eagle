@@ -6,6 +6,7 @@
 #define EAGLE_SCENETEST_H
 
 #include <eagle/Eagle.h>
+#include "DummyEvents.h"
 
 class SceneTest : public Eagle::Layer {
 
@@ -17,13 +18,13 @@ public:
     std::weak_ptr<Eagle::UniformBuffer> m_uniformBuffer;
     std::weak_ptr<Eagle::DescriptorSet> m_descriptorSet;
 
+    float rotationDirection = 1;
 
     glm::mat4 view, proj, model;
 
     glm::quat rotation;
 
     virtual void handle_attach() override {
-        EG_TRACE("Example layer attached!");
 
         rotation = glm::quat(glm::vec3(0));
 
@@ -86,7 +87,7 @@ public:
         auto currentTime = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-        rotation = glm::quat(glm::radians(glm::vec3(25.0f, 15.0f, 7.5f) * time));
+        rotation = glm::quat(glm::radians(glm::vec3(25.0f, 15.0f, 7.5f) * time * rotationDirection));
         glm::normalize(rotation);
 
         model = glm::mat4(1) * glm::mat4_cast(rotation);
@@ -103,13 +104,23 @@ public:
     }
 
     virtual void handle_deattach() override{
-        EG_TRACE("Example layer deattached!");
+
     }
 
     virtual void handle_event(Eagle::Event& e) override {
         EG_TRACE("Example layer event received!");
         Eagle::EventDispatcher dispatcher(e);
-        dispatcher.dispatch<Eagle::WindowResizedEvent>(BIND_EVENT_FN(SceneTest::handle_window_resized));
+        if (dispatcher.dispatch<Eagle::WindowResizedEvent>(BIND_EVENT_FN(SceneTest::handle_window_resized))){
+            return;
+        }
+        if (dispatcher.dispatch<ButtonClickedEvent>(BIND_EVENT_FN(SceneTest::handle_button_click))){
+            return;
+        }
+    }
+
+    bool handle_button_click(ButtonClickedEvent& e){
+        rotationDirection *= -1;
+        return true;
     }
 
     bool handle_window_resized(Eagle::WindowResizedEvent& e){

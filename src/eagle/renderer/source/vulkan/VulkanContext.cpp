@@ -27,7 +27,6 @@ void VulkanContext::init(Window* window) {
     EG_CORE_TRACE("Initializing vulkan context!");
 
     m_window = window;
-    m_eventListenerIdentifier = m_window->add_event_listener(BIND_EVENT_FN(VulkanContext::handle_event));
 
     create_instance();
     create_debug_callback();
@@ -43,17 +42,6 @@ void VulkanContext::init(Window* window) {
     create_sync_objects();
 
     EG_CORE_TRACE("Vulkan ready!");
-}
-
-void VulkanContext::handle_event(Event &e) {
-    EventDispatcher dispatcher(e);
-    dispatcher.dispatch<WindowResizedEvent>(BIND_EVENT_FN(VulkanContext::window_resized));
-}
-
-bool VulkanContext::window_resized(WindowResizedEvent& e) {
-    EG_CORE_TRACE("Vulkan received event of type WINDOW_RESIZED!");
-    m_windowResized = true;
-    return false;
 }
 
 void VulkanContext::deinit() {
@@ -87,8 +75,6 @@ void VulkanContext::deinit() {
     }
 
     VK_CALL vkDestroyInstance(m_instance, nullptr);
-
-    m_window->remove_event_listener(m_eventListenerIdentifier);
 
     EG_CORE_TRACE("Vulkan terminated!");
 }
@@ -1071,6 +1057,11 @@ void VulkanContext::handle_flush_uniform_buffer_data(std::shared_ptr<UniformBuff
     }
     std::shared_ptr<VulkanUniformBuffer> vulkanUniformBuffer = std::static_pointer_cast<VulkanUniformBuffer>(uniformBuffer);
     vulkanUniformBuffer->flush(data, m_drawInfo.imageIndex);
+}
+
+void VulkanContext::handle_window_resized(int width, int height) {
+    EG_CORE_TRACE("Vulkan received event of type WINDOW_RESIZED!");
+    m_windowResized = true;
 }
 
 

@@ -27,6 +27,7 @@ public:
     virtual void end_draw() = 0;
     virtual void refresh() = 0;
     virtual void deinit() = 0;
+    virtual void handle_window_resized(int width, int height) = 0;
 
     static std::weak_ptr<Shader> create_shader(const std::string &vertFilePath, const std::string &fragFilePath);
     static std::weak_ptr<VertexBuffer> create_vertex_buffer(std::vector<float> &vertices, size_t stride);

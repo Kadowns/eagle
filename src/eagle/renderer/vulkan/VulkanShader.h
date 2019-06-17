@@ -46,7 +46,7 @@ private:
 
     void create_descriptor_set_layout();
 
-    VkShaderModule create_shader_module(const std::vector<char> &code);
+    VkShaderModule create_shader_module(const std::vector<uint32_t> &code);
 
     VkDescriptorSetLayoutBinding create_descriptor_set_layout_binding(uint32_t binding,
                                                                       VkDescriptorType type,
@@ -59,14 +59,15 @@ private:
     VkVertexInputBindingDescription get_binding_description(const ShaderItemLayout& layout);
     std::vector<VkVertexInputAttributeDescription> get_attribute_descriptions(const ShaderItemLayout& layout);
 
+private:
+
     VulkanShaderCreateInfo m_createInfo;
-
-    VkCommandBuffer m_cmd;
-
+    VkCommandBuffer m_commandBuffer;
     VkPipelineLayout m_pipelineLayout;
     VkPipeline m_graphicsPipeline;
     VkDescriptorSetLayout m_descriptorSetLayout;
     std::vector<VkDescriptorSetLayoutBinding> m_layoutBindings;
+    std::vector<uint32_t> m_vertShaderCode, m_fragShaderCode;
 
     bool m_cleared;
 

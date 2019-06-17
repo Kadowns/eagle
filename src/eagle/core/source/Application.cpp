@@ -27,29 +27,42 @@ Application::Application(const ApplicationCreateInfo& config) :
     m_layerStack.emplace(config.layers);
 }
 
-void Application::handle_event(Event& e){
+void Application::handle_event(std::shared_ptr<Event> e){
 
-    EventDispatcher dispatcher(e);
-    dispatcher.dispatch<WindowCloseEvent>(BIND_EVENT_FN(Application::window_close_event));
+    EventDispatcher dispatcher(*e);
+    if (dispatcher.dispatch<WindowCloseEvent>(BIND_EVENT_FN(Application::window_close_event))){
+        return;
+    }
+    m_eventQueue.emplace(e);
 
-    for (auto& layer : m_layerStack){
-        layer->handle_event(e);
-        if (e.is_handled())
-            break;
+}
+
+void Application::dispatch_events() {
+    while (!m_eventQueue.empty()){
+        auto& e = m_eventQueue.front();
+        for (auto& layer : m_layerStack){
+            layer->handle_event(*e);
+            if ((*e).is_handled())
+                break;
+        }
+        m_eventQueue.pop();
     }
 }
+
 
 void Application::run() {
 
     EG_CORE_TRACE_F("Initializing {0}", EAGLE_GET_INFO(EAGLE_APP_NAME));
 
     m_window->init();
-    size_t identifier = m_window->add_event_listener(BIND_EVENT_FN(Application::handle_event));
+    m_window->set_event_callback(BIND_EVENT_FN(Application::handle_event));
 
     m_layerStack.init();
 
     while(!m_shouldClose){
         m_window->handle_events();
+
+        dispatch_events();
 
         for (auto& layer : m_layerStack){
             layer->handle_update();
@@ -65,8 +78,6 @@ void Application::run() {
     }
 
     m_layerStack.deinit();
-
-    m_window->remove_event_listener(identifier);
 
     m_window->deinit();
     EG_CORE_TRACE("Application terminated!");
@@ -104,6 +115,10 @@ uint32_t Application::get_window_width() {
 
 uint32_t Application::get_window_height() {
     return m_instance->m_window->get_height();
+}
+
+void Application::event_emplace_back(std::shared_ptr<Event> e) {
+    m_eventQueue.emplace(e);
 }
 
 _EAGLE_END

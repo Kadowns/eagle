@@ -16,7 +16,8 @@ enum class EVENT_TYPE {
     NONE = 0,
     WINDOW_CLOSE, WINDOW_RESIZE, WINDOW_FOCUS, WINDOW_LOST_FOCUS, WINDOW_MOVED,
     KEY_PRESSED, KEY_RELEASED, KEY_TYPED,
-    MOUSE_BUTTON_PRESSED, MOUSE_BUTTON_RELEASED, MOUSE_MOVE, MOUSE_SCROLLED
+    MOUSE_BUTTON_PRESSED, MOUSE_BUTTON_RELEASED, MOUSE_MOVE, MOUSE_SCROLLED,
+    CUSTOM
 };
 
 enum EVENT_CATEGORY {
@@ -25,11 +26,12 @@ enum EVENT_CATEGORY {
     EVENT_CATEGORY_INPUT        = BIT(1),
     EVENT_CATEGORY_KEYBOARD     = BIT(2),
     EVENT_CATEGORY_MOUSE        = BIT(3),
-    EVENT_CATEGORY_MOUSE_BUTTON = BIT(4)
+    EVENT_CATEGORY_MOUSE_BUTTON = BIT(4),
+    EVENT_CATEGORY_CUSTOM       = BIT(5)
 };
 
-#define EVENT_CLASS_TYPE(type)  static EVENT_TYPE get_static_type() { return EVENT_TYPE::type; }\
-                                virtual EVENT_TYPE get_event_type() const override { return get_static_type(); }
+#define EVENT_CLASS_TYPE(type)  static Eagle::EVENT_TYPE get_static_type() { return type; }\
+                                virtual Eagle::EVENT_TYPE get_event_type() const override { return get_static_type(); }
 
 #define EVENT_CLASS_CATEGORY(category) virtual int get_category_flags() const override { return category; }
 

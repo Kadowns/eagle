@@ -1,5 +1,5 @@
-
 #include "eagle/renderer/vulkan/VulkanShader.h"
+#include "eagle/renderer/vulkan/VulkanShaderCompiler.h"
 #include "eagle/renderer/ShaderItemLayout.h"
 #include "eagle/core/Log.h"
 
@@ -9,9 +9,14 @@
 _EAGLE_BEGIN
 
 VulkanShader::VulkanShader(const std::string& vertFileName, const std::string& fragFileName, const VulkanShaderCreateInfo& createInfo) :
-    Shader(vertFileName, fragFileName),
     m_cleared(true),
     m_createInfo(createInfo){
+
+    m_vertShaderCode = VulkanShaderCompiler::compile_glsl(PROJECT_ROOT + vertFileName);
+    m_fragShaderCode = VulkanShaderCompiler::compile_glsl(PROJECT_ROOT + fragFileName);
+    EG_CORE_DEBUG_F("Shader code size {0}", m_vertShaderCode.size());
+    EG_CORE_DEBUG_F("Shader code size {0}", m_fragShaderCode.size());
+
     create_descriptor_set_layout();
     create_pipeline();
 }
@@ -225,14 +230,14 @@ VkFormat VulkanShader::component_format(const SHADER_ITEM_COMPONENT &component) 
 }
 
 
-VkShaderModule VulkanShader::create_shader_module(const std::vector<char> &code) {
+VkShaderModule VulkanShader::create_shader_module(const std::vector<uint32_t> &code) {
 
     EG_CORE_TRACE("Creating shader module!");
 
     VkShaderModuleCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.codeSize = code.size();
-    createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+    createInfo.pCode = code.data();
 
     VkShaderModule shaderModule;
     VK_CALL_ASSERT(vkCreateShaderModule(m_createInfo.device, &createInfo, nullptr, &shaderModule)) {
@@ -251,11 +256,11 @@ VkPipelineLayout& VulkanShader::get_layout() {
 }
 
 void VulkanShader::bind() {
-    VK_CALL vkCmdBindPipeline(m_cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
+    VK_CALL vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
 }
 
 void VulkanShader::bind_command_buffer(VkCommandBuffer cmd) {
-    m_cmd = cmd;
+    m_commandBuffer = cmd;
 }
 
 void VulkanShader::compile() {

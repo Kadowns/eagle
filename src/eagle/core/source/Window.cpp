@@ -10,7 +10,7 @@
 _EAGLE_BEGIN
 
 Window::Window(RenderingContext* renderingContext, uint32_t width, uint32_t height) :
-    m_context(renderingContext), m_windowData(width, height){
+    m_windowData(width, height, renderingContext) {
 
 }
 

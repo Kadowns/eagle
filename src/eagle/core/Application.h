@@ -6,6 +6,7 @@
 #define EAGLE_APPLICATION_H
 
 #include <memory>
+#include <queue>
 
 #include "Core.h"
 #include "LayerStack.h"
@@ -37,7 +38,9 @@ public:
      ~Application() = default;
 
     void run();
-    void handle_event(Event& e);
+    void handle_event(std::shared_ptr<Event> e);
+    void dispatch_events();
+    void event_emplace_back(std::shared_ptr<Event> e);
     void layer_emplace_back(std::shared_ptr<Layer> layer);
     void layer_emplace_front(std::shared_ptr<Layer> layer);
     void layer_emplace(std::vector<std::shared_ptr<Layer>> layers);
@@ -49,6 +52,8 @@ public:
 
 private:
 
+    using EventQueue = std::queue<std::shared_ptr<Event>>;
+
     bool window_close_event(WindowCloseEvent& e);
 
     static Application* m_instance;
@@ -58,6 +63,7 @@ private:
     bool m_shouldClose = false;
 
     LayerStack m_layerStack;
+    EventQueue m_eventQueue;
 
 };
 

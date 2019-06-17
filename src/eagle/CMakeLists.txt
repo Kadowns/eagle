@@ -4,6 +4,7 @@ find_package(GLFW REQUIRED)
 find_package(SPDLOG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(GLM REQUIRED)
+find_package(GLSLANG REQUIRED)
 
 
 set(CORE_INCLUDE
@@ -43,6 +44,7 @@ set(RENDERER_INCLUDE
         renderer/vulkan/VulkanCore.h
         renderer/vulkan/VulkanHelper.h
         renderer/vulkan/VulkanShader.h
+        renderer/vulkan/VulkanShaderCompiler.h
         renderer/vulkan/VulkanBuffer.h
         renderer/vulkan/VulkanVertexBuffer.h
         renderer/vulkan/VulkanIndexBuffer.h
@@ -60,6 +62,7 @@ set(RENDERER_SOURCE
         renderer/source/vulkan/VulkanHelper.cpp
         renderer/source/vulkan/VulkanCore.cpp
         renderer/source/vulkan/VulkanShader.cpp
+        renderer/source/vulkan/VulkanShaderCompiler.cpp
         renderer/source/vulkan/VulkanBuffer.cpp
         renderer/source/vulkan/VulkanVertexBuffer.cpp
         renderer/source/vulkan/VulkanIndexBuffer.cpp
@@ -75,4 +78,4 @@ create_module(eagle_s STATIC "${EAGLE_ALL}")
 
 define_file_basename_for_sources(eagle_s)
 
-target_link_libraries(eagle_s GLFW spdlog Vulkan::Vulkan glm)
+target_link_libraries(eagle_s GLFW spdlog Vulkan::Vulkan glm glslang SPIRV OSDependent OGLCompiler)

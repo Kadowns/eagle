@@ -25,14 +25,12 @@ public:
     virtual void refresh() override;
 
     virtual void handle_events() override;
+    virtual void set_event_callback(PFN_EventCallback callback) override;
 
     virtual void* get_native_window() override;
 
     virtual bool is_minimized() override;
     virtual void wait_native_events() override;
-
-    virtual size_t add_event_listener(PFN_EventCallback callback) override;
-    virtual void remove_event_listener(size_t identifier) override;
 
 private:
 
