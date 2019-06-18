@@ -236,7 +236,7 @@ VkShaderModule VulkanShader::create_shader_module(const std::vector<uint32_t> &c
 
     VkShaderModuleCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    createInfo.codeSize = code.size();
+    createInfo.codeSize = code.size() * sizeof(uint32_t);
     createInfo.pCode = code.data();
 
     VkShaderModule shaderModule;

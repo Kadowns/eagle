@@ -28,7 +28,7 @@ public:
 
         rotation = glm::quat(glm::vec3(0));
 
-        m_shader = Eagle::RenderingContext::create_shader("shaders/shader_vert.spv", "shaders/shader_frag.spv");
+        m_shader = Eagle::RenderingContext::create_shader("shaders/shader.vert", "shaders/shader.frag");
         std::vector<float> vertices = {
                 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 0.5, // 0
                 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.5,  // 1

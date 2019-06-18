@@ -12,7 +12,7 @@ _EAGLE_BEGIN
 
 bool VulkanShaderCompiler::m_glslangIntitialized = false;
 
-const std::vector<uint32_t> VulkanShaderCompiler::compile_glsl(const std::string &fileName) {
+std::vector<uint32_t> VulkanShaderCompiler::compile_glsl(const std::string &fileName) {
 
     //initializes glslang
     if (!m_glslangIntitialized) {
@@ -92,7 +92,7 @@ const std::vector<uint32_t> VulkanShaderCompiler::compile_glsl(const std::string
     }
 
     //converts glslang program to spirv format
-    std::vector<uint32_t> SpirV;
+    std::vector<unsigned int> SpirV;
     spv::SpvBuildLogger logger;
     glslang::SpvOptions spvOptions;
     glslang::GlslangToSpv(*program.getIntermediate(shaderStage), SpirV, &logger, &spvOptions);
