@@ -121,8 +121,10 @@ const TBuiltInResource DefaultTBuiltInResource = {
                            }};
 
 class VulkanShaderCompiler {
+
 public:
-    static std::vector<uint32_t> compile_glsl(const std::string &fileName);
+    static std::vector<uint32_t>
+    compile_glsl(const std::string &fileName);
 
 private:
 

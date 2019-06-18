@@ -30,22 +30,18 @@ std::vector<uint32_t> VulkanShaderCompiler::compile_glsl(const std::string &file
     glslang::TShader shader(shaderStage);
 
 
-    std::ifstream file(fileName, std::ios::ate);
+    std::ifstream file(fileName);
     if (!file.is_open()) {
         EG_CORE_FATAL_F("Failed to load shader: {0}", fileName);
         throw std::runtime_error("failed to open file: " + fileName);
     }
 
     //reads glsl file and stores on a const char* (otherwise it would not be possible to set the shader strings with a temporary value)
-    size_t fileSize = (size_t) file.tellg();
-    std::vector<char> buffer(fileSize);
-    file.seekg(0);
-    file.read(buffer.data(), fileSize);
-    file.close();
-    const char* cstrInput = buffer.data();
+    std::string glslInput((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+
+    const char* cstrInput = glslInput.data();
 
     shader.setStrings(&cstrInput, 1);
-
 
     //environment definitions
     int ClientInputSemanticsVersion = 100; // maps to, say, #define VULKAN 100
@@ -92,13 +88,14 @@ std::vector<uint32_t> VulkanShaderCompiler::compile_glsl(const std::string &file
     }
 
     //converts glslang program to spirv format
-    std::vector<unsigned int> SpirV;
+    std::vector<uint32_t> spirv;
     spv::SpvBuildLogger logger;
     glslang::SpvOptions spvOptions;
-    glslang::GlslangToSpv(*program.getIntermediate(shaderStage), SpirV, &logger, &spvOptions);
-    EG_CORE_FATAL_F("Result: {0}", logger.getAllMessages());
-
-    return SpirV;
+    glslang::GlslangToSpv(*program.getIntermediate(shaderStage), spirv, &logger, &spvOptions);
+    if (!logger.getAllMessages().empty()){
+        EG_CORE_FATAL_F("Failed to convert glsl code to spirv code! Log: {0}", logger.getAllMessages());
+    }
+    return spirv;
 }
 
 std::string VulkanShaderCompiler::get_file_path(const std::string &file) {

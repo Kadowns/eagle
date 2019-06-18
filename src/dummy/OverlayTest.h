@@ -22,7 +22,7 @@ private:
 
 public:
     virtual void handle_attach() override {
-        m_shader = Eagle::RenderingContext::create_shader("shaders/shader.vert", "shaders/shader.frag");
+        m_shader = Eagle::RenderingContext::create_shader("shaders/overlay.vert", "shaders/overlay.frag");
 
         std::vector<float> vertices = {
                 0.0f, 0.0f, 0.0f, 1.0f, 0.8f, 0.8, // 0
@@ -37,12 +37,9 @@ public:
         };
         m_indexBuffer = Eagle::RenderingContext::create_index_buffer(indices);
 
-        m_uniformBuffer = Eagle::RenderingContext::create_uniform_buffer(m_shader.lock()->get_shader_item("mvp"));
-
-
+        m_uniformBuffer = Eagle::RenderingContext::create_uniform_buffer(Eagle::ShaderItemLayout({Eagle::SHADER_ITEM_COMPONENT_MAT4}));
 
         m_descriptorSet = Eagle::RenderingContext::create_descriptor_set(m_shader.lock(), {m_uniformBuffer.lock()});
-
 
         //view = glm::lookAt(glm::vec3(0.0f, 3.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         proj = glm::ortho(0.0f, (float)Eagle::Application::get_window_width(), 0.0f, (float)Eagle::Application::get_window_height());
@@ -70,15 +67,14 @@ public:
     virtual void handle_event(Eagle::Event &e) override {
 
         Eagle::EventDispatcher dispatcher(e);
-        dispatcher.dispatch<Eagle::MouseClickEvent>(BIND_EVENT_FN(OverlayTest::handle_mouse_click));
+        if (dispatcher.dispatch<Eagle::MousePressedEvent>(BIND_EVENT_FN(OverlayTest::handle_mouse_pressed))){
+            return;
+        }
     }
 
-    bool handle_mouse_click(Eagle::MouseClickEvent& e){
+    bool handle_mouse_pressed(Eagle::MousePressedEvent &e){
 
-        if (intersects(
-                glm::vec2(e.get_x(), e.get_y()),
-                glm::vec2(0, Eagle::Application::get_window_height() - 128),
-                glm::vec2(Eagle::Application::get_window_width(), Eagle::Application::get_window_height()))){
+        if (intersects_button(glm::vec2(e.get_x(), e.get_y()))){
             EG_INFO_F("Mouse clicked success! {0} , {1}", e.get_x(), e.get_y());
 
             Eagle::Application::instance().event_emplace_back(std::make_shared<ButtonClickedEvent>());
@@ -88,6 +84,12 @@ public:
         return false;
     }
 
+    bool intersects_button(glm::vec2 point){
+        return intersects(
+                glm::vec2(point.x, point.y),
+                glm::vec2(0, Eagle::Application::get_window_height() - 128),
+                glm::vec2(Eagle::Application::get_window_width(), Eagle::Application::get_window_height()));
+    }
 
     bool intersects(glm::vec2 point, glm::vec2 min, glm::vec2 max){
         return point.x > min.x && point.x < max.x && point.y > min.y && point.y < max.y;

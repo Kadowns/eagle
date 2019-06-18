@@ -15,18 +15,20 @@ public:
     std::weak_ptr<Eagle::Shader> m_shader;
     std::weak_ptr<Eagle::VertexBuffer> m_vertexBuffer;
     std::weak_ptr<Eagle::IndexBuffer> m_indexBuffer;
-    std::weak_ptr<Eagle::UniformBuffer> m_uniformBuffer;
+    std::weak_ptr<Eagle::UniformBuffer> m_mvpBuffer, m_colorBuffer;
     std::weak_ptr<Eagle::DescriptorSet> m_descriptorSet;
 
     float rotationDirection = 1;
 
     glm::mat4 view, proj, model;
+    glm::vec4 color;
 
     glm::quat rotation;
 
     virtual void handle_attach() override {
 
         rotation = glm::quat(glm::vec3(0));
+        color = glm::vec4(0.2f, 0.5f, 0.9f, 1.0f);
 
         m_shader = Eagle::RenderingContext::create_shader("shaders/shader.vert", "shaders/shader.frag");
         std::vector<float> vertices = {
@@ -73,9 +75,9 @@ public:
         };
         m_indexBuffer = Eagle::RenderingContext::create_index_buffer(indices);
 
-        m_uniformBuffer = Eagle::RenderingContext::create_uniform_buffer(m_shader.lock()->get_shader_item("mvp"));
-
-        m_descriptorSet = Eagle::RenderingContext::create_descriptor_set(m_shader.lock(), {m_uniformBuffer.lock()});
+        m_mvpBuffer = Eagle::RenderingContext::create_uniform_buffer(Eagle::ShaderItemLayout({Eagle::SHADER_ITEM_COMPONENT_MAT4}));
+        m_colorBuffer = Eagle::RenderingContext::create_uniform_buffer(Eagle::ShaderItemLayout({Eagle::SHADER_ITEM_COMPONENT_VEC4}));
+        m_descriptorSet = Eagle::RenderingContext::create_descriptor_set(m_shader.lock(), {m_mvpBuffer.lock(), m_colorBuffer.lock()});
 
         view = glm::lookAt(glm::vec3(0.0f, 3.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         proj = glm::perspective(glm::radians(45.0f), Eagle::Application::get_window_aspect(), 0.1f, 10.0f);
@@ -97,7 +99,8 @@ public:
     virtual void handle_draw() override {
 
         glm::mat4 mvp = proj * view * model;
-        Eagle::RenderingContext::flush_uniform_buffer_data(m_uniformBuffer.lock(), &mvp);
+        Eagle::RenderingContext::flush_uniform_buffer_data(m_mvpBuffer.lock(), &mvp);
+        Eagle::RenderingContext::flush_uniform_buffer_data(m_colorBuffer.lock(), &color);
         Eagle::RenderingContext::bind_shader(m_shader.lock());
         Eagle::RenderingContext::bind_descriptor_set(m_descriptorSet.lock());
         Eagle::RenderingContext::draw_indexed_vertex_buffer(m_vertexBuffer.lock(), m_indexBuffer.lock());
@@ -113,15 +116,17 @@ public:
         if (dispatcher.dispatch<Eagle::WindowResizedEvent>(BIND_EVENT_FN(SceneTest::handle_window_resized))){
             return;
         }
-        if (dispatcher.dispatch<ButtonClickedEvent>(BIND_EVENT_FN(SceneTest::handle_button_click))){
+        if (dispatcher.dispatch<ButtonClickedEvent>(BIND_EVENT_FN(SceneTest::handle_button_pressed))){
             return;
         }
     }
 
-    bool handle_button_click(ButtonClickedEvent& e){
+    bool handle_button_pressed(ButtonClickedEvent &e){
         rotationDirection *= -1;
+        color = glm::vec4(1.0f, 1.0, 1.0, 1.0f) - color;
         return true;
     }
+
 
     bool handle_window_resized(Eagle::WindowResizedEvent& e){
         proj = glm::perspective(glm::radians(45.0f), (float)e.get_width() / e.get_height(), 0.1f, 10.0f);

@@ -1,9 +1,11 @@
+#include "eagle/renderer/vulkan/spirv_reflect.h"
 #include "eagle/renderer/vulkan/VulkanShader.h"
 #include "eagle/renderer/vulkan/VulkanShaderCompiler.h"
 #include "eagle/renderer/ShaderItemLayout.h"
 #include "eagle/core/Log.h"
 
 #include <fstream>
+
 
 
 _EAGLE_BEGIN
@@ -14,8 +16,6 @@ VulkanShader::VulkanShader(const std::string& vertFileName, const std::string& f
 
     m_vertShaderCode = VulkanShaderCompiler::compile_glsl(PROJECT_ROOT + vertFileName);
     m_fragShaderCode = VulkanShaderCompiler::compile_glsl(PROJECT_ROOT + fragFileName);
-    EG_CORE_DEBUG_F("Shader code size {0}", m_vertShaderCode.size());
-    EG_CORE_DEBUG_F("Shader code size {0}", m_fragShaderCode.size());
 
     create_descriptor_set_layout();
     create_pipeline();
@@ -28,14 +28,60 @@ VulkanShader::~VulkanShader() {
 
 void VulkanShader::create_descriptor_set_layout() {
 
-    m_layoutBindings.emplace_back(create_descriptor_set_layout_binding(
-            0,
-            VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            1,
-            VK_SHADER_STAGE_VERTEX_BIT,
-            nullptr
-    ));
-    m_uniformLayouts.insert(std::map< std::string, ShaderItemLayout>::value_type ( "mvp", ShaderItemLayout({SHADER_ITEM_COMPONENT_MAT4}) ));
+    SpvReflectShaderModule vertexShaderReflection, fragmentShaderReflection;
+    SPV_REFLECT_ASSERT(spvReflectCreateShaderModule(m_vertShaderCode.size() * sizeof(unsigned int), m_vertShaderCode.data(), &vertexShaderReflection));
+    SPV_REFLECT_ASSERT(spvReflectCreateShaderModule(m_fragShaderCode.size() * sizeof(unsigned int), m_fragShaderCode.data(), &fragmentShaderReflection));
+
+    std::map<uint32_t, VkDescriptorSetLayoutBinding> descriptorBindingsMap;
+
+    auto add_descriptor_bindings_from_shader_stage = [&](const SpvReflectShaderModule* shaderReflectionModule, const VkShaderStageFlags shaderStage) {
+
+        uint32_t descriptorBindingCount = 0;
+        SPV_REFLECT_ASSERT(spvReflectEnumerateDescriptorBindings(shaderReflectionModule, &descriptorBindingCount, nullptr));
+
+        if (descriptorBindingCount > 0) {
+
+            std::vector<SpvReflectDescriptorBinding*> reflectionDescriptorBindings(descriptorBindingCount);
+
+            SPV_REFLECT_ASSERT(spvReflectEnumerateDescriptorBindings(shaderReflectionModule, &descriptorBindingCount, reflectionDescriptorBindings.data()));
+
+            //Sort by binding so we can easily check if the binding has already been added by a previous shader stage
+            std::sort(std::begin(reflectionDescriptorBindings), std::end(reflectionDescriptorBindings),
+                    [](const SpvReflectDescriptorBinding* a, const SpvReflectDescriptorBinding* b)
+                      {
+                          return a->binding < b->binding;
+                      });
+
+            for (auto& reflectedDescriptorBinding : reflectionDescriptorBindings){
+
+                auto existingBinding = descriptorBindingsMap.find(reflectedDescriptorBinding->binding);
+                if (existingBinding != descriptorBindingsMap.end()){
+                    //If this binding already exists (from a previous shader stage), append this ShaderStages flag to it
+                    existingBinding->second.stageFlags |= shaderStage;
+                }
+                else { //Otherwise a new binding needs to be added
+
+                    VkDescriptorSetLayoutBinding descriptorBinding = {};
+                    descriptorBinding.binding = reflectedDescriptorBinding->binding;
+                    descriptorBinding.descriptorType = reflectedDescriptorBinding->descriptor_type;
+                    descriptorBinding.descriptorCount = 1; //TODO:
+                    descriptorBinding.stageFlags = shaderStage;
+
+                    descriptorBindingsMap.emplace(descriptorBinding.binding, descriptorBinding);
+
+                    //Also store our reflection data, keyed by binding name (maybe in the future)
+                    //DescriptorBindingsReflection.emplace(std::string(ReflectionDescriptorBinding->name), *ReflectionDescriptorBinding);
+                }
+            }
+        }
+    };
+
+    add_descriptor_bindings_from_shader_stage(&vertexShaderReflection, VK_SHADER_STAGE_VERTEX_BIT);
+    add_descriptor_bindings_from_shader_stage(&fragmentShaderReflection, VK_SHADER_STAGE_FRAGMENT_BIT);
+
+    for (auto& it : descriptorBindingsMap){
+        m_layoutBindings.emplace_back(it.second);
+    }
 
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo = {};
     descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -261,10 +307,6 @@ void VulkanShader::bind() {
 
 void VulkanShader::bind_command_buffer(VkCommandBuffer cmd) {
     m_commandBuffer = cmd;
-}
-
-void VulkanShader::compile() {
-    //TODO -- implement glslang compiler
 }
 
 const std::vector<VkDescriptorSetLayoutBinding> &VulkanShader::get_descriptor_set_layout_bindings() {

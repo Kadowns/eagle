@@ -13,6 +13,12 @@ public:
     EVENT_CLASS_CATEGORY(Eagle::EVENT_CATEGORY_CUSTOM)
 };
 
+class ButtonReleasedEvent : public Eagle::Event {
+public:
+    EVENT_CLASS_TYPE(Eagle::EVENT_TYPE::CUSTOM)
+    EVENT_CLASS_CATEGORY(Eagle::EVENT_CATEGORY_CUSTOM)
+};
+
 
 
 #endif //EAGLE_DUMMYEVENTS_H

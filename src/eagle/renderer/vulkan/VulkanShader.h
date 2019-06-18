@@ -17,6 +17,8 @@ public:
         VkRenderPass renderPass;
     };
 
+public:
+
     VulkanShader(const std::string &vertFileName, const std::string &fragFileName,
                  const VulkanShaderCreateInfo &createInfo);
 
@@ -27,8 +29,6 @@ public:
     void bind_command_buffer(VkCommandBuffer cmd);
 
     virtual void bind() override;
-
-    virtual void compile() override;
 
     virtual void create_pipeline() override;
 

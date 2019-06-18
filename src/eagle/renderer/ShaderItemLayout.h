@@ -23,7 +23,7 @@ class ShaderItemLayout {
 
 public:
     ShaderItemLayout() = default;
-    explicit ShaderItemLayout(std::vector<SHADER_ITEM_COMPONENT> components);
+    ShaderItemLayout(std::vector<SHADER_ITEM_COMPONENT> components);
     ~ShaderItemLayout() = default;
 
     size_t stride() const;

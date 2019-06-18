@@ -50,6 +50,7 @@ set(RENDERER_INCLUDE
         renderer/vulkan/VulkanIndexBuffer.h
         renderer/vulkan/VulkanUniformBuffer.h
         renderer/vulkan/VulkanDescriptorSet.h
+        renderer/vulkan/spirv_reflect.h
         )
 
 set(RENDERER_SOURCE
@@ -68,6 +69,7 @@ set(RENDERER_SOURCE
         renderer/source/vulkan/VulkanIndexBuffer.cpp
         renderer/source/vulkan/VulkanUniformBuffer.cpp
         renderer/source/vulkan/VulkanDescriptorSet.cpp
+        renderer/source/vulkan/spirv_reflect.cpp
         )
 
 set(RENDERER_ALL ${RENDERER_INCLUDE} ${RENDERER_SOURCE})

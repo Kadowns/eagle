@@ -77,9 +77,13 @@ void WindowGLFW::init() {
     });
 
     //mouse click
-    glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int x, int y, int key){
+    glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int key, int action, int mod){
         auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
-        data.eventCallback(std::make_shared<MouseClickEvent>(data.mouseX, data.mouseY, key));
+        if (action == GLFW_PRESS){
+            data.eventCallback(std::make_shared<MousePressedEvent>(data.mouseX, data.mouseY, key));
+        }else{
+            data.eventCallback(std::make_shared<MouseReleasedEvent>(data.mouseX, data.mouseY, key));
+        }
     });
 
     EG_CORE_TRACE("Window initialized!");
