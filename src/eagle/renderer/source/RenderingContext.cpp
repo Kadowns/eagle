@@ -57,8 +57,8 @@ RenderingContext::bind_descriptor_set(std::shared_ptr<DescriptorSet> descriptorS
     m_currentRenderer->handle_bind_descriptor_set(descriptorSet);
 }
 
-void RenderingContext::flush_uniform_buffer_data(std::shared_ptr<UniformBuffer> uniformBuffer, void *data) {
-    m_currentRenderer->handle_flush_uniform_buffer_data(uniformBuffer, data);
+void RenderingContext::uniform_buffer_update_data(std::shared_ptr<UniformBuffer> uniformBuffer, void *data) {
+    m_currentRenderer->handle_uniform_buffer_update_data(uniformBuffer, data);
 }
 
 _EAGLE_END

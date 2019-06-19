@@ -18,7 +18,7 @@ public:
     explicit UniformBuffer(const ShaderItemLayout& layout );
     virtual ~UniformBuffer();
 
-    virtual void flush(void *data, uint32_t bufferIndex) = 0;
+    virtual void flush(uint32_t bufferIndex) = 0;
     virtual size_t size() = 0;
 protected:
     ShaderItemLayout m_layout;

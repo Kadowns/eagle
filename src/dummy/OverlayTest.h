@@ -18,7 +18,7 @@ private:
     std::weak_ptr<Eagle::DescriptorSet> m_descriptorSet;
 
 
-    glm::mat4 proj, model;
+    glm::mat4 proj, model, pm;
 
 public:
     virtual void handle_attach() override {
@@ -45,7 +45,8 @@ public:
         proj = glm::ortho(0.0f, (float)Eagle::Application::get_window_width(), 0.0f, (float)Eagle::Application::get_window_height());
         model = glm::translate(glm::mat4(1), glm::vec3(0, (float)Eagle::Application::get_window_height() - 128, 0));
         model = glm::scale(model, glm::vec3((float)Eagle::Application::get_window_width(), 128, 1));
-
+        pm = proj * model;
+        Eagle::RenderingContext::uniform_buffer_update_data(m_uniformBuffer.lock(), &pm);
     }
 
     virtual void handle_deattach() override {
@@ -57,8 +58,7 @@ public:
     }
 
     virtual void handle_draw() override {
-        glm::mat4 pm = proj * model;
-        Eagle::RenderingContext::flush_uniform_buffer_data(m_uniformBuffer.lock(), &pm);
+
         Eagle::RenderingContext::bind_shader(m_shader.lock());
         Eagle::RenderingContext::bind_descriptor_set(m_descriptorSet.lock());
         Eagle::RenderingContext::draw_indexed_vertex_buffer(m_vertexBuffer.lock(), m_indexBuffer.lock());

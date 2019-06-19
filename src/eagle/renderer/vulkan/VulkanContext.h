@@ -130,10 +130,6 @@ protected:
 
     VkExtent2D choose_swap_extent(const VkSurfaceCapabilitiesKHR& capabilities);
 
-    void handle_event(Event& e);
-
-    bool window_resized(WindowResizedEvent& e);
-
     //inherited via RenderingContext
     virtual std::weak_ptr<Shader>
     handle_create_shader(const std::string &vertFilePath, const std::string &fragFilePath) override;
@@ -161,7 +157,7 @@ protected:
     handle_draw_indexed_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer, std::shared_ptr<IndexBuffer> indexBuffer) override;
 
     virtual void
-    handle_flush_uniform_buffer_data(std::shared_ptr<UniformBuffer> uniformBuffer, void* data) override;
+    handle_uniform_buffer_update_data(std::shared_ptr<UniformBuffer> uniformBuffer, void *data) override;
 
     virtual void
     handle_bind_descriptor_set(std::shared_ptr<DescriptorSet> descriptorSet) override;
@@ -195,7 +191,7 @@ protected:
 
     std::vector<std::shared_ptr<VulkanVertexBuffer>> m_vertexBuffers;
     std::vector<std::shared_ptr<VulkanIndexBuffer>> m_indexBuffers;
-    std::vector<std::shared_ptr<VulkanUniformBuffer>> m_uniformBuffers;
+    std::vector<std::shared_ptr<VulkanUniformBuffer>> m_uniformBuffers, m_dirtyUniformBuffers;
     std::vector<std::shared_ptr<VulkanDescriptorSet>> m_descriptorSets;
     std::vector<std::shared_ptr<VulkanShader>> m_shaders;
 

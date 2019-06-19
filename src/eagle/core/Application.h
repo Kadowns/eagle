@@ -67,8 +67,6 @@ private:
 
 };
 
-ApplicationCreateInfo create_application_info();
-
 _EAGLE_END
 
 #endif //EAGLE_APPLICATION_H

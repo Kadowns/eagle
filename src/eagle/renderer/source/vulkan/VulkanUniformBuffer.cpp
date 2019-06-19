@@ -2,6 +2,7 @@
 // Created by Novak on 09/06/2019.
 //
 
+#include <algorithm>
 #include "eagle/renderer/vulkan/VulkanUniformBuffer.h"
 
 _EAGLE_BEGIN
@@ -16,8 +17,11 @@ VulkanUniformBuffer::~VulkanUniformBuffer() {
 }
 
 void
-VulkanUniformBuffer::flush(void *data, uint32_t bufferIndex) {
-    m_buffers[bufferIndex]->copy_to(data, m_layout.stride());
+VulkanUniformBuffer::flush(uint32_t bufferIndex) {
+    m_buffers[bufferIndex]->copy_to(m_data, m_layout.stride());
+    if (is_dirty()){
+        m_dirtyBuffers.erase(std::find(m_dirtyBuffers.begin(), m_dirtyBuffers.end(), bufferIndex));
+    }
 }
 
 size_t
@@ -50,6 +54,18 @@ void VulkanUniformBuffer::cleanup() {
         m_buffers[i]->destroy();
     }
     m_cleared = true;
+}
+
+void VulkanUniformBuffer::upload_data(void *data) {
+    m_data = data;
+    m_dirtyBuffers.resize(m_buffers.size());
+    for (size_t i = 0; i < m_dirtyBuffers.size(); i++){
+        m_dirtyBuffers[i] = i;
+    }
+}
+
+bool VulkanUniformBuffer::is_dirty() {
+    return !m_dirtyBuffers.empty();
 }
 
 

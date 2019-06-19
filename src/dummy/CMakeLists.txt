@@ -1,9 +1,9 @@
 include(${CMAKE_MODULE_PATH}/Eagle.cmake)
 
-
 set(DUMMY_INCLUDE
         SceneTest.h
         OverlayTest.h
+        DummyEvents.h
         )
 
 set(DUMMY_SOURCES
@@ -12,7 +12,7 @@ set(DUMMY_SOURCES
 
 set(DUMMY_ALL ${DUMMY_INCLUDE} ${DUMMY_SOURCES})
 
-add_library(dummy STATIC ${DUMMY_ALL})
-target_link_libraries(dummy eagle_s)
-
+add_executable(dummy ${DUMMY_ALL})
 define_file_basename_for_sources(dummy)
+
+target_link_libraries(dummy eagle_s)

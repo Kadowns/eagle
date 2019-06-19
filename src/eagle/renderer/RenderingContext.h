@@ -39,7 +39,7 @@ public:
     static void bind_shader(std::shared_ptr<Shader> shader);
     static void bind_descriptor_set(std::shared_ptr<DescriptorSet> descriptorSet);
     static void draw_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer);
-    static void flush_uniform_buffer_data(std::shared_ptr<UniformBuffer> uniformBuffer, void* data);
+    static void uniform_buffer_update_data(std::shared_ptr<UniformBuffer> uniformBuffer, void *data);
     static void draw_indexed_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer, std::shared_ptr<IndexBuffer> indexBuffer);
 
 protected:
@@ -72,7 +72,7 @@ protected:
     handle_draw_indexed_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer, std::shared_ptr<IndexBuffer> indexBuffer) = 0;
 
     virtual void
-    handle_flush_uniform_buffer_data(std::shared_ptr<UniformBuffer> uniformBuffer, void* data) = 0;
+    handle_uniform_buffer_update_data(std::shared_ptr<UniformBuffer> uniformBuffer, void *data) = 0;
 
     virtual void
     handle_bind_descriptor_set(std::shared_ptr<DescriptorSet> descriptorSet) = 0;

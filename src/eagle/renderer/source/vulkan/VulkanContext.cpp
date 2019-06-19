@@ -128,6 +128,22 @@ void VulkanContext::end_draw() {
 
     VK_CALL vkCmdEndRenderPass(m_commandBuffers[m_drawInfo.imageIndex]);
 
+    //updates dirty buffers
+    if (!m_dirtyUniformBuffers.empty()){
+        std::vector<std::shared_ptr<VulkanUniformBuffer>> dirtyBuffers;
+        for (auto& buffer : m_dirtyUniformBuffers){
+            buffer->flush(m_drawInfo.imageIndex);
+
+            //if the buffer is still dirty, we want to maintain it on the dirt buffers vector
+            if (buffer->is_dirty()){
+                dirtyBuffers.emplace_back(buffer);
+            }
+        }
+
+        //swaps the old buffer vector with the new one
+        std::swap(m_dirtyUniformBuffers, dirtyBuffers);
+    }
+
     m_drawInitialized = false;
 
     VK_CALL_ASSERT(vkEndCommandBuffer(m_commandBuffers[m_drawInfo.imageIndex])) {
@@ -889,7 +905,7 @@ void VulkanContext::recreate_swapchain() {
 }
 
 void VulkanContext::cleanup_swapchain() {
-    EG_TRACE("Clearing swapchain!");
+    EG_CORE_TRACE("Clearing swapchain!");
 
     for (size_t i = 0; i < m_framebuffers.size(); i++){
         VK_CALL vkDestroyFramebuffer(m_device, m_framebuffers[i], nullptr);
@@ -916,12 +932,12 @@ void VulkanContext::cleanup_swapchain() {
     }
 
     VK_CALL vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
-    EG_TRACE("Swapchain cleared!");
+    EG_CORE_TRACE("Swapchain cleared!");
 }
 
 std::weak_ptr<Shader>
 VulkanContext::handle_create_shader(const std::string &vertFilePath, const std::string &fragFilePath) {
-    EG_TRACE("Creating a vulkan shader!");
+    EG_CORE_TRACE("Creating a vulkan shader!");
     VulkanShader::VulkanShaderCreateInfo createInfo = {};
     createInfo.device = m_device;
     createInfo.extent = m_swapchainExtent;
@@ -932,7 +948,7 @@ VulkanContext::handle_create_shader(const std::string &vertFilePath, const std::
 
 std::weak_ptr<VertexBuffer>
 VulkanContext::handle_create_vertex_buffer(std::vector<float> &vertices, size_t stride) {
-    EG_TRACE("Creating a vulkan vertex buffer!");
+    EG_CORE_TRACE("Creating a vulkan vertex buffer!");
     VulkanVertexBufferCreateInfo createInfo = {};
     createInfo.vertices = std::move(vertices);
     createInfo.stride = stride;
@@ -945,7 +961,7 @@ VulkanContext::handle_create_vertex_buffer(std::vector<float> &vertices, size_t 
 
 std::weak_ptr<IndexBuffer>
 VulkanContext::handle_create_index_buffer(std::vector<uint32_t> &indices) {
-    EG_TRACE("Creating a vulkan index buffer!");
+    EG_CORE_TRACE("Creating a vulkan index buffer!");
     VulkanIndexBufferCreateInfo createInfo = {};
     createInfo.graphicsQueue = m_graphicsQueue;
     createInfo.physicalDevice = m_physicalDevice;
@@ -1049,18 +1065,16 @@ VulkanContext::handle_bind_descriptor_set(std::shared_ptr<DescriptorSet> descrip
     vulkanDescriptorSet->bind();
 }
 
-void VulkanContext::handle_flush_uniform_buffer_data(std::shared_ptr<UniformBuffer> uniformBuffer, void *data) {
+void VulkanContext::handle_uniform_buffer_update_data(std::shared_ptr<UniformBuffer> uniformBuffer, void *data) {
 
-    if (!m_drawInitialized){
-        EG_CORE_ERROR("Draw vertex buffer called outside of draw range!");
-        return;
-    }
     std::shared_ptr<VulkanUniformBuffer> vulkanUniformBuffer = std::static_pointer_cast<VulkanUniformBuffer>(uniformBuffer);
-    vulkanUniformBuffer->flush(data, m_drawInfo.imageIndex);
+    vulkanUniformBuffer->upload_data(data);
+    if (std::find(m_dirtyUniformBuffers.begin(), m_dirtyUniformBuffers.end(), vulkanUniformBuffer) == m_dirtyUniformBuffers.end()){
+        m_dirtyUniformBuffers.emplace_back(vulkanUniformBuffer);
+    }
 }
 
 void VulkanContext::handle_window_resized(int width, int height) {
-    EG_CORE_TRACE("Vulkan received event of type WINDOW_RESIZED!");
     m_windowResized = true;
 }
 
