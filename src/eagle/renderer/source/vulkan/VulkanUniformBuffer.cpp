@@ -40,8 +40,8 @@ void VulkanUniformBuffer::create_uniform_buffer() {
     bufferCreateInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
     for (size_t i = 0; i < m_info.bufferCount; i++) {
-        VulkanBuffer::create_buffer(m_info.physicalDevice, m_info.device, m_buffers[i], m_layout.stride(),
-                                    bufferCreateInfo);
+        VulkanBuffer::create_buffer(m_info.physicalDevice, m_info.device, m_buffers[i],
+                                    bufferCreateInfo, m_layout.stride(), nullptr);
         m_buffers[i]->map(m_layout.stride());
     }
     m_cleared = false;

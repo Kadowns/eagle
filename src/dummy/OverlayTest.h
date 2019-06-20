@@ -25,10 +25,10 @@ public:
         m_shader = Eagle::RenderingContext::create_shader("shaders/overlay.vert", "shaders/overlay.frag");
 
         std::vector<float> vertices = {
-                0.0f, 0.0f, 0.0f, 1.0f, 0.8f, 0.8, // 0
-                0.0f, 1.0f, 0.0f, 1.0f, 0.8f, 0.8,  // 1
-                1.0f, 1.0f, 0.0f, 1.0f, 0.8f, 0.8,  // 2
-                1.0f, 0.0f, 0.0f, 1.0f, 0.8f, 0.8,  // 3
+                0.0f, 0.0f, 0.0f, 1.0f, 0.8f, 0.8f, // 0
+                0.0f, 1.0f, 0.0f, 1.0f, 0.8f, 0.8f, // 1
+                1.0f, 1.0f, 0.0f, 1.0f, 0.8f, 0.8f, // 2
+                1.0f, 0.0f, 0.0f, 1.0f, 0.8f, 0.8f // 3
         };
         m_vertexBuffer = Eagle::RenderingContext::create_vertex_buffer(vertices, 6);
 
@@ -70,17 +70,28 @@ public:
         if (dispatcher.dispatch<Eagle::MousePressedEvent>(BIND_EVENT_FN(OverlayTest::handle_mouse_pressed))){
             return;
         }
+
+        if (dispatcher.dispatch<Eagle::WindowResizedEvent>(BIND_EVENT_FN(OverlayTest::handle_window_resized))){
+            return;
+        }
+    }
+
+    bool handle_window_resized(Eagle::WindowResizedEvent& e){
+        proj = glm::ortho(0.0f, (float)e.get_width(), 0.0f, (float)e.get_height());
+        model = glm::translate(glm::mat4(1), glm::vec3(0, (float)e.get_height() - 128, 0));
+        model = glm::scale(model, glm::vec3((float)e.get_width(), 128, 1));
+        pm = proj * model;
+        Eagle::RenderingContext::uniform_buffer_update_data(m_uniformBuffer.lock(), &pm);
+        return false;
     }
 
     bool handle_mouse_pressed(Eagle::MousePressedEvent &e){
 
         if (intersects_button(glm::vec2(e.get_x(), e.get_y()))){
-            EG_INFO_F("Mouse clicked success! {0} , {1}", e.get_x(), e.get_y());
 
             Eagle::Application::instance().event_emplace_back(std::make_shared<ButtonClickedEvent>());
             return true;
         }
-        EG_INFO_F("Mouse clicked failed! {0} , {1}", e.get_x(), e.get_y());
         return false;
     }
 

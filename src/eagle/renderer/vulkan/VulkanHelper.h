@@ -27,6 +27,17 @@ public:
     static void
     end_single_time_commnds(VkDevice device, VkCommandPool commandPool, VkCommandBuffer commandBuffer, VkQueue graphicsQueue);
 
+    static void
+    create_image(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t width, uint32_t height,
+                 uint32_t mipLevels, uint32_t arrayLayers, VkFormat format, VkImageTiling tiling,
+                 VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image,
+                 VkDeviceMemory &imageMemory, const VkImageCreateFlags &flags);
+
+    static void
+    transition_image_layout(VkDevice device, VkCommandPool commandPool, VkQueue graphicsQueue, VkImage image,
+                            VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout,
+                            VkImageSubresourceRange subresourceRange);
+
 };
 
 _EAGLE_END

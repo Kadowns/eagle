@@ -67,6 +67,8 @@ private:
     VkPipeline m_graphicsPipeline;
     VkDescriptorSetLayout m_descriptorSetLayout;
     std::vector<VkDescriptorSetLayoutBinding> m_layoutBindings;
+    VkVertexInputBindingDescription m_inputBinding;
+    std::vector<VkVertexInputAttributeDescription> m_inputAttributes;
     std::vector<uint32_t> m_vertShaderCode, m_fragShaderCode;
 
     bool m_cleared;

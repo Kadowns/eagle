@@ -55,7 +55,9 @@ void VulkanContext::deinit() {
 
     cleanup_swapchain();
     m_descriptorSets.clear();
+    m_dirtyUniformBuffers.clear();
     m_uniformBuffers.clear();
+    m_textures.clear();
     m_shaders.clear();
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -332,6 +334,11 @@ int VulkanContext::evaluate_device(VkPhysicalDevice device) {
     VkPhysicalDeviceFeatures deviceFeatures = {};
     VK_CALL vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
+    //samplers
+    if (!deviceFeatures.samplerAnisotropy){
+        return 0;
+    }
+
     //se n�o tiver geometry shader, pula fora
     if (!deviceFeatures.geometryShader) {
         return 0;
@@ -370,6 +377,7 @@ int VulkanContext::evaluate_device(VkPhysicalDevice device) {
     }
 
     score += physicalDeviceProperties.limits.maxImageDimension2D;
+
 
     EG_CORE_TRACE_F("Device suitable! score:{0}", score);
 
@@ -548,6 +556,7 @@ void VulkanContext::create_logical_device() {
     }
 
     VkPhysicalDeviceFeatures deviceFeatures = {};
+    deviceFeatures.samplerAnisotropy = VK_TRUE;
 
     VkDeviceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -983,7 +992,8 @@ VulkanContext::handle_create_uniform_buffer(const ShaderItemLayout &layout) {
 
 std::weak_ptr<DescriptorSet>
 VulkanContext::handle_create_descriptor_set(std::shared_ptr<Shader> shader,
-                                            const std::vector<std::shared_ptr<UniformBuffer>> &uniformBuffers) {
+                                            const std::vector<std::shared_ptr<UniformBuffer>> &uniformBuffers,
+                                            const std::vector<std::shared_ptr<Texture2D>> &textures) {
     VulkanDescriptorSetCreateInfo createInfo = {};
     createInfo.device = m_device;
     createInfo.bufferCount = m_swapchainImages.size();
@@ -991,8 +1001,28 @@ VulkanContext::handle_create_descriptor_set(std::shared_ptr<Shader> shader,
     for (size_t i = 0; i < uniformBuffers.size(); i++){
         vulkanUniformBuffers[i] = std::static_pointer_cast<VulkanUniformBuffer>(uniformBuffers[i]);
     }
-    m_descriptorSets.emplace_back(std::make_shared<VulkanDescriptorSet>(std::static_pointer_cast<VulkanShader>(shader), vulkanUniformBuffers, createInfo));
+
+    std::vector<std::shared_ptr<VulkanTexture2D>> vulkanTextures(textures.size());
+    for (size_t i = 0; i < textures.size(); i++){
+        vulkanTextures[i] = std::static_pointer_cast<VulkanTexture2D>(textures[i]);
+    }
+    m_descriptorSets.emplace_back(std::make_shared<VulkanDescriptorSet>(std::static_pointer_cast<VulkanShader>(shader), vulkanUniformBuffers, vulkanTextures, createInfo));
     return m_descriptorSets.back();
+}
+
+std::weak_ptr<Texture2D>
+VulkanContext::handle_create_texture_2d(const std::string &filePath) {
+
+    Texture2DCreateInfo textureInfo = Texture2D::load_texture(filePath);
+
+    VulkanTexture2DCreateInfo vulkanTextureCreateInfo = {};
+    vulkanTextureCreateInfo.device = m_device;
+    vulkanTextureCreateInfo.physicalDevice = m_physicalDevice;
+    vulkanTextureCreateInfo.commandPool = m_commandPool;
+    vulkanTextureCreateInfo.graphicsQueue = m_graphicsQueue;
+
+    m_textures.emplace_back(std::make_shared<VulkanTexture2D>(textureInfo, vulkanTextureCreateInfo));
+    return m_textures.back();
 }
 
 void

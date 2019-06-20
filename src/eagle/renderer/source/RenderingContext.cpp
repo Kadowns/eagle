@@ -32,8 +32,13 @@ RenderingContext::create_uniform_buffer(const ShaderItemLayout &layout) {
 
 std::weak_ptr<DescriptorSet>
 RenderingContext::create_descriptor_set(std::shared_ptr<Shader> shader,
-                                        const std::vector<std::shared_ptr<UniformBuffer>> &uniformBuffers) {
-    return m_currentRenderer->handle_create_descriptor_set(shader, uniformBuffers);
+                                        const std::vector<std::shared_ptr<UniformBuffer>> &uniformBuffers,
+                                        const std::vector<std::shared_ptr<Texture2D>> &textures) {
+    return m_currentRenderer->handle_create_descriptor_set(shader, uniformBuffers, textures);
+}
+
+std::weak_ptr<Texture2D> RenderingContext::create_texture_2d(const std::string &filePath) {
+    return m_currentRenderer->handle_create_texture_2d(filePath);
 }
 
 void

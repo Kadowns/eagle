@@ -5,6 +5,7 @@
 #include "eagle/renderer/vulkan/VulkanCore.h"
 #include "eagle/renderer/vulkan/VulkanShader.h"
 #include "eagle/renderer/vulkan/VulkanUniformBuffer.h"
+#include "eagle/renderer/vulkan/VulkanTexture2D.h"
 
 _EAGLE_BEGIN
 
@@ -22,8 +23,9 @@ struct VulkanDescriptorSetDrawInfo {
 class VulkanDescriptorSet : public DescriptorSet {
 public:
     VulkanDescriptorSet(std::shared_ptr<VulkanShader> shader,
-                           const std::vector<std::shared_ptr<VulkanUniformBuffer>> &uniformBuffers,
-                           VulkanDescriptorSetCreateInfo createInfo);
+                        const std::vector<std::shared_ptr<VulkanUniformBuffer>> &uniformBuffers,
+                        const std::vector<std::shared_ptr<VulkanTexture2D>> &textures,
+                        VulkanDescriptorSetCreateInfo createInfo);
     ~VulkanDescriptorSet();
 
     void cleanup();
@@ -36,8 +38,9 @@ private:
 
     VkDescriptorPool m_descriptorPool;
     std::vector<VkDescriptorSet> m_descriptorSets;
-    std::vector<std::shared_ptr<VulkanUniformBuffer>> m_uniformBuffers;
     std::weak_ptr<VulkanShader> m_shader;
+    std::vector<std::shared_ptr<VulkanUniformBuffer>> m_uniformBuffers;
+    std::vector<std::shared_ptr<VulkanTexture2D>> m_textures;
     VulkanDescriptorSetCreateInfo m_info;
     VulkanDescriptorSetDrawInfo m_drawInfo;
 

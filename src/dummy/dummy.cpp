@@ -25,7 +25,7 @@ int main(){
     try{
         app->run();
     }catch(std::exception& e){
-        EG_FATAL_F("Exception caught! Message:{0}", e.what());
+        EG_CORE_FATAL_F("Exception: {0}", e.what());
         return 1;
     }
 

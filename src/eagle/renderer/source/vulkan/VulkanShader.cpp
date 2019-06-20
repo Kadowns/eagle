@@ -82,6 +82,43 @@ void VulkanShader::create_descriptor_set_layout() {
     for (auto& it : descriptorBindingsMap){
         m_layoutBindings.emplace_back(it.second);
     }
+    //-----------------------------
+
+
+    //vertex input-----------------------------
+    uint32_t vertexInputCount = 0;
+    SPV_REFLECT_ASSERT(spvReflectEnumerateInputVariables(&vertexShaderReflection, &vertexInputCount, nullptr));
+    if (vertexInputCount > 0){
+
+        std::vector<SpvReflectInterfaceVariable*> vertexInputs(vertexInputCount);
+        SPV_REFLECT_ASSERT(spvReflectEnumerateInputVariables(&vertexShaderReflection, &vertexInputCount, vertexInputs.data()));
+
+        std::sort(std::begin(vertexInputs), std::end(vertexInputs),
+                  [](const SpvReflectInterfaceVariable* a, const SpvReflectInterfaceVariable* b){
+                      return a->location < b->location;
+                  });
+
+        uint32_t offset = 0;
+
+        //Individual elements of our vertices
+        m_inputAttributes.clear();
+        for (auto& input : vertexInputs) {
+            VkVertexInputAttributeDescription attribute;
+            attribute.binding = 0; //TODO: Allow multiple vertex buffer bindings
+            attribute.location = input->location;
+            attribute.format   = input->format;
+            attribute.offset = offset;
+
+            m_inputAttributes.push_back(attribute);
+            offset += spv_reflect::FormatSize(attribute.format);
+        }
+
+        //Represents one type of Vertex for an input vertex buffer
+        m_inputBinding.binding = 0;
+        m_inputBinding.stride = offset;
+        m_inputBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    }
+
 
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo = {};
     descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -113,16 +150,13 @@ void VulkanShader::create_pipeline() {
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
-    ShaderItemLayout vertexLayout({SHADER_ITEM_COMPONENT_VEC3, SHADER_ITEM_COMPONENT_VEC3});
-    VkVertexInputBindingDescription inputBinding = get_binding_description(vertexLayout);
-    std::vector<VkVertexInputAttributeDescription> inputAttributes = get_attribute_descriptions(vertexLayout);
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertexInputInfo.vertexBindingDescriptionCount = 1;
-    vertexInputInfo.pVertexBindingDescriptions = &inputBinding;
-    vertexInputInfo.vertexAttributeDescriptionCount = inputAttributes.size();
-    vertexInputInfo.pVertexAttributeDescriptions = inputAttributes.data();
+    vertexInputInfo.pVertexBindingDescriptions = &m_inputBinding;
+    vertexInputInfo.vertexAttributeDescriptionCount = m_inputAttributes.size();
+    vertexInputInfo.pVertexAttributeDescriptions = m_inputAttributes.data();
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

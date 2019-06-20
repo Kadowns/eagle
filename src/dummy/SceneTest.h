@@ -12,11 +12,23 @@ class SceneTest : public Eagle::Layer {
 
 public:
 
+    struct Light {
+        glm::vec4 direction, color;
+        std::weak_ptr<Eagle::UniformBuffer> buffer;
+
+
+        void update(){
+            Eagle::RenderingContext::uniform_buffer_update_data(buffer.lock(), &direction);
+        }
+
+    } m_light;
+
     std::weak_ptr<Eagle::Shader> m_shader;
     std::weak_ptr<Eagle::VertexBuffer> m_vertexBuffer;
     std::weak_ptr<Eagle::IndexBuffer> m_indexBuffer;
     std::weak_ptr<Eagle::UniformBuffer> m_mvpBuffer, m_colorBuffer;
     std::weak_ptr<Eagle::DescriptorSet> m_descriptorSet;
+    std::weak_ptr<Eagle::Texture2D> m_texture;
 
     float rotationDirection = 1;
 
@@ -29,38 +41,38 @@ public:
 
         m_shader = Eagle::RenderingContext::create_shader("shaders/shader.vert", "shaders/shader.frag");
         std::vector<float> vertices = {
-                1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 0.5, // 0
-                1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.5,  // 1
-                -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.5,  // 2
-                -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 0.5,  // 3
+                1.0f, -1.0f, 1.0f,      0.0f, 0.0f,   0.0f, 0.0f, 1.0f,      // 0
+                1.0f, 1.0f, 1.0f,       1.0f, 0.0f,   0.0f, 0.0f, 1.0f,      // 1
+                -1.0f, 1.0f, 1.0f,      0.0f, 1.0f,   0.0f, 0.0f, 1.0f,      // 2
+                -1.0f, -1.0f, 1.0f,     1.0f, 1.0f,   0.0f, 0.0f, 1.0f,      // 3
 
-                1.0f, 1.0f, -1.0f, 1.0f, 0.5, 1.0f, // 4
-                1.0f, -1.0f, -1.0f, 1.0f, 0.5, 1.0f,  // 5
-                -1.0f, -1.0f, -1.0f, 1.0f, 0.5, 1.0f,  // 6
-                -1.0f, 1.0f, -1.0f, 1.0f, 0.5, 1.0f,  // 7
+                1.0f, 1.0f, -1.0f,      0.0f, 0.0f,   0.0f, 0.0f, -1.0f,      // 4
+                1.0f, -1.0f, -1.0f,     1.0f, 0.0f,   0.0f, 0.0f, -1.0f,      // 5
+                -1.0f, -1.0f, -1.0f,    0.0f, 1.0f,   0.0f, 0.0f, -1.0f,      // 6
+                -1.0f, 1.0f, -1.0f,     1.0f, 1.0f,   0.0f, 0.0f, -1.0f,      // 7
 
-                -1.0f, 1.0f, 1.0f, 1.0f, 0.5, 0.5, // 8
-                -1.0f, 1.0f, -1.0f, 1.0f, 0.5, 0.5,  // 9
-                -1.0f, -1.0f, -1.0f, 1.0f, 0.5, 0.5,  // 10
-                -1.0f, -1.0f, 1.0f, 1.0f, 0.5, 0.5,  // 11
+                -1.0f, 1.0f, 1.0f,      0.0f, 0.0f,   -1.0f, 0.0f, 0.0f,      // 8
+                -1.0f, 1.0f, -1.0f,     1.0f, 0.0f,   -1.0f, 0.0f, 0.0f,      // 9
+                -1.0f, -1.0f, -1.0f,    0.0f, 1.0f,   -1.0f, 0.0f, 0.0f,      // 10
+                -1.0f, -1.0f, 1.0f,     1.0f, 1.0f,   -1.0f, 0.0f, 0.0f,      // 11
 
-                1.0f, -1.0f, 1.0f, 0.5, 0.5, 1.0f, // 12
-                1.0f, -1.0f, -1.0f, 0.5, 0.5, 1.0f,  // 13
-                1.0f, 1.0f, -1.0f, 0.5, 0.5, 1.0f,  // 14
-                1.0f, 1.0f, 1.0f, 0.5, 0.5, 1.0f,  // 15
+                1.0f, -1.0f, 1.0f,      0.0f, 0.0f,   1.0f, 0.0f, 0.0f,      // 12
+                1.0f, -1.0f, -1.0f,     1.0f, 0.0f,   1.0f, 0.0f, 0.0f,      // 13
+                1.0f, 1.0f, -1.0f,      0.0f, 1.0f,   1.0f, 0.0f, 0.0f,      // 14
+                1.0f, 1.0f, 1.0f,       1.0f, 1.0f,   1.0f, 0.0f, 0.0f,      // 15
 
-                1.0f, -1.0f, -1.0f, 0.5, 1.0f, 1.0f, // 16
-                1.0f, -1.0f, 1.0f, 0.5, 1.0f, 1.0f,  // 17
-                -1.0f, -1.0f, 1.0f, 0.5, 1.0f, 1.0f,  // 18
-                -1.0f, -1.0f, -1.0f, 0.5, 1.0f, 1.0f,  // 19
+                1.0f, -1.0f, -1.0f,     0.0f, 0.0f,   0.0f, -1.0f, 0.0f,     // 16
+                1.0f, -1.0f, 1.0f,      1.0f, 0.0f,   0.0f, -1.0f, 0.0f,      // 17
+                -1.0f, -1.0f, 1.0f,     0.0f, 1.0f,   0.0f, -1.0f, 0.0f,      // 18
+                -1.0f, -1.0f, -1.0f,    1.0f, 1.0f,   0.0f, -1.0f, 0.0f,     // 19
 
-                1.0f, 1.0f, 1.0f, 0.5, 1.0f, 0.5, // 20
-                1.0f, 1.0f, -1.0f, 0.5, 1.0f, 0.5,  // 21
-                -1.0f, 1.0f, -1.0f, 0.5, 1.0f, 0.5,  // 22
-                -1.0f, 1.0f, 1.0f, 0.5, 1.0f, 0.5,  // 23
+                1.0f, 1.0f, 1.0f,       0.0f, 0.0f,   0.0f, 1.0f, 0.0f,      // 20
+                1.0f, 1.0f, -1.0f,      1.0f, 0.0f,   0.0f, 1.0f, 0.0f,      // 21
+                -1.0f, 1.0f, -1.0f,     0.0f, 1.0f,   0.0f, 1.0f, 0.0f,      // 22
+                -1.0f, 1.0f, 1.0f,      1.0f, 1.0f,   0.0f, 1.0f, 0.0f,      // 23
 
         };
-        m_vertexBuffer = Eagle::RenderingContext::create_vertex_buffer(vertices, 6);
+        m_vertexBuffer = Eagle::RenderingContext::create_vertex_buffer(vertices, 8);
 
         std::vector<uint32_t> indices = {
                 0, 1, 2, 0, 2, 3,
@@ -74,7 +86,15 @@ public:
 
         m_mvpBuffer = Eagle::RenderingContext::create_uniform_buffer(Eagle::ShaderItemLayout({Eagle::SHADER_ITEM_COMPONENT_MAT4}));
         m_colorBuffer = Eagle::RenderingContext::create_uniform_buffer(Eagle::ShaderItemLayout({Eagle::SHADER_ITEM_COMPONENT_VEC4}));
-        m_descriptorSet = Eagle::RenderingContext::create_descriptor_set(m_shader.lock(), {m_mvpBuffer.lock(), m_colorBuffer.lock()});
+        m_light.buffer = Eagle::RenderingContext::create_uniform_buffer(Eagle::ShaderItemLayout({Eagle::SHADER_ITEM_COMPONENT_VEC4, Eagle::SHADER_ITEM_COMPONENT_VEC4}));
+        m_light.color = glm::vec4(1.0f);
+        m_light.direction = glm::vec4(0.2f, -0.2f, 0.8f, 1.0f);
+        m_light.update();
+
+        m_texture = Eagle::RenderingContext::create_texture_2d("textures/box.png");
+        m_descriptorSet = Eagle::RenderingContext::create_descriptor_set(m_shader.lock(),
+                                                                         {m_mvpBuffer.lock(), m_colorBuffer.lock(), m_light.buffer.lock()},
+                                                                         {m_texture.lock()});
 
         rotation = glm::quat(glm::vec3(0));
 
@@ -82,8 +102,10 @@ public:
         proj = glm::perspective(glm::radians(45.0f), Eagle::Application::get_window_aspect(), 0.1f, 10.0f);
         proj[1][1] *= -1;
 
-        color = glm::vec4(0.2f, 0.5f, 0.9f, 1.0f);
+        color = glm::vec4(1.0);
         Eagle::RenderingContext::uniform_buffer_update_data(m_colorBuffer.lock(), &color);
+
+
     }
 
     virtual void handle_update() override {
@@ -112,7 +134,7 @@ public:
     }
 
     virtual void handle_event(Eagle::Event& e) override {
-        EG_TRACE("Example layer event received!");
+
         Eagle::EventDispatcher dispatcher(e);
         if (dispatcher.dispatch<Eagle::WindowResizedEvent>(BIND_EVENT_FN(SceneTest::handle_window_resized))){
             return;

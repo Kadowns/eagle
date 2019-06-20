@@ -6,8 +6,9 @@ _EAGLE_BEGIN
 
 VulkanDescriptorSet::VulkanDescriptorSet(std::shared_ptr<VulkanShader> shader,
                                          const std::vector<std::shared_ptr<VulkanUniformBuffer>> &uniformBuffers,
+                                         const std::vector<std::shared_ptr<VulkanTexture2D>> &textures,
                                          VulkanDescriptorSetCreateInfo createInfo) :
-    m_shader(shader), m_uniformBuffers(uniformBuffers), m_info(createInfo){
+    m_shader(shader), m_uniformBuffers(uniformBuffers), m_textures(textures), m_info(createInfo){
     create_descriptor_pool();
     create_descriptor_sets();
 }
@@ -54,8 +55,9 @@ void VulkanDescriptorSet::create_descriptor_sets() {
         throw std::runtime_error("failed to allocate descriptor sets!");
     }
 
-    std::vector<VkDescriptorBufferInfo> bufferInfos = {};
-    bufferInfos.resize(m_uniformBuffers.size());
+    std::vector<VkDescriptorSetLayoutBinding> descriptorBindings = m_shader.lock()->get_descriptor_set_layout_bindings();
+    std::vector<VkDescriptorBufferInfo> bufferInfos(m_uniformBuffers.size());
+    std::vector<VkDescriptorImageInfo> imageInfos(m_textures.size());
     for (size_t i = 0; i < m_descriptorSets.size(); i++) {
 
         for (size_t j = 0; j < bufferInfos.size(); j++) {
@@ -64,17 +66,34 @@ void VulkanDescriptorSet::create_descriptor_sets() {
             bufferInfos[j].range = m_uniformBuffers[j]->size();
         }
 
+
+        for (size_t j = 0; j < imageInfos.size(); j++){
+            imageInfos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfos[j].imageView = m_textures[j]->get_native_image_view();
+            imageInfos[j].sampler = m_textures[j]->get_native_sampler();
+        }
+
         std::vector<VkWriteDescriptorSet> descriptorWrite = {};
 
-        descriptorWrite.resize(bufferInfos.size());
-        for (size_t j = 0; j < bufferInfos.size(); j++) {
+
+        descriptorWrite.resize(bufferInfos.size() + imageInfos.size());
+        size_t bufferIndex = 0;
+        size_t imageIndex = 0;
+        for (size_t j = 0; j < descriptorWrite.size(); j++) {
             descriptorWrite[j].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descriptorWrite[j].dstSet = m_descriptorSets[i];
             descriptorWrite[j].dstBinding = j;
             descriptorWrite[j].dstArrayElement = 0;
-            descriptorWrite[j].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptorWrite[j].descriptorType = descriptorBindings[j].descriptorType;
             descriptorWrite[j].descriptorCount = 1;
-            descriptorWrite[j].pBufferInfo = &bufferInfos[j];
+            if (descriptorWrite[j].descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER){
+                descriptorWrite[j].pBufferInfo = &bufferInfos[bufferIndex];
+                bufferIndex++;
+            }
+            else if (descriptorWrite[j].descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER){
+                descriptorWrite[j].pImageInfo = &imageInfos[imageIndex];
+                imageIndex++;
+            }
         }
 
         VK_CALL vkUpdateDescriptorSets(m_info.device, static_cast<uint32_t>(descriptorWrite.size()), descriptorWrite.data(), 0, nullptr);

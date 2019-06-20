@@ -55,8 +55,7 @@ VulkanBuffer::copy_to(void* data, VkDeviceSize size) {
 
 VkResult
 VulkanBuffer::create_buffer(VkPhysicalDevice physicalDevice, VkDevice device, std::shared_ptr<VulkanBuffer> &buffer,
-                            VkDeviceSize size,
-                            const VulkanBufferCreateInfo &info, void *data) {
+                            const VulkanBufferCreateInfo &info, VkDeviceSize size, void *data) {
     buffer = std::make_shared<VulkanBuffer>(device, info);
     VkResult result;
     VkBufferCreateInfo bufferInfo = {};

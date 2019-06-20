@@ -11,6 +11,7 @@
 #include "IndexBuffer.h"
 #include "UniformBuffer.h"
 #include "DescriptorSet.h"
+#include "Texture2D.h"
 
 _EAGLE_BEGIN
 
@@ -33,9 +34,10 @@ public:
     static std::weak_ptr<VertexBuffer> create_vertex_buffer(std::vector<float> &vertices, size_t stride);
     static std::weak_ptr<IndexBuffer> create_index_buffer(std::vector<uint32_t>& indices);
     static std::weak_ptr<UniformBuffer> create_uniform_buffer(const ShaderItemLayout& layout);
-    static std::weak_ptr<DescriptorSet> create_descriptor_set(
-                                            std::shared_ptr<Shader> shader,
-                                            const std::vector<std::shared_ptr<UniformBuffer>> &uniformBuffers);
+    static std::weak_ptr<DescriptorSet> create_descriptor_set(std::shared_ptr<Shader> shader,
+                                                              const std::vector<std::shared_ptr<UniformBuffer>> &uniformBuffers = {},
+                                                              const std::vector<std::shared_ptr<Texture2D>> &textures = {});
+    static std::weak_ptr<Texture2D> create_texture_2d(const std::string& filePath);
     static void bind_shader(std::shared_ptr<Shader> shader);
     static void bind_descriptor_set(std::shared_ptr<DescriptorSet> descriptorSet);
     static void draw_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer);
@@ -60,7 +62,11 @@ protected:
 
     virtual std::weak_ptr<DescriptorSet>
     handle_create_descriptor_set(std::shared_ptr<Shader> shader,
-                                 const std::vector<std::shared_ptr<UniformBuffer>> &uniformBuffers) = 0;
+                                 const std::vector<std::shared_ptr<UniformBuffer>> &uniformBuffers,
+                                 const std::vector<std::shared_ptr<Texture2D>> &textures) = 0;
+
+    virtual std::weak_ptr<Texture2D>
+    handle_create_texture_2d(const std::string& filePath) = 0;
 
     virtual void
     handle_bind_shader(std::shared_ptr<Shader> shader) = 0;

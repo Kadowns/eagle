@@ -38,8 +38,7 @@ public:
 
     static VkResult
     create_buffer(VkPhysicalDevice physicalDevice, VkDevice device, std::shared_ptr<VulkanBuffer> &buffer,
-                  VkDeviceSize size,
-                  const VulkanBufferCreateInfo &info, void *data = nullptr);
+                  const VulkanBufferCreateInfo &info, VkDeviceSize size, void *data = nullptr);
 
     static void
     copy_buffer(

@@ -20,6 +20,7 @@
 #include "VulkanIndexBuffer.h"
 #include "VulkanUniformBuffer.h"
 #include "VulkanDescriptorSet.h"
+#include "VulkanTexture2D.h"
 
 _EAGLE_BEGIN
 
@@ -145,7 +146,11 @@ protected:
 
     virtual std::weak_ptr<DescriptorSet>
     handle_create_descriptor_set(std::shared_ptr<Shader> shader,
-                                 const std::vector<std::shared_ptr<UniformBuffer>> &uniformBuffers) override;
+                                 const std::vector<std::shared_ptr<UniformBuffer>> &uniformBuffers,
+                                 const std::vector<std::shared_ptr<Texture2D>> &textures) override;
+
+    virtual std::weak_ptr<Texture2D>
+    handle_create_texture_2d(const std::string& filePath) override;
 
     virtual void
     handle_bind_shader(std::shared_ptr<Shader> shader) override;
@@ -194,6 +199,7 @@ protected:
     std::vector<std::shared_ptr<VulkanUniformBuffer>> m_uniformBuffers, m_dirtyUniformBuffers;
     std::vector<std::shared_ptr<VulkanDescriptorSet>> m_descriptorSets;
     std::vector<std::shared_ptr<VulkanShader>> m_shaders;
+    std::vector<std::shared_ptr<VulkanTexture2D>> m_textures;
 
     uint32_t m_currentFrame = 0;
 

@@ -17,14 +17,17 @@ VulkanIndexBuffer::VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInf
     createBufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
     std::shared_ptr<VulkanBuffer> stagingBuffer;
-    VK_CALL VulkanBuffer::create_buffer(
-            createInfo.physicalDevice, m_device, stagingBuffer, bufferSize, createBufferInfo, m_indices.data());
+    VK_CALL
+    VulkanBuffer::create_buffer(
+            createInfo.physicalDevice, m_device, stagingBuffer, createBufferInfo, bufferSize, m_indices.data());
 
 
     createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
     createBufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 
-    VK_CALL VulkanBuffer::create_buffer(createInfo.physicalDevice, m_device, m_buffer, bufferSize, createBufferInfo);
+    VK_CALL
+    VulkanBuffer::create_buffer(createInfo.physicalDevice, m_device, m_buffer, createBufferInfo, bufferSize,
+                                nullptr);
 
     VK_CALL VulkanBuffer::copy_buffer(
             device,
