@@ -7,8 +7,8 @@
 
 _EAGLE_BEGIN
 
-VulkanUniformBuffer::VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createInfo, const ShaderItemLayout &layout) :
-        UniformBuffer(layout), m_info(createInfo) {
+VulkanUniformBuffer::VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createInfo, size_t size) :
+        UniformBuffer(size), m_info(createInfo) {
     create_uniform_buffer();
 }
 
@@ -18,15 +18,10 @@ VulkanUniformBuffer::~VulkanUniformBuffer() {
 
 void
 VulkanUniformBuffer::flush(uint32_t bufferIndex) {
-    m_buffers[bufferIndex]->copy_to(m_data, m_layout.stride());
+    m_buffers[bufferIndex]->copy_to(m_data, m_size);
     if (is_dirty()){
         m_dirtyBuffers.erase(std::find(m_dirtyBuffers.begin(), m_dirtyBuffers.end(), bufferIndex));
     }
-}
-
-size_t
-VulkanUniformBuffer::size() {
-    return m_layout.stride();
 }
 
 void VulkanUniformBuffer::create_uniform_buffer() {
@@ -41,8 +36,8 @@ void VulkanUniformBuffer::create_uniform_buffer() {
 
     for (size_t i = 0; i < m_info.bufferCount; i++) {
         VulkanBuffer::create_buffer(m_info.physicalDevice, m_info.device, m_buffers[i],
-                                    bufferCreateInfo, m_layout.stride(), nullptr);
-        m_buffers[i]->map(m_layout.stride());
+                                    bufferCreateInfo, m_size, m_data);
+        m_buffers[i]->map(m_size);
     }
     m_cleared = false;
 }
@@ -53,6 +48,7 @@ void VulkanUniformBuffer::cleanup() {
         m_buffers[i]->unmap();
         m_buffers[i]->destroy();
     }
+    m_dirtyBuffers.clear();
     m_cleared = true;
 }
 

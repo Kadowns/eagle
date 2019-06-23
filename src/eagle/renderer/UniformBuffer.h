@@ -15,14 +15,13 @@ class UniformBuffer {
 
 public:
 
-    explicit UniformBuffer(const ShaderItemLayout& layout );
+    explicit UniformBuffer(size_t size);
     virtual ~UniformBuffer();
 
     virtual void flush(uint32_t bufferIndex) = 0;
-    virtual size_t size() = 0;
+    size_t size() {return m_size;}
 protected:
-    ShaderItemLayout m_layout;
-
+    size_t m_size;
 };
 
 _EAGLE_END

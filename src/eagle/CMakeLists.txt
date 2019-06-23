@@ -42,6 +42,8 @@ set(RENDERER_INCLUDE
         renderer/ShaderItemLayout.h
         renderer/DescriptorSet.h
         renderer/Texture2D.h
+        renderer/Image.h
+        renderer/RenderTarget.h
         renderer/vulkan/VulkanContext.h
         renderer/vulkan/VulkanCore.h
         renderer/vulkan/VulkanHelper.h
@@ -53,6 +55,8 @@ set(RENDERER_INCLUDE
         renderer/vulkan/VulkanUniformBuffer.h
         renderer/vulkan/VulkanDescriptorSet.h
         renderer/vulkan/VulkanTexture2D.h
+        renderer/vulkan/VulkanImage.h
+        renderer/vulkan/VulkanRenderTarget.h
         renderer/vulkan/spirv_reflect.h
         )
 
@@ -74,6 +78,7 @@ set(RENDERER_SOURCE
         renderer/source/vulkan/VulkanUniformBuffer.cpp
         renderer/source/vulkan/VulkanDescriptorSet.cpp
         renderer/source/vulkan/VulkanTexture2D.cpp
+        renderer/source/vulkan/VulkanRenderTarget.cpp
         renderer/source/vulkan/spirv_reflect.cpp
         )
 

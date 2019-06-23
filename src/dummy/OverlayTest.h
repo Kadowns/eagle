@@ -37,7 +37,7 @@ public:
         };
         m_indexBuffer = Eagle::RenderingContext::create_index_buffer(indices);
 
-        m_uniformBuffer = Eagle::RenderingContext::create_uniform_buffer(Eagle::ShaderItemLayout({Eagle::SHADER_ITEM_COMPONENT_MAT4}));
+        m_uniformBuffer = Eagle::RenderingContext::create_uniform_buffer(sizeof(glm::mat4));
 
         m_descriptorSet = Eagle::RenderingContext::create_descriptor_set(m_shader.lock(), {m_uniformBuffer.lock()});
 
@@ -46,7 +46,7 @@ public:
         model = glm::translate(glm::mat4(1), glm::vec3(0, (float)Eagle::Application::get_window_height() - 128, 0));
         model = glm::scale(model, glm::vec3((float)Eagle::Application::get_window_width(), 128, 1));
         pm = proj * model;
-        Eagle::RenderingContext::uniform_buffer_update_data(m_uniformBuffer.lock(), &pm);
+        Eagle::RenderingContext::uniform_buffer_flush(m_uniformBuffer.lock(), &pm);
     }
 
     virtual void handle_deattach() override {
@@ -59,9 +59,13 @@ public:
 
     virtual void handle_draw() override {
 
+        Eagle::RenderingContext::begin_draw();
+
         Eagle::RenderingContext::bind_shader(m_shader.lock());
         Eagle::RenderingContext::bind_descriptor_set(m_descriptorSet.lock());
-        Eagle::RenderingContext::draw_indexed_vertex_buffer(m_vertexBuffer.lock(), m_indexBuffer.lock());
+        Eagle::RenderingContext::draw_indexed(m_vertexBuffer.lock(), m_indexBuffer.lock());
+
+        Eagle::RenderingContext::end_draw();
     }
 
     virtual void handle_event(Eagle::Event &e) override {
@@ -77,11 +81,12 @@ public:
     }
 
     bool handle_window_resized(Eagle::WindowResizedEvent& e){
+
         proj = glm::ortho(0.0f, (float)e.get_width(), 0.0f, (float)e.get_height());
         model = glm::translate(glm::mat4(1), glm::vec3(0, (float)e.get_height() - 128, 0));
         model = glm::scale(model, glm::vec3((float)e.get_width(), 128, 1));
         pm = proj * model;
-        Eagle::RenderingContext::uniform_buffer_update_data(m_uniformBuffer.lock(), &pm);
+        Eagle::RenderingContext::uniform_buffer_flush(m_uniformBuffer.lock(), &pm);
         return false;
     }
 

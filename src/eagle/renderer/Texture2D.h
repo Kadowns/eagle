@@ -6,6 +6,8 @@
 #define EAGLE_TEXTURE2D_H
 
 #include "eagle/core/Core.h"
+#include "Image.h"
+#include <memory>
 #include <vector>
 
 _EAGLE_BEGIN
@@ -27,9 +29,10 @@ public:
     inline const int get_height()                 const { return m_textureInfo.height;      }
     inline const int get_mip_levels()             const { return m_textureInfo.mipLevels;   }
     inline const int get_layer_count()            const { return m_textureInfo.layerCount;  }
-    inline const int get_channels()               const { return m_textureInfo.channels;  }
+    inline const int get_channels()               const { return m_textureInfo.channels;    }
     inline const std::vector<Pixel>& get_pixels() const { return m_textureInfo.pixels;      }
 
+    inline virtual std::weak_ptr<Image> get_image() = 0;
     virtual void upload_pixel_data() = 0;
 
     static Texture2DCreateInfo load_texture(const std::string& path);

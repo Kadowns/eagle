@@ -1,14 +1,13 @@
 #include "eagle/renderer/vulkan/VulkanDescriptorSet.h"
-
-
+#include "eagle/renderer/vulkan/VulkanImage.h"
 
 _EAGLE_BEGIN
 
 VulkanDescriptorSet::VulkanDescriptorSet(std::shared_ptr<VulkanShader> shader,
                                          const std::vector<std::shared_ptr<VulkanUniformBuffer>> &uniformBuffers,
-                                         const std::vector<std::shared_ptr<VulkanTexture2D>> &textures,
+                                         const std::vector<std::shared_ptr<VulkanImage>> &images,
                                          VulkanDescriptorSetCreateInfo createInfo) :
-    m_shader(shader), m_uniformBuffers(uniformBuffers), m_textures(textures), m_info(createInfo){
+    m_shader(shader), m_uniformBuffers(uniformBuffers), m_images(images), m_info(createInfo){
     create_descriptor_pool();
     create_descriptor_sets();
 }
@@ -57,7 +56,7 @@ void VulkanDescriptorSet::create_descriptor_sets() {
 
     std::vector<VkDescriptorSetLayoutBinding> descriptorBindings = m_shader.lock()->get_descriptor_set_layout_bindings();
     std::vector<VkDescriptorBufferInfo> bufferInfos(m_uniformBuffers.size());
-    std::vector<VkDescriptorImageInfo> imageInfos(m_textures.size());
+    std::vector<VkDescriptorImageInfo> imageInfos(m_images.size());
     for (size_t i = 0; i < m_descriptorSets.size(); i++) {
 
         for (size_t j = 0; j < bufferInfos.size(); j++) {
@@ -66,15 +65,13 @@ void VulkanDescriptorSet::create_descriptor_sets() {
             bufferInfos[j].range = m_uniformBuffers[j]->size();
         }
 
-
         for (size_t j = 0; j < imageInfos.size(); j++){
             imageInfos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfos[j].imageView = m_textures[j]->get_native_image_view();
-            imageInfos[j].sampler = m_textures[j]->get_native_sampler();
+            imageInfos[j].imageView = m_images[j]->view;
+            imageInfos[j].sampler = m_images[j]->sampler;
         }
 
         std::vector<VkWriteDescriptorSet> descriptorWrite = {};
-
 
         descriptorWrite.resize(bufferInfos.size() + imageInfos.size());
         size_t bufferIndex = 0;

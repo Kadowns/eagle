@@ -11,7 +11,6 @@
 #include <optional>
 #include <functional>
 
-#include "eagle/core/events/WindowEvents.h"
 #include "eagle/renderer/RenderingContext.h"
 
 #include "VulkanCore.h"
@@ -21,6 +20,7 @@
 #include "VulkanUniformBuffer.h"
 #include "VulkanDescriptorSet.h"
 #include "VulkanTexture2D.h"
+#include "VulkanRenderTarget.h"
 
 _EAGLE_BEGIN
 
@@ -58,7 +58,6 @@ protected:
         uint32_t imageIndex;
     };
 
-
 public:
 
     VulkanContext();
@@ -67,8 +66,6 @@ public:
 
     //inherited via RenderingContext
     virtual void init(Window *window) override;
-    virtual void begin_draw() override;
-    virtual void end_draw() override;
     virtual void refresh() override;
     virtual void deinit() override;
     virtual void handle_window_resized(int width, int height) override;
@@ -99,15 +96,17 @@ protected:
 
     virtual void create_swapchain_images();
 
-    virtual void create_render_pass();
-
     virtual void create_command_pool();
-
-    virtual void create_framebuffers();
 
     virtual void allocate_command_buffers();
 
     virtual void create_sync_objects();
+
+    virtual void create_depth_resources();
+
+    virtual void create_render_pass();
+
+    virtual void create_framebuffers();
 
     virtual void recreate_swapchain();
 
@@ -130,10 +129,15 @@ protected:
     VkPresentModeKHR choose_swap_present_mode(const std::vector<VkPresentModeKHR>& presentModes);
 
     VkExtent2D choose_swap_extent(const VkSurfaceCapabilitiesKHR& capabilities);
+    VkFormat find_supported_format(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+    VkFormat find_depth_format();
 
     //inherited via RenderingContext
     virtual std::weak_ptr<Shader>
     handle_create_shader(const std::string &vertFilePath, const std::string &fragFilePath) override;
+
+    virtual std::weak_ptr<Shader>
+    handle_create_shader(const std::string &vertFilePath, const std::string &fragFilePath, std::shared_ptr<RenderTarget> renderTarget) override;
 
     virtual std::weak_ptr<VertexBuffer>
     handle_create_vertex_buffer(std::vector<float> &vertices, size_t stride) override;
@@ -142,15 +146,18 @@ protected:
     handle_create_index_buffer(std::vector<uint32_t> &indices) override;
 
     virtual std::weak_ptr<UniformBuffer>
-    handle_create_uniform_buffer(const ShaderItemLayout& layout) override;
+    handle_create_uniform_buffer(size_t size) override;
 
     virtual std::weak_ptr<DescriptorSet>
     handle_create_descriptor_set(std::shared_ptr<Shader> shader,
                                  const std::vector<std::shared_ptr<UniformBuffer>> &uniformBuffers,
-                                 const std::vector<std::shared_ptr<Texture2D>> &textures) override;
+                                 const std::vector<std::shared_ptr<Image>> &images) override;
 
     virtual std::weak_ptr<Texture2D>
     handle_create_texture_2d(const std::string& filePath) override;
+
+    virtual std::weak_ptr<RenderTarget>
+    handle_create_render_target() override;
 
     virtual void
     handle_bind_shader(std::shared_ptr<Shader> shader) override;
@@ -159,13 +166,20 @@ protected:
     handle_draw_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer) override;
 
     virtual void
-    handle_draw_indexed_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer, std::shared_ptr<IndexBuffer> indexBuffer) override;
+    handle_draw_indexed(std::shared_ptr<VertexBuffer> vertexBuffer, std::shared_ptr<IndexBuffer> indexBuffer) override;
 
     virtual void
-    handle_uniform_buffer_update_data(std::shared_ptr<UniformBuffer> uniformBuffer, void *data) override;
+    handle_uniform_buffer_flush(std::shared_ptr<UniformBuffer> uniformBuffer, void *data) override;
 
     virtual void
     handle_bind_descriptor_set(std::shared_ptr<DescriptorSet> descriptorSet) override;
+
+    virtual void begin_draw_commands() override;
+    virtual void end_draw_commands() override;
+    virtual void handle_begin_draw() override;
+    virtual void handle_begin_draw(std::shared_ptr<RenderTarget> renderTarget) override;
+    virtual void handle_end_draw() override;
+
 
 protected:
 
@@ -178,13 +192,16 @@ protected:
 
     VkDebugUtilsMessengerEXT m_debugMessenger;
     VkQueue m_graphicsQueue;
-    VkFormat m_swapchainFormat;
-    VkExtent2D m_swapchainExtent;
-    VkSwapchainKHR m_swapchain;
-    VkRenderPass m_renderPass;
-    std::vector<VkImage> m_swapchainImages;
-    std::vector<VkImageView> m_swapchainImageViews;
-    std::vector<VkFramebuffer> m_framebuffers;
+
+    struct {
+        VkFormat swapchainFormat;
+        VkExtent2D extent2D;
+        VkSwapchainKHR swapchain;
+        VkRenderPass renderPass;
+        std::vector<VkImage> swapchainImages;
+        std::vector<VkImageView> swapchainImageViews;
+        std::vector<VkFramebuffer> framebuffers;
+    } m_present;
 
     VkCommandPool m_commandPool;
     std::vector<VkCommandBuffer> m_commandBuffers;
@@ -200,10 +217,9 @@ protected:
     std::vector<std::shared_ptr<VulkanDescriptorSet>> m_descriptorSets;
     std::vector<std::shared_ptr<VulkanShader>> m_shaders;
     std::vector<std::shared_ptr<VulkanTexture2D>> m_textures;
+    std::vector<std::shared_ptr<VulkanRenderTarget>> m_renderTargets;
 
     uint32_t m_currentFrame = 0;
-
-    size_t m_eventListenerIdentifier;
 
     bool m_windowResized = false;
     bool m_drawInitialized = false;

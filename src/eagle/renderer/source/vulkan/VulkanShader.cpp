@@ -12,7 +12,7 @@ _EAGLE_BEGIN
 
 VulkanShader::VulkanShader(const std::string& vertFileName, const std::string& fragFileName, const VulkanShaderCreateInfo& createInfo) :
     m_cleared(true),
-    m_createInfo(createInfo){
+    m_info(createInfo){
 
     m_vertShaderCode = VulkanShaderCompiler::compile_glsl(PROJECT_ROOT + vertFileName);
     m_fragShaderCode = VulkanShaderCompiler::compile_glsl(PROJECT_ROOT + fragFileName);
@@ -22,7 +22,7 @@ VulkanShader::VulkanShader(const std::string& vertFileName, const std::string& f
 }
 
 VulkanShader::~VulkanShader() {
-    VK_CALL vkDestroyDescriptorSetLayout(m_createInfo.device, m_descriptorSetLayout, nullptr);
+    VK_CALL vkDestroyDescriptorSetLayout(m_info.device, m_descriptorSetLayout, nullptr);
     cleanup_pipeline();
 }
 
@@ -125,7 +125,7 @@ void VulkanShader::create_descriptor_set_layout() {
     descriptorSetLayoutInfo.bindingCount = static_cast<uint32_t>(m_layoutBindings.size());
     descriptorSetLayoutInfo.pBindings = m_layoutBindings.data();
 
-    VK_CALL_ASSERT(vkCreateDescriptorSetLayout(m_createInfo.device, &descriptorSetLayoutInfo, nullptr, &m_descriptorSetLayout)) {
+    VK_CALL_ASSERT(vkCreateDescriptorSetLayout(m_info.device, &descriptorSetLayoutInfo, nullptr, &m_descriptorSetLayout)) {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
 }
@@ -163,17 +163,19 @@ void VulkanShader::create_pipeline() {
     inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     inputAssembly.primitiveRestartEnable = VK_FALSE;
 
+
+    VkExtent2D extent = *m_info.pExtent;
     VkViewport viewport = {};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = (float) m_createInfo.extent.width;
-    viewport.height = (float) m_createInfo.extent.height;
+    viewport.width = (float) extent.width;
+    viewport.height = (float) extent.height;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     VkRect2D scissor = {};
     scissor.offset = {0, 0};
-    scissor.extent = m_createInfo.extent;
+    scissor.extent = extent;
 
     VkPipelineViewportStateCreateInfo viewportState = {};
     viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -201,6 +203,18 @@ void VulkanShader::create_pipeline() {
     colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
     colorBlendAttachment.blendEnable = VK_FALSE;
 
+    VkPipelineDepthStencilStateCreateInfo depthStencil = {};
+    depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depthStencil.depthTestEnable = VK_TRUE;
+    depthStencil.depthWriteEnable = VK_TRUE;
+    depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+    depthStencil.depthBoundsTestEnable = VK_FALSE;
+    depthStencil.minDepthBounds = 0.0f; // Optional
+    depthStencil.maxDepthBounds = 1.0f; // Optional
+    depthStencil.stencilTestEnable = VK_FALSE;
+    depthStencil.front = {}; // Optional
+    depthStencil.back = {}; // Optional
+
     VkPipelineColorBlendStateCreateInfo colorBlending = {};
     colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     colorBlending.logicOpEnable = VK_FALSE;
@@ -212,13 +226,14 @@ void VulkanShader::create_pipeline() {
     colorBlending.blendConstants[2] = 0.0f;
     colorBlending.blendConstants[3] = 0.0f;
 
+
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.pushConstantRangeCount = 0;
     pipelineLayoutInfo.setLayoutCount = 1;
     pipelineLayoutInfo.pSetLayouts = &m_descriptorSetLayout;
 
-    VK_CALL_ASSERT(vkCreatePipelineLayout(m_createInfo.device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout)) {
+    VK_CALL_ASSERT(vkCreatePipelineLayout(m_info.device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout)) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
 
@@ -232,17 +247,18 @@ void VulkanShader::create_pipeline() {
     pipelineInfo.pRasterizationState = &rasterizer;
     pipelineInfo.pMultisampleState = &multisampling;
     pipelineInfo.pColorBlendState = &colorBlending;
+    pipelineInfo.pDepthStencilState = &depthStencil;
     pipelineInfo.layout = m_pipelineLayout;
-    pipelineInfo.renderPass = m_createInfo.renderPass;
+    pipelineInfo.renderPass = *m_info.pRenderPass;
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-    VK_CALL_ASSERT(vkCreateGraphicsPipelines(m_createInfo.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_graphicsPipeline)) {
+    VK_CALL_ASSERT(vkCreateGraphicsPipelines(m_info.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_graphicsPipeline)) {
         throw std::runtime_error("failed to create graphics pipeline!");
     }
 
-    VK_CALL vkDestroyShaderModule(m_createInfo.device, fragShaderModule, nullptr);
-    VK_CALL vkDestroyShaderModule(m_createInfo.device, vertShaderModule, nullptr);
+    VK_CALL vkDestroyShaderModule(m_info.device, fragShaderModule, nullptr);
+    VK_CALL vkDestroyShaderModule(m_info.device, vertShaderModule, nullptr);
 
     m_cleared = false;
 
@@ -251,8 +267,8 @@ void VulkanShader::create_pipeline() {
 
 void VulkanShader::cleanup_pipeline(){
     if (m_cleared){ return; }
-    VK_CALL vkDestroyPipeline(m_createInfo.device, m_graphicsPipeline, nullptr);
-    VK_CALL vkDestroyPipelineLayout(m_createInfo.device, m_pipelineLayout, nullptr);
+    VK_CALL vkDestroyPipeline(m_info.device, m_graphicsPipeline, nullptr);
+    VK_CALL vkDestroyPipelineLayout(m_info.device, m_pipelineLayout, nullptr);
     m_cleared = true;
 }
 
@@ -320,7 +336,7 @@ VkShaderModule VulkanShader::create_shader_module(const std::vector<uint32_t> &c
     createInfo.pCode = code.data();
 
     VkShaderModule shaderModule;
-    VK_CALL_ASSERT(vkCreateShaderModule(m_createInfo.device, &createInfo, nullptr, &shaderModule)) {
+    VK_CALL_ASSERT(vkCreateShaderModule(m_info.device, &createInfo, nullptr, &shaderModule)) {
         throw std::runtime_error("failed to create shader module!");
     }
 

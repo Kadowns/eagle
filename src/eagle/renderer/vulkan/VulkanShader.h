@@ -3,7 +3,7 @@
 
 #include "VulkanCore.h"
 #include "eagle/renderer/Shader.h"
-#include "eagle/renderer/ShaderItemLayout.h"
+#include "eagle/renderer/vulkan/VulkanRenderTarget.h"
 
 _EAGLE_BEGIN
 
@@ -13,8 +13,8 @@ public:
 
     struct VulkanShaderCreateInfo {
         VkDevice device;
-        VkExtent2D extent;
-        VkRenderPass renderPass;
+        VkRenderPass* pRenderPass;
+        VkExtent2D* pExtent;
     };
 
 public:
@@ -23,8 +23,6 @@ public:
                  const VulkanShaderCreateInfo &createInfo);
 
     ~VulkanShader();
-
-    inline void set_vulkan_info(const VulkanShaderCreateInfo &info) { m_createInfo = info; }
 
     void bind_command_buffer(VkCommandBuffer cmd);
 
@@ -61,7 +59,7 @@ private:
 
 private:
 
-    VulkanShaderCreateInfo m_createInfo;
+    VulkanShaderCreateInfo m_info;
     VkCommandBuffer m_commandBuffer;
     VkPipelineLayout m_pipelineLayout;
     VkPipeline m_graphicsPipeline;

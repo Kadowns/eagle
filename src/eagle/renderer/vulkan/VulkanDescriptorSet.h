@@ -24,7 +24,7 @@ class VulkanDescriptorSet : public DescriptorSet {
 public:
     VulkanDescriptorSet(std::shared_ptr<VulkanShader> shader,
                         const std::vector<std::shared_ptr<VulkanUniformBuffer>> &uniformBuffers,
-                        const std::vector<std::shared_ptr<VulkanTexture2D>> &textures,
+                        const std::vector<std::shared_ptr<VulkanImage>> &images,
                         VulkanDescriptorSetCreateInfo createInfo);
     ~VulkanDescriptorSet();
 
@@ -40,7 +40,7 @@ private:
     std::vector<VkDescriptorSet> m_descriptorSets;
     std::weak_ptr<VulkanShader> m_shader;
     std::vector<std::shared_ptr<VulkanUniformBuffer>> m_uniformBuffers;
-    std::vector<std::shared_ptr<VulkanTexture2D>> m_textures;
+    std::vector<std::shared_ptr<VulkanImage>> m_images;
     VulkanDescriptorSetCreateInfo m_info;
     VulkanDescriptorSetDrawInfo m_drawInfo;
 

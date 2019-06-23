@@ -48,8 +48,10 @@ void WindowGLFW::init() {
         auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
         data.width = width;
         data.height = height;
-        data.eventCallback(std::make_shared<WindowResizedEvent>(width, height));
         data.context->handle_window_resized(width, height);
+        if (width != 0 && height != 0){
+            data.eventCallback(std::make_shared<WindowResizedEvent>(width, height));
+        }
     });
 
     //window focus
@@ -115,11 +117,11 @@ void WindowGLFW::wait_native_events() {
 }
 
 void WindowGLFW::begin_draw() {
-    m_windowData.context->begin_draw();
+    m_windowData.context->begin_draw_commands();
 }
 
 void WindowGLFW::end_draw() {
-    m_windowData.context->end_draw();
+    m_windowData.context->end_draw_commands();
 }
 
 void WindowGLFW::set_event_callback(Window::PFN_EventCallback callback) {

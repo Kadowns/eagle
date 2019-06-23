@@ -8,12 +8,9 @@
 
 _EAGLE_BEGIN
 
-VkImageView VulkanHelper::create_image_view(
-        VkDevice device,
-        VkImage image,
-        VkFormat format,
-        VkImageViewType viewType,
-        VkImageSubresourceRange subresourceRange) {
+void VulkanHelper::create_image_view(VkDevice device, VkImage image, VkImageView &imageView, VkFormat format,
+                                     VkImageViewType viewType,
+                                     VkImageSubresourceRange subresourceRange) {
 
     VkImageViewCreateInfo viewInfo = {};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -22,12 +19,9 @@ VkImageView VulkanHelper::create_image_view(
     viewInfo.format = format;
     viewInfo.subresourceRange = subresourceRange;
 
-    VkImageView imageView;
     if (vkCreateImageView(device, &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
         throw std::runtime_error("failed to create texture image view!");
     }
-
-    return imageView;
 }
 
 uint32_t
@@ -84,7 +78,7 @@ void
 VulkanHelper::create_image(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t width, uint32_t height,
                            uint32_t mipLevels, uint32_t arrayLayers, VkFormat format, VkImageTiling tiling,
                            VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image,
-                           VkDeviceMemory &imageMemory, const VkImageCreateFlags &flags) {
+                           VkDeviceMemory &imageMemory, VkImageCreateFlags flags) {
 
     VkImageCreateInfo imageInfo = {};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -174,6 +168,31 @@ VulkanHelper::transition_image_layout(VkDevice device, VkCommandPool commandPool
     );
 
     end_single_time_commnds(device, commandPool, commandBuffer, graphicsQueue);
+}
+
+void
+VulkanHelper::create_image_sampler(VkDevice device, VkSampler &sampler, VkSamplerAddressMode wrapMode) {
+    VkSamplerCreateInfo samplerInfo = {};
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter = VK_FILTER_LINEAR;
+    samplerInfo.minFilter = VK_FILTER_LINEAR;
+    samplerInfo.addressModeU = wrapMode;
+    samplerInfo.addressModeV = wrapMode;
+    samplerInfo.addressModeW = wrapMode;
+    samplerInfo.anisotropyEnable = VK_TRUE;
+    samplerInfo.maxAnisotropy = 16;
+    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerInfo.unnormalizedCoordinates = VK_FALSE;
+    samplerInfo.compareEnable = VK_FALSE;
+    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.mipLodBias = 0.0f;
+    samplerInfo.minLod = 0.0f;
+    samplerInfo.maxLod = 1;
+
+    if (vkCreateSampler(device, &samplerInfo, nullptr, &sampler) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create texture sampler!");
+    }
 }
 
 

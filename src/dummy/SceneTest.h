@@ -18,10 +18,24 @@ public:
 
 
         void update(){
-            Eagle::RenderingContext::uniform_buffer_update_data(buffer.lock(), &direction);
+            Eagle::RenderingContext::uniform_buffer_flush(buffer.lock(), &direction);
         }
 
     } m_light;
+
+    struct {
+        std::weak_ptr<Eagle::Shader> shader;
+        std::weak_ptr<Eagle::VertexBuffer> vertices;
+        std::weak_ptr<Eagle::IndexBuffer> indices;
+        std::weak_ptr<Eagle::UniformBuffer> uniform;
+        std::weak_ptr<Eagle::DescriptorSet> descriptorSet;
+
+        struct{
+            alignas(4)  float amount;
+            alignas(16) glm::mat3 kernel;
+        }ubo;
+
+    } postFx;
 
     std::weak_ptr<Eagle::Shader> m_shader;
     std::weak_ptr<Eagle::VertexBuffer> m_vertexBuffer;
@@ -29,6 +43,7 @@ public:
     std::weak_ptr<Eagle::UniformBuffer> m_mvpBuffer, m_colorBuffer;
     std::weak_ptr<Eagle::DescriptorSet> m_descriptorSet;
     std::weak_ptr<Eagle::Texture2D> m_texture;
+    std::weak_ptr<Eagle::RenderTarget> m_renderTarget;
 
     float rotationDirection = 1;
 
@@ -39,8 +54,41 @@ public:
 
     virtual void handle_attach() override {
 
-        m_shader = Eagle::RenderingContext::create_shader("shaders/shader.vert", "shaders/shader.frag");
+        m_renderTarget = Eagle::RenderingContext::create_render_target();
+
+        postFx.shader = Eagle::RenderingContext::create_shader("shaders/postprocess.vert", "shaders/postprocess.frag");
+        postFx.uniform = Eagle::RenderingContext::create_uniform_buffer(sizeof(postFx.ubo));
+        postFx.descriptorSet = Eagle::RenderingContext::create_descriptor_set(
+                postFx.shader.lock(),
+                {postFx.uniform.lock()},
+                {m_renderTarget.lock()->get_image().lock()}
+                );
+
         std::vector<float> vertices = {
+                -1.0f, -1.0f, 0.0f, 0.0f,
+                -1.0f, 1.0f,  0.0f, 1.0f,
+                1.0f, 1.0f,   1.0f, 1.0f,
+                1.0f, -1.0f,  1.0f, 0.0f
+        };
+        postFx.vertices = Eagle::RenderingContext::create_vertex_buffer(vertices, 4);
+
+        std::vector<uint32_t> indices = {
+                0, 1, 2, 0, 2, 3
+        };
+
+        postFx.indices = Eagle::RenderingContext::create_index_buffer(indices);
+
+        postFx.ubo.kernel = glm::mat3(
+                -1.0f, -2.0f, -1.0f,
+                -1.0f, 0.0f, 1.0f,
+                1.0f, 2.0f, 1.0f
+        );
+        postFx.ubo.amount = 0.1f;
+        Eagle::RenderingContext::uniform_buffer_flush(postFx.uniform.lock(), &postFx.ubo);
+
+
+        m_shader = Eagle::RenderingContext::create_shader("shaders/shader.vert", "shaders/shader.frag", m_renderTarget.lock());
+        vertices = {
                 1.0f, -1.0f, 1.0f,      0.0f, 0.0f,   0.0f, 0.0f, 1.0f,      // 0
                 1.0f, 1.0f, 1.0f,       1.0f, 0.0f,   0.0f, 0.0f, 1.0f,      // 1
                 -1.0f, 1.0f, 1.0f,      0.0f, 1.0f,   0.0f, 0.0f, 1.0f,      // 2
@@ -74,7 +122,7 @@ public:
         };
         m_vertexBuffer = Eagle::RenderingContext::create_vertex_buffer(vertices, 8);
 
-        std::vector<uint32_t> indices = {
+        indices = {
                 0, 1, 2, 0, 2, 3,
                 4, 5, 6, 4, 6, 7,
                 8, 9, 10, 8, 10, 11,
@@ -84,9 +132,9 @@ public:
         };
         m_indexBuffer = Eagle::RenderingContext::create_index_buffer(indices);
 
-        m_mvpBuffer = Eagle::RenderingContext::create_uniform_buffer(Eagle::ShaderItemLayout({Eagle::SHADER_ITEM_COMPONENT_MAT4}));
-        m_colorBuffer = Eagle::RenderingContext::create_uniform_buffer(Eagle::ShaderItemLayout({Eagle::SHADER_ITEM_COMPONENT_VEC4}));
-        m_light.buffer = Eagle::RenderingContext::create_uniform_buffer(Eagle::ShaderItemLayout({Eagle::SHADER_ITEM_COMPONENT_VEC4, Eagle::SHADER_ITEM_COMPONENT_VEC4}));
+        m_mvpBuffer = Eagle::RenderingContext::create_uniform_buffer(sizeof(glm::mat4));
+        m_colorBuffer = Eagle::RenderingContext::create_uniform_buffer(sizeof(glm::vec4));
+        m_light.buffer = Eagle::RenderingContext::create_uniform_buffer(sizeof(glm::vec4) * 2);
         m_light.color = glm::vec4(1.0f);
         m_light.direction = glm::vec4(0.2f, -0.2f, 0.8f, 1.0f);
         m_light.update();
@@ -94,7 +142,7 @@ public:
         m_texture = Eagle::RenderingContext::create_texture_2d("textures/box.png");
         m_descriptorSet = Eagle::RenderingContext::create_descriptor_set(m_shader.lock(),
                                                                          {m_mvpBuffer.lock(), m_colorBuffer.lock(), m_light.buffer.lock()},
-                                                                         {m_texture.lock()});
+                                                                         {m_texture.lock()->get_image().lock()});
 
         rotation = glm::quat(glm::vec3(0));
 
@@ -103,7 +151,7 @@ public:
         proj[1][1] *= -1;
 
         color = glm::vec4(1.0);
-        Eagle::RenderingContext::uniform_buffer_update_data(m_colorBuffer.lock(), &color);
+        Eagle::RenderingContext::uniform_buffer_flush(m_colorBuffer.lock(), &color);
 
 
     }
@@ -118,15 +166,31 @@ public:
 
         model = glm::mat4(1) * glm::mat4_cast(rotation);
         mvp = proj * view * model;
-        Eagle::RenderingContext::uniform_buffer_update_data(m_mvpBuffer.lock(), &mvp);
+        Eagle::RenderingContext::uniform_buffer_flush(m_mvpBuffer.lock(), &mvp);
+
+        postFx.ubo.amount = abs(sin((double)time)) * 0.5f + 0.5f;
+        Eagle::RenderingContext::uniform_buffer_flush(postFx.uniform.lock(), &postFx.ubo);
+
 
     }
 
     virtual void handle_draw() override {
 
+        Eagle::RenderingContext::begin_draw(m_renderTarget.lock());
+
         Eagle::RenderingContext::bind_shader(m_shader.lock());
         Eagle::RenderingContext::bind_descriptor_set(m_descriptorSet.lock());
-        Eagle::RenderingContext::draw_indexed_vertex_buffer(m_vertexBuffer.lock(), m_indexBuffer.lock());
+        Eagle::RenderingContext::draw_indexed(m_vertexBuffer.lock(), m_indexBuffer.lock());
+
+        Eagle::RenderingContext::end_draw();
+
+        Eagle::RenderingContext::begin_draw();
+
+        Eagle::RenderingContext::bind_shader(postFx.shader.lock());
+        Eagle::RenderingContext::bind_descriptor_set(postFx.descriptorSet.lock());
+        Eagle::RenderingContext::draw_indexed(postFx.vertices.lock(), postFx.indices.lock());
+
+        Eagle::RenderingContext::end_draw();
     }
 
     virtual void handle_deattach() override{
@@ -147,7 +211,7 @@ public:
     bool handle_button_pressed(ButtonClickedEvent &e){
         rotationDirection *= -1;
         color = glm::vec4(1.0f, 1.0, 1.0, 1.0f) - color;
-        Eagle::RenderingContext::uniform_buffer_update_data(m_colorBuffer.lock(), &color);
+        Eagle::RenderingContext::uniform_buffer_flush(m_colorBuffer.lock(), &color);
         return true;
     }
 

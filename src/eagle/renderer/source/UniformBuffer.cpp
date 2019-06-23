@@ -6,8 +6,8 @@
 
 _EAGLE_BEGIN
 
-UniformBuffer::UniformBuffer(const ShaderItemLayout& layout):
-    m_layout(layout){
+UniformBuffer::UniformBuffer(size_t size):
+    m_size(size){
 
 }
 
