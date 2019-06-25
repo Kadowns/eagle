@@ -30,8 +30,6 @@ void main(){
 
     vec3 borderColor = (color1 + color2 + color3 + color4 + color5 + color6 + color7 + color8 + color9).rrr;
     vec3 color = texture(uTexture, vTexCoord).rgb;
-
-    outColor = vec4(mix(color, borderColor, uKernel.amount), 1.0);
-
+    outColor = vec4(clamp(color + borderColor * uKernel.amount, 0.0, 1.0), 1.0);
 
 }

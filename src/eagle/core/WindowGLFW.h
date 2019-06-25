@@ -20,7 +20,7 @@ public:
 
     virtual void init() override;
     virtual void deinit() override;
-    virtual void begin_draw() override;
+    virtual bool begin_draw() override;
     virtual void end_draw() override;
     virtual void refresh() override;
 

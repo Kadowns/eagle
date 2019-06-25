@@ -25,7 +25,8 @@ public:
     virtual ~RenderingContext() = default;
 
     virtual void init(Window *window) = 0;
-    virtual void begin_draw_commands() = 0;
+    virtual bool begin_draw_commands() = 0;
+
     virtual void end_draw_commands() = 0;
     virtual void refresh() = 0;
     virtual void deinit() = 0;
@@ -42,9 +43,8 @@ public:
     static std::weak_ptr<Texture2D> create_texture_2d(const std::string& filePath);
     static std::weak_ptr<RenderTarget> create_render_target();
 
-    static void begin_draw();
-    static void begin_draw(std::shared_ptr<RenderTarget>);
-    static void end_draw();
+    static void begin_draw_offscreen(std::shared_ptr<RenderTarget> renderTarget);
+    static void end_draw_offscreen();
     static void bind_shader(std::shared_ptr<Shader> shader);
     static void bind_descriptor_set(std::shared_ptr<DescriptorSet> descriptorSet);
     static void draw_vertices(std::shared_ptr<VertexBuffer> vertexBuffer);
@@ -98,13 +98,10 @@ protected:
     handle_bind_descriptor_set(std::shared_ptr<DescriptorSet> descriptorSet) = 0;
 
     virtual void
-    handle_begin_draw() = 0;
+    handle_end_draw_offscreen() = 0;
 
     virtual void
-    handle_end_draw() = 0;
-
-    virtual void
-    handle_begin_draw(std::shared_ptr<RenderTarget> renderTarget) = 0;
+    handle_begin_draw_offscreen(std::shared_ptr<RenderTarget> renderTarget) = 0;
 
 };
 

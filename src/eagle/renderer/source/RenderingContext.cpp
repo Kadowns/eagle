@@ -80,18 +80,13 @@ RenderingContext::uniform_buffer_flush(std::shared_ptr<UniformBuffer> uniformBuf
 }
 
 void
-RenderingContext::begin_draw() {
-    m_currentRenderer->handle_begin_draw();
+RenderingContext::begin_draw_offscreen(std::shared_ptr<RenderTarget> renderTarget) {
+    m_currentRenderer->handle_begin_draw_offscreen(renderTarget);
 }
 
 void
-RenderingContext::begin_draw(std::shared_ptr<RenderTarget> renderTarget) {
-    m_currentRenderer->handle_begin_draw(renderTarget);
-}
-
-void
-RenderingContext::end_draw() {
-    m_currentRenderer->handle_end_draw();
+RenderingContext::end_draw_offscreen() {
+    m_currentRenderer->handle_end_draw_offscreen();
 }
 
 

@@ -98,14 +98,6 @@ void VulkanDescriptorSet::create_descriptor_sets() {
     m_cleared = false;
 }
 
-void VulkanDescriptorSet::bind() {
-    VK_CALL vkCmdBindDescriptorSets(m_drawInfo.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shader.lock()->get_layout(), 0, 1, &m_descriptorSets[m_drawInfo.bufferIndex], 0, nullptr);
-}
-
-void VulkanDescriptorSet::set_draw_info(VulkanDescriptorSetDrawInfo drawInfo) {
-    m_drawInfo = drawInfo;
-}
-
 void VulkanDescriptorSet::cleanup() {
     if (m_cleared) return;
     VK_CALL vkDestroyDescriptorPool(m_info.device, m_descriptorPool, nullptr);

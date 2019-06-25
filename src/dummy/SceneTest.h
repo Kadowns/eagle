@@ -176,21 +176,17 @@ public:
 
     virtual void handle_draw() override {
 
-        Eagle::RenderingContext::begin_draw(m_renderTarget.lock());
+        Eagle::RenderingContext::begin_draw_offscreen(m_renderTarget.lock());
 
         Eagle::RenderingContext::bind_shader(m_shader.lock());
         Eagle::RenderingContext::bind_descriptor_set(m_descriptorSet.lock());
         Eagle::RenderingContext::draw_indexed(m_vertexBuffer.lock(), m_indexBuffer.lock());
 
-        Eagle::RenderingContext::end_draw();
-
-        Eagle::RenderingContext::begin_draw();
+        Eagle::RenderingContext::end_draw_offscreen();
 
         Eagle::RenderingContext::bind_shader(postFx.shader.lock());
         Eagle::RenderingContext::bind_descriptor_set(postFx.descriptorSet.lock());
         Eagle::RenderingContext::draw_indexed(postFx.vertices.lock(), postFx.indices.lock());
-
-        Eagle::RenderingContext::end_draw();
     }
 
     virtual void handle_deattach() override{

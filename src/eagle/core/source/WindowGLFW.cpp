@@ -116,8 +116,8 @@ void WindowGLFW::wait_native_events() {
     glfwWaitEvents();
 }
 
-void WindowGLFW::begin_draw() {
-    m_windowData.context->begin_draw_commands();
+bool WindowGLFW::begin_draw() {
+    return m_windowData.context->begin_draw_commands();
 }
 
 void WindowGLFW::end_draw() {

@@ -59,13 +59,10 @@ public:
 
     virtual void handle_draw() override {
 
-        Eagle::RenderingContext::begin_draw();
-
         Eagle::RenderingContext::bind_shader(m_shader.lock());
         Eagle::RenderingContext::bind_descriptor_set(m_descriptorSet.lock());
         Eagle::RenderingContext::draw_indexed(m_vertexBuffer.lock(), m_indexBuffer.lock());
 
-        Eagle::RenderingContext::end_draw();
     }
 
     virtual void handle_event(Eagle::Event &e) override {

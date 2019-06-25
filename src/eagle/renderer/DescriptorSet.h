@@ -14,9 +14,6 @@ _EAGLE_BEGIN
 
 class DescriptorSet {
 
-public:
-    virtual void bind() = 0;
-
 };
 
 _EAGLE_END

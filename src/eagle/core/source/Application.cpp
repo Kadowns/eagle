@@ -68,7 +68,11 @@ void Application::run() {
             layer->handle_update();
         }
 
-        m_window->begin_draw();
+        if (!m_window->begin_draw()){
+            //failed to present image, skip all rendering for this frame
+            continue;
+        }
+
         for (auto layer = m_layerStack.end(); layer != m_layerStack.begin();){
             (*--layer)->handle_draw();
         }

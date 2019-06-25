@@ -57,6 +57,7 @@ set(RENDERER_INCLUDE
         renderer/vulkan/VulkanTexture2D.h
         renderer/vulkan/VulkanImage.h
         renderer/vulkan/VulkanRenderTarget.h
+        renderer/vulkan/VulkanCommand.h
         renderer/vulkan/spirv_reflect.h
         )
 

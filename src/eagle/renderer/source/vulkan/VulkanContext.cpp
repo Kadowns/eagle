@@ -93,38 +93,6 @@ void VulkanContext::deinit() {
 }
 
 
-void VulkanContext::refresh() {
-    if (m_drawInfo.invalidFrame) {
-        return;
-    }
-
-    VkPresentInfoKHR presentInfo = {};
-    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-    VkSemaphore waitSemaphores[] = {m_renderFinishedSemaphores[m_currentFrame]};
-    presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = waitSemaphores;
-
-    VkSwapchainKHR swapChains[] = {m_present.swapchain};
-    presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = swapChains;
-    presentInfo.pImageIndices = &m_drawInfo.imageIndex;
-
-    VK_CALL
-    VkResult result = vkQueuePresentKHR(m_presentQueue, &presentInfo);
-
-
-    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_windowResized) {
-        m_windowResized = false;
-        recreate_swapchain();
-
-    } else if (result != VK_SUCCESS) {
-        throw std::runtime_error("failed to present swapchain image!");
-    }
-
-    m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
-}
-
 void VulkanContext::create_instance() {
 
     EG_CORE_TRACE("Creating vulkan instance!");
@@ -1080,6 +1048,18 @@ std::weak_ptr<RenderTarget> VulkanContext::handle_create_render_target() {
 }
 
 void
+VulkanContext::handle_uniform_buffer_flush(std::shared_ptr<UniformBuffer> uniformBuffer, void *data) {
+
+    std::shared_ptr<VulkanUniformBuffer> vulkanUniformBuffer = std::static_pointer_cast<VulkanUniformBuffer>(
+            uniformBuffer);
+    vulkanUniformBuffer->upload_data(data);
+    if (std::find(m_dirtyUniformBuffers.begin(), m_dirtyUniformBuffers.end(), vulkanUniformBuffer) ==
+        m_dirtyUniformBuffers.end()) {
+        m_dirtyUniformBuffers.emplace_back(vulkanUniformBuffer);
+    }
+}
+
+void
 VulkanContext::handle_draw_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer) {
 
     if (!m_drawInitialized) {
@@ -1089,13 +1069,20 @@ VulkanContext::handle_draw_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuf
 
     std::shared_ptr<VulkanVertexBuffer> vulkanVertexBuffer = std::static_pointer_cast<VulkanVertexBuffer>(vertexBuffer);
 
-    VkBuffer buffers[] = {vulkanVertexBuffer->get_buffer().get_native_buffer()};
-    VkDeviceSize offsets[] = {0};
+    auto bindVertexCmd = std::make_shared<VulkanCommandBindVertexBuffer>(m_present.commandBuffer, vulkanVertexBuffer->get_buffer().get_native_buffer());
+    auto drawCmd = std::make_shared<VulkanCommandDraw>(m_present.commandBuffer, vulkanVertexBuffer->get_vertices_count());
 
-    VK_CALL
-    vkCmdBindVertexBuffers(m_commandBuffers[m_drawInfo.imageIndex], 0, 1, buffers, offsets);
-    VK_CALL
-    vkCmdDraw(m_commandBuffers[m_drawInfo.imageIndex], vulkanVertexBuffer->get_vertices_count(), 1, 0, 0);
+    if (m_recordingFirstPass){
+        size_t index = m_firstPassCommands.size();
+        m_firstPassCommands.resize(index + 2);
+        m_firstPassCommands[index]     = bindVertexCmd;
+        m_firstPassCommands[index + 1] = drawCmd;
+    } else {
+        size_t index = m_secondPassCommands.size();
+        m_secondPassCommands.resize(index + 2);
+        m_secondPassCommands[index]     = bindVertexCmd;
+        m_secondPassCommands[index + 1] = drawCmd;
+    }
 }
 
 void
@@ -1108,8 +1095,13 @@ VulkanContext::handle_bind_shader(std::shared_ptr<Shader> shader) {
 
     std::shared_ptr<VulkanShader> vulkanShader = std::static_pointer_cast<VulkanShader>(shader);
 
-    vulkanShader->bind_command_buffer(m_commandBuffers[m_drawInfo.imageIndex]);
-    vulkanShader->bind();
+    auto cmd = std::make_shared<VulkanCommandBindShader>(m_present.commandBuffer, vulkanShader->get_pipeline());
+
+    if (m_recordingFirstPass){
+        m_firstPassCommands.emplace_back(cmd);
+    } else {
+        m_secondPassCommands.emplace_back(cmd);
+    }
 }
 
 void
@@ -1123,52 +1115,50 @@ VulkanContext::handle_draw_indexed(std::shared_ptr<VertexBuffer> vertexBuffer,
 
     std::shared_ptr<VulkanIndexBuffer> vulkanIndexBuffer = std::static_pointer_cast<VulkanIndexBuffer>(indexBuffer);
 
-    VkBuffer vertexBuffers[] = {vulkanVertexBuffer->get_buffer().get_native_buffer()};
-    VkDeviceSize offsets[] = {0};
+    auto bindVertexCmd = std::make_shared<VulkanCommandBindVertexBuffer>(m_present.commandBuffer, vulkanVertexBuffer->get_buffer().get_native_buffer());
+    auto bindIndexCmd = std::make_shared<VulkanCommandBindIndexBuffer>(m_present.commandBuffer, vulkanIndexBuffer->get_buffer().get_native_buffer());
+    auto drawIndexedCmd = std::make_shared<VulkanCommandDrawIndexed>(m_present.commandBuffer, vulkanIndexBuffer->get_indices_count());
 
-    VK_CALL
-    vkCmdBindVertexBuffers(m_commandBuffers[m_drawInfo.imageIndex], 0, 1, vertexBuffers, offsets);
-
-    VK_CALL
-    vkCmdBindIndexBuffer(m_commandBuffers[m_drawInfo.imageIndex], vulkanIndexBuffer->get_buffer().get_native_buffer(),
-                         0, VK_INDEX_TYPE_UINT32);
-
-    VK_CALL
-    vkCmdDrawIndexed(m_commandBuffers[m_drawInfo.imageIndex], vulkanIndexBuffer->get_indices_count(), 1, 0, 0, 0);
-
+    if (m_recordingFirstPass){
+        size_t index = m_firstPassCommands.size();
+        m_firstPassCommands.resize(m_firstPassCommands.size() + 3);
+        m_firstPassCommands[index]     = bindVertexCmd;
+        m_firstPassCommands[index + 1] = bindIndexCmd;
+        m_firstPassCommands[index + 2] = drawIndexedCmd;
+    }
+    else{
+        size_t index = m_secondPassCommands.size();
+        m_secondPassCommands.resize(m_secondPassCommands.size() + 3);
+        m_secondPassCommands[index]     = bindVertexCmd;
+        m_secondPassCommands[index + 1] = bindIndexCmd;
+        m_secondPassCommands[index + 2] = drawIndexedCmd;
+    }
 }
 
 void
 VulkanContext::handle_bind_descriptor_set(std::shared_ptr<DescriptorSet> descriptorSet) {
 
     if (!m_drawInitialized) {
-        EG_CORE_ERROR("Draw vertex buffer called outside of draw range!");
+        EG_CORE_ERROR("bind descriptor called outside of draw range!");
         return;
     }
 
     std::shared_ptr<VulkanDescriptorSet> vulkanDescriptorSet = std::static_pointer_cast<VulkanDescriptorSet>(
             descriptorSet);
 
-    VulkanDescriptorSetDrawInfo info = {};
-    info.bufferIndex = m_drawInfo.imageIndex;
-    info.commandBuffer = m_commandBuffers[m_drawInfo.imageIndex];
-    vulkanDescriptorSet->set_draw_info(info);
-    vulkanDescriptorSet->bind();
+    auto cmd = std::make_shared<VulkanCommandBindDescriptorSet>(
+            m_present.commandBuffer,
+            vulkanDescriptorSet->get_shader().lock()->get_layout(),
+            vulkanDescriptorSet->get_descriptors()[m_drawInfo.imageIndex]
+            );
+    if (m_recordingFirstPass)
+        m_firstPassCommands.emplace_back(cmd);
+    else
+        m_secondPassCommands.emplace_back(cmd);
+
 }
 
-void VulkanContext::handle_uniform_buffer_flush(std::shared_ptr<UniformBuffer> uniformBuffer, void *data) {
-
-    std::shared_ptr<VulkanUniformBuffer> vulkanUniformBuffer = std::static_pointer_cast<VulkanUniformBuffer>(
-            uniformBuffer);
-    vulkanUniformBuffer->upload_data(data);
-    if (std::find(m_dirtyUniformBuffers.begin(), m_dirtyUniformBuffers.end(), vulkanUniformBuffer) ==
-        m_dirtyUniformBuffers.end()) {
-        m_dirtyUniformBuffers.emplace_back(vulkanUniformBuffer);
-    }
-}
-
-void VulkanContext::begin_draw_commands() {
-    m_drawInfo.invalidFrame = false;
+bool VulkanContext::begin_draw_commands() {
 
     VK_CALL
     vkWaitForFences(m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
@@ -1180,29 +1170,54 @@ void VulkanContext::begin_draw_commands() {
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
         recreate_swapchain();
-        m_drawInfo.invalidFrame = true;
-        return;
+        return false;
     } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error("failed to acquire swapchain image!");
     }
-
 
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
+    //get the correct commandbuffer for this layer (current image + layer offset in the commandbuffer vector)
+    m_present.commandBuffer = m_commandBuffers[m_drawInfo.imageIndex];
+
     VK_CALL_ASSERT(vkBeginCommandBuffer(m_commandBuffers[m_drawInfo.imageIndex], &beginInfo)) {
         throw std::runtime_error("failed to begin recording command buffer!");
     }
     m_drawInitialized = true;
+
+    return true;
 }
 
 void VulkanContext::end_draw_commands() {
-    if (m_drawInfo.invalidFrame) {
-        return;
+
+    //first pass, so we guarantee that all custom render targets will be renderer first
+    for (auto& cmd : m_firstPassCommands){
+        cmd->operator()();
     }
 
-    VK_CALL_ASSERT(vkEndCommandBuffer(m_commandBuffers[m_drawInfo.imageIndex])) {
+    std::array<VkClearValue, 1> clearValues = {};
+    clearValues[0].color = {0.0f, 0.0f, 0.0f, 1.0f};
+
+    VkRenderPassBeginInfo renderPassInfo = {};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = m_present.renderPass;
+    renderPassInfo.framebuffer = m_present.framebuffers[m_drawInfo.imageIndex];
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = m_present.extent2D;
+    renderPassInfo.clearValueCount = clearValues.size();
+    renderPassInfo.pClearValues = clearValues.data();
+
+    VK_CALL vkCmdBeginRenderPass(m_present.commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    for (auto& cmd : m_secondPassCommands){
+        cmd->operator()();
+    }
+
+    VK_CALL vkCmdEndRenderPass(m_present.commandBuffer);
+
+    VK_CALL_ASSERT(vkEndCommandBuffer(m_present.commandBuffer)) {
         throw std::runtime_error("failed to record command buffer!");
     }
 
@@ -1221,6 +1236,8 @@ void VulkanContext::end_draw_commands() {
         std::swap(m_dirtyUniformBuffers, dirtyBuffers);
     }
 
+    m_firstPassCommands.clear();
+    m_secondPassCommands.clear();
     m_drawInitialized = false;
 
     VkSubmitInfo submitInfo = {};
@@ -1246,58 +1263,59 @@ void VulkanContext::end_draw_commands() {
     }
 }
 
-void VulkanContext::handle_begin_draw(std::shared_ptr<RenderTarget> renderTarget) {
-
-    if (m_drawInfo.invalidFrame) {
-        return;
-    }
+void VulkanContext::handle_begin_draw_offscreen(std::shared_ptr<RenderTarget> renderTarget) {
 
     auto vkRenderTarget = std::static_pointer_cast<VulkanRenderTarget>(renderTarget);
 
-    std::array<VkClearValue, 2> clearValues = {};
-    clearValues[0].color = {0.0f, 0.0f, 0.0f, 1.0f};
-    clearValues[1].depthStencil = {1.0f, 0};
+    m_recordingFirstPass = true;
 
-    VkRenderPassBeginInfo renderPassInfo = {};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = vkRenderTarget->get_render_pass();
-    renderPassInfo.framebuffer = vkRenderTarget->get_framebuffer();
-    renderPassInfo.renderArea.offset = {0, 0};
-    renderPassInfo.renderArea.extent = {vkRenderTarget->get_width(), vkRenderTarget->get_height()};
-    renderPassInfo.clearValueCount = clearValues.size();
-    renderPassInfo.pClearValues = clearValues.data();
-
-    VK_CALL vkCmdBeginRenderPass(m_commandBuffers[m_drawInfo.imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    auto cmd = std::make_shared<VulkanCommandBeginRenderPass>(
+            m_present.commandBuffer,
+            vkRenderTarget->get_render_pass(),
+            vkRenderTarget->get_framebuffer(),
+            vkRenderTarget->get_extent()
+            );
+    //can only ever be on the first pass
+    m_firstPassCommands.emplace_back(cmd);
 }
 
-void VulkanContext::handle_begin_draw() {
+void VulkanContext::handle_end_draw_offscreen() {
 
-    if (m_drawInfo.invalidFrame) {
-        return;
-    }
+    auto cmd = std::make_shared<VulkanCommandEndRenderPass>(m_present.commandBuffer);
 
-    std::array<VkClearValue, 1> clearValues = {};
-    clearValues[0].color = {0.0f, 0.0f, 0.0f, 1.0f};
+    //can only ever be on the first pass
+    m_firstPassCommands.emplace_back(cmd);
 
-    VkRenderPassBeginInfo renderPassInfo = {};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = m_present.renderPass;
-    renderPassInfo.framebuffer = m_present.framebuffers[m_drawInfo.imageIndex];
-    renderPassInfo.renderArea.offset = {0, 0};
-    renderPassInfo.renderArea.extent = m_present.extent2D;
-    renderPassInfo.clearValueCount = clearValues.size();
-    renderPassInfo.pClearValues = clearValues.data();
-
-    VK_CALL vkCmdBeginRenderPass(m_commandBuffers[m_drawInfo.imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    m_recordingFirstPass = false;
 }
 
-void VulkanContext::handle_end_draw() {
+void VulkanContext::refresh() {
 
-    if (m_drawInfo.invalidFrame) {
-        return;
+    VkPresentInfoKHR presentInfo = {};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+    VkSemaphore waitSemaphores[] = {m_renderFinishedSemaphores[m_currentFrame]};
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = waitSemaphores;
+
+    VkSwapchainKHR swapChains[] = {m_present.swapchain};
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = swapChains;
+    presentInfo.pImageIndices = &m_drawInfo.imageIndex;
+
+    VK_CALL
+    VkResult result = vkQueuePresentKHR(m_presentQueue, &presentInfo);
+
+
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_windowResized) {
+        m_windowResized = false;
+        recreate_swapchain();
+
+    } else if (result != VK_SUCCESS) {
+        throw std::runtime_error("failed to present swapchain image!");
     }
 
-    VK_CALL vkCmdEndRenderPass(m_commandBuffers[m_drawInfo.imageIndex]);
+    m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 

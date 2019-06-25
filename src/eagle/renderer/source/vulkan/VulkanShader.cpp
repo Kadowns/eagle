@@ -22,8 +22,9 @@ VulkanShader::VulkanShader(const std::string& vertFileName, const std::string& f
 }
 
 VulkanShader::~VulkanShader() {
-    VK_CALL vkDestroyDescriptorSetLayout(m_info.device, m_descriptorSetLayout, nullptr);
     cleanup_pipeline();
+    VK_CALL vkDestroyPipelineLayout(m_info.device, m_pipelineLayout, nullptr);
+    VK_CALL vkDestroyDescriptorSetLayout(m_info.device, m_descriptorSetLayout, nullptr);
 }
 
 void VulkanShader::create_descriptor_set_layout() {
@@ -128,6 +129,16 @@ void VulkanShader::create_descriptor_set_layout() {
     VK_CALL_ASSERT(vkCreateDescriptorSetLayout(m_info.device, &descriptorSetLayoutInfo, nullptr, &m_descriptorSetLayout)) {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
+
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.pushConstantRangeCount = 0;
+    pipelineLayoutInfo.setLayoutCount = 1;
+    pipelineLayoutInfo.pSetLayouts = &m_descriptorSetLayout;
+
+    VK_CALL_ASSERT(vkCreatePipelineLayout(m_info.device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout)) {
+        throw std::runtime_error("failed to create pipeline layout!");
+    }
 }
 
 void VulkanShader::create_pipeline() {
@@ -227,16 +238,6 @@ void VulkanShader::create_pipeline() {
     colorBlending.blendConstants[3] = 0.0f;
 
 
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
-    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.pushConstantRangeCount = 0;
-    pipelineLayoutInfo.setLayoutCount = 1;
-    pipelineLayoutInfo.pSetLayouts = &m_descriptorSetLayout;
-
-    VK_CALL_ASSERT(vkCreatePipelineLayout(m_info.device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout)) {
-        throw std::runtime_error("failed to create pipeline layout!");
-    }
-
     VkGraphicsPipelineCreateInfo pipelineInfo = {};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pipelineInfo.stageCount = 2;
@@ -268,7 +269,6 @@ void VulkanShader::create_pipeline() {
 void VulkanShader::cleanup_pipeline(){
     if (m_cleared){ return; }
     VK_CALL vkDestroyPipeline(m_info.device, m_graphicsPipeline, nullptr);
-    VK_CALL vkDestroyPipelineLayout(m_info.device, m_pipelineLayout, nullptr);
     m_cleared = true;
 }
 
@@ -351,13 +351,6 @@ VkPipelineLayout& VulkanShader::get_layout() {
     return m_pipelineLayout;
 }
 
-void VulkanShader::bind() {
-    VK_CALL vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
-}
-
-void VulkanShader::bind_command_buffer(VkCommandBuffer cmd) {
-    m_commandBuffer = cmd;
-}
 
 const std::vector<VkDescriptorSetLayoutBinding> &VulkanShader::get_descriptor_set_layout_bindings() {
     return m_layoutBindings;

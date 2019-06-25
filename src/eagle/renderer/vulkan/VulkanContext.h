@@ -21,6 +21,7 @@
 #include "VulkanDescriptorSet.h"
 #include "VulkanTexture2D.h"
 #include "VulkanRenderTarget.h"
+#include "VulkanCommand.h"
 
 _EAGLE_BEGIN
 
@@ -66,6 +67,8 @@ public:
 
     //inherited via RenderingContext
     virtual void init(Window *window) override;
+    virtual bool begin_draw_commands() override;
+    virtual void end_draw_commands() override;
     virtual void refresh() override;
     virtual void deinit() override;
     virtual void handle_window_resized(int width, int height) override;
@@ -174,11 +177,8 @@ protected:
     virtual void
     handle_bind_descriptor_set(std::shared_ptr<DescriptorSet> descriptorSet) override;
 
-    virtual void begin_draw_commands() override;
-    virtual void end_draw_commands() override;
-    virtual void handle_begin_draw() override;
-    virtual void handle_begin_draw(std::shared_ptr<RenderTarget> renderTarget) override;
-    virtual void handle_end_draw() override;
+    virtual void handle_begin_draw_offscreen(std::shared_ptr<RenderTarget> renderTarget) override;
+    virtual void handle_end_draw_offscreen() override;
 
 
 protected:
@@ -201,6 +201,7 @@ protected:
         std::vector<VkImage> swapchainImages;
         std::vector<VkImageView> swapchainImageViews;
         std::vector<VkFramebuffer> framebuffers;
+        VkCommandBuffer commandBuffer;
     } m_present;
 
     VkCommandPool m_commandPool;
@@ -209,6 +210,8 @@ protected:
     std::vector<VkSemaphore> m_renderFinishedSemaphores;
     std::vector<VkFence> m_inFlightFences;
     VkQueue m_presentQueue;
+    bool m_recordingFirstPass = false;
+    std::vector<std::shared_ptr<VulkanCommand>> m_firstPassCommands, m_secondPassCommands;
     VulkanDrawFrameInfo m_drawInfo;
 
     std::vector<std::shared_ptr<VulkanVertexBuffer>> m_vertexBuffers;

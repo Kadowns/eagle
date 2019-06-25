@@ -14,11 +14,6 @@ struct VulkanDescriptorSetCreateInfo {
     uint32_t bufferCount;
 };
 
-struct VulkanDescriptorSetDrawInfo {
-    VkCommandBuffer commandBuffer;
-    uint32_t bufferIndex;
-};
-
 
 class VulkanDescriptorSet : public DescriptorSet {
 public:
@@ -31,9 +26,9 @@ public:
     void cleanup();
     void create_descriptor_sets();
     void create_descriptor_pool();
-    void set_draw_info(VulkanDescriptorSetDrawInfo drawInfo);
-    virtual void bind() override;
-
+    inline std::vector<VkDescriptorSet>& get_descriptors() {return m_descriptorSets;}
+    inline std::weak_ptr<VulkanShader> get_shader() { return m_shader; }
+    
 private:
 
     VkDescriptorPool m_descriptorPool;
@@ -42,7 +37,6 @@ private:
     std::vector<std::shared_ptr<VulkanUniformBuffer>> m_uniformBuffers;
     std::vector<std::shared_ptr<VulkanImage>> m_images;
     VulkanDescriptorSetCreateInfo m_info;
-    VulkanDescriptorSetDrawInfo m_drawInfo;
 
     bool m_cleared = true;
 
