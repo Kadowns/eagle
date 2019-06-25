@@ -105,7 +105,7 @@ void VulkanContext::create_instance() {
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = EAGLE_GET_INFO(EAGLE_APP_NAME).c_str();
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.pEngineName = "Eagle";
+    appInfo.pEngineName = "eagle";
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.apiVersion = VK_API_VERSION_1_0;
 

@@ -2,7 +2,7 @@
 // Created by Novak on 12/05/2019.
 //
 
-#include "../Core.h"
+#include "eagle/core/Core.h"
 _EAGLE_BEGIN
 
 std::map<EAGLE_KEY, std::string> EagleInfo::m_infoMap;

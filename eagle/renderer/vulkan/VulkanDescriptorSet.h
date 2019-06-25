@@ -2,10 +2,10 @@
 #define EAGLE_VULKANDESCRIPTORSET_H
 
 #include "eagle/renderer/DescriptorSet.h"
-#include "eagle/renderer/vulkan/VulkanCore.h"
-#include "eagle/renderer/vulkan/VulkanShader.h"
-#include "eagle/renderer/vulkan/VulkanUniformBuffer.h"
-#include "eagle/renderer/vulkan/VulkanTexture2D.h"
+#include "VulkanCore.h"
+#include "VulkanShader.h"
+#include "VulkanUniformBuffer.h"
+#include "VulkanTexture2D.h"
 
 _EAGLE_BEGIN
 

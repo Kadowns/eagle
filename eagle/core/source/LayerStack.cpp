@@ -5,7 +5,7 @@
 #include <algorithm>
 
 #include "eagle/core/LayerStack.h"
-#include <eagle/core/Log.h>
+#include "eagle/core/Log.h"
 
 _EAGLE_BEGIN
 

@@ -6,7 +6,6 @@
 #ifndef EAGLE_WINDOWEVENTS_H
 #define EAGLE_WINDOWEVENTS_H
 
-#include "eagle/core/Core.h"
 #include "Event.h"
 
 _EAGLE_BEGIN

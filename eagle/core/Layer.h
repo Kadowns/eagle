@@ -6,8 +6,8 @@
 #ifndef EAGLE_LAYER_H
 #define EAGLE_LAYER_H
 
-#include "eagle/core/Core.h"
-#include "eagle/core/events/Event.h"
+#include "Core.h"
+#include "events/Event.h"
 
 _EAGLE_BEGIN
 

@@ -6,7 +6,7 @@
 #define EAGLE_VULKANUNIFORMBUFFER_H
 
 #include "eagle/renderer/UniformBuffer.h"
-#include "eagle/renderer/vulkan/VulkanBuffer.h"
+#include "VulkanBuffer.h"
 
 _EAGLE_BEGIN
 

@@ -3,12 +3,13 @@
 //
 
 #include "eagle/core/WindowGLFW.h"
+#include "eagle/core/Log.h"
 #include "eagle/core/events/WindowEvents.h"
 #include "eagle/core/events/InputEvents.h"
 #include "eagle/renderer/RenderingContext.h"
 
 #include <GLFW/glfw3.h>
-#include <eagle/core/Log.h>
+
 
 _EAGLE_BEGIN
 
@@ -28,7 +29,7 @@ void WindowGLFW::init() {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-    m_window = glfwCreateWindow(m_windowData.width, m_windowData.height, ("Eagle - " + EAGLE_GET_INFO(EAGLE_APP_NAME)).c_str(), nullptr, nullptr);
+    m_window = glfwCreateWindow(m_windowData.width, m_windowData.height, ("eagle - " + EAGLE_GET_INFO(EAGLE_APP_NAME)).c_str(), nullptr, nullptr);
 
     if (!m_window){
         glfwTerminate();

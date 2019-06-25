@@ -3,7 +3,6 @@
 //
 
 
-#include <eagle/core/Window.h>
 #include "eagle/core/Window.h"
 #include "eagle/renderer/RenderingContext.h"
 

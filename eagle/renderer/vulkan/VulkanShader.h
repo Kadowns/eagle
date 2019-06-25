@@ -1,9 +1,9 @@
 #ifndef EAGLE_VULKANSHADER_H
 #define EAGLE_VULKANSHADER_H
 
-#include "VulkanCore.h"
 #include "eagle/renderer/Shader.h"
-#include "eagle/renderer/vulkan/VulkanRenderTarget.h"
+#include "VulkanCore.h"
+#include "VulkanRenderTarget.h"
 
 _EAGLE_BEGIN
 

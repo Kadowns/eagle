@@ -4,7 +4,6 @@
 
 
 #include "eagle/renderer/vulkan/VulkanHelper.h"
-#include <glm/vec3.hpp>
 
 _EAGLE_BEGIN
 

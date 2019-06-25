@@ -10,10 +10,9 @@
 
 #include "Core.h"
 #include "LayerStack.h"
+#include "Log.h"
 #include "events/Event.h"
 #include "events/WindowEvents.h"
-#include "Log.h"
-
 
 
 _EAGLE_BEGIN
