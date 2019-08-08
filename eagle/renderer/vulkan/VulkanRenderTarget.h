@@ -24,7 +24,9 @@ struct VulkanRenderTargetCreateInfo {
 
 class VulkanRenderTarget : public RenderTarget{
 public:
-    explicit VulkanRenderTarget(uint32_t width, uint32_t height, VulkanRenderTargetCreateInfo &info);
+    explicit VulkanRenderTarget(uint32_t width, uint32_t height,
+                                const std::vector<RENDER_TARGET_ATTACHMENT> &attachments,
+                                VulkanRenderTargetCreateInfo &info);
     ~VulkanRenderTarget();
 
     void create_resources();
@@ -33,20 +35,25 @@ public:
 
     void cleanup();
     void create(uint32_t width, uint32_t height);
-
-    virtual std::weak_ptr<Image> get_image() override {return m_color;}
-    virtual uint32_t get_width() override {return m_extent.width;}
-    virtual uint32_t get_height() override {return m_extent.height;}
     VkExtent2D& get_extent() {return m_extent;}
 
-    std::weak_ptr<Image> get_depth_image() {return m_depth;}
+    virtual std::weak_ptr<Image> get_image(size_t index) override;
+    virtual std::vector<std::weak_ptr<Image>> get_images() override;
+
     VkFramebuffer& get_framebuffer() {return m_framebuffer;}
     VkRenderPass & get_render_pass() {return m_renderPass;}
+    std::vector<VkClearValue> get_clear_values();
+
+private:
+
+    void create_image_resources(std::shared_ptr<VulkanImageAttachment> &image, VkFormat format,
+                                VkImageUsageFlags usageFlags, VkImageAspectFlags aspectMask);
 
 private:
 
     VulkanRenderTargetCreateInfo m_info;
-    std::shared_ptr<VulkanImage> m_color, m_depth;
+    std::shared_ptr<VulkanImageAttachment> m_depthAttachment;
+    std::vector<std::shared_ptr<VulkanImage>> m_images;
     VkFramebuffer m_framebuffer;
     VkRenderPass m_renderPass;
     VkExtent2D m_extent;

@@ -6,16 +6,22 @@
 #define EAGLE_VULKANVERTEXBUFFER_H
 
 #include <memory>
+#include <set>
 
 #include "eagle/renderer/VertexBuffer.h"
+#include "eagle/renderer/VertexLayout.h"
 #include "VulkanBuffer.h"
 
 
 _EAGLE_BEGIN
 
 struct VulkanVertexBufferCreateInfo {
-    std::vector<float> vertices;
-    uint32_t stride;
+    VulkanVertexBufferCreateInfo(const VertexLayout& layout):vertexLayout(layout) {}
+
+    void* data;
+    uint32_t count;
+    VertexLayout vertexLayout;
+    uint32_t bufferCount;
     VkPhysicalDevice physicalDevice;
     VkCommandPool commandPool;
     VkQueue graphicsQueue;
@@ -25,21 +31,36 @@ class VulkanVertexBuffer : public VertexBuffer {
 
 public:
 
-    VulkanVertexBuffer(VkDevice device, VulkanVertexBufferCreateInfo &createInfo);
+    VulkanVertexBuffer(VkDevice device, VulkanVertexBufferCreateInfo &createInfo, EG_BUFFER_USAGE usageFlags);
     virtual ~VulkanVertexBuffer();
-    virtual const std::vector<float>& get_vertices() override;
-    virtual const void* get_vertices_data() override;
+
+
     virtual uint32_t get_vertices_count() override;
     virtual uint32_t get_stride() override;
 
-    inline VulkanBuffer& get_buffer() { return *m_buffer; }
+    bool is_dirty() const;
+    void flush(uint32_t bufferIndex);
+    void upload(void* data, uint32_t elementCount);
+    inline VulkanBuffer& get_buffer(uint32_t bufferIndex) {
+        if (m_usage == EG_BUFFER_USAGE::CONSTANT){
+            return *(m_buffers[0]);
+        }
+        return *(m_buffers[bufferIndex]);
+    }
 
 private:
     VkDevice m_device;
-    std::vector<float> m_vertices;
-    uint32_t m_stride;
+    VkPhysicalDevice m_physicalDevice;
+    VertexLayout m_layout;
+    uint32_t m_elementCount;
+    EG_BUFFER_USAGE m_usage;
+    char* m_data =  nullptr;
 
-    std::shared_ptr<VulkanBuffer> m_buffer;
+    std::vector<std::shared_ptr<VulkanBuffer>> m_buffers;
+    std::set<int> m_dirtyBuffers;
+
+
+    bool m_resizing = false, m_initialized = false;
 
 };
 

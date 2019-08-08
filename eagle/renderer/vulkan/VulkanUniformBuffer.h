@@ -20,7 +20,7 @@ class VulkanUniformBuffer : public UniformBuffer {
 
 public:
 
-    explicit VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createInfo, size_t size);
+    explicit VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createInfo, size_t size, void *data);
     virtual ~VulkanUniformBuffer();
 
     virtual void flush(uint32_t bufferIndex) override;

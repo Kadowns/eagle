@@ -41,6 +41,8 @@ public:
                             VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout,
                             VkImageSubresourceRange subresourceRange);
 
+    static VkFormat get_vk_format(EG_FORMAT format);
+
 };
 
 _EAGLE_END

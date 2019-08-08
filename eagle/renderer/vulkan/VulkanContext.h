@@ -19,9 +19,11 @@
 #include "VulkanIndexBuffer.h"
 #include "VulkanUniformBuffer.h"
 #include "VulkanDescriptorSet.h"
+#include "VulkanDescriptorSetLayout.h"
 #include "VulkanTexture2D.h"
 #include "VulkanRenderTarget.h"
 #include "VulkanCommand.h"
+#include "VulkanCommandList.h"
 
 _EAGLE_BEGIN
 
@@ -137,48 +139,80 @@ protected:
 
     //inherited via RenderingContext
     virtual std::weak_ptr<Shader>
-    handle_create_shader(const std::string &vertFilePath, const std::string &fragFilePath) override;
+    create_shader(const std::string &vertFilePath, const std::string &fragFilePath,
+                  const std::vector<std::shared_ptr<DescriptorSetLayout>> &descriptorSetLayouts,
+                  const ShaderPipelineInfo &pipelineInfo) override;
 
     virtual std::weak_ptr<Shader>
-    handle_create_shader(const std::string &vertFilePath, const std::string &fragFilePath, std::shared_ptr<RenderTarget> renderTarget) override;
+    create_shader(const std::string &vertFilePath, const std::string &fragFilePath,
+                  const std::vector<std::shared_ptr<DescriptorSetLayout>> &descriptorSetLayouts,
+                  const ShaderPipelineInfo &pipelineInfo,
+                  std::shared_ptr<RenderTarget> renderTarget) override;
 
     virtual std::weak_ptr<VertexBuffer>
-    handle_create_vertex_buffer(std::vector<float> &vertices, size_t stride) override;
+    create_vertex_buffer(void *vertices, uint32_t count, const VertexLayout &vertexLayout,
+                         EG_BUFFER_USAGE usageFlags) override;
 
     virtual std::weak_ptr<IndexBuffer>
-    handle_create_index_buffer(std::vector<uint32_t> &indices) override;
+    create_index_buffer(void *indexData, size_t indexCount, INDEX_BUFFER_TYPE indexType,
+                        EG_BUFFER_USAGE usage) override;
 
     virtual std::weak_ptr<UniformBuffer>
-    handle_create_uniform_buffer(size_t size) override;
+    create_uniform_buffer(size_t size, void *data) override;
+
+    virtual std::weak_ptr<DescriptorSetLayout>
+    create_descriptor_set_layout(const std::vector<DescriptorBinding>& bindings) override;
 
     virtual std::weak_ptr<DescriptorSet>
-    handle_create_descriptor_set(std::shared_ptr<Shader> shader,
-                                 const std::vector<std::shared_ptr<UniformBuffer>> &uniformBuffers,
-                                 const std::vector<std::shared_ptr<Image>> &images) override;
+    create_descriptor_set(std::shared_ptr<DescriptorSetLayout> descriptorLayout,
+                          const std::vector<std::shared_ptr<DescriptorItem>> &descriptorItems) override;
 
     virtual std::weak_ptr<Texture2D>
-    handle_create_texture_2d(const std::string& filePath) override;
+    create_texture_2d(Texture2DCreateInfo &createInfo) override;
 
     virtual std::weak_ptr<RenderTarget>
-    handle_create_render_target() override;
+    create_render_target(const std::vector<RENDER_TARGET_ATTACHMENT> &attachments) override;
 
     virtual void
-    handle_bind_shader(std::shared_ptr<Shader> shader) override;
+    bind_shader(std::shared_ptr<Shader> shader) override;
 
     virtual void
-    handle_draw_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer) override;
+    draw(uint32_t vertexCount) override;
 
     virtual void
-    handle_draw_indexed(std::shared_ptr<VertexBuffer> vertexBuffer, std::shared_ptr<IndexBuffer> indexBuffer) override;
+    draw_indexed(uint32_t indicesCount, uint32_t indexOffset, uint32_t vertexOffset) override;
 
     virtual void
-    handle_uniform_buffer_flush(std::shared_ptr<UniformBuffer> uniformBuffer, void *data) override;
+    uniform_buffer_flush(std::shared_ptr<UniformBuffer> uniformBuffer, void *data) override;
 
     virtual void
-    handle_bind_descriptor_set(std::shared_ptr<DescriptorSet> descriptorSet) override;
+    vertex_buffer_flush(std::shared_ptr<VertexBuffer> vertexBuffer, void *data, uint32_t vertexCount) override;
 
-    virtual void handle_begin_draw_offscreen(std::shared_ptr<RenderTarget> renderTarget) override;
-    virtual void handle_end_draw_offscreen() override;
+    virtual void
+    index_buffer_flush(std::shared_ptr<IndexBuffer> indexBuffer, void *data, uint32_t indexCount) override;
+
+    virtual void
+    bind_descriptor_sets(std::shared_ptr<Shader> shader, std::shared_ptr<DescriptorSet> descriptorSet,
+                         uint32_t setIndex) override;
+
+    virtual void
+    push_constants(std::shared_ptr<Shader> shader, EG_SHADER_STAGE stage, uint32_t offset, size_t size,
+                   void *data) override;
+
+    virtual void
+    bind_vertex_buffer(std::shared_ptr<VertexBuffer> vertexBuffer) override;
+
+    virtual void
+    bind_index_buffer(std::shared_ptr<IndexBuffer> indexBuffer) override;
+
+    virtual void
+    set_viewport(float w, float h, float x, float y, float minDepth, float maxDepth) override;
+
+    virtual void
+    set_scissor(uint32_t w, uint32_t h, uint32_t x, uint32_t y) override;
+
+    virtual void begin_draw_offscreen(std::shared_ptr<RenderTarget> renderTarget) override;
+    virtual void end_draw_offscreen() override;
 
 
 protected:
@@ -194,6 +228,7 @@ protected:
     VkQueue m_graphicsQueue;
 
     struct {
+        VulkanImageAttachment depth;
         VkFormat swapchainFormat;
         VkExtent2D extent2D;
         VkSwapchainKHR swapchain;
@@ -210,14 +245,14 @@ protected:
     std::vector<VkSemaphore> m_renderFinishedSemaphores;
     std::vector<VkFence> m_inFlightFences;
     VkQueue m_presentQueue;
-    bool m_recordingFirstPass = false;
-    std::vector<std::shared_ptr<VulkanCommand>> m_firstPassCommands, m_secondPassCommands;
+    VulkanCommandList m_commandList;
     VulkanDrawFrameInfo m_drawInfo;
 
-    std::vector<std::shared_ptr<VulkanVertexBuffer>> m_vertexBuffers;
-    std::vector<std::shared_ptr<VulkanIndexBuffer>> m_indexBuffers;
+    std::vector<std::shared_ptr<VulkanVertexBuffer>> m_vertexBuffers, m_dirtyVertexBuffers;
+    std::vector<std::shared_ptr<VulkanIndexBuffer>> m_indexBuffers, m_dirtyIndexBuffers;
     std::vector<std::shared_ptr<VulkanUniformBuffer>> m_uniformBuffers, m_dirtyUniformBuffers;
     std::vector<std::shared_ptr<VulkanDescriptorSet>> m_descriptorSets;
+    std::vector<std::shared_ptr<VulkanDescriptorSetLayout>> m_descriptorSetsLayouts;
     std::vector<std::shared_ptr<VulkanShader>> m_shaders;
     std::vector<std::shared_ptr<VulkanTexture2D>> m_textures;
     std::vector<std::shared_ptr<VulkanRenderTarget>> m_renderTargets;

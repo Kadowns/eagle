@@ -10,6 +10,8 @@
 #include <StandAlone/DirStackFileIncluder.h>
 
 #include <vector>
+#include <eagle/renderer/Shader.h>
+#include <eagle/renderer/RenderingCore.h>
 #include "VulkanCore.h"
 
 _EAGLE_BEGIN
@@ -124,13 +126,13 @@ class VulkanShaderCompiler {
 
 public:
     static std::vector<uint32_t>
-    compile_glsl(const std::string &fileName);
+    compile_glsl(const std::string &filename, EG_SHADER_STAGE stage);
 
 private:
 
     static std::string get_file_path(const std::string& file);
     static std::string get_suffix(const std::string& file);
-    static EShLanguage get_shader_stage(const std::string& stage);
+    static EShLanguage get_shader_stage(EG_SHADER_STAGE stage);
 
     static bool m_glslangIntitialized;
 

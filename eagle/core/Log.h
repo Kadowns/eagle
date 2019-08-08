@@ -71,8 +71,8 @@ _EAGLE_END
 
 #define EG_TRACE(message)    Eagle::Log::client_log(FILE_BASENAME, __FUNCTION__, __LINE__, Eagle::Log::TRACE, message)
 #define EG_INFO(message)     Eagle::Log::client_log(FILE_BASENAME, __FUNCTION__, __LINE__, Eagle::Log::INFO, message)
-#define EG_DEBUG(message)    Eagle::Log::client_log(FILE_BASENAME, __FUNCTION__, __LINE__, Eagle::Log::DEBug, message)
-#define EG_WARNING(message)  Eagle::Log::client_log(FILE_BASENAME, __FUNCTION__, __LINE__, Eagle::Log::WARn, message)
+#define EG_DEBUG(message)    Eagle::Log::client_log(FILE_BASENAME, __FUNCTION__, __LINE__, Eagle::Log::DEBUG, message)
+#define EG_WARNING(message)  Eagle::Log::client_log(FILE_BASENAME, __FUNCTION__, __LINE__, Eagle::Log::WARN, message)
 #define EG_ERROR(message)    Eagle::Log::client_log(FILE_BASENAME, __FUNCTION__, __LINE__, Eagle::Log::ERR, message)
 #define EG_FATAL(message)    Eagle::Log::client_log(FILE_BASENAME, __FUNCTION__, __LINE__, Eagle::Log::CRITICAL, message)
 

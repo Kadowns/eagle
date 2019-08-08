@@ -13,8 +13,6 @@ _EAGLE_BEGIN
 class WindowResizedEvent : public Event {
 
 public:
-    EVENT_CLASS_TYPE(EVENT_TYPE::WINDOW_RESIZE)
-    EVENT_CLASS_CATEGORY(EVENT_CATEGORY_WINDOW)
 
     WindowResizedEvent(uint32_t width, uint32_t height) :
         m_width(width), m_height(height){}
@@ -29,26 +27,22 @@ private:
 
 class WindowCloseEvent : public Event {
 public:
-    EVENT_CLASS_TYPE(EVENT_TYPE::WINDOW_CLOSE)
-    EVENT_CLASS_CATEGORY(EVENT_CATEGORY_WINDOW)
+
 };
 
 class WindowFocusEvent : public Event{
 public:
-    EVENT_CLASS_TYPE(EVENT_TYPE::WINDOW_FOCUS)
-    EVENT_CLASS_CATEGORY(EVENT_CATEGORY_WINDOW)
+
 };
 
 class WindowLostFocusEvent : public Event{
 public:
-    EVENT_CLASS_TYPE(EVENT_TYPE::WINDOW_LOST_FOCUS)
-    EVENT_CLASS_CATEGORY(EVENT_CATEGORY_WINDOW)
+
 };
 
 class WindowMoveEvent : public Event{
 public:
-    EVENT_CLASS_TYPE(EVENT_TYPE::WINDOW_MOVED)
-    EVENT_CLASS_CATEGORY(EVENT_CATEGORY_WINDOW)
+
 };
 
 _EAGLE_END

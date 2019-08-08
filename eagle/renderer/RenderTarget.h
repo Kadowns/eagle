@@ -11,14 +11,27 @@
 
 _EAGLE_BEGIN
 
-class RenderTarget{
-public:
-    virtual std::weak_ptr<Image> get_image() = 0;
-    virtual uint32_t get_width() = 0;
-    virtual uint32_t get_height() = 0;
 
+enum class RENDER_TARGET_ATTACHMENT {
+    COLOR
+};
+
+class RenderTarget {
+public:
+    RenderTarget(uint32_t width, uint32_t height, const std::vector<RENDER_TARGET_ATTACHMENT> &attachments):
+        m_width(width), m_height(height),
+        m_attachments(attachments){}
     virtual ~RenderTarget() = default;
-    RenderTarget() = default;
+
+    virtual std::weak_ptr<Image> get_image(size_t index) = 0;
+    virtual std::vector<std::weak_ptr<Image>> get_images() = 0;
+
+    const std::vector<RENDER_TARGET_ATTACHMENT>& get_attachments() const {return m_attachments;}
+
+protected:
+    uint32_t m_width, m_height;
+    std::vector<RENDER_TARGET_ATTACHMENT> m_attachments;
+
 };
 
 _EAGLE_END

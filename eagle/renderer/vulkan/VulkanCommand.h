@@ -7,6 +7,8 @@
 
 #include "VulkanCore.h"
 
+#include <array>
+
 _EAGLE_BEGIN
 
 class VulkanCommand {
@@ -19,17 +21,19 @@ class VulkanCommandDrawIndexed : public VulkanCommand {
 
 public:
 
-    explicit VulkanCommandDrawIndexed(VkCommandBuffer& commandBuffer, uint32_t indicesCount):
-        m_commandBuffer(commandBuffer), m_indicesCount(indicesCount){}
+    explicit VulkanCommandDrawIndexed(VkCommandBuffer &commandBuffer, uint32_t indicesCount, uint32_t indexOffset,
+                                      uint32_t vertexOffset) :
+        m_commandBuffer(commandBuffer), m_indicesCount(indicesCount), m_vertexOffset(vertexOffset), m_indexOffset(indexOffset){}
 
     inline virtual void operator()() override {
-        vkCmdDrawIndexed(m_commandBuffer, m_indicesCount, 1, 0, 0, 0);
+        vkCmdDrawIndexed(m_commandBuffer, m_indicesCount, 1, m_indexOffset, m_vertexOffset, 0);
     }
 
 private:
 
     VkCommandBuffer m_commandBuffer;
     uint32_t m_indicesCount;
+    uint32_t m_vertexOffset, m_indexOffset;
 };
 
 class VulkanCommandBindVertexBuffer : public VulkanCommand {
@@ -40,9 +44,9 @@ public:
         m_commandBuffer(commandBuffer), m_vertexBuffer(vertexBuffer){}
 
     inline virtual void operator()() override {
-        VkBuffer buffers[] = {m_vertexBuffer};
+        //VkBuffer buffers[] = {m_vertexBuffer};
         VkDeviceSize offsets[] = {0};
-        vkCmdBindVertexBuffers(m_commandBuffer, 0, 1, buffers, offsets);
+        vkCmdBindVertexBuffers(m_commandBuffer, 0, 1, &m_vertexBuffer, offsets);
     }
 private:
     VkCommandBuffer m_commandBuffer;
@@ -56,7 +60,6 @@ public:
         m_commandBuffer(commandBuffer), m_verticesCount(verticesCount){}
 
     inline virtual void operator()() override {
-
         vkCmdDraw(m_commandBuffer, m_verticesCount, 1, 0, 0);
     }
 
@@ -71,16 +74,17 @@ private:
 class VulkanCommandBindIndexBuffer : public VulkanCommand {
 
 public:
-    explicit VulkanCommandBindIndexBuffer(VkCommandBuffer& commandBuffer, VkBuffer& indexBuffer) :
-        m_commandBuffer(commandBuffer), m_indexBuffer(indexBuffer){}
+    explicit VulkanCommandBindIndexBuffer(VkCommandBuffer& commandBuffer, VkBuffer& indexBuffer, VkIndexType indexType) :
+        m_commandBuffer(commandBuffer), m_indexBuffer(indexBuffer), m_indexType(indexType){}
 
     inline virtual void operator()() override {
-        vkCmdBindIndexBuffer(m_commandBuffer, m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindIndexBuffer(m_commandBuffer, m_indexBuffer, 0, m_indexType);
     }
 
 private:
     VkCommandBuffer m_commandBuffer;
     VkBuffer m_indexBuffer;
+    VkIndexType m_indexType;
 };
 
 class VulkanCommandBindShader : public VulkanCommand {
@@ -102,30 +106,95 @@ private:
 class VulkanCommandBindDescriptorSet : public VulkanCommand {
 
 public:
-    explicit VulkanCommandBindDescriptorSet(VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, VkDescriptorSet& descriptorSet) :
-    m_commandBuffer(commandBuffer), m_pipelineLayout(pipelineLayout), m_descriptorSet(descriptorSet){}
+    explicit VulkanCommandBindDescriptorSet(VkCommandBuffer &commandBuffer, VkPipelineLayout &pipelineLayout,
+                                            VkDescriptorSet &descriptorSet, uint32_t setIndex) :
+    m_commandBuffer(commandBuffer), m_pipelineLayout(pipelineLayout), m_descriptorSet(descriptorSet), m_setIndex(setIndex){}
 
     inline virtual void operator()() override {
-        vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSet, 0, nullptr);
+        vkCmdBindDescriptorSets(
+                m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout,
+                m_setIndex, 1, &m_descriptorSet,
+                0, nullptr);
     }
 
 private:
     VkCommandBuffer m_commandBuffer;
     VkPipelineLayout m_pipelineLayout;
     VkDescriptorSet m_descriptorSet;
+    uint32_t m_setIndex;
 };
 
-class VulkanCommandBeginRenderPass: public VulkanCommand{
+class VulkanCommandPushConstants : public VulkanCommand {
 
 public:
-    explicit VulkanCommandBeginRenderPass(VkCommandBuffer& commandBuffer, VkRenderPass& renderPass, VkFramebuffer& frameBuffer, VkExtent2D& extent):
-        m_commandBuffer(commandBuffer), m_renderPass(renderPass), m_framebuffer(frameBuffer), m_extent(extent) {}
+    explicit VulkanCommandPushConstants(VkCommandBuffer &commandBuffer, VkPipelineLayout &layout,
+                                        VkShaderStageFlags stageFlags,
+                                        uint32_t offset, size_t size, void *data) :
+            m_commandBuffer(commandBuffer),
+            m_pipelineLayout(layout),
+            m_stageFlags(stageFlags),
+            m_offset(offset),
+            m_size(size),
+            m_data(data){}
 
     inline virtual void operator()() override {
+        vkCmdPushConstants(m_commandBuffer, m_pipelineLayout, m_stageFlags, m_offset, m_size, m_data);
+    }
 
-        std::array<VkClearValue, 2> clearValues = {};
-        clearValues[0].color = {0.0f, 0.0f, 0.0f, 1.0f};
-        clearValues[1].depthStencil = {1.0f, 0};
+private:
+    VkCommandBuffer m_commandBuffer;
+    VkPipelineLayout m_pipelineLayout;
+    VkShaderStageFlags m_stageFlags;
+    uint32_t m_offset;
+    size_t m_size;
+    void* m_data;
+};
+
+class VulkanCommandSetViewport : public VulkanCommand {
+
+public:
+    explicit VulkanCommandSetViewport(VkCommandBuffer &commandBuffer, VkViewport viewport):
+    m_commandBuffer(commandBuffer), m_viewport(viewport){}
+
+    inline virtual void operator()()override {
+
+        vkCmdSetViewport(m_commandBuffer, 0, 1, &m_viewport);
+    }
+
+private:
+    VkCommandBuffer m_commandBuffer;
+    VkViewport m_viewport;
+};
+
+class VulkanCommandSetScissor: public VulkanCommand {
+
+public:
+    explicit VulkanCommandSetScissor(VkCommandBuffer &commandBuffer, VkRect2D rect2D):
+            m_commandBuffer(commandBuffer), m_rect2D(rect2D){}
+
+    inline virtual void operator()()override {
+        vkCmdSetScissor(m_commandBuffer, 0, 1, &m_rect2D);
+    }
+
+private:
+    VkCommandBuffer m_commandBuffer;
+    VkRect2D m_rect2D;
+};
+
+
+class VulkanCommandBeginRenderPass : public VulkanCommand {
+
+public:
+    explicit VulkanCommandBeginRenderPass(VkCommandBuffer &commandBuffer, VkRenderPass &renderPass,
+                                          VkFramebuffer &frameBuffer,
+                                          VkExtent2D &extent, std::vector<VkClearValue> clearValues) :
+        m_commandBuffer(commandBuffer),
+        m_renderPass(renderPass),
+        m_framebuffer(frameBuffer),
+        m_extent(extent),
+        m_clearValues(std::move(clearValues)) {}
+
+    inline virtual void operator()() override {
 
         VkRenderPassBeginInfo renderPassInfo = {};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -133,8 +202,8 @@ public:
         renderPassInfo.framebuffer = m_framebuffer;
         renderPassInfo.renderArea.offset = {0, 0};
         renderPassInfo.renderArea.extent = m_extent;
-        renderPassInfo.clearValueCount = clearValues.size();
-        renderPassInfo.pClearValues = clearValues.data();
+        renderPassInfo.clearValueCount = m_clearValues.size();
+        renderPassInfo.pClearValues = m_clearValues.data();
 
         vkCmdBeginRenderPass(m_commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     }
@@ -144,6 +213,7 @@ private:
     VkRenderPass m_renderPass;
     VkFramebuffer m_framebuffer;
     VkExtent2D m_extent;
+    std::vector<VkClearValue> m_clearValues;
 };
 
 class VulkanCommandEndRenderPass : public VulkanCommand{

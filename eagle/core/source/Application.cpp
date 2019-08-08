@@ -28,11 +28,7 @@ Application::Application(const ApplicationCreateInfo& config) :
 }
 
 void Application::handle_event(std::shared_ptr<Event> e){
-
-    EventDispatcher dispatcher(*e);
-    if (dispatcher.dispatch<WindowCloseEvent>(BIND_EVENT_FN(Application::window_close_event))){
-        return;
-    }
+    m_dispatcher.dispatch(*e);
     m_eventQueue.emplace(e);
 
 }
@@ -57,7 +53,13 @@ void Application::run() {
     m_window->init();
     m_window->set_event_callback(BIND_EVENT_FN(Application::handle_event));
 
+    m_dispatcher.add_listener<WindowCloseEvent>([&](Event& e){
+        return window_close_event(*(WindowCloseEvent*)&e);
+    });
+
     m_layerStack.init();
+
+    auto renderingContext = m_window->get_rendering_context();
 
     while(!m_shouldClose){
         m_window->handle_events();
@@ -68,7 +70,7 @@ void Application::run() {
             layer->handle_update();
         }
 
-        if (!m_window->begin_draw()){
+        if (!renderingContext->begin_draw_commands()){
             //failed to present image, skip all rendering for this frame
             continue;
         }
@@ -76,7 +78,7 @@ void Application::run() {
         for (auto layer = m_layerStack.end(); layer != m_layerStack.begin();){
             (*--layer)->handle_draw();
         }
-        m_window->end_draw();
+        renderingContext->end_draw_commands();
 
         m_window->refresh();
     }
@@ -107,18 +109,6 @@ bool Application::window_close_event(WindowCloseEvent& e) {
 
 void Application::layer_emplace(std::vector<std::shared_ptr<Layer>> layers) {
     m_layerStack.emplace(layers);
-}
-
-float Application::get_window_aspect() {
-    return (float)get_window_width() / get_window_height();
-}
-
-uint32_t Application::get_window_width() {
-    return m_instance->m_window->get_width();
-}
-
-uint32_t Application::get_window_height() {
-    return m_instance->m_window->get_height();
 }
 
 void Application::event_emplace_back(std::shared_ptr<Event> e) {

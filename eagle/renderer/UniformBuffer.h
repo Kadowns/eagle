@@ -7,11 +7,12 @@
 
 #include <memory>
 
+#include "DescriptorItem.h"
 #include "Shader.h"
 
 _EAGLE_BEGIN
 
-class UniformBuffer {
+class UniformBuffer : public DescriptorItem {
 
 public:
 

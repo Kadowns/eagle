@@ -45,9 +45,8 @@ public:
     void layer_emplace(std::vector<std::shared_ptr<Layer>> layers);
     void layer_pop(std::shared_ptr<Layer> layer);
 
-    static float get_window_aspect();
-    static uint32_t get_window_width();
-    static uint32_t get_window_height();
+
+    std::shared_ptr<Window> get_window() { return m_window; }
 
 private:
 
@@ -57,12 +56,13 @@ private:
 
     static Application* m_instance;
 
-    std::unique_ptr<Window> m_window;
+    std::shared_ptr<Window> m_window;
 
     bool m_shouldClose = false;
 
     LayerStack m_layerStack;
     EventQueue m_eventQueue;
+    EventDispatcher m_dispatcher;
 
 };
 

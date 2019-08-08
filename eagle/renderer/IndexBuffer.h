@@ -7,17 +7,21 @@
 
 #include <vector>
 #include "eagle/core/Core.h"
+#include "RenderingCore.h"
 
 _EAGLE_BEGIN
+
+enum class INDEX_BUFFER_TYPE{
+    UINT_16 = 2,
+    UINT_32 = 4
+};
 
 class IndexBuffer {
 public:
     IndexBuffer() = default;
     virtual ~IndexBuffer() = default;
-
-    virtual const std::vector<uint32_t>& get_indices() = 0;
-    virtual const void* get_indices_data() = 0;
-    virtual uint32_t get_indices_count() = 0;
+    virtual void * get_data() = 0;
+    virtual size_t get_indices_count() = 0;
 };
 
 _EAGLE_END

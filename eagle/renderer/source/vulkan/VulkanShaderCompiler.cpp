@@ -12,7 +12,7 @@ _EAGLE_BEGIN
 
 bool VulkanShaderCompiler::m_glslangIntitialized = false;
 
-std::vector<uint32_t> VulkanShaderCompiler::compile_glsl(const std::string &fileName) {
+std::vector<uint32_t> VulkanShaderCompiler::compile_glsl(const std::string &filename, EG_SHADER_STAGE stage) {
 
     //initializes glslang
     if (!m_glslangIntitialized) {
@@ -23,17 +23,16 @@ std::vector<uint32_t> VulkanShaderCompiler::compile_glsl(const std::string &file
         m_glslangIntitialized = true;
     }
 
-    //get correct shade stage based on file suffix
-    EShLanguage shaderStage = get_shader_stage(get_suffix(fileName));
+    EShLanguage shaderStage = get_shader_stage(stage);
 
     //creates shader object based on shader stage
     glslang::TShader shader(shaderStage);
 
 
-    std::ifstream file(fileName);
+    std::ifstream file(filename);
     if (!file.is_open()) {
-        EG_CORE_FATAL_F("Failed to load shader: {0}", fileName);
-        throw std::runtime_error("failed to open file: " + fileName);
+        EG_CORE_FATAL_F("Failed to open shader file: {0}", filename);
+        throw std::runtime_error("failed to open file: " + filename);
     }
 
     //reads glsl file and stores on a const char* (otherwise it would not be possible to set the shader strings with a temporary value)
@@ -61,13 +60,13 @@ std::vector<uint32_t> VulkanShaderCompiler::compile_glsl(const std::string &file
     //preprocessing of the glsl shader (includes all files into the actual glsl string)
     DirStackFileIncluder includer;
 
-    std::string path = get_file_path(fileName);
+    std::string path = get_file_path(filename);
     includer.pushExternalLocalDirectory(path);
 
     std::string preprocessedGLSL;
 
     if (!shader.preprocess(&resources, DefaultVersion, ENoProfile, false, false, messages, &preprocessedGLSL, includer)) {
-        EG_CORE_FATAL_F("GLSL Preprocessing Failed for: {0}\n Log: {1}\n DebugLog: {2}", fileName, shader.getInfoLog(), shader.getInfoDebugLog());
+        EG_CORE_FATAL_F("GLSL Preprocessing Failed for: {0}\n Log: {1}\n DebugLog: {2}", filename, shader.getInfoLog(), shader.getInfoDebugLog());
     }
 
     //updates shader strings with preprocessed glsl file
@@ -76,7 +75,7 @@ std::vector<uint32_t> VulkanShaderCompiler::compile_glsl(const std::string &file
 
     //parses the shader
     if (!shader.parse(&resources, 100, false, messages)) {
-        EG_CORE_FATAL_F("GLSL Parsing Failed for: {0}\n Log: {1}\n DebugLog: {2}", fileName, shader.getInfoLog(), shader.getInfoDebugLog());
+        EG_CORE_FATAL_F("GLSL Parsing Failed for: {0}\n Log: {1}\n DebugLog: {2}", filename, shader.getInfoLog(), shader.getInfoDebugLog());
     }
 
     glslang::TProgram program;
@@ -84,7 +83,7 @@ std::vector<uint32_t> VulkanShaderCompiler::compile_glsl(const std::string &file
 
     //links program with shader
     if(!program.link(messages)) {
-        EG_CORE_FATAL_F("GLSL Linking Failed for: {0}\n Log: {1}\n DebugLog: {2}", fileName, shader.getInfoLog(), shader.getInfoDebugLog());
+        EG_CORE_FATAL_F("GLSL Linking Failed for: {0}\n Log: {1}\n DebugLog: {2}", filename, shader.getInfoLog(), shader.getInfoDebugLog());
     }
 
     //converts glslang program to spirv format
@@ -108,22 +107,14 @@ std::string VulkanShaderCompiler::get_suffix(const std::string &name) {
     return (pos == std::string::npos) ? "" : name.substr(name.rfind('.') + 1);
 }
 
-EShLanguage VulkanShaderCompiler::get_shader_stage(const std::string &stage) {
-    if (stage == "vert") {
-        return EShLangVertex;
-    } else if (stage == "tesc") {
-        return EShLangTessControl;
-    } else if (stage == "tese") {
-        return EShLangTessEvaluation;
-    } else if (stage == "geom") {
-        return EShLangGeometry;
-    } else if (stage == "frag") {
-        return EShLangFragment;
-    } else if (stage == "comp") {
-        return EShLangCompute;
-    } else {
-        EG_CORE_FATAL_F("Invalid shader suffix: {0}", stage);
-        return EShLangCount;
+EShLanguage VulkanShaderCompiler::get_shader_stage(EG_SHADER_STAGE stage) {
+    switch(stage){
+        case EG_SHADER_STAGE::VERTEX:return EShLangVertex;
+        case EG_SHADER_STAGE::FRAGMENT:return EShLangFragment;
+        case EG_SHADER_STAGE::COMPUTE:return EShLangCompute;
+        case EG_SHADER_STAGE::GEOMETRY:return EShLangGeometry;
+        case EG_SHADER_STAGE::TESSALATION_CONTROL:return EShLangTessControl;
+        case EG_SHADER_STAGE::TESSALATION_EVALUATE:return EShLangTessEvaluation;
     }
 }
 

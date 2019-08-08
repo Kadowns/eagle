@@ -13,9 +13,6 @@ class MouseMoveEvent : public Event {
 
 public:
 
-    EVENT_CLASS_TYPE(EVENT_TYPE::MOUSE_MOVE)
-    EVENT_CLASS_CATEGORY(EVENT_CATEGORY_INPUT | EVENT_CATEGORY_MOUSE)
-
     MouseMoveEvent(float x, float y)
         : m_x(x), m_y(y){}
 
@@ -31,37 +28,66 @@ private:
 class MousePressedEvent : public Event {
 
 public:
-    EVENT_CLASS_TYPE(EVENT_TYPE::MOUSE_BUTTON_PRESSED)
-    EVENT_CLASS_CATEGORY(EVENT_CATEGORY_INPUT | EVENT_CATEGORY_MOUSE)
 
-    MousePressedEvent(float x, float y, int key) :
-        m_x(x), m_y(y), m_key(key){}
+    MousePressedEvent(int key, int mods) :  m_key(key), m_mods(mods){}
 
-    float get_x() const {return m_x;}
-    float get_y() const {return m_y;}
     int get_key() const {return m_key;}
 
 private:
-    float m_x, m_y;
-    int m_key;
+    int m_key, m_mods;
 };
 
 class MouseReleasedEvent : public Event {
 
 public:
-    EVENT_CLASS_TYPE(EVENT_TYPE::MOUSE_BUTTON_RELEASED)
-    EVENT_CLASS_CATEGORY(EVENT_CATEGORY_INPUT | EVENT_CATEGORY_MOUSE)
 
-    MouseReleasedEvent(float x, float y, int key) :
-            m_x(x), m_y(y), m_key(key){}
+    MouseReleasedEvent(int key, int mods) : m_key(key), m_mods(mods){}
 
-    float get_x() const {return m_x;}
-    float get_y() const {return m_y;}
     int get_key() const {return m_key;}
 
 private:
+    int m_key, m_mods;
+};
+
+class MouseScrolledEvent : public Event {
+
+public:
+
+    MouseScrolledEvent(float x, float y) :  m_x(x), m_y(y) {}
+
+    inline float get_x() const {return m_x;}
+    inline float get_y() const {return m_y;}
+
+private:
     float m_x, m_y;
-    int m_key;
+};
+
+class KeyEvent : public Event {
+
+public:
+
+    KeyEvent(int key, int action, int mods) : m_key(key), m_action(action), m_mods(mods) {}
+
+    inline int get_key()  const {return m_key;}
+    inline int get_mods() const {return m_mods;}
+    inline int get_action() const{return m_action;}
+
+private:
+    int m_key, m_action, m_mods;
+
+};
+
+class KeyTypedEvent : public Event {
+
+public:
+
+    KeyTypedEvent(uint32_t key) : m_key(key) {}
+
+    inline uint32_t get_key()  const {return m_key;}
+
+private:
+    uint32_t m_key;
+
 };
 
 _EAGLE_END

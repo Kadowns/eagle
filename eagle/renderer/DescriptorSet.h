@@ -13,7 +13,8 @@
 _EAGLE_BEGIN
 
 class DescriptorSet {
-
+public:
+    virtual ~DescriptorSet() = default;
 };
 
 _EAGLE_END

@@ -1,1 +1,0 @@
-add_subdirectory(${CMAKE_HOME_DIRECTORY}/external/stb ${CMAKE_BINARY_DIR}/stb)

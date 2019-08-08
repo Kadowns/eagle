@@ -6,6 +6,7 @@
 #define EAGLE_VULKANCORE_H
 
 #include "eagle/core/Core.h"
+#include "eagle/renderer/RenderingCore.h"
 #include <vulkan/vulkan.h>
 
 _EAGLE_BEGIN

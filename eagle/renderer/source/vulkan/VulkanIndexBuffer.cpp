@@ -3,57 +3,161 @@
 //
 
 #include "eagle/renderer/vulkan/VulkanIndexBuffer.h"
+#include "eagle/core/Log.h"
 
 _EAGLE_BEGIN
 
-VulkanIndexBuffer::VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInfo &createInfo):
+VulkanIndexBuffer::VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInfo &createInfo, void *indexData,
+                                     size_t indexCount, INDEX_BUFFER_TYPE indexType, EG_BUFFER_USAGE usage) :
         m_device(device),
-        m_indices(createInfo.indices) {
+        m_physicalDevice(createInfo.physicalDevice),
+        m_indexCount(indexCount),
+        m_indexType(indexType),
+        m_usage(usage),
+        m_buffers(createInfo.bufferCount){
 
-    VkDeviceSize bufferSize = sizeof(m_indices[0]) * m_indices.size();
+    VkDeviceSize bufferSize = static_cast<int>(indexType) * indexCount;
 
-    VulkanBufferCreateInfo createBufferInfo = {};
-    createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-    createBufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    if (indexCount != 0){
+        m_data = new char[bufferSize];
+        memcpy(m_data, indexData, bufferSize);
+    }
 
-    std::shared_ptr<VulkanBuffer> stagingBuffer;
-    VK_CALL
-    VulkanBuffer::create_buffer(
-            createInfo.physicalDevice, m_device, stagingBuffer, createBufferInfo, bufferSize, m_indices.data());
+    switch(m_usage){
+        case EG_BUFFER_USAGE::DYNAMIC:{
+
+            if (indexCount == 0) {
+                return;
+            }
+
+            VulkanBufferCreateInfo createBufferInfo = {};
+            createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+            createBufferInfo.usageFlags = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+            for (auto& buffer : m_buffers){
+                VulkanBuffer::create_buffer(createInfo.physicalDevice, m_device, buffer, createBufferInfo, bufferSize);
+                buffer->map();
+                buffer->copy_to(m_data, bufferSize);
+                buffer->flush();
+            }
+        } break;
+        case EG_BUFFER_USAGE::CONSTANT:{
+            VulkanBufferCreateInfo createBufferInfo = {};
+            createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+            createBufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+
+            std::shared_ptr<VulkanBuffer> stagingBuffer;
+            VK_CALL
+            VulkanBuffer::create_buffer(
+                    createInfo.physicalDevice, m_device, stagingBuffer, createBufferInfo, bufferSize, m_data);
 
 
-    createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-    createBufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+            createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+            createBufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 
-    VK_CALL
-    VulkanBuffer::create_buffer(createInfo.physicalDevice, m_device, m_buffer, createBufferInfo, bufferSize,
-                                nullptr);
+            VK_CALL
+            VulkanBuffer::create_buffer(createInfo.physicalDevice, m_device, m_buffers[0], createBufferInfo, bufferSize);
 
-    VK_CALL VulkanBuffer::copy_buffer(
-            device,
-            createInfo.commandPool,
-            createInfo.graphicsQueue,
-            stagingBuffer->get_native_buffer(),
-            m_buffer->get_native_buffer(),
-            bufferSize,
-            0);
+            VK_CALL VulkanBuffer::copy_buffer(
+                    device,
+                    createInfo.commandPool,
+                    createInfo.graphicsQueue,
+                    stagingBuffer->get_native_buffer(),
+                    m_buffers[0]->get_native_buffer(),
+                    bufferSize,
+                    0);
 
-    stagingBuffer->destroy();
+            stagingBuffer->destroy();
+        } break;
+    }
+    m_initialized = true;
 }
 VulkanIndexBuffer::~VulkanIndexBuffer() {
-    m_buffer->destroy();
+    for (auto& buffer : m_buffers){
+        buffer->unmap();
+        buffer->destroy();
+    }
 }
 
-const std::vector<uint32_t>& VulkanIndexBuffer::get_indices() {
-    return m_indices;
+void* VulkanIndexBuffer::get_data() {
+    return m_data;
 }
 
-const void *VulkanIndexBuffer::get_indices_data() {
-    return m_indices.data();
+size_t VulkanIndexBuffer::get_indices_count() {
+    return m_indexCount;
 }
 
-uint32_t VulkanIndexBuffer::get_indices_count() {
-    return m_indices.size();
+
+bool VulkanIndexBuffer::is_dirty() const {
+    return !m_dirtyBuffers.empty();
+}
+
+void VulkanIndexBuffer::flush(uint32_t bufferIndex) {
+
+    if (!is_dirty()){
+        return;
+    }
+
+    VkDeviceSize bufferSize = m_indexCount * static_cast<int>(m_indexType);
+
+    if (m_resizing || !m_buffers[bufferIndex]){
+        if (m_buffers[bufferIndex]){
+            m_buffers[bufferIndex]->unmap();
+            m_buffers[bufferIndex]->destroy();
+        }
+
+
+        VulkanBufferCreateInfo createBufferInfo = {};
+        createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+        createBufferInfo.usageFlags = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+        VulkanBuffer::create_buffer(m_physicalDevice, m_device, m_buffers[bufferIndex], createBufferInfo, bufferSize, m_data);
+        m_buffers[bufferIndex]->map();
+    }
+    m_buffers[bufferIndex]->copy_to(m_data, bufferSize);
+    m_buffers[bufferIndex]->flush();
+    m_dirtyBuffers.erase(bufferIndex);
+
+}
+
+void VulkanIndexBuffer::upload(void *data, uint32_t indexCount) {
+    if (m_usage == EG_BUFFER_USAGE::CONSTANT){
+        EG_CORE_ERROR("Trying to flush data to a index buffer created with CONSTANT flag! To be able to flush data, be sure to create the buffer with DYNAMIC flag!");
+        return;
+    }
+
+    VkDeviceSize bufferSize = static_cast<int>(m_indexType) * indexCount;
+
+    if (m_data != nullptr){
+        delete[](m_data);
+    }
+
+    m_data = new char[bufferSize];
+    memcpy(m_data, data, bufferSize);
+
+
+    if (!m_initialized){
+
+        VulkanBufferCreateInfo createBufferInfo = {};
+        createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+        createBufferInfo.usageFlags = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+        for (auto& buffer : m_buffers){
+            VulkanBuffer::create_buffer(m_physicalDevice, m_device, buffer, createBufferInfo, bufferSize);
+            buffer->map();
+            buffer->copy_to(m_data, bufferSize);
+            buffer->flush();
+        }
+        m_initialized = true;
+    }
+    else{
+        if (m_indexCount != indexCount){
+            m_resizing = true;
+        }
+
+        m_dirtyBuffers.clear();
+        for (int i = 0; i < m_buffers.size(); i++){
+            m_dirtyBuffers.insert(i);
+        }
+    }
+    m_indexCount = indexCount;
 }
 
 _EAGLE_END

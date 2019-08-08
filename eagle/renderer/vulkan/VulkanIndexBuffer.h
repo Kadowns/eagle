@@ -6,6 +6,7 @@
 #define EAGLE_VULKANINDEXBUFFER_H
 
 #include <memory>
+#include <set>
 
 #include "eagle/renderer/IndexBuffer.h"
 #include "VulkanBuffer.h"
@@ -14,29 +15,49 @@
 _EAGLE_BEGIN
 
 struct VulkanIndexBufferCreateInfo {
-    std::vector<uint32_t> indices;
     VkPhysicalDevice physicalDevice;
     VkCommandPool commandPool;
     VkQueue graphicsQueue;
+    uint32_t bufferCount;
 };
 
 class VulkanIndexBuffer : public IndexBuffer {
 
 public:
 
-    VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInfo &createInfo);
+    VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInfo &createInfo, void *indexData,
+                      size_t indexCount, INDEX_BUFFER_TYPE indexType, EG_BUFFER_USAGE usage);
     virtual ~VulkanIndexBuffer();
-    virtual const std::vector<uint32_t>& get_indices() override;
-    virtual const void* get_indices_data() override;
-    virtual uint32_t get_indices_count() override;
+    virtual void * get_data() override;
+    virtual size_t get_indices_count() override;
 
-    inline VulkanBuffer& get_buffer() { return *m_buffer; }
+    bool is_dirty() const;
+    void flush(uint32_t bufferIndex);
+    void upload(void* data, uint32_t verticesCount);
+    inline VulkanBuffer& get_buffer(uint32_t bufferIndex) {
+        if (m_usage == EG_BUFFER_USAGE::CONSTANT){
+            return *(m_buffers[0]);
+        }
+        return *(m_buffers[bufferIndex]);
+    }
+
+    inline VkIndexType get_native_index_type(){
+        switch(m_indexType) {
+            case INDEX_BUFFER_TYPE::UINT_16: return VK_INDEX_TYPE_UINT16;
+            case INDEX_BUFFER_TYPE::UINT_32: return VK_INDEX_TYPE_UINT32;
+        }
+    }
 
 private:
     VkDevice m_device;
-    std::vector<uint32_t> m_indices;
-
-    std::shared_ptr<VulkanBuffer> m_buffer;
+    VkPhysicalDevice m_physicalDevice;
+    std::vector<std::shared_ptr<VulkanBuffer>> m_buffers;
+    std::set<int> m_dirtyBuffers;
+    char* m_data = nullptr;
+    size_t m_indexCount;
+    INDEX_BUFFER_TYPE m_indexType;
+    EG_BUFFER_USAGE m_usage;
+    bool m_resizing = false, m_initialized = false;
 };
 
 _EAGLE_END

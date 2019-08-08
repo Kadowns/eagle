@@ -28,8 +28,10 @@ void WindowGLFW::init() {
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+    glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+    glfwWindowHint(GLFW_FOCUSED , GLFW_TRUE);
 
-    m_window = glfwCreateWindow(m_windowData.width, m_windowData.height, ("eagle - " + EAGLE_GET_INFO(EAGLE_APP_NAME)).c_str(), nullptr, nullptr);
+    m_window = glfwCreateWindow(m_windowData.width, m_windowData.height, ("Eagle - " + EAGLE_GET_INFO(EAGLE_APP_NAME)).c_str(), nullptr, nullptr);
 
     if (!m_window){
         glfwTerminate();
@@ -37,6 +39,7 @@ void WindowGLFW::init() {
     }
 
     glfwMakeContextCurrent(m_window);
+    glfwShowWindow(m_window);
 
     m_windowData.context->init(this);
 
@@ -54,7 +57,7 @@ void WindowGLFW::init() {
             data.eventCallback(std::make_shared<WindowResizedEvent>(width, height));
         }
     });
-
+    glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
     //window focus
     glfwSetWindowFocusCallback(m_window, [](GLFWwindow* window, int focused){
         auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -74,26 +77,54 @@ void WindowGLFW::init() {
     //mouse move
     glfwSetCursorPosCallback(m_window, [](GLFWwindow* window, double x, double y){
         auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
-        data.mouseX = static_cast<uint32_t>(x);
-        data.mouseY = static_cast<uint32_t>(y);
-        data.eventCallback(std::make_shared<MouseMoveEvent>(x, y));
+        data.eventCallback(std::make_shared<MouseMoveEvent>(static_cast<float>(x), static_cast<float>(y)));
+    });
+
+    glfwSetScrollCallback(m_window, [](GLFWwindow* window, double x, double y){
+       auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
+       data.eventCallback(std::make_shared<MouseScrolledEvent>(static_cast<float>(x),static_cast<float>(y)));
     });
 
     //mouse click
     glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int key, int action, int mod){
         auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
-        if (action == GLFW_PRESS){
-            data.eventCallback(std::make_shared<MousePressedEvent>(data.mouseX, data.mouseY, key));
+        if (action == GLFW_PRESS || action == GLFW_REPEAT){
+            data.eventCallback(std::make_shared<MousePressedEvent>(key, mod));
         }else{
-            data.eventCallback(std::make_shared<MouseReleasedEvent>(data.mouseX, data.mouseY, key));
+            data.eventCallback(std::make_shared<MouseReleasedEvent>(key, mod));
         }
     });
+
+    glfwSetKeyCallback(m_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+        auto &data = *(WindowData *) glfwGetWindowUserPointer(window);
+        data.eventCallback(std::make_shared<KeyEvent>(key, action, mods));
+    });
+
+    glfwSetCharCallback(m_window, [](GLFWwindow* window, unsigned int c){
+        auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
+        data.eventCallback(std::make_shared<KeyTypedEvent>(c));
+    });
+
+    m_mouseCursors[EG_CURSOR::ARROW] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+    m_mouseCursors[EG_CURSOR::TEXT] = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
+    m_mouseCursors[EG_CURSOR::CROSSHAIR] = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
+    m_mouseCursors[EG_CURSOR::HAND] = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
+    m_mouseCursors[EG_CURSOR::HORI_RESIZE] = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
+    m_mouseCursors[EG_CURSOR::VERT_RESIZE] = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
+
+    m_input = std::make_unique<InputGLFW>(m_window);
 
     EG_CORE_TRACE("Window initialized!");
 }
 
 void WindowGLFW::deinit() {
     m_windowData.context->deinit();
+
+    for (auto& it : m_mouseCursors){
+        glfwDestroyCursor(it.second);
+    }
+    m_mouseCursors.clear();
+
     glfwTerminate();
 }
 
@@ -110,24 +141,22 @@ void WindowGLFW::handle_events() {
 }
 
 bool WindowGLFW::is_minimized() {
-    return m_windowData.width == 0 || m_windowData.height == 0;
+    int width, height;
+    glfwGetWindowSize(m_window, &width, &height);
+    return width == 0 || height == 0;
 }
 
 void WindowGLFW::wait_native_events() {
     glfwWaitEvents();
 }
 
-bool WindowGLFW::begin_draw() {
-    return m_windowData.context->begin_draw_commands();
-}
-
-void WindowGLFW::end_draw() {
-    m_windowData.context->end_draw_commands();
-}
-
 void WindowGLFW::set_event_callback(Window::PFN_EventCallback callback) {
     m_windowData.eventCallback = callback;
 }
 
+void WindowGLFW::set_cursor_shape(EG_CURSOR cursorType) {
+    auto cursor = m_mouseCursors.find(cursorType);
+    glfwSetCursor(m_window, cursor != m_mouseCursors.end() ? cursor->second : m_mouseCursors[EG_CURSOR::ARROW]);
+}
 
 _EAGLE_END

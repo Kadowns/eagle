@@ -7,6 +7,7 @@
 _EAGLE_BEGIN
 
 UniformBuffer::UniformBuffer(size_t size):
+    DescriptorItem(EG_DESCRIPTOR_TYPE::UNIFORM_BUFFER),
     m_size(size){
 
 }

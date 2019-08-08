@@ -1,39 +1,19 @@
+#include <utility>
+
 //
 // Created by Novak on 05/06/2019.
-// Code HEAVILY based on Hazel events: https://github.com/TheCherno/Hazel
 //
 
 #ifndef EAGLE_EVENT_H
 #define EAGLE_EVENT_H
 
 #include <functional>
+#include <map>
+#include <typeindex>
 
 #include "eagle/core/Core.h"
 
 _EAGLE_BEGIN
-
-enum class EVENT_TYPE {
-    NONE = 0,
-    WINDOW_CLOSE, WINDOW_RESIZE, WINDOW_FOCUS, WINDOW_LOST_FOCUS, WINDOW_MOVED,
-    KEY_PRESSED, KEY_RELEASED, KEY_TYPED,
-    MOUSE_BUTTON_PRESSED, MOUSE_BUTTON_RELEASED, MOUSE_MOVE, MOUSE_SCROLLED,
-    CUSTOM
-};
-
-enum EVENT_CATEGORY {
-    NONE                        = 0,
-    EVENT_CATEGORY_WINDOW       = BIT(0),
-    EVENT_CATEGORY_INPUT        = BIT(1),
-    EVENT_CATEGORY_KEYBOARD     = BIT(2),
-    EVENT_CATEGORY_MOUSE        = BIT(3),
-    EVENT_CATEGORY_MOUSE_BUTTON = BIT(4),
-    EVENT_CATEGORY_CUSTOM       = BIT(5)
-};
-
-#define EVENT_CLASS_TYPE(type)  static Eagle::EVENT_TYPE get_static_type() { return type; }\
-                                virtual Eagle::EVENT_TYPE get_event_type() const override { return get_static_type(); }
-
-#define EVENT_CLASS_CATEGORY(category) virtual int get_category_flags() const override { return category; }
 
 class EventDispatcher;
 
@@ -42,12 +22,8 @@ public:
     Event() = default;
     virtual ~Event() = default;
 
-    virtual EVENT_TYPE get_event_type() const = 0;
-
-    virtual int get_category_flags() const = 0;
-
-    bool is_in_category(EVENT_CATEGORY category) {
-        return get_category_flags() & category;
+    virtual std::type_index get_type_index( ) const {
+        return std::type_index( typeid(*this) );
     }
 
     bool is_handled() { return m_handled; }
@@ -56,25 +32,32 @@ private:
     bool m_handled = false;
 };
 
+
 class EventDispatcher {
-    template<typename T>
-    using PFN_EventHandle = std::function<bool(T &)>;
+    using EventFunctionHandle = std::function<bool(Eagle::Event&)>;
 public:
-    explicit EventDispatcher(Event &event)
-            : m_Event(event) {
-    }
+    EventDispatcher() = default;
 
     template<typename T>
-    bool dispatch(PFN_EventHandle<T> func) {
-        if (m_Event.get_event_type() == T::get_static_type()) {
-            m_Event.m_handled = func(*(T *) &m_Event);
+    void add_listener(EventFunctionHandle func){
+        static_assert(std::is_base_of<Eagle::Event, T>(), "Template argument does not inherit from Eagle::Event");
+        std::type_index index(typeid(T));
+        if (m_listeners.count(index) == 0){
+            m_listeners[index] = std::move(func);
+        }
+    }
+
+    bool dispatch(Eagle::Event& e) {
+        auto listener = m_listeners.find(e.get_type_index());
+        if (listener != m_listeners.end()){
+            e.m_handled = listener->second.operator()(e);
             return true;
         }
         return false;
     }
 
 private:
-    Event &m_Event;
+    std::map<std::type_index, EventFunctionHandle> m_listeners;
 };
 
 _EAGLE_END

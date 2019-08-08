@@ -8,10 +8,12 @@
 
 _EAGLE_BEGIN
 
-VulkanRenderTarget::VulkanRenderTarget(uint32_t width, uint32_t height, VulkanRenderTargetCreateInfo &info) :
+VulkanRenderTarget::VulkanRenderTarget(uint32_t width, uint32_t height,
+                                       const std::vector<RENDER_TARGET_ATTACHMENT> &attachments,
+                                       VulkanRenderTargetCreateInfo &info) :
+    RenderTarget(width, height, attachments),
     m_info(info),
-    m_color(std::make_shared<VulkanImage>()),
-    m_depth(std::make_shared<VulkanImage>()){
+    m_depthAttachment(std::make_shared<VulkanImageAttachment>()){
     create(width, height);
 }
 
@@ -24,147 +26,156 @@ void VulkanRenderTarget::cleanup() {
         return;
 
     EG_CORE_TRACE("Clearing render target!");
+
+    auto destroy_attachment = [&](std::shared_ptr<VulkanImageAttachment> attachment){
+        vkDestroyImageView(m_info.device, attachment->view, nullptr);
+        vkDestroyImage(m_info.device, attachment->image, nullptr);
+        vkFreeMemory(m_info.device, attachment->memory, nullptr);
+    };
+
     VK_CALL vkDestroyFramebuffer(m_info.device, m_framebuffer, nullptr);
 
     VK_CALL vkDestroyRenderPass(m_info.device, m_renderPass, nullptr);
 
-    VK_CALL vkDestroySampler(m_info.device, m_color->sampler, nullptr);
 
-    VK_CALL vkDestroyImageView(m_info.device, m_color->view, nullptr);
-    VK_CALL vkDestroyImageView(m_info.device, m_depth->view, nullptr);
+    for (auto& image : m_images){
+        VK_CALL vkDestroySampler(
+                m_info.device,
+                std::static_pointer_cast<VulkanImageSampler>(image->get_sampler().lock())->sampler,
+                nullptr
+                );
 
-    VK_CALL vkDestroyImage(m_info.device, m_color->image, nullptr);
-    VK_CALL vkDestroyImage(m_info.device, m_depth->image, nullptr);
+        auto attachment = std::static_pointer_cast<VulkanImageAttachment>(image->get_attachment().lock());
+        destroy_attachment(attachment);
+    }
 
-    VK_CALL vkFreeMemory(m_info.device, m_color->memory, nullptr);
-    VK_CALL vkFreeMemory(m_info.device, m_depth->memory, nullptr);
+    VK_CALL destroy_attachment(m_depthAttachment);
+
     EG_CORE_TRACE("Render target cleared!");
     m_cleared = true;
 }
 
 void VulkanRenderTarget::create_resources() {
-//color
-    VK_CALL VulkanHelper::create_image(m_info.physicalDevice, m_info.device, m_extent.width, m_extent.height,
-                                       1, 1, m_info.colorFormat, VK_IMAGE_TILING_OPTIMAL,
-                                       VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                                       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_color->image, m_color->memory);
 
-    VkImageSubresourceRange subresourceRange = {};
-    subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    subresourceRange.baseMipLevel = 0;
-    subresourceRange.levelCount = 1;
-    subresourceRange.baseArrayLayer = 0;
-    subresourceRange.layerCount = 1;
+    m_images.clear();
+    m_images.resize(m_attachments.size());
 
-
-    VK_CALL VulkanHelper::create_image_view(m_info.device, m_color->image, m_color->view,
-                                            m_info.colorFormat, VK_IMAGE_VIEW_TYPE_2D,
-                                            subresourceRange);
-
+    for (size_t i = 0; i < m_images.size(); i++){
+        m_images[i] = std::make_shared<VulkanImage>(m_width, m_height);
+        auto attachment = std::static_pointer_cast<VulkanImageAttachment>(m_images[i]->get_attachment().lock());
+        auto sampler = std::static_pointer_cast<VulkanImageSampler>(m_images[i]->get_sampler().lock());
+        create_image_resources(
+                        attachment,
+                        m_info.colorFormat,
+                        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                        VK_IMAGE_ASPECT_COLOR_BIT
+                        );
+        VK_CALL VulkanHelper::create_image_sampler(m_info.device, sampler->sampler, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+    }
 
     auto has_stencil_component = [&](VkFormat format) {
         return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
     };
 
-    subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    VkImageAspectFlags depthAspect = VK_IMAGE_ASPECT_DEPTH_BIT;
+
     if (has_stencil_component(m_info.depthFormat)) {
-        subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+        depthAspect |= VK_IMAGE_ASPECT_STENCIL_BIT;
     }
 
-    VK_CALL VulkanHelper::create_image(m_info.physicalDevice, m_info.device, m_extent.width, m_extent.height,
-                                       1, 1, m_info.depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-                                       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_depth->image,
-                                       m_depth->memory);
-
-    VK_CALL VulkanHelper::create_image_view(m_info.device, m_depth->image, m_depth->view,
-                                            m_info.depthFormat, VK_IMAGE_VIEW_TYPE_2D, subresourceRange);
-
-
-    //sampler
-    VK_CALL VulkanHelper::create_image_sampler(m_info.device, m_color->sampler, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+    create_image_resources(m_depthAttachment, m_info.depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, depthAspect);
 }
 
 void VulkanRenderTarget::create_render_pass() {
 
-    std::array<VkAttachmentDescription, 2> attchmentDescriptions = {};
+    // + 1 for depth attachment
+    std::vector<VkAttachmentDescription> attachmentDescriptions(m_images.size() + 1);
     // Color attachment
-    attchmentDescriptions[0].format = VK_FORMAT_R8G8B8A8_UNORM;
-    attchmentDescriptions[0].samples = VK_SAMPLE_COUNT_1_BIT;
-    attchmentDescriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    attchmentDescriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    attchmentDescriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    attchmentDescriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    attchmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    attchmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    // Depth attachment
-    attchmentDescriptions[1].format = m_info.depthFormat;
-    attchmentDescriptions[1].samples = VK_SAMPLE_COUNT_1_BIT;
-    attchmentDescriptions[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    attchmentDescriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    attchmentDescriptions[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    attchmentDescriptions[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    attchmentDescriptions[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    attchmentDescriptions[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-    VkAttachmentReference colorReference = {};
-    colorReference.attachment = 0;
-    colorReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL ;
+    for (size_t i = 0; i < attachmentDescriptions.size(); i++){
+        attachmentDescriptions[i].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachmentDescriptions[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachmentDescriptions[i].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachmentDescriptions[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachmentDescriptions[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        if (i != attachmentDescriptions.size() - 1){
+            attachmentDescriptions[i].format = m_info.colorFormat;
+            attachmentDescriptions[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            attachmentDescriptions[i].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        } else {
+            attachmentDescriptions[i].format = m_info.depthFormat;
+            attachmentDescriptions[i].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            attachmentDescriptions[i].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        }
+    }
+
+    std::vector<VkAttachmentReference> colorReferences(m_images.size());
+    for (size_t i = 0; i < colorReferences.size(); i++){
+        colorReferences[i].attachment = i;
+        colorReferences[i].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    }
 
     VkAttachmentReference depthReference = {};
-    depthReference.attachment = 1;
+    depthReference.attachment = colorReferences.size();
     depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
     VkSubpassDescription subpassDescription = {};
     subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpassDescription.colorAttachmentCount = 1;
-    subpassDescription.pColorAttachments = &colorReference;
+    subpassDescription.colorAttachmentCount = colorReferences.size();
+    subpassDescription.pColorAttachments = colorReferences.data();
     subpassDescription.pDepthStencilAttachment = &depthReference;
 
     // Use subpass dependencies for layout transitions
-    std::array<VkSubpassDependency, 2> dependencies = {};
+    std::vector<VkSubpassDependency> dependencies(attachmentDescriptions.size());
+    for (size_t i = 0; i < dependencies.size(); i++){
 
-    dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-    dependencies[0].dstSubpass = 0;
-    dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+        dependencies[i].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-    dependencies[1].srcSubpass = 0;
-    dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-    dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
+        if (i != dependencies.size() - 1){
+            //color
+            dependencies[i].srcSubpass = VK_SUBPASS_EXTERNAL;
+            dependencies[i].dstSubpass = 0;
+            dependencies[i].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            dependencies[i].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            dependencies[i].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            dependencies[i].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        } else {
+            //depth
+            dependencies[i].srcSubpass = 0;
+            dependencies[i].dstSubpass = VK_SUBPASS_EXTERNAL;
+            dependencies[i].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            dependencies[i].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            dependencies[i].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            dependencies[i].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        }
+    }
 
     // Create the actual renderpass
     VkRenderPassCreateInfo renderPassInfo = {};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    renderPassInfo.attachmentCount = static_cast<uint32_t>(attchmentDescriptions.size());
-    renderPassInfo.pAttachments = attchmentDescriptions.data();
+    renderPassInfo.attachmentCount = static_cast<uint32_t>(attachmentDescriptions.size());
+    renderPassInfo.pAttachments = attachmentDescriptions.data();
     renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = &subpassDescription;
     renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
     renderPassInfo.pDependencies = dependencies.data();
-
 
     VK_CALL vkCreateRenderPass(m_info.device, &renderPassInfo, nullptr, &m_renderPass);
 }
 
 void VulkanRenderTarget::create_framebuffer() {
 
-    VkImageView attachments[2];
-    attachments[0] = m_color->view;
-    attachments[1] = m_depth->view;
+    std::vector<VkImageView> attachments(m_images.size());
+    for (size_t i = 0; i < attachments.size(); i++){
+        attachments[i] = std::static_pointer_cast<VulkanImageAttachment>(m_images[i]->get_attachment().lock())->view;
+    }
+    attachments.emplace_back(m_depthAttachment->view);
 
     VkFramebufferCreateInfo framebufferCreateInfo = {};
     framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     framebufferCreateInfo.renderPass = m_renderPass;
-    framebufferCreateInfo.attachmentCount = 2;
-    framebufferCreateInfo.pAttachments = attachments;
+    framebufferCreateInfo.attachmentCount = attachments.size();
+    framebufferCreateInfo.pAttachments = attachments.data();
     framebufferCreateInfo.width = m_extent.width;
     framebufferCreateInfo.height = m_extent.height;
     framebufferCreateInfo.layers = 1;
@@ -181,6 +192,47 @@ void VulkanRenderTarget::create(uint32_t width, uint32_t height) {
     create_render_pass();
     create_framebuffer();
     m_cleared = false;
+}
+
+void VulkanRenderTarget::create_image_resources(std::shared_ptr<VulkanImageAttachment> &image, VkFormat format,
+                                                VkImageUsageFlags usageFlags, VkImageAspectFlags aspectMask) {
+
+    VK_CALL VulkanHelper::create_image(m_info.physicalDevice, m_info.device, m_extent.width, m_extent.height,
+                                       1, 1, format, VK_IMAGE_TILING_OPTIMAL, usageFlags,
+                                       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image->image, image->memory);
+
+    VkImageSubresourceRange subresourceRange = {};
+    subresourceRange.aspectMask = aspectMask;
+    subresourceRange.baseMipLevel = 0;
+    subresourceRange.levelCount = 1;
+    subresourceRange.baseArrayLayer = 0;
+    subresourceRange.layerCount = 1;
+
+    VK_CALL VulkanHelper::create_image_view(m_info.device, image->image, image->view,
+                                            format, VK_IMAGE_VIEW_TYPE_2D, subresourceRange);
+
+}
+
+std::weak_ptr<Image> VulkanRenderTarget::get_image(size_t index) {
+    return m_images[index];
+}
+
+std::vector<std::weak_ptr<Image>> VulkanRenderTarget::get_images() {
+
+    std::vector<std::weak_ptr<Image>> images(m_images.size());
+    for (size_t i = 0; i < m_images.size(); i++){
+        images[i] = m_images[i];
+    }
+    return images;
+}
+
+std::vector<VkClearValue> VulkanRenderTarget::get_clear_values() {
+    std::vector<VkClearValue> clearValues(m_images.size() + 1);
+    for (uint32_t i = 0; i < m_images.size(); i++){
+        clearValues[i].color = {0.0f, 0.0f, 0.0f, 1.0f};
+    }
+    clearValues[clearValues.size() - 1].depthStencil = {1.0f, 0};
+    return clearValues;
 }
 
 

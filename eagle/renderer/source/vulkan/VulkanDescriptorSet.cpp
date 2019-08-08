@@ -3,11 +3,10 @@
 
 _EAGLE_BEGIN
 
-VulkanDescriptorSet::VulkanDescriptorSet(std::shared_ptr<VulkanShader> shader,
-                                         const std::vector<std::shared_ptr<VulkanUniformBuffer>> &uniformBuffers,
-                                         const std::vector<std::shared_ptr<VulkanImage>> &images,
+VulkanDescriptorSet::VulkanDescriptorSet(const std::shared_ptr<VulkanDescriptorSetLayout> &descriptorSetLayout,
+                                         const std::vector<std::shared_ptr<DescriptorItem>> &descriptorItems,
                                          VulkanDescriptorSetCreateInfo createInfo) :
-    m_shader(shader), m_uniformBuffers(uniformBuffers), m_images(images), m_info(createInfo){
+    m_descriptorSetLayout(descriptorSetLayout), m_descriptorItems(descriptorItems), m_info(createInfo){
     create_descriptor_pool();
     create_descriptor_sets();
 }
@@ -18,7 +17,8 @@ VulkanDescriptorSet::~VulkanDescriptorSet() {
 
 void VulkanDescriptorSet::create_descriptor_pool() {
 
-    auto layoutBindings = m_shader.lock()->get_descriptor_set_layout_bindings();
+    if (!m_cleared) return;
+    auto layoutBindings = m_descriptorSetLayout.lock()->get_native_bindings();
 
     std::vector<VkDescriptorPoolSize> poolSizes = {};
     poolSizes.resize(layoutBindings.size());
@@ -42,7 +42,7 @@ void VulkanDescriptorSet::create_descriptor_sets() {
 
     if (!m_cleared) return;
 
-    std::vector<VkDescriptorSetLayout> layouts(m_info.bufferCount, m_shader.lock()->get_descriptor_set_layout());
+    std::vector<VkDescriptorSetLayout> layouts(m_info.bufferCount, m_descriptorSetLayout.lock()->get_native_layout());
     VkDescriptorSetAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfo.descriptorPool = m_descriptorPool;
@@ -54,26 +54,39 @@ void VulkanDescriptorSet::create_descriptor_sets() {
         throw std::runtime_error("failed to allocate descriptor sets!");
     }
 
-    std::vector<VkDescriptorSetLayoutBinding> descriptorBindings = m_shader.lock()->get_descriptor_set_layout_bindings();
-    std::vector<VkDescriptorBufferInfo> bufferInfos(m_uniformBuffers.size());
-    std::vector<VkDescriptorImageInfo> imageInfos(m_images.size());
+    std::vector<VkDescriptorSetLayoutBinding> descriptorBindings = m_descriptorSetLayout.lock()->get_native_bindings();
+    std::vector<VkDescriptorBufferInfo> bufferInfos;
+    std::vector<VkDescriptorImageInfo> imageInfos;
     for (size_t i = 0; i < m_descriptorSets.size(); i++) {
 
-        for (size_t j = 0; j < bufferInfos.size(); j++) {
-            bufferInfos[j].buffer = m_uniformBuffers[j]->get_buffers()[i]->get_native_buffer();
-            bufferInfos[j].offset = 0;
-            bufferInfos[j].range = m_uniformBuffers[j]->size();
-        }
 
-        for (size_t j = 0; j < imageInfos.size(); j++){
-            imageInfos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfos[j].imageView = m_images[j]->view;
-            imageInfos[j].sampler = m_images[j]->sampler;
+        for (uint32_t j = 0; j < m_descriptorItems.size(); j++){
+            switch (m_descriptorItems[j]->type()){
+
+                case EG_DESCRIPTOR_TYPE::UNIFORM_BUFFER:{
+                    auto buffer = std::static_pointer_cast<VulkanUniformBuffer>(m_descriptorItems[j]);
+                    VkDescriptorBufferInfo bufferInfo = {};
+                    bufferInfo.buffer = buffer->get_buffers()[i]->get_native_buffer();
+                    bufferInfo.offset = 0;
+                    bufferInfo.range = buffer->size();
+                    bufferInfos.push_back(bufferInfo);
+                    break;
+                }
+                case EG_DESCRIPTOR_TYPE::IMAGE_2D:{
+                    auto image = std::static_pointer_cast<VulkanImage>(m_descriptorItems[j]);
+                    VkDescriptorImageInfo imageInfo = {};
+                    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                    imageInfo.imageView = std::static_pointer_cast<VulkanImageAttachment>(image->get_attachment().lock())->view;
+                    imageInfo.sampler = std::static_pointer_cast<VulkanImageSampler>(image->get_sampler().lock())->sampler;
+                    imageInfos.push_back(imageInfo);
+                    break;
+                }
+            }
         }
 
         std::vector<VkWriteDescriptorSet> descriptorWrite = {};
 
-        descriptorWrite.resize(bufferInfos.size() + imageInfos.size());
+        descriptorWrite.resize(m_descriptorItems.size());
         size_t bufferIndex = 0;
         size_t imageIndex = 0;
         for (size_t j = 0; j < descriptorWrite.size(); j++) {

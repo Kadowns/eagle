@@ -8,10 +8,26 @@
 #include <vector>
 #include <map>
 
-#include "eagle/core/Core.h"
-#include "ShaderItemLayout.h"
+#include "RenderingCore.h"
+#include "VertexLayout.h"
+#include "DescriptorSetLayout.h"
 
 _EAGLE_BEGIN
+
+
+struct ShaderPipelineInfo {
+    ShaderPipelineInfo(const VertexLayout& layout) : vertexLayout(layout) {}
+
+    bool blendEnable;
+    bool depthTesting;
+    bool dynamicStates;
+    VertexLayout vertexLayout;
+    struct{
+        float x = 0, y = 0;
+        float widthPercent = 1, heightPercent = 1;
+    } viewport;
+};
+
 
 class Shader {
 

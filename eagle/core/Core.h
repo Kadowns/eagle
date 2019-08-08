@@ -22,6 +22,15 @@ enum EAGLE_KEY{
     EAGLE_DEVICE_NAME = 2
 };
 
+enum class EG_CURSOR{
+    ARROW = 0,
+    TEXT = 1,
+    VERT_RESIZE = 2,
+    HORI_RESIZE = 3,
+    HAND = 4,
+    CROSSHAIR = 5
+};
+
 class EagleInfo {
 public:
     static std::string get_info(EAGLE_KEY key);

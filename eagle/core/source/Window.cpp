@@ -25,4 +25,8 @@ uint32_t Window::get_height() {
     return m_windowData.height;
 }
 
+std::shared_ptr<RenderingContext> Window::get_rendering_context() {
+    return m_windowData.context;
+}
+
 _EAGLE_END

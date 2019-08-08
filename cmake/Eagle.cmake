@@ -21,7 +21,7 @@ endfunction()
 
 function(define_file_basename_for_sources targetname)
     get_target_property(source_files "${targetname}" SOURCES)
-    message("Sources: ${source_files}")
+    #message("Sources: ${source_files}")
     foreach(sourcefile ${source_files})
         # Get source file's current list of compile definitions.
         get_property(defs SOURCE "${sourcefile}"

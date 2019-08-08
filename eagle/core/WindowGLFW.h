@@ -8,8 +8,10 @@
 
 #include "Core.h"
 #include "Window.h"
+#include "InputGLFW.h"
 
 struct GLFWwindow;
+struct GLFWcursor;
 
 _EAGLE_BEGIN
 
@@ -20,8 +22,7 @@ public:
 
     virtual void init() override;
     virtual void deinit() override;
-    virtual bool begin_draw() override;
-    virtual void end_draw() override;
+
     virtual void refresh() override;
 
     virtual void handle_events() override;
@@ -32,9 +33,15 @@ public:
     virtual bool is_minimized() override;
     virtual void wait_native_events() override;
 
+    virtual void set_cursor_shape(EG_CURSOR cursorType) override;
+
 private:
 
     GLFWwindow* m_window;
+
+    std::unique_ptr<InputGLFW> m_input;
+
+    std::map<EG_CURSOR, GLFWcursor*> m_mouseCursors;
 };
 
 _EAGLE_END

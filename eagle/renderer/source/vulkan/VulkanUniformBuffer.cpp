@@ -7,8 +7,8 @@
 
 _EAGLE_BEGIN
 
-VulkanUniformBuffer::VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createInfo, size_t size) :
-        UniformBuffer(size), m_info(createInfo) {
+VulkanUniformBuffer::VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createInfo, size_t size, void* data) :
+        UniformBuffer(size), m_info(createInfo), m_data(data) {
     create_uniform_buffer();
 }
 

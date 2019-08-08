@@ -27,7 +27,8 @@ public:
 
     virtual void upload_pixel_data() override;
 
-    inline virtual std::weak_ptr<Image> get_image() override    { return m_image;     }
+    virtual std::weak_ptr<Image> get_image() override;
+
 
 private:
 
@@ -36,7 +37,6 @@ private:
 private:
     VulkanTexture2DCreateInfo m_vulkanInfo;
     std::shared_ptr<VulkanImage> m_image;
-
 };
 
 _EAGLE_END

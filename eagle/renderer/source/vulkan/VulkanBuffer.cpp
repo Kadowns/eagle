@@ -48,7 +48,7 @@ VulkanBuffer::destroy() {
 }
 
 void
-VulkanBuffer::copy_to(void* data, VkDeviceSize size) {
+VulkanBuffer::copy_to(void *data, VkDeviceSize size) {
     assert(m_mapped);
     memcpy(m_mapped, data, size);
 }
@@ -71,6 +71,8 @@ VulkanBuffer::create_buffer(VkPhysicalDevice physicalDevice, VkDevice device, st
     VkMemoryRequirements memRequirements;
     vkGetBufferMemoryRequirements(device, buffer->get_native_buffer(), &memRequirements);
 
+    buffer->m_alignment = memRequirements.alignment;
+    buffer->m_size = memRequirements.size;
     VkMemoryAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
@@ -114,6 +116,15 @@ void VulkanBuffer::copy_buffer(
 
     VulkanHelper::end_single_time_commnds(device, commandPool, commandBuffer, graphicsQueue);
 
+}
+
+void VulkanBuffer::flush(VkDeviceSize size, VkDeviceSize offset) {
+    VkMappedMemoryRange memoryRange = {};
+    memoryRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    memoryRange.size = size;
+    memoryRange.offset = offset;
+    memoryRange.memory = m_memory;
+    vkFlushMappedMemoryRanges(m_device, 1, &memoryRange);
 }
 
 

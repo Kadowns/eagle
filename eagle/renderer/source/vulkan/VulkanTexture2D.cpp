@@ -9,21 +9,24 @@ _EAGLE_BEGIN
 
 VulkanTexture2D::VulkanTexture2D(const Texture2DCreateInfo &textureCreateInfo,
                                  const VulkanTexture2DCreateInfo &vulkanInfo) :
-        Texture2D(textureCreateInfo),
-        m_vulkanInfo(vulkanInfo),
-        m_image(std::make_shared<VulkanImage>()){
+    Texture2D(textureCreateInfo),
+    m_vulkanInfo(vulkanInfo),
+    m_image(std::make_shared<VulkanImage>(textureCreateInfo.width, textureCreateInfo.height)){
     upload_pixel_data();
 }
 
 VulkanTexture2D::~VulkanTexture2D() {
     VK_CALL
-    vkDestroySampler(m_vulkanInfo.device, m_image->sampler, nullptr);
+    vkDestroySampler(m_vulkanInfo.device, std::static_pointer_cast<VulkanImageSampler>(m_image->get_sampler().lock())->sampler, nullptr);
+
+    auto imageAttachment = std::static_pointer_cast<VulkanImageAttachment>(m_image->get_attachment().lock());
+
     VK_CALL
-    vkDestroyImageView(m_vulkanInfo.device, m_image->view, nullptr);
+    vkDestroyImageView(m_vulkanInfo.device, imageAttachment->view, nullptr);
     VK_CALL
-    vkDestroyImage(m_vulkanInfo.device, m_image->image, nullptr);
+    vkDestroyImage(m_vulkanInfo.device, imageAttachment->image, nullptr);
     VK_CALL
-    vkFreeMemory(m_vulkanInfo.device, m_image->memory, nullptr);
+    vkFreeMemory(m_vulkanInfo.device, imageAttachment->memory, nullptr);
 }
 
 void VulkanTexture2D::upload_pixel_data() {
@@ -39,18 +42,20 @@ void VulkanTexture2D::upload_pixel_data() {
             m_vulkanInfo.device,
             stagingBuffer,
             bufferInfo,
-            m_textureInfo.pixels.size(),
-            m_textureInfo.pixels.data()
+            m_pixels.size(),
+            m_pixels.data()
     );
+
+    auto imageAttachment = std::static_pointer_cast<VulkanImageAttachment>(m_image->get_attachment().lock());
 
     VK_CALL
     VulkanHelper::create_image(m_vulkanInfo.physicalDevice, m_vulkanInfo.device,
-                               m_textureInfo.width, m_textureInfo.height, m_textureInfo.mipLevels,
-                               m_textureInfo.layerCount,
-                               VK_FORMAT_R8G8B8A8_UNORM,
+                               m_image->get_width(), m_image->get_height(), m_mipLevels,
+                               m_layerCount,
+                               VulkanHelper::get_vk_format(m_format),
                                VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                                VK_SHARING_MODE_EXCLUSIVE,
-                               m_image->image, m_image->memory, 0);
+                               imageAttachment->image, imageAttachment->memory, 0);
 
     VkImageSubresourceRange subresourceRange = {};
     subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -61,23 +66,27 @@ void VulkanTexture2D::upload_pixel_data() {
 
     VK_CALL
     VulkanHelper::transition_image_layout(m_vulkanInfo.device, m_vulkanInfo.commandPool, m_vulkanInfo.graphicsQueue,
-                                          m_image->image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED,
+                                          imageAttachment->image, VulkanHelper::get_vk_format(m_format), VK_IMAGE_LAYOUT_UNDEFINED,
                                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, subresourceRange);
 
-    copy_buffer_to_image(stagingBuffer, m_image->image, m_textureInfo.width, m_textureInfo.height);
+    copy_buffer_to_image(stagingBuffer, imageAttachment->image, m_image->get_width(), m_image->get_height());
 
     VK_CALL
     VulkanHelper::transition_image_layout(m_vulkanInfo.device, m_vulkanInfo.commandPool, m_vulkanInfo.graphicsQueue,
-                                          m_image->image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                          imageAttachment->image, VulkanHelper::get_vk_format(m_format), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                                           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, subresourceRange);
 
     stagingBuffer->destroy();
 
-    VulkanHelper::create_image_view(m_vulkanInfo.device, m_image->image, m_image->view, VK_FORMAT_R8G8B8A8_UNORM,
+    VulkanHelper::create_image_view(m_vulkanInfo.device, imageAttachment->image, imageAttachment->view, VulkanHelper::get_vk_format(m_format),
                                     VK_IMAGE_VIEW_TYPE_2D, subresourceRange);
 
 
-    VulkanHelper::create_image_sampler(m_vulkanInfo.device, m_image->sampler, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+    VulkanHelper::create_image_sampler(
+            m_vulkanInfo.device,
+            std::static_pointer_cast<VulkanImageSampler>(m_image->get_sampler().lock())->sampler,
+            VK_SAMPLER_ADDRESS_MODE_REPEAT
+            );
 }
 
 void
@@ -115,6 +124,10 @@ VulkanTexture2D::copy_buffer_to_image(std::shared_ptr<VulkanBuffer> buffer, VkIm
 
     VulkanHelper::end_single_time_commnds(m_vulkanInfo.device, m_vulkanInfo.commandPool, commandBuffer,
                                           m_vulkanInfo.graphicsQueue);
+}
+
+std::weak_ptr<Image> VulkanTexture2D::get_image() {
+    return m_image;
 }
 
 _EAGLE_END

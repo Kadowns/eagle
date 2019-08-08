@@ -4,8 +4,12 @@
 #include "eagle/renderer/Shader.h"
 #include "VulkanCore.h"
 #include "VulkanRenderTarget.h"
+#include "VulkanDescriptorSetLayout.h"
 
 _EAGLE_BEGIN
+
+
+
 
 class VulkanShader : public Shader {
 
@@ -19,8 +23,9 @@ public:
 
 public:
 
-    VulkanShader(const std::string &vertFileName, const std::string &fragFileName,
-                 const VulkanShaderCreateInfo &createInfo);
+    VulkanShader(const std::string &vertFilePath, const std::string &fragFilePath,
+                 const std::vector<std::shared_ptr<VulkanDescriptorSetLayout>> &descriptorSetLayouts,
+                 const ShaderPipelineInfo &pipelineInfo, const VulkanShaderCreateInfo &createInfo);
 
     ~VulkanShader();
 
@@ -32,36 +37,21 @@ public:
 
     VkPipelineLayout &get_layout();
 
-    const std::vector<VkDescriptorSetLayoutBinding>& get_descriptor_set_layout_bindings();
-
-    VkDescriptorSetLayout const & get_descriptor_set_layout();
-
 private:
 
-    void create_descriptor_set_layout();
+    void create_pipeline_layout(
+            const std::vector<std::shared_ptr<VulkanDescriptorSetLayout>> &descriptorSetLayouts);
 
     VkShaderModule create_shader_module(const std::vector<uint32_t> &code);
-
-    VkDescriptorSetLayoutBinding create_descriptor_set_layout_binding(uint32_t binding,
-                                                                      VkDescriptorType type,
-                                                                      uint32_t descriptorCount,
-                                                                      VkShaderStageFlags flags,
-                                                                      const VkSampler *pImmutableSamplers);
-
-    VkFormat component_format(const SHADER_ITEM_COMPONENT& component);
-
-    VkVertexInputBindingDescription get_binding_description(const ShaderItemLayout& layout);
-    std::vector<VkVertexInputAttributeDescription> get_attribute_descriptions(const ShaderItemLayout& layout);
-
 private:
 
+    ShaderPipelineInfo m_pipelineInfo;
     VulkanShaderCreateInfo m_info;
-    VkCommandBuffer m_commandBuffer;
+    VertexLayout m_vertexLayout;
     VkPipelineLayout m_pipelineLayout;
     VkPipeline m_graphicsPipeline;
-    VkDescriptorSetLayout m_descriptorSetLayout;
-    std::vector<VkDescriptorSetLayoutBinding> m_layoutBindings;
     VkVertexInputBindingDescription m_inputBinding;
+    uint32_t m_outputAttachmentCount = 0;
     std::vector<VkVertexInputAttributeDescription> m_inputAttributes;
     std::vector<uint32_t> m_vertShaderCode, m_fragShaderCode;
 

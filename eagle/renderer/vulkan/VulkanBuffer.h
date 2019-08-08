@@ -28,7 +28,8 @@ public:
     VkResult map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
     VkResult bind(VkDeviceSize offset = 0);
     void unmap();
-    void copy_to(void* data, VkDeviceSize size);
+    void copy_to(void *data, VkDeviceSize size);
+    void flush(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
     void destroy();
 
     inline VkBuffer&       get_native_buffer() { return m_buffer; }
@@ -57,6 +58,8 @@ private:
     VkBuffer m_buffer = VK_NULL_HANDLE;
     VkDeviceMemory m_memory = VK_NULL_HANDLE;
     void* m_mapped = nullptr;
+    VkDeviceSize m_alignment = 0;
+    VkDeviceSize m_size = 0;
 
     VkBufferUsageFlags m_usageFlags = VK_BUFFER_USAGE_FLAG_BITS_MAX_ENUM;
     VkMemoryPropertyFlags m_memoryFlags = VK_MEMORY_PROPERTY_FLAG_BITS_MAX_ENUM;
