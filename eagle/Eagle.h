@@ -15,9 +15,9 @@
 #include <eagle/core/events/WindowEvents.h>
 
 #include <eagle/core/WindowGLFW.h>
-#include <eagle/renderer/RenderingCore.h>
-#include <eagle/renderer/RenderingContext.h>
-#include <eagle/renderer/vulkan/VulkanContext.h>
+#include <eagle/core/renderer/RenderingCore.h>
+#include <eagle/core/renderer/RenderingContext.h>
+#include <eagle/core/renderer/vulkan/VulkanContext.h>
 
 
 

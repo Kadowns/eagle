@@ -523,8 +523,8 @@ public:
     // r-values should only be computed when they are needed, not speculatively.
     //
     // Computing an l-value means saving away information for later use in the compiler,
-    // no code is generated until the l-value is later dereferenced.  It is okay
-    // to speculatively generate an l-value, just not okay to speculatively dereference it.
+    // no code is generated until the l-value is later deReferenced.  It is okay
+    // to speculatively generate an l-value, just not okay to speculatively deReference it.
     //
     // The base of the access chain (the left-most variable or expression
     // from which everything is based) can be set either as an l-value
@@ -542,7 +542,7 @@ public:
         Id instr;                      // cache the instruction that generates this access chain
         std::vector<unsigned> swizzle; // each std::vector element selects the next GLSL component number
         Id component;                  // a dynamic component index, can coexist with a swizzle, done after the swizzle, NoResult if not present
-        Id preSwizzleBaseType;         // dereferenced type, before swizzle or component is applied; NoType unless a swizzle or component is present
+        Id preSwizzleBaseType;         // deReferenced type, before swizzle or component is applied; NoType unless a swizzle or component is present
         bool isRValue;                 // true if 'base' is an r-value, otherwise, base is an l-value
         unsigned int alignment;        // bitwise OR of alignment values passed in. Accumulates worst alignment. Only tracks base and (optional) component selection alignment.
 

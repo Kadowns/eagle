@@ -9,7 +9,7 @@
 #include "Core.h"
 #include "events/Event.h"
 
-_EAGLE_BEGIN
+EG_BEGIN
 
 class Layer {
 
@@ -24,6 +24,6 @@ public:
     virtual void handle_event(Event& e) {}
 };
 
-_EAGLE_END
+EG_END
 
 #endif //EAGLE_LAYER_H

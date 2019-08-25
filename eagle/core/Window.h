@@ -10,18 +10,18 @@
 
 #include "Core.h"
 #include "events/Event.h"
-#include "eagle/renderer/RenderingContext.h"
+#include "renderer/RenderingContext.h"
 
 
 #define BIND_EVENT_FN(func) std::bind(&func, this, std::placeholders::_1)
 
-_EAGLE_BEGIN
+EG_BEGIN
 
 class Window {
 
 public:
 
-    using PFN_EventCallback = std::function<void(std::shared_ptr<Event>)>;
+    using PFN_EventCallback = std::function<void(Reference<Event>)>;
 
     Window(RenderingContext* renderingContext, uint32_t width, uint32_t height);
 
@@ -41,9 +41,10 @@ public:
     virtual void wait_native_events() = 0;
 
     virtual void set_cursor_shape(EG_CURSOR cursorType) = 0;
+    virtual void set_cursor_visible(bool visible) = 0;
 
 
-    std::shared_ptr<RenderingContext> get_rendering_context();
+    Reference<RenderingContext> get_rendering_context();
     uint32_t get_width();
     uint32_t get_height();
 
@@ -55,11 +56,11 @@ protected:
 
         uint32_t width, height;
         PFN_EventCallback eventCallback;
-        std::shared_ptr<RenderingContext> context;
+        Reference<RenderingContext> context;
 
     } m_windowData;
 };
 
-_EAGLE_END
+EG_END
 
 #endif //EAGLE_WINDOW_H

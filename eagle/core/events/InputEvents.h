@@ -7,7 +7,7 @@
 
 #include "Event.h"
 
-_EAGLE_BEGIN
+EG_BEGIN
 
 class MouseMoveEvent : public Event {
 
@@ -25,32 +25,20 @@ private:
 
 };
 
-class MousePressedEvent : public Event {
-
+class MouseButtonEvent : public Event {
 public:
 
-    MousePressedEvent(int key, int mods) :  m_key(key), m_mods(mods){}
+    MouseButtonEvent(int key, int action, int mods) :  m_key(key), m_action(action), m_mods(mods){}
 
-    int get_key() const {return m_key;}
-
-private:
-    int m_key, m_mods;
-};
-
-class MouseReleasedEvent : public Event {
-
-public:
-
-    MouseReleasedEvent(int key, int mods) : m_key(key), m_mods(mods){}
-
-    int get_key() const {return m_key;}
+    int get_key() const { return m_key; }
+    int get_action() const { return m_action; }
+    int get_mods() const { return m_mods; }
 
 private:
-    int m_key, m_mods;
+    int m_key, m_action, m_mods;
 };
 
 class MouseScrolledEvent : public Event {
-
 public:
 
     MouseScrolledEvent(float x, float y) :  m_x(x), m_y(y) {}
@@ -90,6 +78,6 @@ private:
 
 };
 
-_EAGLE_END
+EG_END
 
 #endif //EAGLE_INPUTEVENTS_H

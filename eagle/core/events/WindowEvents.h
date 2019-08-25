@@ -8,7 +8,7 @@
 
 #include "Event.h"
 
-_EAGLE_BEGIN
+EG_BEGIN
 
 class WindowResizedEvent : public Event {
 
@@ -45,6 +45,6 @@ public:
 
 };
 
-_EAGLE_END
+EG_END
 
 #endif //EAGLE_WINDOWEVENTS_H

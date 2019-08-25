@@ -11,31 +11,31 @@
 #include "Core.h"
 #include "Layer.h"
 
-_EAGLE_BEGIN
+EG_BEGIN
 
 class LayerStack {
 
 public:
 
-    explicit LayerStack(const std::vector<std::shared_ptr<Layer>>& initialLayers);
+    explicit LayerStack(const std::vector<Reference<Layer>>& initialLayers);
     LayerStack() = default;
     ~LayerStack() = default;
 
 
     void init();
     void deinit();
-    void emplace_back(std::shared_ptr<Layer> layer);
-    void emplace_front(std::shared_ptr<Layer> layer);
-    void emplace(const std::vector<std::shared_ptr<Layer>>& layers);
-    void pop_layer(std::shared_ptr<Layer> layer);
+    void emplace_back(Reference<Layer> layer);
+    void emplace_front(Reference<Layer> layer);
+    void emplace(const std::vector<Reference<Layer>>& layers);
+    void pop_layer(Reference<Layer> layer);
 
 
-    std::vector<std::shared_ptr<Layer>>::iterator begin()   { return m_layers.begin();   }
-    std::vector<std::shared_ptr<Layer>>::iterator end()     { return m_layers.end();     }
+    std::vector<Reference<Layer>>::iterator begin()   { return m_layers.begin();   }
+    std::vector<Reference<Layer>>::iterator end()     { return m_layers.end();     }
 
 private:
 
-    std::vector<std::shared_ptr<Layer>> m_layers;
+    std::vector<Reference<Layer>> m_layers;
 
     bool m_initialized = false;
 
@@ -43,6 +43,6 @@ private:
 
 
 
-_EAGLE_END
+EG_END
 
 #endif //EAGLE_LAYERSTACK_H

@@ -365,13 +365,13 @@ postfix_expression
         $$ = $1;
     }
     | postfix_expression LEFT_BRACKET integer_expression RIGHT_BRACKET {
-        $$ = parseContext.handleBracketDereference($2.loc, $1, $3);
+        $$ = parseContext.handleBracketDeReference($2.loc, $1, $3);
     }
     | function_call {
         $$ = $1;
     }
     | postfix_expression DOT IDENTIFIER {
-        $$ = parseContext.handleDotDereference($3.loc, $1, *$3.string);
+        $$ = parseContext.handleDotDeReference($3.loc, $1, *$3.string);
     }
     | postfix_expression INC_OP {
         parseContext.variableCheck($1);
@@ -613,7 +613,7 @@ equality_expression
         parseContext.arrayObjectCheck($2.loc, $1->getType(), "array comparison");
         parseContext.opaqueCheck($2.loc, $1->getType(), "==");
         parseContext.specializationCheck($2.loc, $1->getType(), "==");
-        parseContext.referenceCheck($2.loc, $1->getType(), "==");
+        parseContext.ReferenceCheck($2.loc, $1->getType(), "==");
         $$ = parseContext.handleBinaryMath($2.loc, "==", EOpEqual, $1, $3);
         if ($$ == 0)
             $$ = parseContext.intermediate.addConstantUnion(false, $2.loc);
@@ -622,7 +622,7 @@ equality_expression
         parseContext.arrayObjectCheck($2.loc, $1->getType(), "array comparison");
         parseContext.opaqueCheck($2.loc, $1->getType(), "!=");
         parseContext.specializationCheck($2.loc, $1->getType(), "!=");
-        parseContext.referenceCheck($2.loc, $1->getType(), "!=");
+        parseContext.ReferenceCheck($2.loc, $1->getType(), "!=");
         $$ = parseContext.handleBinaryMath($2.loc, "!=", EOpNotEqual, $1, $3);
         if ($$ == 0)
             $$ = parseContext.intermediate.addConstantUnion(false, $2.loc);

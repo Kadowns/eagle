@@ -5,17 +5,28 @@
 #ifndef EAGLE_CORE_H
 #define EAGLE_CORE_H
 
+#include <memory>
 #include <map>
 
-#define _EAGLE_BEGIN namespace Eagle {
-#define _EAGLE_END   }
+#define EG_BEGIN namespace Eagle {
+#define EG_END   }
 
 #define EAGLE_GET_INFO(key) Eagle::EagleInfo::get_info(key)
 #define EAGLE_SET_INFO(key, value) Eagle::EagleInfo::set_info(key, value)
 
 #define BIT(x) (1 << x)
 
-_EAGLE_BEGIN
+EG_BEGIN
+
+template<typename T>
+using Handle = std::weak_ptr<T>;
+
+template<typename T>
+using Reference = std::shared_ptr<T>;
+
+template<typename T>
+using Scope = std::unique_ptr<T>;
+
 enum EAGLE_KEY{
     EAGLE_APP_NAME = 0,
     EAGLE_RENDERING_CONTEXT = 1,
@@ -39,7 +50,7 @@ private:
     static std::map<EAGLE_KEY, std::string> m_infoMap;
 };
 
-_EAGLE_END
+EG_END
 
 
 #endif //EAGLE_CORE_H

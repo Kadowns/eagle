@@ -1,19 +1,19 @@
-#include <utility>
-
 //
+
 // Created by Novak on 05/06/2019.
 //
-
 #ifndef EAGLE_EVENT_H
+
 #define EAGLE_EVENT_H
 
 #include <functional>
+#include <utility>
 #include <map>
 #include <typeindex>
 
 #include "eagle/core/Core.h"
 
-_EAGLE_BEGIN
+EG_BEGIN
 
 class EventDispatcher;
 
@@ -57,9 +57,9 @@ public:
     }
 
 private:
-    std::map<std::type_index, EventFunctionHandle> m_listeners;
+    std::unordered_map<std::type_index, EventFunctionHandle> m_listeners;
 };
 
-_EAGLE_END
+EG_END
 
 #endif //EAGLE_EVENT_H

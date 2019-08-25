@@ -1213,10 +1213,10 @@ enum Op {
     OpTypeAvcMcePayloadINTEL = 5704,
     OpTypeAvcMceResultINTEL = 5705,
     OpTypeAvcImeResultINTEL = 5706,
-    OpTypeAvcImeResultSingleReferenceStreamoutINTEL = 5707,
-    OpTypeAvcImeResultDualReferenceStreamoutINTEL = 5708,
-    OpTypeAvcImeSingleReferenceStreaminINTEL = 5709,
-    OpTypeAvcImeDualReferenceStreaminINTEL = 5710,
+    OpTypeAvcImeResultSingleREFERENCEStreamoutINTEL = 5707,
+    OpTypeAvcImeResultDualREFERENCEStreamoutINTEL = 5708,
+    OpTypeAvcImeSingleREFERENCEStreaminINTEL = 5709,
+    OpTypeAvcImeDualREFERENCEStreaminINTEL = 5710,
     OpTypeAvcRefResultINTEL = 5711,
     OpTypeAvcSicResultINTEL = 5712,
     OpSubgroupAvcMceGetDefaultInterBaseMultiReferencePenaltyINTEL = 5713,
@@ -1265,17 +1265,17 @@ enum Op {
     OpSubgroupAvcImeSetWeightedSadINTEL = 5756,
     OpSubgroupAvcImeEvaluateWithSingleReferenceINTEL = 5757,
     OpSubgroupAvcImeEvaluateWithDualReferenceINTEL = 5758,
-    OpSubgroupAvcImeEvaluateWithSingleReferenceStreaminINTEL = 5759,
-    OpSubgroupAvcImeEvaluateWithDualReferenceStreaminINTEL = 5760,
-    OpSubgroupAvcImeEvaluateWithSingleReferenceStreamoutINTEL = 5761,
-    OpSubgroupAvcImeEvaluateWithDualReferenceStreamoutINTEL = 5762,
-    OpSubgroupAvcImeEvaluateWithSingleReferenceStreaminoutINTEL = 5763,
-    OpSubgroupAvcImeEvaluateWithDualReferenceStreaminoutINTEL = 5764,
+    OpSubgroupAvcImeEvaluateWithSingleREFERENCEStreaminINTEL = 5759,
+    OpSubgroupAvcImeEvaluateWithDualREFERENCEStreaminINTEL = 5760,
+    OpSubgroupAvcImeEvaluateWithSingleREFERENCEStreamoutINTEL = 5761,
+    OpSubgroupAvcImeEvaluateWithDualREFERENCEStreamoutINTEL = 5762,
+    OpSubgroupAvcImeEvaluateWithSingleREFERENCEStreaminoutINTEL = 5763,
+    OpSubgroupAvcImeEvaluateWithDualREFERENCEStreaminoutINTEL = 5764,
     OpSubgroupAvcImeConvertToMceResultINTEL = 5765,
-    OpSubgroupAvcImeGetSingleReferenceStreaminINTEL = 5766,
-    OpSubgroupAvcImeGetDualReferenceStreaminINTEL = 5767,
-    OpSubgroupAvcImeStripSingleReferenceStreamoutINTEL = 5768,
-    OpSubgroupAvcImeStripDualReferenceStreamoutINTEL = 5769,
+    OpSubgroupAvcImeGetSingleREFERENCEStreaminINTEL = 5766,
+    OpSubgroupAvcImeGetDualREFERENCEStreaminINTEL = 5767,
+    OpSubgroupAvcImeStripSingleREFERENCEStreamoutINTEL = 5768,
+    OpSubgroupAvcImeStripDualREFERENCEStreamoutINTEL = 5769,
     OpSubgroupAvcImeGetStreamoutSingleReferenceMajorShapeMotionVectorsINTEL = 5770,
     OpSubgroupAvcImeGetStreamoutSingleReferenceMajorShapeDistortionsINTEL = 5771,
     OpSubgroupAvcImeGetStreamoutSingleReferenceMajorShapeReferenceIdsINTEL = 5772,
@@ -1712,10 +1712,10 @@ inline void HasResultAndType(Op opcode, bool *hasResult, bool *hasResultType) {
     case OpTypeAvcMcePayloadINTEL: *hasResult = true; *hasResultType = false; break;
     case OpTypeAvcMceResultINTEL: *hasResult = true; *hasResultType = false; break;
     case OpTypeAvcImeResultINTEL: *hasResult = true; *hasResultType = false; break;
-    case OpTypeAvcImeResultSingleReferenceStreamoutINTEL: *hasResult = true; *hasResultType = false; break;
-    case OpTypeAvcImeResultDualReferenceStreamoutINTEL: *hasResult = true; *hasResultType = false; break;
-    case OpTypeAvcImeSingleReferenceStreaminINTEL: *hasResult = true; *hasResultType = false; break;
-    case OpTypeAvcImeDualReferenceStreaminINTEL: *hasResult = true; *hasResultType = false; break;
+    case OpTypeAvcImeResultSingleREFERENCEStreamoutINTEL: *hasResult = true; *hasResultType = false; break;
+    case OpTypeAvcImeResultDualREFERENCEStreamoutINTEL: *hasResult = true; *hasResultType = false; break;
+    case OpTypeAvcImeSingleREFERENCEStreaminINTEL: *hasResult = true; *hasResultType = false; break;
+    case OpTypeAvcImeDualREFERENCEStreaminINTEL: *hasResult = true; *hasResultType = false; break;
     case OpTypeAvcRefResultINTEL: *hasResult = true; *hasResultType = false; break;
     case OpTypeAvcSicResultINTEL: *hasResult = true; *hasResultType = false; break;
     case OpSubgroupAvcMceGetDefaultInterBaseMultiReferencePenaltyINTEL: *hasResult = true; *hasResultType = true; break;
@@ -1764,17 +1764,17 @@ inline void HasResultAndType(Op opcode, bool *hasResult, bool *hasResultType) {
     case OpSubgroupAvcImeSetWeightedSadINTEL: *hasResult = true; *hasResultType = true; break;
     case OpSubgroupAvcImeEvaluateWithSingleReferenceINTEL: *hasResult = true; *hasResultType = true; break;
     case OpSubgroupAvcImeEvaluateWithDualReferenceINTEL: *hasResult = true; *hasResultType = true; break;
-    case OpSubgroupAvcImeEvaluateWithSingleReferenceStreaminINTEL: *hasResult = true; *hasResultType = true; break;
-    case OpSubgroupAvcImeEvaluateWithDualReferenceStreaminINTEL: *hasResult = true; *hasResultType = true; break;
-    case OpSubgroupAvcImeEvaluateWithSingleReferenceStreamoutINTEL: *hasResult = true; *hasResultType = true; break;
-    case OpSubgroupAvcImeEvaluateWithDualReferenceStreamoutINTEL: *hasResult = true; *hasResultType = true; break;
-    case OpSubgroupAvcImeEvaluateWithSingleReferenceStreaminoutINTEL: *hasResult = true; *hasResultType = true; break;
-    case OpSubgroupAvcImeEvaluateWithDualReferenceStreaminoutINTEL: *hasResult = true; *hasResultType = true; break;
+    case OpSubgroupAvcImeEvaluateWithSingleREFERENCEStreaminINTEL: *hasResult = true; *hasResultType = true; break;
+    case OpSubgroupAvcImeEvaluateWithDualREFERENCEStreaminINTEL: *hasResult = true; *hasResultType = true; break;
+    case OpSubgroupAvcImeEvaluateWithSingleREFERENCEStreamoutINTEL: *hasResult = true; *hasResultType = true; break;
+    case OpSubgroupAvcImeEvaluateWithDualREFERENCEStreamoutINTEL: *hasResult = true; *hasResultType = true; break;
+    case OpSubgroupAvcImeEvaluateWithSingleREFERENCEStreaminoutINTEL: *hasResult = true; *hasResultType = true; break;
+    case OpSubgroupAvcImeEvaluateWithDualREFERENCEStreaminoutINTEL: *hasResult = true; *hasResultType = true; break;
     case OpSubgroupAvcImeConvertToMceResultINTEL: *hasResult = true; *hasResultType = true; break;
-    case OpSubgroupAvcImeGetSingleReferenceStreaminINTEL: *hasResult = true; *hasResultType = true; break;
-    case OpSubgroupAvcImeGetDualReferenceStreaminINTEL: *hasResult = true; *hasResultType = true; break;
-    case OpSubgroupAvcImeStripSingleReferenceStreamoutINTEL: *hasResult = true; *hasResultType = true; break;
-    case OpSubgroupAvcImeStripDualReferenceStreamoutINTEL: *hasResult = true; *hasResultType = true; break;
+    case OpSubgroupAvcImeGetSingleREFERENCEStreaminINTEL: *hasResult = true; *hasResultType = true; break;
+    case OpSubgroupAvcImeGetDualREFERENCEStreaminINTEL: *hasResult = true; *hasResultType = true; break;
+    case OpSubgroupAvcImeStripSingleREFERENCEStreamoutINTEL: *hasResult = true; *hasResultType = true; break;
+    case OpSubgroupAvcImeStripDualREFERENCEStreamoutINTEL: *hasResult = true; *hasResultType = true; break;
     case OpSubgroupAvcImeGetStreamoutSingleReferenceMajorShapeMotionVectorsINTEL: *hasResult = true; *hasResultType = true; break;
     case OpSubgroupAvcImeGetStreamoutSingleReferenceMajorShapeDistortionsINTEL: *hasResult = true; *hasResultType = true; break;
     case OpSubgroupAvcImeGetStreamoutSingleReferenceMajorShapeReferenceIdsINTEL: *hasResult = true; *hasResultType = true; break;

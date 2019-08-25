@@ -489,9 +489,9 @@ public:
     // Drop just the storage qualification, which perhaps should
     // never be done, as it is fundamentally inconsistent, but need to
     // explore what downstream consumers need.
-    // E.g., in a dereference, it is an inconsistency between:
-    // A) partially dereferenced resource is still in the storage class it started in
-    // B) partially dereferenced resource is a new temporary object
+    // E.g., in a deReference, it is an inconsistency between:
+    // A) partially deReferenced resource is still in the storage class it started in
+    // B) partially deReferenced resource is a new temporary object
     // If A, then nothing should change, if B, then everything should change, but this is half way.
     void makePartialTemporary()
     {
@@ -1360,7 +1360,7 @@ public:
         qualifier.clear();
         qualifier.storage = q;
     }
-    // to efficiently make a dereferenced type
+    // to efficiently make a deReferenced type
     // without ever duplicating the outer structure that will be thrown away
     // and using only shallow copy
     TType(const TType& type, int derefIndex, bool rowMajor = false)
@@ -1372,18 +1372,18 @@ public:
                                     } else {
                                         // want our own copy of the array, so we can edit it
                                         arraySizes = new TArraySizes;
-                                        arraySizes->copyDereferenced(*type.arraySizes);
+                                        arraySizes->copyDeReferenced(*type.arraySizes);
                                     }
                                 } else if (type.basicType == EbtStruct || type.basicType == EbtBlock) {
-                                    // do a structure dereference
+                                    // do a structure deReference
                                     const TTypeList& memberList = *type.getStruct();
                                     shallowCopy(*memberList[derefIndex].type);
                                     return;
                                 } else {
-                                    // do a vector/matrix dereference
+                                    // do a vector/matrix deReference
                                     shallowCopy(type);
                                     if (matrixCols > 0) {
-                                        // dereference from matrix to vector
+                                        // deReference from matrix to vector
                                         if (rowMajor)
                                             vectorSize = matrixCols;
                                         else
@@ -1393,7 +1393,7 @@ public:
                                         if (vectorSize == 1)
                                             vector1 = true;
                                     } else if (isVector()) {
-                                        // dereference from vector to scalar
+                                        // deReference from vector to scalar
                                         vectorSize = 1;
                                         vector1 = false;
                                     } else if (isCoopMat()) {
@@ -1419,7 +1419,7 @@ public:
                                 sampler.clear();
                                 typeName = NewPoolTString(n.c_str());
                             }
-    // for block reference (first parameter must be EbtReference)
+    // for block Reference (first parameter must be EbtReference)
     explicit TType(TBasicType t, const TType &p, const TString& n) :
                             basicType(t), vectorSize(1), matrixCols(0), matrixRows(0), vector1(false),
                             arraySizes(nullptr), structure(nullptr), fieldName(nullptr), typeName(nullptr)
@@ -1798,7 +1798,7 @@ public:
 #ifdef NV_EXTENSIONS
         case EbtAccStructNV:       return "accelerationStructureNV";
 #endif
-        case EbtReference:         return "reference";
+        case EbtReference:         return "Reference";
         default:                   return "unknown type";
         }
     }
@@ -1885,9 +1885,9 @@ public:
                 if (qualifier.layoutPushConstant)
                     appendStr(" push_constant");
                 if (qualifier.layoutBufferReference)
-                    appendStr(" buffer_reference");
+                    appendStr(" buffer_Reference");
                 if (qualifier.hasBufferReferenceAlign()) {
-                    appendStr(" buffer_reference_align=");
+                    appendStr(" buffer_Reference_align=");
                     appendUint(1u << qualifier.layoutBufferReferenceAlign);
                 }
 
@@ -2259,7 +2259,7 @@ protected:
     TQualifier qualifier;
 
     TArraySizes* arraySizes;    // nullptr unless an array; can be shared across types
-    // A type can't be both a structure (EbtStruct/EbtBlock) and a reference (EbtReference), so
+    // A type can't be both a structure (EbtStruct/EbtBlock) and a Reference (EbtReference), so
     // conserve space by making these a union
     union {
         TTypeList* structure;       // invalid unless this is a struct; can be shared across types

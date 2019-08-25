@@ -46,41 +46,41 @@ extern "C" {
  *
  *  For more information about how to use this file, see @ref build_include.
  */
-/*! @defgroup context Context reference
+/*! @defgroup context Context std::shared_ptr
  *  @brief Functions and types related to OpenGL and OpenGL ES contexts.
  *
- *  This is the reference documentation for OpenGL and OpenGL ES context related
+ *  This is the std::shared_ptr documentation for OpenGL and OpenGL ES context related
  *  functions.  For more task-oriented information, see the @ref context_guide.
  */
-/*! @defgroup vulkan Vulkan reference
+/*! @defgroup vulkan Vulkan std::shared_ptr
  *  @brief Functions and types related to Vulkan.
  *
- *  This is the reference documentation for Vulkan related functions and types.
+ *  This is the std::shared_ptr documentation for Vulkan related functions and types.
  *  For more task-oriented information, see the @ref vulkan_guide.
  */
-/*! @defgroup init Initialization, version and error reference
+/*! @defgroup init Initialization, version and error std::shared_ptr
  *  @brief Functions and types related to initialization and error handling.
  *
- *  This is the reference documentation for initialization and termination of
+ *  This is the std::shared_ptr documentation for initialization and termination of
  *  the library, version management and error handling.  For more task-oriented
  *  information, see the @ref intro_guide.
  */
-/*! @defgroup input Input reference
+/*! @defgroup input Input std::shared_ptr
  *  @brief Functions and types related to input handling.
  *
- *  This is the reference documentation for input related functions and types.
+ *  This is the std::shared_ptr documentation for input related functions and types.
  *  For more task-oriented information, see the @ref input_guide.
  */
-/*! @defgroup monitor Monitor reference
+/*! @defgroup monitor Monitor std::shared_ptr
  *  @brief Functions and types related to monitors.
  *
- *  This is the reference documentation for monitor related functions and types.
+ *  This is the std::shared_ptr documentation for monitor related functions and types.
  *  For more task-oriented information, see the @ref monitor_guide.
  */
-/*! @defgroup window Window reference
+/*! @defgroup window Window std::shared_ptr
  *  @brief Functions and types related to windows.
  *
- *  This is the reference documentation for window related functions and types,
+ *  This is the std::shared_ptr documentation for window related functions and types,
  *  including creation, deletion and event polling.  For more task-oriented
  *  information, see the @ref window_guide.
  */

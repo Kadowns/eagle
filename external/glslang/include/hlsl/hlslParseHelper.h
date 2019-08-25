@@ -71,12 +71,12 @@ public:
 
     void handlePragma(const TSourceLoc&, const TVector<TString>&) override;
     TIntermTyped* handleVariable(const TSourceLoc&, const TString* string);
-    TIntermTyped* handleBracketDereference(const TSourceLoc&, TIntermTyped* base, TIntermTyped* index);
+    TIntermTyped* handleBracketDeReference(const TSourceLoc&, TIntermTyped* base, TIntermTyped* index);
     TIntermTyped* handleBracketOperator(const TSourceLoc&, TIntermTyped* base, TIntermTyped* index);
 
     TIntermTyped* handleBinaryMath(const TSourceLoc&, const char* str, TOperator op, TIntermTyped* left, TIntermTyped* right);
     TIntermTyped* handleUnaryMath(const TSourceLoc&, const char* str, TOperator op, TIntermTyped* childNode);
-    TIntermTyped* handleDotDereference(const TSourceLoc&, TIntermTyped* base, const TString& field);
+    TIntermTyped* handleDotDeReference(const TSourceLoc&, TIntermTyped* base, const TString& field);
     bool isBuiltInMethod(const TSourceLoc&, TIntermTyped* base, const TString& field);
     void assignToInterface(TVariable& variable);
     void handleFunctionDeclarator(const TSourceLoc&, TFunction& function, bool prototype);
@@ -304,7 +304,7 @@ protected:
     void addStructBuffArguments(const TSourceLoc& loc, TIntermAggregate*&);
     void addStructBufferHiddenCounterParam(const TSourceLoc& loc, TParameter&, TIntermAggregate*&);
 
-    // Return true if this type is a reference.  This is not currently a type method in case that's
+    // Return true if this type is a Reference.  This is not currently a type method in case that's
     // a language specific answer.
     bool isReference(const TType& type) const { return isStructBufferType(type); }
 

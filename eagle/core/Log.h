@@ -5,7 +5,7 @@
 #include <spdlog/spdlog.h>
 #include <memory>
 
-_EAGLE_BEGIN
+EG_BEGIN
 
 class Log {
 
@@ -41,12 +41,12 @@ public:
     }
 
 private:
-    static std::shared_ptr<spdlog::logger> s_coreLogger;
-    static std::shared_ptr<spdlog::logger> s_clientLogger;
+    static Reference<spdlog::logger> s_coreLogger;
+    static Reference<spdlog::logger> s_clientLogger;
 
 };
 
-_EAGLE_END
+EG_END
 
 #define EG_CORE_TRACE_F(message, ...)    Eagle::Log::core_log(FILE_BASENAME, __FUNCTION__, __LINE__, Eagle::Log::TRACE, message, __VA_ARGS__)
 #define EG_CORE_INFO_F(message, ...)     Eagle::Log::core_log(FILE_BASENAME, __FUNCTION__, __LINE__, Eagle::Log::INFO, message, __VA_ARGS__)

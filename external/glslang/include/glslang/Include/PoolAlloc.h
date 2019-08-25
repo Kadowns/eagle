@@ -267,15 +267,15 @@ public:
     typedef ptrdiff_t difference_type;
     typedef T *pointer;
     typedef const T *const_pointer;
-    typedef T& reference;
-    typedef const T& const_reference;
+    typedef T& Reference;
+    typedef const T& const_Reference;
     typedef T value_type;
     template<class Other>
         struct rebind {
             typedef pool_allocator<Other> other;
         };
-    pointer address(reference x) const { return &x; }
-    const_pointer address(const_reference x) const { return &x; }
+    pointer address(Reference x) const { return &x; }
+    const_pointer address(const_Reference x) const { return &x; }
 
     pool_allocator() : allocator(GetThreadPoolAllocator()) { }
     pool_allocator(TPoolAllocator& a) : allocator(a) { }

@@ -291,7 +291,7 @@ public:
 
     void handlePragma(const TSourceLoc&, const TVector<TString>&) override;
     TIntermTyped* handleVariable(const TSourceLoc&, TSymbol* symbol, const TString* string);
-    TIntermTyped* handleBracketDereference(const TSourceLoc&, TIntermTyped* base, TIntermTyped* index);
+    TIntermTyped* handleBracketDeReference(const TSourceLoc&, TIntermTyped* base, TIntermTyped* index);
     void handleIndexLimits(const TSourceLoc&, TIntermTyped* base, TIntermTyped* index);
 
     void makeEditable(TSymbol*&) override;
@@ -305,7 +305,7 @@ public:
 
     TIntermTyped* handleBinaryMath(const TSourceLoc&, const char* str, TOperator op, TIntermTyped* left, TIntermTyped* right);
     TIntermTyped* handleUnaryMath(const TSourceLoc&, const char* str, TOperator op, TIntermTyped* childNode);
-    TIntermTyped* handleDotDereference(const TSourceLoc&, TIntermTyped* base, const TString& field);
+    TIntermTyped* handleDotDeReference(const TSourceLoc&, TIntermTyped* base, const TString& field);
     void blockMemberExtensionCheck(const TSourceLoc&, const TIntermTyped* base, int member, const TString& memberName);
     TFunction* handleFunctionDeclarator(const TSourceLoc&, TFunction& function, bool prototype);
     TIntermAggregate* handleFunctionDefinition(const TSourceLoc&, TFunction&);
@@ -370,7 +370,7 @@ public:
     void nestedStructCheck(const TSourceLoc&);
     void arrayObjectCheck(const TSourceLoc&, const TType&, const char* op);
     void opaqueCheck(const TSourceLoc&, const TType&, const char* op);
-    void referenceCheck(const TSourceLoc&, const TType&, const char* op);
+    void ReferenceCheck(const TSourceLoc&, const TType&, const char* op);
     void storage16BitAssignmentCheck(const TSourceLoc&, const TType&, const char* op);
     void specializationCheck(const TSourceLoc&, const TType&, const char* op);
     void structTypeCheck(const TSourceLoc&, TPublicType&);

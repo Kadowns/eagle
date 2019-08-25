@@ -4,10 +4,10 @@
 #include <spdlog/sinks/ansicolor_sink.h>
 
 
-_EAGLE_BEGIN
+EG_BEGIN
 
-std::shared_ptr<spdlog::logger> Log::s_coreLogger;
-std::shared_ptr<spdlog::logger> Log::s_clientLogger;
+Reference<spdlog::logger> Log::s_coreLogger;
+Reference<spdlog::logger> Log::s_clientLogger;
 
 void Log::init(Log::LOG_LEVEL coreLogLevel, Log::LOG_LEVEL clientLogLevel) {
 
@@ -18,6 +18,6 @@ void Log::init(Log::LOG_LEVEL coreLogLevel, Log::LOG_LEVEL clientLogLevel) {
     s_clientLogger->set_level((spdlog::level::level_enum)clientLogLevel);
 }
 
-_EAGLE_END
+EG_END
 
 

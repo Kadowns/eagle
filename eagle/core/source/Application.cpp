@@ -9,7 +9,7 @@
 #include "eagle/core/events/InputEvents.h"
 #include "eagle/core/events/WindowEvents.h"
 
-_EAGLE_BEGIN
+EG_BEGIN
 
 Application* Application::m_instance = nullptr;
 
@@ -27,15 +27,14 @@ Application::Application(const ApplicationCreateInfo& config) :
     m_layerStack.emplace(config.layers);
 }
 
-void Application::handle_event(std::shared_ptr<Event> e){
-    m_dispatcher.dispatch(*e);
+void Application::handle_event(Reference<Event> e){
     m_eventQueue.emplace(e);
-
 }
 
 void Application::dispatch_events() {
     while (!m_eventQueue.empty()){
         auto& e = m_eventQueue.front();
+        m_dispatcher.dispatch(*e);
         for (auto& layer : m_layerStack){
             layer->handle_event(*e);
             if ((*e).is_handled())
@@ -57,6 +56,22 @@ void Application::run() {
         return window_close_event(*(WindowCloseEvent*)&e);
     });
 
+    m_dispatcher.add_listener<MouseMoveEvent>([&](Event& e){
+        return mouse_move_event(*(MouseMoveEvent*)&e);
+    });
+
+    m_dispatcher.add_listener<MouseButtonEvent>([&](Event& e){
+        return mouse_button_event(*(MouseButtonEvent*)&e);
+    });
+
+    m_dispatcher.add_listener<MouseScrolledEvent>([&](Event& e){
+        return mouse_scroll_event(*(MouseScrolledEvent*)&e);
+    });
+
+    m_dispatcher.add_listener<KeyEvent>([&](Event& e){
+        return key_event(*(KeyEvent*)&e);
+    });
+
     m_layerStack.init();
 
     auto renderingContext = m_window->get_rendering_context();
@@ -69,6 +84,7 @@ void Application::run() {
         for (auto& layer : m_layerStack){
             layer->handle_update();
         }
+        Input::instance().refresh();
 
         if (!renderingContext->begin_draw_commands()){
             //failed to present image, skip all rendering for this frame
@@ -90,15 +106,15 @@ void Application::run() {
 
 }
 
-void Application::layer_emplace_back(std::shared_ptr<Layer> layer) {
+void Application::layer_emplace_back(Reference<Layer> layer) {
     m_layerStack.emplace_back(layer);
 }
 
-void Application::layer_emplace_front(std::shared_ptr<Layer> layer) {
+void Application::layer_emplace_front(Reference<Layer> layer) {
     m_layerStack.emplace_front(layer);
 }
 
-void Application::layer_pop(std::shared_ptr<Layer> layer) {
+void Application::layer_pop(Reference<Layer> layer) {
     m_layerStack.pop_layer(layer);
 }
 
@@ -107,12 +123,32 @@ bool Application::window_close_event(WindowCloseEvent& e) {
     return false;
 }
 
-void Application::layer_emplace(std::vector<std::shared_ptr<Layer>> layers) {
+void Application::layer_emplace(std::vector<Reference<Layer>> layers) {
     m_layerStack.emplace(layers);
 }
 
-void Application::event_emplace_back(std::shared_ptr<Event> e) {
+void Application::event_emplace_back(Reference<Event> e) {
     m_eventQueue.emplace(e);
 }
 
-_EAGLE_END
+bool Application::key_event(KeyEvent &e) {
+    Input::instance().handle_key(e);
+    return false;
+}
+
+bool Application::mouse_button_event(MouseButtonEvent &e) {
+    Input::instance().handle_mouse_button(e);
+    return false;
+}
+
+bool Application::mouse_scroll_event(MouseScrolledEvent &e) {
+    Input::instance().handle_mouse_scroll(e);
+    return false;
+}
+
+bool Application::mouse_move_event(MouseMoveEvent &e) {
+    Input::instance().handle_mouse_move(e);
+    return false;
+}
+
+EG_END

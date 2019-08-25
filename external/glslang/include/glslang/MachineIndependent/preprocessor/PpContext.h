@@ -584,7 +584,7 @@ protected:
         TInputScanner* input;
     };
 
-    // Holds a reference to included file data, as well as a
+    // Holds a Reference to included file data, as well as a
     // prologue and an epilogue string. This can be scanned using the tInput
     // interface and acts as a single source string.
     class TokenizableIncludeFile : public tInput {

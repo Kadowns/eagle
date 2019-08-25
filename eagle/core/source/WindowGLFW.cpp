@@ -6,12 +6,12 @@
 #include "eagle/core/Log.h"
 #include "eagle/core/events/WindowEvents.h"
 #include "eagle/core/events/InputEvents.h"
-#include "eagle/renderer/RenderingContext.h"
+#include "eagle/core/renderer/RenderingContext.h"
 
 #include <GLFW/glfw3.h>
 
 
-_EAGLE_BEGIN
+EG_BEGIN
 
 WindowGLFW::WindowGLFW(RenderingContext* context, uint32_t width, uint32_t height) :
     Window(context, width, height) {
@@ -88,11 +88,7 @@ void WindowGLFW::init() {
     //mouse click
     glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int key, int action, int mod){
         auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
-        if (action == GLFW_PRESS || action == GLFW_REPEAT){
-            data.eventCallback(std::make_shared<MousePressedEvent>(key, mod));
-        }else{
-            data.eventCallback(std::make_shared<MouseReleasedEvent>(key, mod));
-        }
+        data.eventCallback(std::make_shared<MouseButtonEvent>(key, action, mod));
     });
 
     glfwSetKeyCallback(m_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -111,8 +107,6 @@ void WindowGLFW::init() {
     m_mouseCursors[EG_CURSOR::HAND] = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
     m_mouseCursors[EG_CURSOR::HORI_RESIZE] = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
     m_mouseCursors[EG_CURSOR::VERT_RESIZE] = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
-
-    m_input = std::make_unique<InputGLFW>(m_window);
 
     EG_CORE_TRACE("Window initialized!");
 }
@@ -159,4 +153,8 @@ void WindowGLFW::set_cursor_shape(EG_CURSOR cursorType) {
     glfwSetCursor(m_window, cursor != m_mouseCursors.end() ? cursor->second : m_mouseCursors[EG_CURSOR::ARROW]);
 }
 
-_EAGLE_END
+void WindowGLFW::set_cursor_visible(bool visible) {
+    glfwSetInputMode(m_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+}
+
+EG_END

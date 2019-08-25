@@ -66,7 +66,7 @@ class TIntermediate;
 enum TOperator {
     EOpNull,            // if in a node, should only mean a node is still being built
     EOpSequence,        // denotes a list of statements, or parameters, etc.
-    EOpLinkerObjects,   // for aggregate node of objects the linker may need, if not reference by the rest of the AST
+    EOpLinkerObjects,   // for aggregate node of objects the linker may need, if not Reference by the rest of the AST
     EOpFunctionCall,
     EOpFunction,        // For function definition
     EOpParameters,      // an aggregate listing the parameters to a function
@@ -1217,7 +1217,7 @@ public:
 protected:
     int id;                      // the unique id of the symbol this node represents
 #ifdef ENABLE_HLSL
-    int flattenSubset;           // how deeply the flattened object rooted at id has been dereferenced
+    int flattenSubset;           // how deeply the flattened object rooted at id has been deReferenced
 #endif
     TString name;                // the name of the symbol this node represents
     TConstUnionArray constArray; // if the symbol is a front-end compile-time constant, this is its value

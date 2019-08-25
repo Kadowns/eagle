@@ -149,7 +149,7 @@ struct TSmallArrayVector {
 
     // 'this' should currently not be holding anything, and copyNonFront
     // will make it hold a copy of all but the first element of rhs.
-    // (This would be useful for making a type that is dereferenced by
+    // (This would be useful for making a type that is deReferenced by
     // one dimension.)
     void copyNonFront(const TSmallArrayVector& rhs)
     {
@@ -295,8 +295,8 @@ struct TArraySizes {
 
     bool hasUnsized() const { return getOuterSize() == UnsizedArraySize || isInnerUnsized(); }
     bool isSized() const { return getOuterSize() != UnsizedArraySize; }
-    void dereference() { sizes.pop_front(); }
-    void copyDereferenced(const TArraySizes& rhs)
+    void deReference() { sizes.pop_front(); }
+    void copyDeReferenced(const TArraySizes& rhs)
     {
         assert(sizes.size() == 0);
         if (rhs.sizes.size() > 1)
@@ -328,7 +328,7 @@ protected:
 
     TArraySizes(const TArraySizes&);
 
-    // For tracking maximum referenced compile-time constant index.
+    // For tracking maximum Referenced compile-time constant index.
     // Applies only to the outer-most dimension. Potentially becomes
     // the implicit size of the array, if not variably indexed and
     // otherwise legal.

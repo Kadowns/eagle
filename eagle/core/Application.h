@@ -13,9 +13,10 @@
 #include "Log.h"
 #include "events/Event.h"
 #include "events/WindowEvents.h"
+#include "Input.h"
 
 
-_EAGLE_BEGIN
+EG_BEGIN
 
 class Window;
 class RenderingContext;
@@ -23,7 +24,7 @@ class RenderingContext;
 struct ApplicationCreateInfo {
     std::string appName;
     Window* windowType;
-    std::vector<std::shared_ptr<Layer>> layers;
+    std::vector<Reference<Layer>> layers;
     Log::LOG_LEVEL clientLogLevel, coreLogLevel;
 };
 
@@ -37,26 +38,30 @@ public:
      ~Application() = default;
 
     void run();
-    void handle_event(std::shared_ptr<Event> e);
+    void handle_event(Reference<Event> e);
     void dispatch_events();
-    void event_emplace_back(std::shared_ptr<Event> e);
-    void layer_emplace_back(std::shared_ptr<Layer> layer);
-    void layer_emplace_front(std::shared_ptr<Layer> layer);
-    void layer_emplace(std::vector<std::shared_ptr<Layer>> layers);
-    void layer_pop(std::shared_ptr<Layer> layer);
+    void event_emplace_back(Reference<Event> e);
+    void layer_emplace_back(Reference<Layer> layer);
+    void layer_emplace_front(Reference<Layer> layer);
+    void layer_emplace(std::vector<Reference<Layer>> layers);
+    void layer_pop(Reference<Layer> layer);
 
 
-    std::shared_ptr<Window> get_window() { return m_window; }
+    Reference<Window> get_window() { return m_window; }
 
 private:
 
-    using EventQueue = std::queue<std::shared_ptr<Event>>;
+    using EventQueue = std::queue<Reference<Event>>;
 
     bool window_close_event(WindowCloseEvent& e);
+    bool key_event(KeyEvent& e);
+    bool mouse_button_event(MouseButtonEvent& e);
+    bool mouse_scroll_event(MouseScrolledEvent& e);
+    bool mouse_move_event(MouseMoveEvent& e);
 
     static Application* m_instance;
 
-    std::shared_ptr<Window> m_window;
+    Reference<Window> m_window;
 
     bool m_shouldClose = false;
 
@@ -66,6 +71,6 @@ private:
 
 };
 
-_EAGLE_END
+EG_END
 
 #endif //EAGLE_APPLICATION_H

@@ -8,12 +8,11 @@
 
 #include "Core.h"
 #include "Window.h"
-#include "InputGLFW.h"
 
 struct GLFWwindow;
 struct GLFWcursor;
 
-_EAGLE_BEGIN
+EG_BEGIN
 
 class WindowGLFW : public Window {
 public:
@@ -34,17 +33,15 @@ public:
     virtual void wait_native_events() override;
 
     virtual void set_cursor_shape(EG_CURSOR cursorType) override;
+    virtual void set_cursor_visible(bool visible) override;
 
 private:
 
     GLFWwindow* m_window;
-
-    std::unique_ptr<InputGLFW> m_input;
-
     std::map<EG_CURSOR, GLFWcursor*> m_mouseCursors;
 };
 
-_EAGLE_END
+EG_END
 
 
 #endif //EAGLE_WINDOWGLFW_H

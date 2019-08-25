@@ -1,17 +1,19 @@
 set(IMGUI_HEADERS
-        imgui.h
-        imconfig.h
-        imgui_internal.h
-        imstb_rectpack.h
-        imstb_textedit.h
-        imstb_truetype.h
+        imgui/imgui.h
+        imgui/imconfig.h
+        imgui/imgui_internal.h
+        imgui/imstb_rectpack.h
+        imgui/imstb_textedit.h
+        imgui/imstb_truetype.h
+        imgui/imgui_stdlib.h
         )
 
 set(IMGUI_SOURCE
-        imgui.cpp
-        imgui_draw.cpp
-        imgui_demo.cpp
-        imgui_widgets.cpp
+        imgui/imgui.cpp
+        imgui/imgui_draw.cpp
+        imgui/imgui_demo.cpp
+        imgui/imgui_widgets.cpp
+        imgui/imgui_stdlib.cpp
         )
 
 set(IMGUI_ALL ${IMGUI_HEADERS} ${IMGUI_SOURCE})

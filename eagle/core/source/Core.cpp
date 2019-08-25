@@ -3,7 +3,7 @@
 //
 
 #include "eagle/core/Core.h"
-_EAGLE_BEGIN
+EG_BEGIN
 
 std::map<EAGLE_KEY, std::string> EagleInfo::m_infoMap;
 
@@ -14,4 +14,4 @@ std::string EagleInfo::get_info(EAGLE_KEY key) {
 void EagleInfo::set_info(EAGLE_KEY key, const std::string &value) {
     m_infoMap[key] = value;
 }
-_EAGLE_END
+EG_END
