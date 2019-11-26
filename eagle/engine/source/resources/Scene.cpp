@@ -6,36 +6,19 @@
 #include <eagle/engine/resources/Mesh.h>
 #include <eagle/engine/components/Transform.h>
 #include <eagle/engine/components/Renderable.h>
-#include <eagle/editor/Serializer.h>
-#include "eagle/engine/Scene.h"
+#include <eagle/engine/resources/Scene.h>
 
 EG_ENGINE_BEGIN
 
-Scene::Scene():
-    //m_camera(45.0f, 1280, 720, 0.1f, 1000.0f, glm::vec3(0.0f, 1.0f, 3.0f), glm::vec3(0), glm::vec3(0.0f, 0.0f, 1.0f)),
+Scene::Scene(const std::string& name):
+    m_name(name),
+    m_entities(std::make_shared<entityx::EntityManager>(m_events)),
     m_renderingContext(Application::instance().get_window()->get_rendering_context()) {
 
 }
 
 Scene::~Scene() {
 
-}
-
-
-void Scene::init() {
-
-    auto window = Application::instance().get_window();
-
-    sceneViewport.x = 0;
-    sceneViewport.y = 0;
-    sceneViewport.width = window->get_width();
-    sceneViewport.height = window->get_height();
-
-    m_entities = std::make_shared<entityx::EntityManager>(m_events);
-
-    Serializer serializer(ProjectRoot + "/scene.txt");
-
-    serializer.load(*this);
 }
 
 void Scene::update() {

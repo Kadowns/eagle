@@ -11,7 +11,6 @@
 #include "eagle/core/Log.h"
 
 #include <GLFW/glfw3.h>
-#include <eagle/Eagle.h>
 
 
 EG_BEGIN
@@ -67,8 +66,8 @@ void VulkanContext::deinit() {
     }
 
     cleanup_swapchain();
-    m_descriptorSetsLayouts.clear();
     m_descriptorSets.clear();
+    m_descriptorSetsLayouts.clear();
     m_dirtyUniformBuffers.clear();
     m_uniformBuffers.clear();
     m_textures.clear();
@@ -911,6 +910,7 @@ void VulkanContext::recreate_swapchain() {
     create_framebuffers();
 
     for (auto& renderTarget : m_renderTargets){
+        //TODO -- bug when recreating these bois
 //        renderTarget->create(m_present.extent2D.width, m_present.extent2D.height);
     }
 
@@ -923,8 +923,8 @@ void VulkanContext::recreate_swapchain() {
     }
 
     for (auto &descriptorSet : m_descriptorSets) {
-        descriptorSet->create_descriptor_pool();
         descriptorSet->create_descriptor_sets();
+        descriptorSet->update_descriptor_sets();
     }
 
     EG_CORE_TRACE("Swapchain recreated!");
@@ -967,23 +967,16 @@ void VulkanContext::cleanup_swapchain() {
     EG_CORE_TRACE("Swapchain cleared!");
 }
 
-Handle<Shader>
+Handle <Shader>
 VulkanContext::create_shader(const std::string &vertFilePath, const std::string &fragFilePath,
-                             const std::vector<Reference<DescriptorSetLayout>> &descriptorSetLayouts,
                              const ShaderPipelineInfo &pipelineInfo) {
     EG_CORE_TRACE("Creating a vulkan shader!");
-
-    std::vector<Reference<VulkanDescriptorSetLayout>> vkDescriptorSetLayouts(descriptorSetLayouts.size());
-    for (uint32_t i = 0; i < descriptorSetLayouts.size(); i++){
-        vkDescriptorSetLayouts[i] = std::static_pointer_cast<VulkanDescriptorSetLayout>(descriptorSetLayouts[i]);
-    }
-
 
     VulkanShader::VulkanShaderCreateInfo createInfo = {};
     createInfo.device = m_device;
     createInfo.pExtent = &m_present.extent2D;
     createInfo.pRenderPass = pipelineInfo.offscreenRendering ? &m_present.offscreenPass : &m_present.renderPass;
-    m_shaders.emplace_back(std::make_shared<VulkanShader>(vertFilePath, fragFilePath, vkDescriptorSetLayouts, pipelineInfo, createInfo));
+    m_shaders.emplace_back(std::make_shared<VulkanShader>(vertFilePath, fragFilePath, pipelineInfo, createInfo));
     return m_shaders.back();
 }
 
@@ -1028,9 +1021,23 @@ VulkanContext::create_uniform_buffer(size_t size, void *data) {
 
 
 Handle<DescriptorSetLayout>
-VulkanContext::create_descriptor_set_layout(const std::vector<DescriptorBinding> &bindings) {
+VulkanContext::create_descriptor_set_layout(const std::vector<DescriptorBindingDescription> &bindings) {
     m_descriptorSetsLayouts.emplace_back(std::make_shared<VulkanDescriptorSetLayout>(m_device, bindings));
     return m_descriptorSetsLayouts.back();
+}
+
+Handle<DescriptorSet> VulkanContext::create_descriptor_set(const Reference<Shader> &shader, uint32_t setIndex,
+                                                           const std::vector<Reference<Eagle::DescriptorItem>> &descriptorItems) {
+
+    EG_CORE_TRACE("Creating a vulkan descriptor set!");
+    VulkanDescriptorSetCreateInfo createInfo = {};
+    createInfo.device = m_device;
+    createInfo.bufferCount = m_present.swapchainImages.size();
+
+    auto vkShader = std::static_pointer_cast<VulkanShader>(shader);
+
+    m_descriptorSets.emplace_back(std::make_shared<VulkanDescriptorSet>(vkShader->descriptor_set_layout(setIndex), descriptorItems, createInfo));
+    return m_descriptorSets.back();
 }
 
 Handle<DescriptorSet>
@@ -1051,7 +1058,7 @@ VulkanContext::create_descriptor_set(const Reference<DescriptorSetLayout>& descr
 }
 
 Handle<Texture2D>
-VulkanContext::create_texture_2d(Texture2DCreateInfo &createInfo) {
+VulkanContext::create_texture_2d(const Texture2DCreateInfo &createInfo) {
 
     EG_CORE_TRACE("Creating a vulkan texture!");
     VulkanTexture2DCreateInfo vulkanTextureCreateInfo = {};
@@ -1106,7 +1113,16 @@ VulkanContext::index_buffer_flush(const Reference<IndexBuffer> &indexBuffer, voi
     }
 }
 
-void VulkanContext::bind_vertex_buffer(const Reference<VertexBuffer> &vertexBuffer) {
+void
+VulkanContext::update_descriptor_set(const Reference<DescriptorSet> &descriptorSet,
+                                     const std::vector<Reference<DescriptorItem>> &descriptorItems){
+    Reference<VulkanDescriptorSet> vulkanDescriptorSet = std::static_pointer_cast<VulkanDescriptorSet>(descriptorSet);
+    vulkanDescriptorSet->update_descriptor_sets(descriptorItems);
+}
+
+
+void
+VulkanContext::bind_vertex_buffer(const Reference<VertexBuffer> &vertexBuffer) {
     if (!m_drawInitialized) {
         EG_CORE_ERROR("Bind vertex buffer called outside of draw range!");
         return;
@@ -1507,6 +1523,7 @@ void VulkanContext::create_offscreen_render_pass() {
 
     VK_CALL vkCreateRenderPass(m_device, &renderPassInfo, nullptr, &m_present.offscreenPass);
 }
+
 
 
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,

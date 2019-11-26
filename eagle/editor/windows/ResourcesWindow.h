@@ -5,12 +5,11 @@
 #ifndef EAGLE_RESOURCESWINDOW_H
 #define EAGLE_RESOURCESWINDOW_H
 
-#include "eagle/engine/EngineCore.h"
-#include "EditorWindow.h"
+#include "eagle/editor/windows/EditorWindow.h"
 
 #include <boost/filesystem.hpp>
 
-EG_ENGINE_BEGIN
+EG_EDITOR_BEGIN
 
 class ResourcesWindow : public EditorWindow {
 public:
@@ -30,6 +29,6 @@ private:
 
 };
 
-EG_ENGINE_END
+EG_EDITOR_END
 
 #endif //EAGLE_RESOURCESWINDOW_H

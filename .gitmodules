@@ -8,3 +8,6 @@
 [submodule "external/entityx"]
 	path = external/entityx
 	url = https://github.com/alecthomas/entityx.git
+[submodule "external/json"]
+	path = external/json
+	url = https://github.com/nlohmann/json.git

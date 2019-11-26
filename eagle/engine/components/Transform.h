@@ -5,11 +5,12 @@
 #ifndef EAGLE_TRANSFORM_H
 #define EAGLE_TRANSFORM_H
 
-#include "../EngineCore.h"
+#include <eagle/engine/GlobalDefs.h>
+#include <eagle/engine/ecs/EntityManager.h>
 
 EG_ENGINE_BEGIN
 
-struct Transform {
+struct Transform : Component<Transform> {
 
     Transform() :
         position(glm::vec3(0)),scale(glm::vec3(1)), rotation(glm::vec3(0)){}

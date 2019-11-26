@@ -4,17 +4,11 @@
 
 #include <fstream>
 
-#include "eagle/editor/Serializer.h"
-
+#include <eagle/engine/Serializer.h>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
-#include <eagle/engine/components/Renderable.h>
 
-
-#include "eagle/engine/components/Transform.h"
-
-
-EG_ENGINE_BEGIN
+EG_EDITOR_BEGIN
 
 Serializer::Serializer(const std::string &path) : m_path(path) {
 
@@ -31,8 +25,8 @@ void Serializer::load(Scene &scene) {
 
     for (size_t i = 0; i < numberOfEntities; i++){
         auto e = entities->create();
-        ia >> *e.assign<Transform>();
-        ia >> *e.assign<Renderable>();
+        ia >> *e->assign<Transform>();
+        ia >> *e->assign<Renderable>();
     }
 }
 
@@ -41,10 +35,10 @@ void Serializer::save(const Scene &scene) {
     //ofs.clear();
     boost::archive::text_oarchive oa(ofs);
     oa << scene.entities()->size();
-    for (auto e : scene.entities()->entities_for_debugging()){
-        oa << *e.component<Transform>();
-        oa << *e.component<Renderable>();
+    for (auto e : scene.entities()->entities()){
+        oa << *e->component<Transform>();
+        oa << *e->component<Renderable>();
     }
 }
 
-EG_ENGINE_END
+EG_EDITOR_END

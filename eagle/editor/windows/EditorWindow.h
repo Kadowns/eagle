@@ -5,9 +5,9 @@
 #ifndef EAGLE_EDITORWINDOW_H
 #define EAGLE_EDITORWINDOW_H
 
-#include "eagle/engine/EngineCore.h"
+#include "EditorCore.h"
 
-EG_ENGINE_BEGIN
+EG_EDITOR_BEGIN
 
 class EditorWindow {
 public:
@@ -24,6 +24,6 @@ private:
     std::string m_name;
 };
 
-EG_ENGINE_END
+EG_EDITOR_END
 
 #endif //EAGLE_EDITORWINDOW_H

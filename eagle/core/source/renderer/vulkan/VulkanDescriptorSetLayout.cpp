@@ -6,17 +6,24 @@
 
 EG_BEGIN
 
-VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(VkDevice device, const std::vector<DescriptorBinding> &bindings) :
+VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(VkDevice device, const std::vector<DescriptorBindingDescription> &bindings) :
     m_device(device) {
     create(bindings);
 }
+
+VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(VkDevice device, const std::vector<VkDescriptorSetLayoutBinding> &bindings) :
+    m_device(device) {
+    create(bindings);
+}
+
 
 VulkanDescriptorSetLayout::~VulkanDescriptorSetLayout() {
     VK_CALL vkDestroyDescriptorSetLayout(m_device, m_layout, nullptr);
 }
 
-void VulkanDescriptorSetLayout::create(const std::vector<DescriptorBinding> &bindings) {
+void VulkanDescriptorSetLayout::create(const std::vector<DescriptorBindingDescription> &bindings) {
 
+    std::vector<VkDescriptorSetLayoutBinding> vkBindings(bindings.size());
     for (uint32_t i = 0; i < bindings.size(); i++){
         VkDescriptorSetLayoutBinding descriptorBinding = {};
         
@@ -41,15 +48,26 @@ void VulkanDescriptorSetLayout::create(const std::vector<DescriptorBinding> &bin
             case EG_SHADER_STAGE::TESSALATION_EVALUATE: stageFlags = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT; break;
         }
         descriptorBinding.stageFlags = stageFlags;
-        m_bindings.push_back(descriptorBinding);
+        vkBindings[i] = descriptorBinding;
     }
+
+    create(vkBindings);
+}
+
+void VulkanDescriptorSetLayout::create(const std::vector<VkDescriptorSetLayoutBinding> &bindings) {
+
+    m_bindings = bindings;
 
     VkDescriptorSetLayoutCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    createInfo.pBindings = m_bindings.data();
-    createInfo.bindingCount = static_cast<uint32_t>(m_bindings.size());
+    createInfo.pBindings = bindings.data();
+    createInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 
     VK_CALL vkCreateDescriptorSetLayout(m_device, &createInfo, nullptr, &m_layout);
+}
+
+const std::vector<DescriptorBindingDescription> &VulkanDescriptorSetLayout::bindings() {
+
 }
 
 EG_END

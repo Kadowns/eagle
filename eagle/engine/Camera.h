@@ -5,7 +5,8 @@
 #ifndef EAGLE_CAMERA_H
 #define EAGLE_CAMERA_H
 
-#include "EngineCore.h"
+#include "eagle/engine/GlobalDefs.h"
+#include "eagle/engine/Renderer.h"
 
 EG_ENGINE_BEGIN
 
@@ -13,9 +14,8 @@ class Camera {
 
 public:
 
-    Camera(
-            float fov, float width, float height, float nearPlane, float farPlane,
-            glm::vec3 position, glm::vec3 target, glm::vec3 up) :
+    Camera(float fov, float width, float height, float nearPlane, float farPlane, glm::vec3 position, glm::vec3 target,
+           glm::vec3 up) :
             m_fov(fov),
             m_width(width),
             m_height(height),
@@ -25,23 +25,24 @@ public:
             m_target(target),
             m_up(up){
 
-        m_renderingContext = Application::instance().get_window()->get_rendering_context();
         m_projection = glm::perspective(glm::radians(fov), width / height, nearPlane, farPlane);
-        //m_projection[1][1] *= -1;
+
         m_view = glm::lookAt(position, target, up);
         m_viewProjection = m_projection * m_view;
 
-        m_buffer = m_renderingContext->create_uniform_buffer(sizeof(glm::mat4), &m_viewProjection);
+        RenderingContext& context = Renderer::instance().context();
 
-        DescriptorBinding binding = {};
-        binding.descriptorType = EG_DESCRIPTOR_TYPE::UNIFORM_BUFFER;
-        binding.shaderStage = EG_SHADER_STAGE::VERTEX;
+        m_buffer = context.create_uniform_buffer(sizeof(glm::mat4), &m_viewProjection);
+
+        DescriptorBindingDescription binding = {};
+        binding.name = "uWorld";
+        binding.descriptorType = DescriptorType::UNIFORM_BUFFER;
+        binding.shaderStage = ShaderStage::VERTEX;
         binding.binding = 0;
 
-        m_descriptorLayout = m_renderingContext->create_descriptor_set_layout({binding});
-        m_descriptor = m_renderingContext->create_descriptor_set(m_descriptorLayout.lock(), {m_buffer.lock()});
-
-        m_renderTarget = m_renderingContext->create_render_target({RENDER_TARGET_ATTACHMENT::COLOR});
+        m_descriptorLayout = context.create_descriptor_set_layout({binding});
+        m_descriptor = context.create_descriptor_set(m_descriptorLayout.lock(), {m_buffer.lock()});
+        m_renderTarget = context.create_render_target({RENDER_TARGET_ATTACHMENT::COLOR});
     }
 
     ~Camera() {}
@@ -90,12 +91,12 @@ public:
         m_near = nearPlane;
         m_far = farPlane;
         m_projection = glm::perspective(glm::radians(fov), width / height, nearPlane, farPlane);
-        //m_projection[1][1] *= -1;
+
         update_buffer();
     }
 
     inline void update_buffer(){
-        m_renderingContext->uniform_buffer_flush(m_buffer.lock(), &matrix());
+        m_buffer.lock()->upload_data(&matrix());
     }
 
     inline glm::mat4& matrix() { return m_viewProjection = m_projection * m_view; }
@@ -118,11 +119,12 @@ private:
     glm::vec3 m_position, m_target, m_up;
 
     glm::mat4 m_view, m_projection, m_viewProjection;
-    Reference<RenderingContext> m_renderingContext;
+
     Handle<UniformBuffer> m_buffer;
     Handle<DescriptorSetLayout> m_descriptorLayout;
     Handle<DescriptorSet> m_descriptor;
     Handle<RenderTarget> m_renderTarget;
+
 };
 
 EG_ENGINE_END

@@ -1,17 +1,12 @@
-#include "eagle/core/renderer/vulkan/spirv_reflect.h"
-#include "eagle/core/renderer/vulkan/VulkanShader.h"
-#include "eagle/core/renderer/vulkan/VulkanShaderCompiler.h"
-#include "eagle/core/renderer/vulkan/VulkanHelper.h"
-#include "eagle/core/Log.h"
-
-#include <fstream>
-#include <eagle/core/renderer/Shader.h>
-
+#include <eagle/core/renderer/vulkan/VulkanShader.h>
+#include <eagle/core/renderer/vulkan/VulkanShaderCompiler.h>
+#include <eagle/core/renderer/vulkan/VulkanHelper.h>
+#include <eagle/core/renderer/vulkan/spirv_reflect.h>
+#include <eagle/core/Log.h>
 
 EG_BEGIN
 
 VulkanShader::VulkanShader(const std::string &vertFilePath, const std::string &fragFilePath,
-                           const std::vector<Reference<VulkanDescriptorSetLayout>> &descriptorSetLayouts,
                            const ShaderPipelineInfo &pipelineInfo, const VulkanShaderCreateInfo &createInfo) :
     m_pipelineInfo(pipelineInfo),
     m_vertexLayout(pipelineInfo.vertexLayout),
@@ -21,17 +16,18 @@ VulkanShader::VulkanShader(const std::string &vertFilePath, const std::string &f
     m_vertShaderCode = VulkanShaderCompiler::compile_glsl(vertFilePath, EG_SHADER_STAGE::VERTEX);
     m_fragShaderCode = VulkanShaderCompiler::compile_glsl(fragFilePath, EG_SHADER_STAGE::FRAGMENT);
 
-    create_pipeline_layout(descriptorSetLayouts);
+    create_pipeline_layout();
     create_pipeline();
 }
 
 VulkanShader::~VulkanShader() {
     cleanup_pipeline();
     VK_CALL vkDestroyPipelineLayout(m_info.device, m_pipelineLayout, nullptr);
+
+    m_descriptorSetLayouts.clear();
 }
 
-void VulkanShader::create_pipeline_layout(
-        const std::vector<Reference<VulkanDescriptorSetLayout>> &descriptorSetLayouts) {
+void VulkanShader::create_pipeline_layout() {
 
     SpvReflectShaderModule vertexShaderReflection, fragmentShaderReflection;
     SPV_REFLECT_ASSERT(spvReflectCreateShaderModule(m_vertShaderCode.size() * sizeof(unsigned int), m_vertShaderCode.data(), &vertexShaderReflection));
@@ -58,7 +54,59 @@ void VulkanShader::create_pipeline_layout(
     std::vector<VkPushConstantRange> pushConstantsRanges;
     uint32_t pushConstantsOffset = 0;
 
-    auto add_push_constants_from_shader_stage = [&](const SpvReflectShaderModule* shaderReflectionModule, const VkShaderStageFlags shaderStage) {
+    auto add_bindings_from_shader_stage = [&](const SpvReflectShaderModule* shaderReflectionModule, const VkShaderStageFlags shaderStage) {
+
+        uint32_t descriptorBindingCount = 0;
+        SPV_REFLECT_ASSERT(spvReflectEnumerateDescriptorBindings(shaderReflectionModule, &descriptorBindingCount, nullptr));
+
+        if (descriptorBindingCount > 0) {
+
+            std::vector<SpvReflectDescriptorBinding*> reflectedDescriptorBindings(descriptorBindingCount);
+
+            SPV_REFLECT_ASSERT(spvReflectEnumerateDescriptorBindings(shaderReflectionModule, &descriptorBindingCount, reflectedDescriptorBindings.data()));
+
+            //Sort by binding so we can easily check if the binding has already been added by a previous shader stage
+            std::sort(std::begin(reflectedDescriptorBindings), std::end(reflectedDescriptorBindings),
+                      [](const SpvReflectDescriptorBinding* a, const SpvReflectDescriptorBinding* b)
+                      {
+                          return a->set < b->set || a->binding < b->binding;
+                      });
+
+            for (auto& reflectedBinding : reflectedDescriptorBindings){
+
+                auto existingSet = descriptorSetMap.find(reflectedBinding->set);
+                if (existingSet != descriptorSetMap.end()){
+                    //If this set already exists append this binding to it
+                    auto existingBinding = existingSet->second.find(reflectedBinding->binding);
+                    if (existingBinding != existingSet->second.end()){
+                        existingBinding->second.stageFlags |= shaderStage;
+                    }
+                    else{ //Otherwise a new binding needs to be added
+                        VkDescriptorSetLayoutBinding descriptorBinding = {};
+                        descriptorBinding.binding = reflectedBinding->binding;
+                        descriptorBinding.descriptorType = reflectedBinding->descriptor_type;
+                        descriptorBinding.descriptorCount = 1; //TODO:
+                        descriptorBinding.stageFlags = shaderStage;
+
+                        auto s = reflectedBinding->block.size;
+
+                        existingSet->second.emplace(descriptorBinding.binding, descriptorBinding);
+                    }
+                }
+                else { //Otherwise a new set needs to be added
+                    VkDescriptorSetLayoutBinding descriptorBinding = {};
+                    descriptorBinding.binding = reflectedBinding->binding;
+                    descriptorBinding.descriptorType = reflectedBinding->descriptor_type;
+                    descriptorBinding.descriptorCount = 1; //TODO:
+                    descriptorBinding.stageFlags = shaderStage;
+
+                    descriptorSetMap.emplace(reflectedBinding->set, std::map<uint32_t, VkDescriptorSetLayoutBinding>());
+                    descriptorSetMap[reflectedBinding->set].emplace(descriptorBinding.binding, descriptorBinding);
+                }
+            }
+        }
+
+
 
         uint32_t pushConstantsCount = 0;
         SPV_REFLECT_ASSERT(spvReflectEnumeratePushConstantBlocks(shaderReflectionModule, &pushConstantsCount, nullptr));
@@ -80,15 +128,26 @@ void VulkanShader::create_pipeline_layout(
         }
     };
 
-    add_push_constants_from_shader_stage(&vertexShaderReflection, VK_SHADER_STAGE_VERTEX_BIT);
-    add_push_constants_from_shader_stage(&fragmentShaderReflection, VK_SHADER_STAGE_FRAGMENT_BIT);
+    add_bindings_from_shader_stage(&vertexShaderReflection, VK_SHADER_STAGE_VERTEX_BIT);
+    add_bindings_from_shader_stage(&fragmentShaderReflection, VK_SHADER_STAGE_FRAGMENT_BIT);
 
     //fragment shader output count
     SPV_REFLECT_ASSERT(spvReflectEnumerateOutputVariables(&fragmentShaderReflection, &m_outputAttachmentCount, nullptr));
 
-    std::vector<VkDescriptorSetLayout> layouts(descriptorSetLayouts.size());
+
+    for (auto& descriptorSetLayout : descriptorSetMap){
+
+        std::vector<VkDescriptorSetLayoutBinding> bindings;
+        for(auto& binding : descriptorSetLayout.second){
+            bindings.emplace_back(binding.second);
+        }
+
+        m_descriptorSetLayouts.emplace_back(std::make_shared<VulkanDescriptorSetLayout>(m_info.device, bindings));
+    }
+
+    std::vector<VkDescriptorSetLayout> layouts(m_descriptorSetLayouts.size());
     for (uint32_t i = 0; i < layouts.size(); i++){
-        layouts[i] = descriptorSetLayouts[i]->get_native_layout();
+        layouts[i] = m_descriptorSetLayouts[i]->get_native_layout();
     }
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
@@ -299,6 +358,18 @@ VkPipeline& VulkanShader::get_pipeline() {
 
 VkPipelineLayout& VulkanShader::get_layout() {
     return m_pipelineLayout;
+}
+
+const std::vector<Handle<DescriptorSetLayout>> VulkanShader::get_descriptor_set_layouts() {
+    std::vector<Handle<DescriptorSetLayout>> sets(m_descriptorSetLayouts.size());
+    for (size_t i = 0; i < sets.size(); i++){
+        sets[i] = m_descriptorSetLayouts[i];
+    }
+    return sets;
+}
+
+const Handle<DescriptorSetLayout> VulkanShader::get_descriptor_set_layout(uint32_t index) {
+    return m_descriptorSetLayouts[index];
 }
 
 

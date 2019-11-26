@@ -7,15 +7,15 @@ VulkanDescriptorSet::VulkanDescriptorSet(const Reference<VulkanDescriptorSetLayo
                                          const std::vector<Reference<DescriptorItem>> &descriptorItems,
                                          VulkanDescriptorSetCreateInfo createInfo) :
     m_descriptorSetLayout(descriptorSetLayout), m_descriptorItems(descriptorItems), m_info(createInfo){
-    create_descriptor_pool();
     create_descriptor_sets();
+    update_descriptor_sets();
 }
 
 VulkanDescriptorSet::~VulkanDescriptorSet() {
     cleanup();
 }
 
-void VulkanDescriptorSet::create_descriptor_pool() {
+void VulkanDescriptorSet::create_descriptor_sets() {
 
     if (!m_cleared) return;
     auto layoutBindings = m_descriptorSetLayout.lock()->get_native_bindings();
@@ -36,11 +36,6 @@ void VulkanDescriptorSet::create_descriptor_pool() {
     VK_CALL_ASSERT(vkCreateDescriptorPool(m_info.device, &poolInfo, nullptr, &m_descriptorPool)) {
         throw std::runtime_error("failed to create descriptor pool!");
     }
-}
-
-void VulkanDescriptorSet::create_descriptor_sets() {
-
-    if (!m_cleared) return;
 
     std::vector<VkDescriptorSetLayout> layouts(m_info.bufferCount, m_descriptorSetLayout.lock()->get_native_layout());
     VkDescriptorSetAllocateInfo allocInfo = {};
@@ -53,14 +48,34 @@ void VulkanDescriptorSet::create_descriptor_sets() {
     VK_CALL_ASSERT(vkAllocateDescriptorSets(m_info.device, &allocInfo, m_descriptorSets.data())) {
         throw std::runtime_error("failed to allocate descriptor sets!");
     }
+    m_cleared = false;
+}
+
+void VulkanDescriptorSet::update_descriptor_sets(const std::vector<Reference<Eagle::DescriptorItem>>& descriptorItems) {
+
+
+    m_descriptorItems = descriptorItems;
+
+    if (m_cleared) return;
+
+    update_descriptor_sets();
+}
+
+void VulkanDescriptorSet::update_descriptor_sets() {
+
+    if (m_cleared) return;
 
     std::vector<VkDescriptorSetLayoutBinding> descriptorBindings = m_descriptorSetLayout.lock()->get_native_bindings();
     std::vector<VkDescriptorBufferInfo> bufferInfos;
     std::vector<VkDescriptorImageInfo> imageInfos;
+
+    //foreach descriptor set
     for (size_t i = 0; i < m_descriptorSets.size(); i++) {
 
 
+        //foreach descriptor item in descriptor set
         for (uint32_t j = 0; j < m_descriptorItems.size(); j++){
+
             switch (m_descriptorItems[j]->type()){
 
                 case EG_DESCRIPTOR_TYPE::UNIFORM_BUFFER:{
@@ -108,14 +123,16 @@ void VulkanDescriptorSet::create_descriptor_sets() {
 
         VK_CALL vkUpdateDescriptorSets(m_info.device, static_cast<uint32_t>(descriptorWrite.size()), descriptorWrite.data(), 0, nullptr);
     }
-    m_cleared = false;
 }
+
 
 void VulkanDescriptorSet::cleanup() {
     if (m_cleared) return;
     VK_CALL vkDestroyDescriptorPool(m_info.device, m_descriptorPool, nullptr);
     m_cleared = true;
 }
+
+
 
 EG_END
 

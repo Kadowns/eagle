@@ -5,12 +5,9 @@
 #ifndef EAGLE_SERIALIZER_H
 #define EAGLE_SERIALIZER_H
 
-#include "eagle/engine/EngineCore.h"
-#include "eagle/engine/Scene.h"
-#include "eagle/engine/resources/Material.h"
-#include "eagle/engine/resources/Mesh.h"
+#include "EditorCore.h"
 
-EG_ENGINE_BEGIN
+EG_EDITOR_BEGIN
 
 class Serializer {
 
@@ -25,6 +22,6 @@ private:
 
 };
 
-EG_ENGINE_END
+EG_EDITOR_END
 
 #endif //EAGLE_SERIALIZER_H

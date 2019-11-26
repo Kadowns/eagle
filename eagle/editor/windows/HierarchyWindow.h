@@ -7,11 +7,11 @@
 
 #include "EditorWindow.h"
 
-EG_ENGINE_BEGIN
+EG_EDITOR_BEGIN
 
 class HierarchyWindow : public EditorWindow {
 public:
-    HierarchyWindow(const Reference<entityx::EntityManager>& entities);
+    HierarchyWindow();
     virtual ~HierarchyWindow();
 
 protected:
@@ -20,7 +20,7 @@ private:
     Reference<entityx::EntityManager> m_entities;
 };
 
-EG_ENGINE_END
+EG_EDITOR_END
 
 
 #endif //EAGLE_HIERARCHYWINDOW_H
