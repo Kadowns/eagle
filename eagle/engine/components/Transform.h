@@ -6,7 +6,7 @@
 #define EAGLE_TRANSFORM_H
 
 #include <eagle/engine/GlobalDefs.h>
-#include <eagle/engine/ecs/EntityManager.h>
+#include <eagle/engine/EntityManager.h>
 
 EG_ENGINE_BEGIN
 

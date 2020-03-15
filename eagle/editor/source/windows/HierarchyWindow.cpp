@@ -2,9 +2,10 @@
 // Created by Novak on 06/08/2019.
 //
 
-#include <eagle/editor/Selection.h>
 #include <eagle/editor/windows/HierarchyWindow.h>
-#include <eagle/editor/EditorSceneManager.h>
+#include <eagle/editor/Selection.h>
+#include <eagle/engine/components/Transform.h>
+#include <eagle/engine/components/Renderable.h>
 
 EG_EDITOR_BEGIN
 
@@ -19,7 +20,7 @@ HierarchyWindow::~HierarchyWindow() {
 
 void HierarchyWindow::handle_update() {
 
-    if (!EditorSceneManager::instance().is_active()){
+    if (!SceneManager::instance().is_active()){
         ImGui::Text("No active scene");
         return;
     }
@@ -31,20 +32,22 @@ void HierarchyWindow::handle_update() {
 
     if (ImGui::Button("Create Entity")){
         auto e = m_entities->create();
-        e.assign<Transform>();
-        e.assign<Renderable>();
+        e->assign<Transform>();
+        e->assign<Renderable>();
     }
 
 
     if (ImGui::TreeNode("Entities on scene")) {
-        for (auto e : m_entities->entities_for_debugging()) {
+        for (auto e : m_entities->entities()) {
 
-            ImGui::PushID(e.id().id());
+            ImGui::PushID(e->uid());
 
             char buf[32];
-            sprintf(buf, "Object %llu", e.id().id());
-            if (ImGui::Selectable(buf, Selection::current_entity() == e))
-                Selection::set_selected(e);
+            sprintf(buf, "%s", e->name().c_str());
+
+            if (ImGui::Selectable(buf, Selection::is_selected(e.get()))) {
+                Selection::set_selected(e.get());
+            }
 
             ImGui::PopID();
         }

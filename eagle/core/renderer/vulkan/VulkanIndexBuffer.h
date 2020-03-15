@@ -9,7 +9,7 @@
 
 #include "eagle/core/renderer/IndexBuffer.h"
 #include "VulkanBuffer.h"
-
+#include "VulkanCleaner.h"
 
 EG_BEGIN
 
@@ -20,21 +20,23 @@ struct VulkanIndexBufferCreateInfo {
     uint32_t bufferCount;
 };
 
-class VulkanIndexBuffer : public IndexBuffer {
+class VulkanIndexBuffer : public IndexBuffer, public VulkanCleanable {
 
 public:
 
-    VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInfo &createInfo, void *indexData,
-                      size_t indexCount, INDEX_BUFFER_TYPE indexType, EG_BUFFER_USAGE usage);
+    VulkanIndexBuffer(VkDevice device, VulkanCleaner &cleaner,
+                      VulkanIndexBufferCreateInfo &createInfo, void *indexData, size_t indexCount,
+                      IndexBufferType indexType, BufferUsage usage);
     virtual ~VulkanIndexBuffer();
     virtual void * get_data() override;
     virtual size_t get_indices_count() override;
 
-    bool is_dirty() const;
-    void flush(uint32_t bufferIndex);
-    void upload(void* data, uint32_t verticesCount);
+    virtual bool is_dirty() const override;
+    virtual void flush(uint32_t bufferIndex) override;
+
+    virtual void upload(void* data, uint32_t verticesCount) override;
     inline VulkanBuffer& get_buffer(uint32_t bufferIndex) {
-        if (m_usage == EG_BUFFER_USAGE::CONSTANT){
+        if (m_usage == BufferUsage::CONSTANT){
             return *(m_buffers[0]);
         }
         return *(m_buffers[bufferIndex]);
@@ -42,8 +44,8 @@ public:
 
     inline VkIndexType get_native_index_type(){
         switch(m_indexType) {
-            case INDEX_BUFFER_TYPE::UINT_16: return VK_INDEX_TYPE_UINT16;
-            case INDEX_BUFFER_TYPE::UINT_32: return VK_INDEX_TYPE_UINT32;
+            case IndexBufferType::UINT_16: return VK_INDEX_TYPE_UINT16;
+            case IndexBufferType::UINT_32: return VK_INDEX_TYPE_UINT32;
         }
     }
 
@@ -54,8 +56,8 @@ private:
     std::set<int> m_dirtyBuffers;
     char* m_data = nullptr;
     size_t m_indexCount;
-    INDEX_BUFFER_TYPE m_indexType;
-    EG_BUFFER_USAGE m_usage;
+    IndexBufferType m_indexType;
+    BufferUsage m_usage;
     bool m_resizing = false, m_initialized = false;
 };
 

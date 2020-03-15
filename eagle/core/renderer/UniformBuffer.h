@@ -17,10 +17,14 @@ public:
     explicit UniformBuffer(size_t size);
     virtual ~UniformBuffer();
 
-    virtual void flush(uint32_t bufferIndex) = 0;
-    size_t size() {return m_size;}
+    virtual void set_bytes(void *data, size_t size, size_t offset) = 0;
+    virtual void update() = 0;
+    size_t size() {return m_bytes.size();}
+    const std::vector<char>& data() const { return m_bytes; }
+    std::vector<char>& bytes() { return m_bytes; }
+
 protected:
-    size_t m_size;
+    std::vector<char> m_bytes;
 };
 
 EG_END

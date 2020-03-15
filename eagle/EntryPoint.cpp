@@ -2,13 +2,14 @@
 // Created by Novak on 18/06/2019.
 //
 #include <eagle/Eagle.h>
-#include "eagle/editor/EditorLayer.h"
 
 Eagle::ApplicationCreateInfo create_application_info() {
     Eagle::ApplicationCreateInfo config = {};
     config.appName = "Dummy";
-    config.windowType = new Eagle::WindowGLFW(new Eagle::VulkanContext(), 1920, 1080);
-    config.layers.push_back(std::make_shared<Eagle::Engine::EditorLayer>());
+    config.windowType = new Eagle::WindowGLFW(1920, 1080);
+    config.layers.push_back(std::make_shared<Eagle::Engine::MainLayer>());
+    config.layers.push_back(std::make_shared<Eagle::Engine::Editor::EditorLayer>());
+    config.layers.push_back(std::make_shared<Eagle::InputLayer>());
     config.coreLogLevel = Eagle::Log::DEBUG;
     config.clientLogLevel = Eagle::Log::TRACE;
     return config;

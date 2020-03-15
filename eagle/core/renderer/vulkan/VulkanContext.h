@@ -55,11 +55,6 @@ protected:
         std::vector<VkPresentModeKHR> presentModes;
     };
 
-    struct VulkanDrawFrameInfo {
-        bool invalidFrame = false;
-        uint32_t imageIndex;
-    };
-
 public:
 
     VulkanContext();
@@ -68,11 +63,13 @@ public:
 
     //inherited via RenderingContext
     virtual void init(Window *window) override;
-    virtual bool begin_draw_commands() override;
-    virtual void end_draw_commands() override;
-    virtual void refresh() override;
     virtual void deinit() override;
     virtual void handle_window_resized(int width, int height) override;
+    virtual bool prepare_frame() override;
+    virtual Scope <Eagle::CommandBuffer> create_command_buffer() override;
+    virtual const Reference <Eagle::RenderTarget> main_render_target() override;
+    virtual void submit_command_buffer(Scope <Eagle::CommandBuffer> &commandBuffer) override;
+    virtual void present_frame() override;
     //------
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
@@ -98,7 +95,7 @@ protected:
 
     virtual void create_swapchain();
 
-    virtual void create_swapchain_images();
+    virtual void create_render_targets();
 
     virtual void create_command_pool();
 
@@ -138,82 +135,35 @@ protected:
     VkFormat find_supported_format(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
     VkFormat find_depth_format();
 
+public:
     //inherited via RenderingContext
-    virtual Handle<Shader>
-    create_shader(const std::string &vertFilePath, const std::string &fragFilePath,
-                  const std::vector<Reference<DescriptorSetLayout>> &descriptorSetLayouts,
+    virtual Handle <Shader>
+    create_shader(const std::unordered_map<ShaderStage, std::string> &shaderPaths,
                   const ShaderPipelineInfo &pipelineInfo) override;
-
-//    virtual Handle<Shader>
-//    create_shader(const std::string &vertFilePath, const std::string &fragFilePath,
-//                  const std::vector<Reference<DescriptorSetLayout>> &descriptorSetLayouts,
-//                  const ShaderPipelineInfo &pipelineInfo,
-//                  Reference<RenderTarget> renderTarget) override;
 
     virtual Handle<VertexBuffer>
     create_vertex_buffer(void *vertices, uint32_t count, const VertexLayout &vertexLayout,
-                         EG_BUFFER_USAGE usageFlags) override;
+                         BufferUsage usageFlags) override;
 
     virtual Handle<IndexBuffer>
-    create_index_buffer(void *indexData, size_t indexCount, INDEX_BUFFER_TYPE indexType,
-                        EG_BUFFER_USAGE usage) override;
+    create_index_buffer(void *indexData, size_t indexCount, IndexBufferType indexType,
+                        BufferUsage usage) override;
 
     virtual Handle<UniformBuffer>
     create_uniform_buffer(size_t size, void *data) override;
 
     virtual Handle<DescriptorSetLayout>
-    create_descriptor_set_layout(const std::vector<DescriptorBinding> &bindings) override;
+    create_descriptor_set_layout(const std::vector<DescriptorBindingDescription> &bindings) override;
 
     virtual Handle<DescriptorSet>
     create_descriptor_set(const Reference<DescriptorSetLayout> &descriptorLayout,
                           const std::vector<Reference<DescriptorItem>> &descriptorItems) override;
 
     virtual Handle<Texture2D>
-    create_texture_2d(Texture2DCreateInfo &createInfo) override;
+    create_texture_2d(const Texture2DCreateInfo &createInfo) override;
 
     virtual Handle<RenderTarget>
     create_render_target(const std::vector<RENDER_TARGET_ATTACHMENT> &attachments) override;
-
-    virtual void
-    bind_shader(const Reference<Shader> &shader) override;
-
-    virtual void
-    draw(uint32_t vertexCount) override;
-
-    virtual void
-    draw_indexed(uint32_t indicesCount, uint32_t indexOffset, uint32_t vertexOffset) override;
-
-    virtual void
-    uniform_buffer_flush(const Reference<UniformBuffer> &uniformBuffer, void *data) override;
-
-    virtual void
-    vertex_buffer_flush(const Reference<VertexBuffer> &vertexBuffer, void *data, uint32_t vertexCount) override;
-
-    virtual void
-    index_buffer_flush(const Reference<IndexBuffer> &indexBuffer, void *data, uint32_t indexCount) override;
-
-    virtual void
-    bind_descriptor_sets(const Reference<Shader> &shader, const Reference<DescriptorSet> &descriptorSet,
-                         uint32_t setIndex) override;
-
-    virtual void
-    push_constants(const Reference<Shader> &shader, EG_SHADER_STAGE stage, uint32_t offset, size_t size,
-                   void *data) override;
-
-    virtual void
-    bind_vertex_buffer(const Reference<VertexBuffer> &vertexBuffer) override;
-
-    virtual void
-    bind_index_buffer(const Reference<IndexBuffer> &indexBuffer) override;
-
-    virtual void
-    set_viewport(float w, float h, float x, float y, float minDepth, float maxDepth) override;
-
-    virtual void
-    set_scissor(uint32_t w, uint32_t h, uint32_t x, uint32_t y) override;
-
-    virtual void begin_draw_offscreen(const Reference<RenderTarget> &renderTarget) override;
-    virtual void end_draw_offscreen() override;
 
 
 protected:
@@ -229,14 +179,14 @@ protected:
     VkQueue m_graphicsQueue;
 
     struct {
+        uint32_t imageIndex;
+        uint32_t imageCount;
         VulkanImageAttachment depth;
         VkFormat swapchainFormat;
         VkExtent2D extent2D;
         VkSwapchainKHR swapchain;
         VkRenderPass renderPass, offscreenPass;
-        std::vector<VkImage> swapchainImages;
-        std::vector<VkImageView> swapchainImageViews;
-        std::vector<VkFramebuffer> framebuffers;
+        std::vector<Reference<VulkanMainRenderTarget>> renderTargets;
         VkCommandBuffer commandBuffer;
     } m_present;
 
@@ -246,23 +196,21 @@ protected:
     std::vector<VkSemaphore> m_renderFinishedSemaphores;
     std::vector<VkFence> m_inFlightFences;
     VkQueue m_presentQueue;
-    VulkanCommandList m_commandList;
-    VulkanDrawFrameInfo m_drawInfo;
 
-    std::vector<Reference<VulkanVertexBuffer>> m_vertexBuffers, m_dirtyVertexBuffers;
-    std::vector<Reference<VulkanIndexBuffer>> m_indexBuffers, m_dirtyIndexBuffers;
-    std::vector<Reference<VulkanUniformBuffer>> m_uniformBuffers, m_dirtyUniformBuffers;
+    VulkanCleaner m_cleaner;
+
+    std::vector<Reference<VulkanVertexBuffer>> m_vertexBuffers;
+    std::vector<Reference<VulkanIndexBuffer>> m_indexBuffers;
+    std::vector<Reference<VulkanUniformBuffer>> m_uniformBuffers;
     std::vector<Reference<VulkanDescriptorSet>> m_descriptorSets;
     std::vector<Reference<VulkanDescriptorSetLayout>> m_descriptorSetsLayouts;
     std::vector<Reference<VulkanShader>> m_shaders;
     std::vector<Reference<VulkanTexture2D>> m_textures;
-    std::vector<Reference<VulkanRenderTarget>> m_renderTargets;
+    std::vector<Reference<VulkanCustomRenderTarget>> m_renderTargets;
 
     uint32_t m_currentFrame = 0;
 
     bool m_windowResized = false;
-    bool m_drawInitialized = false;
-
 
     const std::vector<const char *> validationLayers = {
             "VK_LAYER_LUNARG_standard_validation"

@@ -6,8 +6,8 @@
 
 EG_BEGIN
 
-Window::Window(RenderingContext* renderingContext, uint32_t width, uint32_t height) :
-    m_windowData(width, height, renderingContext) {
+Window::Window(uint32_t width, uint32_t height) :
+    m_windowData(width, height) {
 
 }
 
@@ -21,10 +21,6 @@ uint32_t Window::get_width() {
 
 uint32_t Window::get_height() {
     return m_windowData.height;
-}
-
-Reference<RenderingContext> Window::get_rendering_context() {
-    return m_windowData.context;
 }
 
 EG_END

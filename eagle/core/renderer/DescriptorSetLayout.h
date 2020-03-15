@@ -10,17 +10,26 @@
 
 EG_BEGIN
 
+struct DescriptorBindingMemberDescription {
+    std::string name;
+    DataType type;
+    uint32_t size;
+    uint32_t offset;
+};
 
-struct DescriptorBinding {
+struct DescriptorBindingDescription {
+    std::string name;
     uint32_t binding;
-    EG_DESCRIPTOR_TYPE descriptorType;
-    EG_SHADER_STAGE shaderStage;
+    DescriptorType descriptorType;
+    ShaderStage shaderStage;
+    size_t size;
+    std::map<std::string, DescriptorBindingMemberDescription> members;
 };
 
 
 class DescriptorSetLayout {
-protected:
-    virtual void create(const std::vector<DescriptorBinding> &bindings) = 0;
+public:
+    virtual const std::vector<DescriptorBindingDescription>& bindings() = 0;
 
 };
 

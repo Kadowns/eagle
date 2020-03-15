@@ -6,12 +6,12 @@
 #define EAGLE_INDEXBUFFER_H
 
 #include <vector>
-#include "eagle/core/Core.h"
+#include "eagle/core/GlobalDefinitions.h"
 #include "RenderingCore.h"
 
 EG_BEGIN
 
-enum class INDEX_BUFFER_TYPE{
+enum class IndexBufferType{
     UINT_16 = 2,
     UINT_32 = 4
 };
@@ -22,6 +22,7 @@ public:
     virtual ~IndexBuffer() = default;
     virtual void * get_data() = 0;
     virtual size_t get_indices_count() = 0;
+    virtual void upload(void* data, uint32_t verticesCount) = 0;
 };
 
 EG_END

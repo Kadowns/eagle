@@ -5,10 +5,12 @@
 #include <fstream>
 
 #include <eagle/engine/Serializer.h>
+#include <eagle/engine/components/Renderable.h>
+#include <eagle/engine/components/Transform.h>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 
-EG_EDITOR_BEGIN
+EG_ENGINE_BEGIN
 
 Serializer::Serializer(const std::string &path) : m_path(path) {
 
@@ -28,6 +30,8 @@ void Serializer::load(Scene &scene) {
         ia >> *e->assign<Transform>();
         ia >> *e->assign<Renderable>();
     }
+    auto e = entities->create();
+    e->assign<DirectionalLight>();
 }
 
 void Serializer::save(const Scene &scene) {
@@ -41,4 +45,4 @@ void Serializer::save(const Scene &scene) {
     }
 }
 
-EG_EDITOR_END
+EG_ENGINE_END

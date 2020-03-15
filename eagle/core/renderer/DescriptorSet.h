@@ -7,7 +7,7 @@
 
 #include <vector>
 
-#include "eagle/core/Core.h"
+#include "eagle/core/GlobalDefinitions.h"
 #include "UniformBuffer.h"
 
 EG_BEGIN
@@ -15,6 +15,7 @@ EG_BEGIN
 class DescriptorSet {
 public:
     virtual ~DescriptorSet() = default;
+    virtual void update(const std::vector<Reference<DescriptorItem>>& descriptorItems) = 0;
 };
 
 EG_END

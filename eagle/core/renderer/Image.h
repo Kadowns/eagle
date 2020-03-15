@@ -5,7 +5,7 @@
 #ifndef EAGLE_IMAGE_H
 #define EAGLE_IMAGE_H
 
-#include "eagle/core/Core.h"
+#include "eagle/core/GlobalDefinitions.h"
 #include "DescriptorItem.h"
 
 
@@ -19,12 +19,18 @@ struct ImageSampler{};
 class Image : public DescriptorItem {
 public:
 
-    Image(uint32_t width, uint32_t height) : DescriptorItem(EG_DESCRIPTOR_TYPE::IMAGE_2D), m_width(width), m_height(height) {}
+    Image(uint32_t width, uint32_t height) : DescriptorItem(DescriptorType::IMAGE_2D), m_width(width), m_height(height) {}
     virtual ~Image() = default;
     uint32_t get_width() const {return m_width;}
     uint32_t get_height() const {return m_height;}
     virtual Handle<ImageAttachment> get_attachment() = 0;
     virtual Handle<ImageSampler> get_sampler() = 0;
+
+    inline void resize(uint32_t width, uint32_t height) {
+        m_width = width;
+        m_height = height;
+    }
+
 
 protected:
     uint32_t m_width, m_height;

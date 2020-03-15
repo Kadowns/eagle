@@ -10,6 +10,11 @@
 
 EG_ENGINE_BEGIN
 
+struct CameraBuffer{
+    alignas(16) glm::mat4 viewProjection;
+    alignas(16) glm::vec3 position;
+};
+
 class Camera {
 
 public:
@@ -32,7 +37,11 @@ public:
 
         RenderingContext& context = Renderer::instance().context();
 
-        m_buffer = context.create_uniform_buffer(sizeof(glm::mat4), &m_viewProjection);
+        CameraBuffer buf = {};
+        buf.viewProjection = m_viewProjection;
+        buf.position = position;
+
+        m_buffer = context.create_uniform_buffer(sizeof(CameraBuffer), &buf);
 
         DescriptorBindingDescription binding = {};
         binding.name = "uWorld";
@@ -96,7 +105,12 @@ public:
     }
 
     inline void update_buffer(){
-        m_buffer.lock()->upload_data(&matrix());
+        CameraBuffer buf = {};
+        buf.viewProjection = matrix();
+        buf.position = m_position;
+
+        m_buffer.lock()->set_bytes(&buf, sizeof(buf), 0);
+        m_buffer.lock()->update();
     }
 
     inline glm::mat4& matrix() { return m_viewProjection = m_projection * m_view; }

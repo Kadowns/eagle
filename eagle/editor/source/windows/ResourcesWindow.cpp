@@ -2,7 +2,7 @@
 // Created by Novak on 13/08/2019.
 //
 
-#include <eagle/editor/ResourcesWindow.h>
+#include <eagle/editor/windows/ResourcesWindow.h>
 #include <eagle/editor/Selection.h>
 
 EG_EDITOR_BEGIN
@@ -30,21 +30,27 @@ void ResourcesWindow::handle_update() {
 
 
     for (auto& family : ResourcesPool::instance().resources()){
-        for (auto& resource : family){
-            //ImGui::PushID(resource.first);
-            if (ImGui::Selectable(resource.second->name().c_str(), Selection::current_resource() == resource.second)) {
-                Selection::set_selected(resource.second);
+
+        if (ImGui::TreeNode(family.begin()->second->type_name().c_str())) {
 
 
+            for (auto &resource : family) {
+                //ImGui::PushID(resource.first);
+                if (ImGui::Selectable(resource.second->name().c_str(), Selection::is_selected(resource.second))) {
+                    Selection::set_selected(resource.second);
+
+
+                }
+                if (ImGui::BeginDragDropSource()) {
+
+                    ImGui::SetDragDropPayload(resource.second->type_name().c_str(), &resource.first,
+                                              sizeof(resource.first));
+                    ImGui::TextUnformatted(resource.second->name().c_str());
+                    ImGui::EndDragDropSource();
+                }
+                //ImGui::PopID();
             }
-            if (ImGui::BeginDragDropSource()) {
-
-                ImGui::SetDragDropPayload(resource.second->type_name().c_str(), &resource.first,
-                                          sizeof(resource.first));
-                ImGui::TextUnformatted(resource.second->name().c_str());
-                ImGui::EndDragDropSource();
-            }
-            //ImGui::PopID();
+            ImGui::TreePop();
         }
     }
 }

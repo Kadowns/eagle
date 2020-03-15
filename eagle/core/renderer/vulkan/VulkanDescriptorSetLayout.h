@@ -12,18 +12,21 @@ EG_BEGIN
 
 class VulkanDescriptorSetLayout : public DescriptorSetLayout{
 public:
-    VulkanDescriptorSetLayout(VkDevice device, const std::vector<DescriptorBinding>& bindings);
+    VulkanDescriptorSetLayout(VkDevice device, const std::vector<DescriptorBindingDescription>& bindings);
     virtual ~VulkanDescriptorSetLayout();
 
-    virtual void create(const std::vector<DescriptorBinding> &bindings) override;
+    void create_layout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
+
+    virtual const std::vector<DescriptorBindingDescription>& bindings();
 
     inline VkDescriptorSetLayout& get_native_layout() { return m_layout; }
-    inline const std::vector<VkDescriptorSetLayoutBinding>& get_native_bindings() { return m_bindings; }
+    inline const std::vector<VkDescriptorSetLayoutBinding>& get_native_bindings() { return m_nativeBindings; }
 
 private:
     VkDevice m_device;
     VkDescriptorSetLayout m_layout;
-    std::vector<VkDescriptorSetLayoutBinding> m_bindings;
+    std::vector<DescriptorBindingDescription> m_bindings;
+    std::vector<VkDescriptorSetLayoutBinding> m_nativeBindings;
 
 
 };

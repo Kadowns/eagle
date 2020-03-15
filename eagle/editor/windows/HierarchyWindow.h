@@ -17,7 +17,7 @@ public:
 protected:
     virtual void handle_update() override;
 private:
-    Reference<entityx::EntityManager> m_entities;
+    Reference<EntityManager> m_entities;
 };
 
 EG_EDITOR_END

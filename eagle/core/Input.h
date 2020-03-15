@@ -8,7 +8,7 @@
 #include <memory>
 #include <set>
 
-#include "Core.h"
+#include "GlobalDefinitions.h"
 #include "events/InputEvents.h"
 #include "events/KeyCodes.h"
 
@@ -16,7 +16,7 @@ EG_BEGIN
 
 class Input {
 private:
-    using Position = std::pair<float, float>;
+    using Position = std::pair<double, double>;
 
 public:
     ~Input() = default;
@@ -42,7 +42,7 @@ public:
 
 protected:
 
-    friend class Application;
+    friend class InputLayer;
     void handle_key(KeyEvent& e);
     void handle_mouse_move(MouseMoveEvent& e);
     void handle_mouse_button(MouseButtonEvent& e);

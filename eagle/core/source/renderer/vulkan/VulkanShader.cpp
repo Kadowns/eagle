@@ -1,20 +1,21 @@
 #include <eagle/core/renderer/vulkan/VulkanShader.h>
 #include <eagle/core/renderer/vulkan/VulkanShaderCompiler.h>
 #include <eagle/core/renderer/vulkan/VulkanHelper.h>
+#include <eagle/core/renderer/vulkan/VulkanConversor.h>
 #include <eagle/core/renderer/vulkan/spirv_reflect.h>
 #include <eagle/core/Log.h>
 
 EG_BEGIN
 
-VulkanShader::VulkanShader(const std::string &vertFilePath, const std::string &fragFilePath,
+VulkanShader::VulkanShader(const std::unordered_map<ShaderStage, std::string> &shaderPaths,
                            const ShaderPipelineInfo &pipelineInfo, const VulkanShaderCreateInfo &createInfo) :
     m_pipelineInfo(pipelineInfo),
     m_vertexLayout(pipelineInfo.vertexLayout),
     m_cleared(true),
     m_info(createInfo){
 
-    m_vertShaderCode = VulkanShaderCompiler::compile_glsl(vertFilePath, EG_SHADER_STAGE::VERTEX);
-    m_fragShaderCode = VulkanShaderCompiler::compile_glsl(fragFilePath, EG_SHADER_STAGE::FRAGMENT);
+    m_vertShaderCode = VulkanShaderCompiler::compile_glsl(shaderPaths.at(ShaderStage::VERTEX), ShaderStage::VERTEX);
+    m_fragShaderCode = VulkanShaderCompiler::compile_glsl(shaderPaths.at(ShaderStage::FRAGMENT), ShaderStage::FRAGMENT);
 
     create_pipeline_layout();
     create_pipeline();
@@ -38,7 +39,7 @@ void VulkanShader::create_pipeline_layout() {
     m_inputAttributes.resize(m_vertexLayout.get_component_count());
     uint32_t offset = 0;
     for (uint32_t i = 0; i < m_inputAttributes.size(); i++){
-        m_inputAttributes[i].format = VulkanHelper::get_vk_format(m_vertexLayout[i]);
+        m_inputAttributes[i].format = VulkanConversor::to_vk(m_vertexLayout[i]);
         m_inputAttributes[i].binding = 0;
         m_inputAttributes[i].location = i;
         m_inputAttributes[i].offset = offset;
@@ -50,7 +51,7 @@ void VulkanShader::create_pipeline_layout() {
     m_inputBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
     //map for each descriptor set with respective descriptor bindings
-    std::map<uint32_t, std::map<uint32_t, VkDescriptorSetLayoutBinding>> descriptorSetMap;
+    std::map<uint32_t, std::map<uint32_t, DescriptorBindingDescription>> descriptorSetMap;
     std::vector<VkPushConstantRange> pushConstantsRanges;
     uint32_t pushConstantsOffset = 0;
 
@@ -74,34 +75,105 @@ void VulkanShader::create_pipeline_layout() {
 
             for (auto& reflectedBinding : reflectedDescriptorBindings){
 
+                DescriptorBindingDescription description = {};
+
+                description.name = std::string(reflectedBinding->name);
+                description.binding = reflectedBinding->binding;
+                description.shaderStage = VulkanConversor::to_eg(shaderStage);
+                description.descriptorType = VulkanConversor::to_eg((VkDescriptorType)reflectedBinding->descriptor_type);
+                if (description.descriptorType == DescriptorType::UNIFORM_BUFFER){
+                    description.size = reflectedBinding->block.size;
+
+                    auto get_member_type = [&](const SpvReflectTypeDescription& type){
+
+                        SpvReflectTypeFlags flags = type.type_flags;
+
+                        if (SPV_REFLECT_TYPE_FLAG_BOOL == flags){
+                            return DataType::BOOL;
+                        }
+                        if (SPV_REFLECT_TYPE_FLAG_INT == flags){
+                            return DataType::INT;
+                        }
+                        if (SPV_REFLECT_TYPE_FLAG_FLOAT & flags){
+                            if ((SPV_REFLECT_TYPE_FLAG_VECTOR | SPV_REFLECT_TYPE_FLAG_MATRIX) & flags){
+                                switch (type.traits.numeric.matrix.column_count) {
+                                    case 4:
+                                        return DataType::MATRIX4X4;
+                                    case 3:
+                                        return DataType::MATRIX3X3;
+                                    case 2:
+                                        return DataType::MATRIX2X2;
+
+                                }
+                            }
+                            if ((SPV_REFLECT_TYPE_FLAG_VECTOR) & flags) {
+                                switch (type.traits.numeric.vector.component_count) {
+                                    case 2:
+                                        return DataType::VECTOR2F;
+                                    case 3:
+                                        return DataType::VECTOR3F;
+                                    case 4:
+                                        return DataType::VECTOR4F;
+                                }
+                            }
+                            return DataType::FLOAT;
+                        }
+
+
+                        if (SPV_REFLECT_TYPE_FLAG_EXTERNAL_IMAGE == flags){
+                            return DataType::EXTERNAL_IMAGE;
+                        }
+                        if (SPV_REFLECT_TYPE_FLAG_EXTERNAL_SAMPLER & flags){
+                            return DataType::EXTERNAL_SAMPLER;
+                        }
+                        if (SPV_REFLECT_TYPE_FLAG_EXTERNAL_SAMPLED_IMAGE & flags){
+                            return DataType::EXTERNAL_SAMPLED_IMAGE;
+                        }
+                        if (SPV_REFLECT_TYPE_FLAG_EXTERNAL_BLOCK & flags){
+                            return DataType::EXTERNAL_BLOCK;
+                        }
+                        if (SPV_REFLECT_TYPE_FLAG_EXTERNAL_MASK & flags){
+                            return DataType::EXTERNAL_MASK;
+                        }
+                        if (SPV_REFLECT_TYPE_FLAG_STRUCT & flags){
+                            return DataType::STRUCT;
+                        }
+                        if (SPV_REFLECT_TYPE_FLAG_ARRAY & flags){
+                            return DataType::ARRAY;
+                        }
+                        return DataType::UNDEFINED;
+                    };
+
+                    for (int i = 0; i < reflectedBinding->block.member_count; i++) {
+
+                        DescriptorBindingMemberDescription member = {};
+                        member.type = get_member_type(*reflectedBinding->block.members[i].type_description);
+                        member.name = reflectedBinding->block.members[i].name;
+                        member.size = reflectedBinding->block.members[i].size;
+                        member.offset = reflectedBinding->block.members[i].offset;
+
+                        description.members.emplace(member.name, member);
+                    }
+                }
+
+
+
+
                 auto existingSet = descriptorSetMap.find(reflectedBinding->set);
                 if (existingSet != descriptorSetMap.end()){
                     //If this set already exists append this binding to it
                     auto existingBinding = existingSet->second.find(reflectedBinding->binding);
                     if (existingBinding != existingSet->second.end()){
-                        existingBinding->second.stageFlags |= shaderStage;
+                        //TODO existingBinding->second.stageFlags |= shaderStage;
                     }
                     else{ //Otherwise a new binding needs to be added
-                        VkDescriptorSetLayoutBinding descriptorBinding = {};
-                        descriptorBinding.binding = reflectedBinding->binding;
-                        descriptorBinding.descriptorType = reflectedBinding->descriptor_type;
-                        descriptorBinding.descriptorCount = 1; //TODO:
-                        descriptorBinding.stageFlags = shaderStage;
-
-                        auto s = reflectedBinding->block.size;
-
-                        existingSet->second.emplace(descriptorBinding.binding, descriptorBinding);
+                        existingSet->second.emplace(description.binding, description);
                     }
                 }
                 else { //Otherwise a new set needs to be added
-                    VkDescriptorSetLayoutBinding descriptorBinding = {};
-                    descriptorBinding.binding = reflectedBinding->binding;
-                    descriptorBinding.descriptorType = reflectedBinding->descriptor_type;
-                    descriptorBinding.descriptorCount = 1; //TODO:
-                    descriptorBinding.stageFlags = shaderStage;
 
-                    descriptorSetMap.emplace(reflectedBinding->set, std::map<uint32_t, VkDescriptorSetLayoutBinding>());
-                    descriptorSetMap[reflectedBinding->set].emplace(descriptorBinding.binding, descriptorBinding);
+                    descriptorSetMap.emplace(reflectedBinding->set, std::map<uint32_t, DescriptorBindingDescription>());
+                    descriptorSetMap[reflectedBinding->set].emplace(description.binding, description);
                 }
             }
         }
@@ -137,12 +209,12 @@ void VulkanShader::create_pipeline_layout() {
 
     for (auto& descriptorSetLayout : descriptorSetMap){
 
-        std::vector<VkDescriptorSetLayoutBinding> bindings;
+        std::vector<DescriptorBindingDescription> descriptions;
         for(auto& binding : descriptorSetLayout.second){
-            bindings.emplace_back(binding.second);
+            descriptions.emplace_back(binding.second);
         }
 
-        m_descriptorSetLayouts.emplace_back(std::make_shared<VulkanDescriptorSetLayout>(m_info.device, bindings));
+        m_descriptorSetLayouts.emplace_back(std::make_shared<VulkanDescriptorSetLayout>(m_info.device, descriptions));
     }
 
     std::vector<VkDescriptorSetLayout> layouts(m_descriptorSetLayouts.size());

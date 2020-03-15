@@ -5,8 +5,7 @@
 #ifndef EAGLE_RESOURCESWINDOW_H
 #define EAGLE_RESOURCESWINDOW_H
 
-#include "eagle/editor/windows/EditorWindow.h"
-
+#include "EditorWindow.h"
 #include <boost/filesystem.hpp>
 
 EG_EDITOR_BEGIN

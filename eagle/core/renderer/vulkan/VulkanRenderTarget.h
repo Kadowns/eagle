@@ -18,29 +18,33 @@ struct VulkanRenderTargetCreateInfo {
     VkPhysicalDevice physicalDevice;
     VkDevice device;
     VkFormat colorFormat, depthFormat;
-    VkRenderPass renderPass;
 };
 
-class VulkanRenderTarget : public RenderTarget{
+class VulkanRenderTarget : public RenderTarget {
 public:
-    explicit VulkanRenderTarget(uint32_t width, uint32_t height,
-                                const std::vector<RENDER_TARGET_ATTACHMENT> &attachments,
-                                VulkanRenderTargetCreateInfo &info);
-    ~VulkanRenderTarget();
+    virtual VkRenderPass& get_render_pass() = 0;
+    virtual VkFramebuffer& get_framebuffer() = 0;
+    virtual VkExtent2D& get_extent() = 0;
+    virtual std::vector<VkClearValue> get_clear_values() = 0;
+};
+
+
+class VulkanCustomRenderTarget : public VulkanRenderTarget {
+public:
+    explicit VulkanCustomRenderTarget(uint32_t width, uint32_t height, VkRenderPass &renderPass,
+                                      VulkanRenderTargetCreateInfo &info);
+    ~VulkanCustomRenderTarget();
 
     void create_resources();
     void create_framebuffer();
-
     void cleanup();
     void create(uint32_t width, uint32_t height);
-    VkExtent2D& get_extent() {return m_extent;}
 
-    virtual Handle<Image> get_image(size_t index) override;
-    virtual std::vector<Handle<Image>> get_images() override;
-
-    VkFramebuffer& get_framebuffer() {return m_framebuffer;}
-    //VkRenderPass & get_render_pass() {return m_renderPass;}
-    std::vector<VkClearValue> get_clear_values();
+    virtual Handle <Image> get_image() override;
+    virtual VkExtent2D& get_extent() override {return m_extent;}
+    virtual VkRenderPass& get_render_pass() override {return m_renderPass;}
+    virtual VkFramebuffer& get_framebuffer() override {return m_framebuffer;}
+    virtual std::vector<VkClearValue> get_clear_values() override;
 
 private:
 
@@ -50,12 +54,36 @@ private:
 private:
 
     VulkanRenderTargetCreateInfo m_info;
+    VkRenderPass& m_renderPass;
     Reference<VulkanImageAttachment> m_depthAttachment;
-    std::vector<Reference<VulkanImage>> m_images;
+    Reference<VulkanImage> m_image;
     VkFramebuffer m_framebuffer;
     VkExtent2D m_extent;
 
     bool m_cleared = true;
+};
+
+
+class VulkanMainRenderTarget : public VulkanRenderTarget {
+
+public:
+    VulkanMainRenderTarget(const VulkanRenderTargetCreateInfo &info, VkImage image, VkRenderPass& renderPass, uint32_t width, uint32_t height);
+
+    virtual ~VulkanMainRenderTarget() override;
+    virtual Handle<Image> get_image() override;
+    virtual VkRenderPass &get_render_pass() override;
+    virtual VkFramebuffer &get_framebuffer() override;
+    virtual VkExtent2D &get_extent() override;
+    virtual std::vector<VkClearValue> get_clear_values() override;
+
+private:
+    VulkanRenderTargetCreateInfo m_info;
+    VkRenderPass& m_renderPass;
+    Reference<VulkanImage> m_image;
+    Reference<VulkanImageAttachment> m_depthAttachment;
+    VkFramebuffer m_framebuffer;
+    VkExtent2D m_extent;
+
 
 };
 

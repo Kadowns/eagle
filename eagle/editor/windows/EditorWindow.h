@@ -5,7 +5,7 @@
 #ifndef EAGLE_EDITORWINDOW_H
 #define EAGLE_EDITORWINDOW_H
 
-#include "EditorCore.h"
+#include <eagle/editor/EditorCore.h>
 
 EG_EDITOR_BEGIN
 
@@ -16,7 +16,7 @@ public:
     virtual ~EditorWindow();
 
     virtual void update();
-    virtual void draw() {}
+    virtual void draw(Scope <CommandBuffer> &commandBuffer) {}
 
 protected:
     virtual void handle_update() = 0;

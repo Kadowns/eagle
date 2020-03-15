@@ -9,20 +9,15 @@
 
 EG_BEGIN
 
-enum class EG_DESCRIPTOR_TYPE{
-    UNIFORM_BUFFER = 0,
-    IMAGE_2D = 1
-};
-
 class DescriptorItem {
 public:
-    explicit DescriptorItem(EG_DESCRIPTOR_TYPE type): m_type(type){}
+    explicit DescriptorItem(DescriptorType type): m_type(type){}
     virtual ~DescriptorItem() {}
 
-    inline EG_DESCRIPTOR_TYPE type() const {return m_type;}
+    inline DescriptorType type() const {return m_type;}
 
 private:
-    EG_DESCRIPTOR_TYPE m_type;
+    DescriptorType m_type;
 };
 
 

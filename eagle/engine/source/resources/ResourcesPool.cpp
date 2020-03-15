@@ -4,10 +4,6 @@
 
 #include "eagle/engine/resources/ResourcesPool.h"
 
-#include <boost/filesystem.hpp>
-#include <stb_image.h>
-#include <eagle/engine/resources/Mesh.h>
-
 EG_ENGINE_BEGIN
 
 BaseResource::Family BaseResource::s_familyCounter = 0;

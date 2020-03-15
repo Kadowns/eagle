@@ -6,6 +6,7 @@
 #define EAGLE_INSPECTORWINDOW_H
 
 #include "EditorWindow.h"
+#include "ObjectEditor.h"
 
 EG_EDITOR_BEGIN
 
@@ -17,8 +18,11 @@ public:
 protected:
     virtual void handle_update() override;
 
-    void draw_entity_inspector(entityx::Entity e);
-    void draw_resource_inspector(BaseResource* resource);
+private:
+
+    Reference<BaseEditor> m_currentEditor;
+
+    TriggerEvent<Object*>::Listener m_onObjectSelectedCallback;
 
 };
 

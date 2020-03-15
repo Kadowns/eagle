@@ -7,8 +7,10 @@
 
 EG_BEGIN
 
-VulkanIndexBuffer::VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInfo &createInfo, void *indexData,
-                                     size_t indexCount, INDEX_BUFFER_TYPE indexType, EG_BUFFER_USAGE usage) :
+VulkanIndexBuffer::VulkanIndexBuffer(VkDevice device, VulkanCleaner &cleaner,
+                                     VulkanIndexBufferCreateInfo &createInfo, void *indexData, size_t indexCount,
+                                     IndexBufferType indexType, BufferUsage usage) :
+        VulkanCleanable(cleaner),
         m_device(device),
         m_physicalDevice(createInfo.physicalDevice),
         m_indexCount(indexCount),
@@ -24,7 +26,7 @@ VulkanIndexBuffer::VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInf
     }
 
     switch(m_usage){
-        case EG_BUFFER_USAGE::DYNAMIC:{
+        case BufferUsage::DYNAMIC:{
 
             if (indexCount == 0) {
                 return;
@@ -40,7 +42,7 @@ VulkanIndexBuffer::VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInf
                 buffer->flush();
             }
         } break;
-        case EG_BUFFER_USAGE::CONSTANT:{
+        case BufferUsage::CONSTANT:{
             VulkanBufferCreateInfo createBufferInfo = {};
             createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
             createBufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
@@ -119,7 +121,7 @@ void VulkanIndexBuffer::flush(uint32_t bufferIndex) {
 }
 
 void VulkanIndexBuffer::upload(void *data, uint32_t indexCount) {
-    if (m_usage == EG_BUFFER_USAGE::CONSTANT){
+    if (m_usage == BufferUsage::CONSTANT){
         EG_CORE_ERROR("Trying to flush data to a index buffer created with CONSTANT flag! To be able to flush data, be sure to create the buffer with DYNAMIC flag!");
         return;
     }
@@ -156,6 +158,7 @@ void VulkanIndexBuffer::upload(void *data, uint32_t indexCount) {
         for (int i = 0; i < m_buffers.size(); i++){
             m_dirtyBuffers.insert(i);
         }
+        m_cleaner.push(this);
     }
     m_indexCount = indexCount;
 }

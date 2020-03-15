@@ -5,32 +5,31 @@
 #ifndef EAGLE_SCENE_H
 #define EAGLE_SCENE_H
 
-#include "eagle/engine/EngineCore.h"
-#include "Camera.h"
+#include <eagle/engine/GlobalDefs.h>
+#include <eagle/engine/LightSettings.h>
+#include <eagle/engine/Camera.h>
+#include <eagle/engine/EntityManager.h>
+#include "ResourcesPool.h"
 
 EG_ENGINE_BEGIN
 
-class Scene {
+class Scene : public Resource<Scene> {
 public:
 
-    Scene(const std::string& name);
+    explicit Scene(const std::string& name);
     ~Scene();
 
     void update();
-    void render(const Reference<Camera> &camera);
+    void render(Scope <CommandBuffer> &commandBuffer, const Reference <Camera> &camera);
 
-    Reference<entityx::EntityManager>& entities() { return m_entities; }
-    const Reference<entityx::EntityManager>& entities() const { return m_entities; }
+    Reference<EntityManager>& entities() { return m_entities; }
+    const Reference<EntityManager>& entities() const { return m_entities; }
 
-    inline std::string name() { return m_name; }
 
 private:
+    Reference<EntityManager> m_entities;
+    LightSettings m_light;
 
-    std::string m_name;
-
-    entityx::EventManager m_events;
-    Reference<entityx::EntityManager> m_entities;
-    Reference<RenderingContext> m_renderingContext;
 };
 
 EG_ENGINE_END

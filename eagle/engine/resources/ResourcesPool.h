@@ -5,35 +5,32 @@
 #ifndef EAGLE_RESOURCEMANAGER_H
 #define EAGLE_RESOURCEMANAGER_H
 
-#include <eagle/engine/EngineCore.h>
-#include <boost/filesystem.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/type_index.hpp>
+#include <eagle/engine/GlobalDefs.h>
+#include <eagle/engine/Object.h>
 #include <unordered_map>
 #include <utility>
+
+#define EG_CREATE_HANDLE(type, obj) Eagle::Engine::ResourceHandle<type>(*dynamic_cast<Resource<type>*>(obj))
 
 EG_ENGINE_BEGIN
 
 using ResourceID = size_t;
 
-class BaseResource {
+class BaseResource : public Object{
 public:
     typedef size_t Family;
 
-    explicit BaseResource(const std::string& name) : m_name(name) {}
+    explicit BaseResource(const std::string& name) : Object(name) {}
 
     virtual ~BaseResource() {}
 
-    virtual std::string type_name() const = 0;
-
-    const std::string& name() const { return m_name; }
+    virtual ResourceID resource_id() const = 0;
 
 protected:
 
     static Family s_familyCounter;
 private:
-    std::string m_name;
+
 };
 
 template<typename T>
@@ -41,10 +38,15 @@ class Resource : public BaseResource {
 public:
     virtual ~Resource() {}
 
-    explicit Resource(const std::string name) : BaseResource(name) {}
+    explicit Resource(const std::string& name) : BaseResource(name) {}
 
     static std::string static_type_name() {
         return boost::typeindex::type_id<T>().pretty_name();
+    }
+
+    static BaseResource::Family family(){
+        static BaseResource::Family family = s_familyCounter++;
+        return family;
     }
 
     virtual std::string type_name() const override {
@@ -52,25 +54,26 @@ public:
         return name;
     }
 
-    ResourceID id() const { return m_id; }
+    virtual ResourceID resource_id() const override final {
+        return m_resourceId;
+    }
 
 private:
     friend class ResourcesPool;
 
-    ResourceID m_id;
-
-    static BaseResource::Family family(){
-        static BaseResource::Family family = s_familyCounter++;
-        return family;
-    }
+    //unique id for this resource (should remain the same after serializing)
+    ResourceID m_resourceId;
 };
 
 template <typename R>
 class ResourceHandle {
 public:
 
-    ResourceHandle(ResourceID id) : m_id(id) {}
-    ResourceHandle(const Resource<R>& resource) : ResourceHandle(resource.id()) {}
+    ResourceHandle(ResourceID id) : m_resourceId(id) {}
+    ResourceHandle() : ResourceHandle(0) {}
+    ResourceHandle(const Resource<R>& resource) : m_resourceId(resource.resource_id()) {}
+    ResourceHandle(const BaseResource& resource) : m_resourceId(resource.resource_id()){}
+    ResourceHandle(const Object& object) : m_resourceId(dynamic_cast<const BaseResource&>(object).resource_id()){}
 
     bool valid() const;
     operator bool() const;
@@ -86,24 +89,24 @@ public:
 
 
     bool operator == (const ResourceHandle<R> &other) const {
-        return m_id == other.m_id;
+        return m_resourceId == other.m_resourceId;
     }
 
     bool operator != (const ResourceHandle<R> &other) const {
         return !(*this == other);
     }
 
-    ResourceID& id() { return m_id; }
-    const ResourceID& id() const { return m_id; }
+    ResourceID& id() { return m_resourceId; }
+    const ResourceID& id() const { return m_resourceId; }
 
 private:
     friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version){
-        ar & m_id;
+        ar & m_resourceId;
     }
 
-    ResourceID m_id;
+    ResourceID m_resourceId;
 };
 
 class ResourcesPool {
@@ -130,11 +133,19 @@ public:
             throw std::runtime_error("Id already present in map!");
         }
 
-        resource->m_id = id;
+        resource->m_resourceId = id;
 
         //invokes loading method with arguments, and stores the result in the correct map
         m_resources[family][id] = resource;
     }
+
+    template<typename R>
+    size_t count(){
+        static_assert(std::is_base_of<Resource<R>, R>());
+        BaseResource::Family family = Resource<R>::family();
+        return m_resources[family].size();
+    }
+
 private:
 
     template<typename R>
@@ -158,24 +169,16 @@ private:
         return family < m_resources.size() && m_resources[family].find(id) != m_resources[family].end();
     }
 
-
-
 private:
 
-    static ResourcesPool* s_instance;
-
-    std::string m_root;
-    std::vector<boost::filesystem::path> m_paths;
-
     std::vector<std::unordered_map<ResourceID, BaseResource*>> m_resources;
-
 
 };
 
 
 template<typename R>
 inline bool ResourceHandle<R>::valid() const {
-    return ResourcesPool::instance().template has_resource<R>(m_id);
+    return ResourcesPool::instance().template has_resource<R>(m_resourceId);
 }
 
 template<typename R>
@@ -185,32 +188,32 @@ inline ResourceHandle<R>::operator bool() const {
 
 template<typename R>
 inline R *ResourceHandle<R>::operator->() {
-    return ResourcesPool::instance().template get_resource_ptr<R>(m_id);
+    return ResourcesPool::instance().template get_resource_ptr<R>(m_resourceId);
 }
 
 template<typename R>
 inline const R *ResourceHandle<R>::operator->() const {
-    return ResourcesPool::instance().template get_resource_ptr<R>(m_id);
+    return ResourcesPool::instance().template get_resource_ptr<R>(m_resourceId);
 }
 
 template<typename R>
 inline R& ResourceHandle<R>::operator*() {
-    return *ResourcesPool::instance().template get_resource_ptr<R>(m_id);
+    return *ResourcesPool::instance().template get_resource_ptr<R>(m_resourceId);
 }
 
 template<typename R>
 inline const R& ResourceHandle<R>::operator*() const {
-    return *ResourcesPool::instance().template get_resource_ptr<R>(m_id);
+    return *ResourcesPool::instance().template get_resource_ptr<R>(m_resourceId);
 }
 
 template<typename R>
 inline R *ResourceHandle<R>::get() {
-    return ResourcesPool::instance().template get_resource_ptr<R>(m_id);
+    return ResourcesPool::instance().template get_resource_ptr<R>(m_resourceId);
 }
 
 template<typename R>
 inline const R *ResourceHandle<R>::get() const {
-    return ResourcesPool::instance().template get_resource_ptr<R>(m_id);
+    return ResourcesPool::instance().template get_resource_ptr<R>(m_resourceId);
 }
 
 EG_ENGINE_END

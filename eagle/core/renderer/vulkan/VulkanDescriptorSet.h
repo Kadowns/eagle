@@ -6,6 +6,7 @@
 #include "VulkanShader.h"
 #include "VulkanUniformBuffer.h"
 #include "VulkanTexture2D.h"
+#include "VulkanCleaner.h"
 
 EG_BEGIN
 
@@ -15,22 +16,30 @@ struct VulkanDescriptorSetCreateInfo {
 };
 
 
-class VulkanDescriptorSet : public DescriptorSet {
+class VulkanDescriptorSet : public DescriptorSet, public VulkanCleanable {
 public:
     VulkanDescriptorSet(const Reference<VulkanDescriptorSetLayout> &descriptorSetLayout,
                         const std::vector<Reference<DescriptorItem>> &descriptorItems,
+                        VulkanCleaner& cleaner,
                         VulkanDescriptorSetCreateInfo createInfo);
     ~VulkanDescriptorSet();
 
     void cleanup();
+    void update_descriptor_sets();
     void create_descriptor_sets();
-    void create_descriptor_pool();
+
+    virtual void update(const std::vector<Reference<DescriptorItem>> &descriptorItems) override;
     inline std::vector<VkDescriptorSet>& get_descriptors() {return m_descriptorSets;}
-    
+
+    virtual bool is_dirty() const override;
+
+    virtual void flush(uint32_t index) override;
+
 private:
 
     VkDescriptorPool m_descriptorPool;
     std::vector<VkDescriptorSet> m_descriptorSets;
+    std::set<int> m_dirtyDescriptors;
     Handle<VulkanDescriptorSetLayout> m_descriptorSetLayout;
     std::vector<Reference<DescriptorItem>> m_descriptorItems;
     VulkanDescriptorSetCreateInfo m_info;

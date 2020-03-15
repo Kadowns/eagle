@@ -12,7 +12,7 @@ EG_BEGIN
 
 bool VulkanShaderCompiler::m_glslangIntitialized = false;
 
-std::vector<uint32_t> VulkanShaderCompiler::compile_glsl(const std::string &filename, EG_SHADER_STAGE stage) {
+std::vector<uint32_t> VulkanShaderCompiler::compile_glsl(const std::string &filename, ShaderStage stage) {
 
     //initializes glslang
     if (!m_glslangIntitialized) {
@@ -107,14 +107,14 @@ std::string VulkanShaderCompiler::get_suffix(const std::string &name) {
     return (pos == std::string::npos) ? "" : name.substr(name.rfind('.') + 1);
 }
 
-EShLanguage VulkanShaderCompiler::get_shader_stage(EG_SHADER_STAGE stage) {
+EShLanguage VulkanShaderCompiler::get_shader_stage(ShaderStage stage) {
     switch(stage){
-        case EG_SHADER_STAGE::VERTEX:return EShLangVertex;
-        case EG_SHADER_STAGE::FRAGMENT:return EShLangFragment;
-        case EG_SHADER_STAGE::COMPUTE:return EShLangCompute;
-        case EG_SHADER_STAGE::GEOMETRY:return EShLangGeometry;
-        case EG_SHADER_STAGE::TESSALATION_CONTROL:return EShLangTessControl;
-        case EG_SHADER_STAGE::TESSALATION_EVALUATE:return EShLangTessEvaluation;
+        case ShaderStage::VERTEX:return EShLangVertex;
+        case ShaderStage::FRAGMENT:return EShLangFragment;
+        case ShaderStage::COMPUTE:return EShLangCompute;
+        case ShaderStage::GEOMETRY:return EShLangGeometry;
+        case ShaderStage::TESSALATION_CONTROL:return EShLangTessControl;
+        case ShaderStage::TESSALATION_EVALUATE:return EShLangTessEvaluation;
     }
 }
 

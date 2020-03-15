@@ -7,8 +7,16 @@
 
 EG_BEGIN
 
-VulkanUniformBuffer::VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createInfo, size_t size, void* data) :
-        UniformBuffer(size), m_info(createInfo), m_data(data) {
+VulkanUniformBuffer::VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createInfo, VulkanCleaner &cleaner,
+                                         size_t size, void *data) :
+        UniformBuffer(size), VulkanCleanable(cleaner), m_info(createInfo) {
+
+    if (data != nullptr){
+        memcpy(m_bytes.data(), data, size);
+    }else{
+        memset(m_bytes.data(), 0, size);
+    }
+
     create_uniform_buffer();
 }
 
@@ -18,10 +26,12 @@ VulkanUniformBuffer::~VulkanUniformBuffer() {
 
 void
 VulkanUniformBuffer::flush(uint32_t bufferIndex) {
-    m_buffers[bufferIndex]->copy_to(m_data, m_size);
-    if (is_dirty()){
-        m_dirtyBuffers.erase(std::find(m_dirtyBuffers.begin(), m_dirtyBuffers.end(), bufferIndex));
+
+    if (!is_dirty()) {
+        return;
     }
+    m_buffers[bufferIndex]->copy_to(m_bytes.data(), m_bytes.size());
+    m_dirtyBuffers.erase(bufferIndex);
 }
 
 void VulkanUniformBuffer::create_uniform_buffer() {
@@ -36,8 +46,8 @@ void VulkanUniformBuffer::create_uniform_buffer() {
 
     for (size_t i = 0; i < m_info.bufferCount; i++) {
         VulkanBuffer::create_buffer(m_info.physicalDevice, m_info.device, m_buffers[i],
-                                    bufferCreateInfo, m_size, m_data);
-        m_buffers[i]->map(m_size);
+                                    bufferCreateInfo, m_bytes.size(), m_bytes.data());
+        m_buffers[i]->map(m_bytes.size());
     }
     m_cleared = false;
 }
@@ -52,19 +62,28 @@ void VulkanUniformBuffer::cleanup() {
     m_cleared = true;
 }
 
-void VulkanUniformBuffer::upload_data(void *data) {
-    m_data = data;
-    m_dirtyBuffers.resize(m_buffers.size());
-    for (size_t i = 0; i < m_dirtyBuffers.size(); i++){
-        m_dirtyBuffers[i] = i;
+void VulkanUniformBuffer::update() {
+    if (!m_dirtyBytes){
+        return;
     }
+
+    m_dirtyBuffers.clear();
+    for (int i = 0; i < m_buffers.size(); i++){
+        m_dirtyBuffers.insert(i);
+    }
+    m_cleaner.push(this);
+    m_dirtyBytes = false;
 }
 
-bool VulkanUniformBuffer::is_dirty() {
+bool VulkanUniformBuffer::is_dirty() const {
     return !m_dirtyBuffers.empty();
+}
+
+void VulkanUniformBuffer::set_bytes(void* data, size_t size, size_t offset) {
+    assert(size + offset <= m_bytes.size());
+    memcpy(m_bytes.data() + offset, data, size);
+    m_dirtyBytes = true;
 }
 
 
 EG_END
-
-

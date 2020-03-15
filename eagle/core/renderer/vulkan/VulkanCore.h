@@ -5,7 +5,7 @@
 #ifndef EAGLE_VULKANCORE_H
 #define EAGLE_VULKANCORE_H
 
-#include "eagle/core/Core.h"
+#include "eagle/core/GlobalDefinitions.h"
 #include "eagle/core/renderer/RenderingCore.h"
 #include <vulkan/vulkan.h>
 
@@ -31,9 +31,9 @@ public:
         return m_callInfo;
     }
 
-private:
-
     static VkCall m_callInfo;
+
+private:
 
 };
 

@@ -5,13 +5,12 @@
 #ifndef EAGLE_EDITORLAYER_H
 #define EAGLE_EDITORLAYER_H
 
-#include <eagle/engine/resources/ResourcesPool.h>
-#include "../engine/Scene.h"
-#include "EditorWindow.h"
-#include "../engine/EngineCore.h"
+#include "EditorCore.h"
+#include "eagle/editor/windows/EditorWindow.h"
 
 
-EG_ENGINE_BEGIN
+
+EG_EDITOR_BEGIN
 
 class EditorLayer : public Eagle::Layer {
 
@@ -26,13 +25,13 @@ public:
 
     virtual void handle_attach() override;
     virtual void handle_update() override;
-    virtual void handle_draw() override;
     virtual void handle_deattach() override;
     virtual void handle_event(Event& e) override;
 
 private:
 
     void submit_buffers();
+    void draw();
     void update_mouse_cursor();
     bool handle_window_resized(WindowResizedEvent &e);
 
@@ -53,14 +52,10 @@ private:
     Handle<IndexBuffer> m_indexBuffer;
     Handle<VertexBuffer> m_vertexBuffer;
 
-    //ResourcesPool m_resources;
-
     std::vector<Reference<EditorWindow>> m_editors;
-
-    Reference<RenderingContext> m_renderingContext;
 
 };
 
-EG_ENGINE_END
+EG_EDITOR_END
 
 #endif //EAGLE_EDITORLAYER_H

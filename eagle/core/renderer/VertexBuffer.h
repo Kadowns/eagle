@@ -6,7 +6,7 @@
 #define EAGLE_VERTEXBUFFER_H
 
 #include <vector>
-#include "eagle/core/Core.h"
+#include "eagle/core/GlobalDefinitions.h"
 #include "RenderingCore.h"
 
 EG_BEGIN
@@ -19,6 +19,7 @@ public:
 
     virtual uint32_t get_vertices_count() = 0;
     virtual uint32_t get_stride() = 0;
+    virtual void upload(void* data, uint32_t elementCount) = 0;
 
 };
 

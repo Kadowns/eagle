@@ -7,6 +7,8 @@
 
 #include "eagle/core/renderer/UniformBuffer.h"
 #include "VulkanBuffer.h"
+#include "VulkanCleaner.h"
+
 
 EG_BEGIN
 
@@ -16,29 +18,30 @@ struct VulkanUniformBufferCreateInfo{
     size_t bufferCount;
 };
 
-class VulkanUniformBuffer : public UniformBuffer {
+class VulkanUniformBuffer : public UniformBuffer, public VulkanCleanable {
 
 public:
 
-    explicit VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createInfo, size_t size, void *data);
+    explicit VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createInfo, VulkanCleaner &cleaner,
+                                 size_t size, void *data);
     virtual ~VulkanUniformBuffer();
 
-    virtual void flush(uint32_t bufferIndex) override;
     inline std::vector<Reference<VulkanBuffer>>& get_buffers() { return m_buffers; }
-
     void create_uniform_buffer();
-    void cleanup();
 
-    void upload_data(void* data);
-    bool is_dirty();
+    void cleanup();
+    virtual void flush(uint32_t bufferIndex) override;
+    virtual void set_bytes(void *data, size_t size, size_t offset) override;
+    virtual void update() override;
+    virtual bool is_dirty() const override;
 
 private:
 
     VulkanUniformBufferCreateInfo m_info;
     std::vector<Reference<VulkanBuffer>> m_buffers;
-    std::vector<uint32_t> m_dirtyBuffers;
-    void* m_data = nullptr;
+    std::set<int> m_dirtyBuffers;
     bool m_cleared = true;
+    bool m_dirtyBytes = false;
 
 };
 

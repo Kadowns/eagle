@@ -6,7 +6,7 @@
 #ifndef EAGLE_LAYER_H
 #define EAGLE_LAYER_H
 
-#include "Core.h"
+#include "GlobalDefinitions.h"
 #include "events/Event.h"
 
 EG_BEGIN
@@ -20,7 +20,6 @@ public:
     virtual void handle_attach()        {}
     virtual void handle_deattach()      {}
     virtual void handle_update()        {}
-    virtual void handle_draw()          {}
     virtual void handle_event(Event& e) {}
 };
 

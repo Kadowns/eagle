@@ -13,15 +13,15 @@ class MouseMoveEvent : public Event {
 
 public:
 
-    MouseMoveEvent(float x, float y)
+    MouseMoveEvent(double x, double y)
         : m_x(x), m_y(y){}
 
-    float get_x() const {return m_x;}
-    float get_y() const {return m_y;}
+    double get_x() const {return m_x;}
+    double get_y() const {return m_y;}
 
 private:
 
-    float m_x, m_y;
+    double m_x, m_y;
 
 };
 

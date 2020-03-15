@@ -5,9 +5,10 @@
 #ifndef EAGLE_SERIALIZER_H
 #define EAGLE_SERIALIZER_H
 
-#include "EditorCore.h"
+#include "GlobalDefs.h"
+#include <eagle/engine/resources/Scene.h>
 
-EG_EDITOR_BEGIN
+EG_ENGINE_BEGIN
 
 class Serializer {
 
@@ -22,6 +23,6 @@ private:
 
 };
 
-EG_EDITOR_END
+EG_ENGINE_END
 
 #endif //EAGLE_SERIALIZER_H

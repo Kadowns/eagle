@@ -10,7 +10,7 @@
 #include "eagle/core/renderer/VertexBuffer.h"
 #include "eagle/core/renderer/VertexLayout.h"
 #include "VulkanBuffer.h"
-
+#include "VulkanCleaner.h"
 
 EG_BEGIN
 
@@ -26,22 +26,24 @@ struct VulkanVertexBufferCreateInfo {
     VkQueue graphicsQueue;
 };
 
-class VulkanVertexBuffer : public VertexBuffer {
+class VulkanVertexBuffer : public VertexBuffer, public VulkanCleanable {
 
 public:
 
-    VulkanVertexBuffer(VkDevice device, VulkanVertexBufferCreateInfo &createInfo, EG_BUFFER_USAGE usageFlags);
+    VulkanVertexBuffer(VkDevice device, VulkanCleaner &cleaner, VulkanVertexBufferCreateInfo &createInfo,
+                       BufferUsage usageFlags);
     virtual ~VulkanVertexBuffer();
 
 
     virtual uint32_t get_vertices_count() override;
     virtual uint32_t get_stride() override;
 
-    bool is_dirty() const;
-    void flush(uint32_t bufferIndex);
-    void upload(void* data, uint32_t elementCount);
+    virtual bool is_dirty() const override;
+    virtual void flush(uint32_t bufferIndex) override;
+    virtual void upload(void* data, uint32_t elementCount) override;
+
     inline VulkanBuffer& get_buffer(uint32_t bufferIndex) {
-        if (m_usage == EG_BUFFER_USAGE::CONSTANT){
+        if (m_usage == BufferUsage::CONSTANT){
             return *(m_buffers[0]);
         }
         return *(m_buffers[bufferIndex]);
@@ -52,7 +54,7 @@ private:
     VkPhysicalDevice m_physicalDevice;
     VertexLayout m_layout;
     uint32_t m_elementCount;
-    EG_BUFFER_USAGE m_usage;
+    BufferUsage m_usage;
     char* m_data =  nullptr;
 
     std::vector<Reference<VulkanBuffer>> m_buffers;

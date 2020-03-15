@@ -20,8 +20,7 @@ public:
 
 public:
 
-    VulkanShader(const std::string &vertFilePath, const std::string &fragFilePath,
-                 const std::vector<Reference<VulkanDescriptorSetLayout>> &descriptorSetLayouts,
+    VulkanShader(const std::unordered_map<ShaderStage, std::string> &shaderPaths,
                  const ShaderPipelineInfo &pipelineInfo, const VulkanShaderCreateInfo &createInfo);
 
     ~VulkanShader();
@@ -30,14 +29,19 @@ public:
 
     virtual void cleanup_pipeline() override;
 
+    virtual const std::vector<Handle<DescriptorSetLayout>> get_descriptor_set_layouts() override;
+    virtual const Handle<DescriptorSetLayout> get_descriptor_set_layout(uint32_t index) override;
+
     VkPipeline &get_pipeline();
 
     VkPipelineLayout &get_layout();
 
+    inline const Reference<VulkanDescriptorSetLayout>& descriptor_set_layout(uint32_t index) { return m_descriptorSetLayouts[index]; }
+    inline const std::vector<Reference<VulkanDescriptorSetLayout>>& descriptor_set_layouts() { return m_descriptorSetLayouts; }
+
 private:
 
-    void create_pipeline_layout(
-            const std::vector<Reference<VulkanDescriptorSetLayout>> &descriptorSetLayouts);
+    void create_pipeline_layout();
 
     VkShaderModule create_shader_module(const std::vector<uint32_t> &code);
 private:
@@ -49,6 +53,7 @@ private:
     VkPipeline m_graphicsPipeline;
     VkVertexInputBindingDescription m_inputBinding;
     uint32_t m_outputAttachmentCount = 0;
+    std::vector<Reference<VulkanDescriptorSetLayout>> m_descriptorSetLayouts;
     std::vector<VkVertexInputAttributeDescription> m_inputAttributes;
     std::vector<uint32_t> m_vertShaderCode, m_fragShaderCode;
 

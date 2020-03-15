@@ -15,22 +15,22 @@ EG_BEGIN
 class VertexLayout {
 
 public:
-    VertexLayout(size_t elementCount, std::initializer_list<EG_FORMAT> components);
-    VertexLayout(size_t elementCount, std::vector<Eagle::EG_FORMAT> components);
+    VertexLayout(size_t elementCount, std::initializer_list<Format> components);
+    VertexLayout(size_t elementCount, std::vector<Eagle::Format> components);
     ~VertexLayout();
 
     size_t get_stride();
     size_t get_component_count();
     size_t get_element_count();
-    std::vector<EG_FORMAT>& get_components();
-    EG_FORMAT get_component(uint32_t index);
+    std::vector<Format>& get_components();
+    Format get_component(uint32_t index);
 
-    inline EG_FORMAT operator[](uint32_t index){
+    inline Format operator[](uint32_t index){
         return m_components[index];
     }
 
 private:
-    std::vector<EG_FORMAT> m_components;
+    std::vector<Format> m_components;
     size_t m_elementCount;
 };
 

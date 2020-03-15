@@ -3,8 +3,6 @@
 //
 
 #include <eagle/editor/windows/SceneWindow.h>
-#include <eagle/editor/Serializer.h>
-#include <eagle/editor/EditorSceneManager.h>
 #include <imgui/imgui_internal.h>
 
 EG_EDITOR_BEGIN
@@ -16,24 +14,24 @@ SceneWindow::SceneWindow() :
     m_camera = std::make_shared<Camera>(60.0f, 720.0f, 480.0f, 0.1f, 1000.0f,
                                         glm::vec3(0.0f, 1.0f, 30.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
+    m_camera->set_view(m_cameraTransform.position, m_cameraTransform.position + m_cameraTransform.front(),
+                       m_cameraTransform.up());
 
-
-    auto renderingContext = Application::instance().get_window()->get_rendering_context();
 
     DescriptorBindingDescription binding = {};
     binding.binding = 0;
-    binding.shaderStage = EgShaderStage::FRAGMENT;
-    binding.descriptorType = EgDescriptorType::IMAGE_2D;
+    binding.shaderStage = ShaderStage::FRAGMENT;
+    binding.descriptorType = DescriptorType::IMAGE_2D;
+
+    RenderingContext& context = Renderer::instance().context();
+
+    m_descriptorLayout = context.create_descriptor_set_layout({binding});
+
+    m_descriptor = context.create_descriptor_set(m_descriptorLayout.lock(),
+                                                                  {m_camera->render_target()->get_image().lock()});
 
 
-    m_descriptorLayout = renderingContext->create_descriptor_set_layout({binding});
 
-    m_descriptor = renderingContext->create_descriptor_set(m_descriptorLayout.lock(),
-                                                                  {m_camera->render_target()->get_image(0).lock()});
-
-
-
-    //SceneManager::load("scene");
 }
 
 SceneWindow::~SceneWindow() {
@@ -45,8 +43,9 @@ void SceneWindow::handle_update() {
 
     static auto lastFrameTime = std::chrono::high_resolution_clock::now();
     auto currentTime = std::chrono::high_resolution_clock::now();
-    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - lastFrameTime).count();
+    double time = std::chrono::duration<double, std::chrono::seconds::period>(currentTime - lastFrameTime).count();
     lastFrameTime = currentTime;
+
 
     ImGuiIO &io = ImGui::GetIO();
     ImVec2 vMin = ImGui::GetWindowContentRegionMin();
@@ -62,7 +61,7 @@ void SceneWindow::handle_update() {
         ImGui::EndDragDropTarget();
     }
 
-    if (EditorSceneManager::instance().is_active()) {
+    if (SceneManager::instance().is_active()) {
 
 
         ImVec2 region(vMax.x - vMin.x, vMax.y - vMin.y);
@@ -94,20 +93,20 @@ void SceneWindow::handle_update() {
 
             speed += Input::instance().mouse_scroll_delta().second;
 
-            m_cameraTransform.position += time * speed * displacement;
+            m_cameraTransform.position += (float)time * speed * displacement;
 
             if (Input::instance().mouse_button_down(EG_MOUSE_BUTTON_RIGHT)) {
                 io.MousePos.x = region.x / 2;
                 io.MousePos.y = region.y / 2;
-                Application::instance().get_window()->set_cursor_visible(false);
+                Application::instance().window().set_cursor_visible(false);
 
                 auto mousePosition = Input::instance().mouse_move_delta();
-                glm::vec2 mouseDelta = glm::vec2(mousePosition.first, mousePosition.second) * time * 80.0f;
+                glm::vec2 mouseDelta = glm::vec2(mousePosition.first, mousePosition.second) * 80.0f * (float)time;
 
                 m_cameraTransform.rotation *= glm::quat(glm::radians(glm::vec3(mouseDelta.y, -mouseDelta.x, 0)));
                 glm::normalize(m_cameraTransform.rotation);
             } else {
-                Application::instance().get_window()->set_cursor_visible(true);
+                Application::instance().window().set_cursor_visible(true);
             }
 
             m_camera->set_view(m_cameraTransform.position, m_cameraTransform.position + m_cameraTransform.front(),
@@ -123,8 +122,25 @@ void SceneWindow::handle_update() {
                                               ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings |
                                               ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav)) {
 
+        static int frameCount = 0;
+        static float fps = 60;
+        static float accumulatedTime = 0;
 
-        ImGui::Text("FPS: %f", 1 / time);
+        accumulatedTime += time;
+        frameCount++;
+
+        if (accumulatedTime > 0.25f){
+            float avg = accumulatedTime / frameCount;
+            fps = 1 / avg;
+            frameCount = 0;
+            accumulatedTime = 0;
+        }
+
+        ImGui::Text("FPS: %f", fps);
+        ImGui::Text("Delta time: %f", time);
+
+        auto mousePosition = Input::instance().mouse_move_delta();
+        ImGui::Text("Mouse delta: {%f, %f}", mousePosition.first * 80, mousePosition.second * 80);
 
         if (ImGui::Button("Save scene")) {
             Serializer serializer(ProjectRoot + "/scene.txt");
@@ -136,9 +152,9 @@ void SceneWindow::handle_update() {
 
 
 
-void SceneWindow::draw() {
-    if (EditorSceneManager::instance().is_active()){
-        SceneManager::current_scene().render(m_camera);
+void SceneWindow::draw(Scope<CommandBuffer> &commandBuffer) {
+    if (SceneManager::instance().is_active()){
+        SceneManager::current_scene().render(commandBuffer, m_camera);
     }
 }
 

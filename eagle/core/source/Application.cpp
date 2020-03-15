@@ -34,7 +34,6 @@ void Application::handle_event(Reference<Event> e){
 void Application::dispatch_events() {
     while (!m_eventQueue.empty()){
         auto& e = m_eventQueue.front();
-        m_dispatcher.dispatch(*e);
         for (auto& layer : m_layerStack){
             layer->handle_event(*e);
             if ((*e).is_handled())
@@ -52,51 +51,16 @@ void Application::run() {
     m_window->init();
     m_window->set_event_callback(BIND_EVENT_FN(Application::handle_event));
 
-    m_dispatcher.add_listener<WindowCloseEvent>([&](Event& e){
-        return window_close_event(*(WindowCloseEvent*)&e);
-    });
-
-    m_dispatcher.add_listener<MouseMoveEvent>([&](Event& e){
-        return mouse_move_event(*(MouseMoveEvent*)&e);
-    });
-
-    m_dispatcher.add_listener<MouseButtonEvent>([&](Event& e){
-        return mouse_button_event(*(MouseButtonEvent*)&e);
-    });
-
-    m_dispatcher.add_listener<MouseScrolledEvent>([&](Event& e){
-        return mouse_scroll_event(*(MouseScrolledEvent*)&e);
-    });
-
-    m_dispatcher.add_listener<KeyEvent>([&](Event& e){
-        return key_event(*(KeyEvent*)&e);
-    });
-
     m_layerStack.init();
 
-    auto renderingContext = m_window->get_rendering_context();
-
-    while(!m_shouldClose){
-        m_window->handle_events();
+    while(!m_quit){
+        m_window->pool_events();
 
         dispatch_events();
 
         for (auto& layer : m_layerStack){
             layer->handle_update();
         }
-        Input::instance().refresh();
-
-        if (!renderingContext->begin_draw_commands()){
-            //failed to present image, skip all rendering for this frame
-            continue;
-        }
-
-        for (auto layer = m_layerStack.end(); layer != m_layerStack.begin();){
-            (*--layer)->handle_draw();
-        }
-        renderingContext->end_draw_commands();
-
-        m_window->refresh();
     }
 
     m_layerStack.deinit();
@@ -118,11 +82,6 @@ void Application::layer_pop(Reference<Layer> layer) {
     m_layerStack.pop_layer(layer);
 }
 
-bool Application::window_close_event(WindowCloseEvent& e) {
-    m_shouldClose = true;
-    return false;
-}
-
 void Application::layer_emplace(std::vector<Reference<Layer>> layers) {
     m_layerStack.emplace(layers);
 }
@@ -131,24 +90,8 @@ void Application::event_emplace_back(Reference<Event> e) {
     m_eventQueue.emplace(e);
 }
 
-bool Application::key_event(KeyEvent &e) {
-    Input::instance().handle_key(e);
-    return false;
-}
-
-bool Application::mouse_button_event(MouseButtonEvent &e) {
-    Input::instance().handle_mouse_button(e);
-    return false;
-}
-
-bool Application::mouse_scroll_event(MouseScrolledEvent &e) {
-    Input::instance().handle_mouse_scroll(e);
-    return false;
-}
-
-bool Application::mouse_move_event(MouseMoveEvent &e) {
-    Input::instance().handle_mouse_move(e);
-    return false;
+void Application::quit() {
+    m_quit = true;
 }
 
 EG_END

@@ -7,7 +7,7 @@
 
 #include <vector>
 
-#include "eagle/core/Core.h"
+#include "eagle/core/GlobalDefinitions.h"
 #include "RenderingCore.h"
 #include "Image.h"
 
@@ -19,7 +19,8 @@ struct Texture2DCreateInfo{
     int width, height;
     int channels;
     int mipLevels, layerCount;
-    EG_FORMAT format;
+    Format format;
+    Filter filter = Filter::LINEAR;
     std::vector<Pixel> pixels;
 };
 
@@ -31,6 +32,7 @@ public:
         m_mipLevels(textureInfo.mipLevels),
         m_layerCount(textureInfo.layerCount),
         m_format(textureInfo.format),
+        m_filter(textureInfo.filter),
         m_pixels(std::move(textureInfo.pixels)){}
     virtual ~Texture2D() = default;
     inline const int get_mip_levels()             const { return m_mipLevels;   }
@@ -46,7 +48,8 @@ public:
 protected:
     int m_channels;
     int m_mipLevels, m_layerCount;
-    EG_FORMAT m_format;
+    Format m_format;
+    Filter m_filter;
     std::vector<Pixel> m_pixels;
 
 };

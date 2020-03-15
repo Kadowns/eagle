@@ -8,7 +8,7 @@
 #include <eagle/engine/GlobalDefs.h>
 #include <eagle/engine/resources/Mesh.h>
 #include <eagle/engine/resources/Material.h>
-#include <eagle/engine/ecs/EntityManager.h>
+#include <eagle/engine/EntityManager.h>
 
 EG_ENGINE_BEGIN
 

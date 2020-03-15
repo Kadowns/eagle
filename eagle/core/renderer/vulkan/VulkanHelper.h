@@ -22,7 +22,7 @@ public:
     find_memory_type(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
     static void
-    create_image_sampler(VkDevice device, VkSampler &sampler, VkSamplerAddressMode wrapMode);
+    create_image_sampler(VkDevice device, VkSampler &sampler, VkSamplerAddressMode wrapMode, VkFilter filter);
 
     static VkCommandBuffer
     begin_single_time_commands(VkDevice device, VkCommandPool commandPool);
@@ -40,8 +40,6 @@ public:
     transition_image_layout(VkDevice device, VkCommandPool commandPool, VkQueue graphicsQueue, VkImage image,
                             VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout,
                             VkImageSubresourceRange subresourceRange);
-
-    static VkFormat get_vk_format(EG_FORMAT format);
 
 };
 

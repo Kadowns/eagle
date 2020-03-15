@@ -8,7 +8,7 @@
 #include <memory>
 #include <queue>
 
-#include "Core.h"
+#include "GlobalDefinitions.h"
 #include "LayerStack.h"
 #include "Log.h"
 #include "events/Event.h"
@@ -40,6 +40,7 @@ public:
     void run();
     void handle_event(Reference<Event> e);
     void dispatch_events();
+    void quit();
     void event_emplace_back(Reference<Event> e);
     void layer_emplace_back(Reference<Layer> layer);
     void layer_emplace_front(Reference<Layer> layer);
@@ -47,27 +48,21 @@ public:
     void layer_pop(Reference<Layer> layer);
 
 
-    Reference<Window> get_window() { return m_window; }
+    inline Window& window() { return *m_window; }
 
 private:
 
     using EventQueue = std::queue<Reference<Event>>;
 
-    bool window_close_event(WindowCloseEvent& e);
-    bool key_event(KeyEvent& e);
-    bool mouse_button_event(MouseButtonEvent& e);
-    bool mouse_scroll_event(MouseScrolledEvent& e);
-    bool mouse_move_event(MouseMoveEvent& e);
-
     static Application* m_instance;
 
     Reference<Window> m_window;
 
-    bool m_shouldClose = false;
+    bool m_quit = false;
 
     LayerStack m_layerStack;
     EventQueue m_eventQueue;
-    EventDispatcher m_dispatcher;
+
 
 };
 

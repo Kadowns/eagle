@@ -2,8 +2,8 @@
 // Created by Novak on 26/06/2019.
 //
 
-#ifndef EAGLE_ENGINECORE_H
-#define EAGLE_ENGINECORE_H
+#ifndef EAGLE_GLOBALDEFS_H
+#define EAGLE_GLOBALDEFS_H
 
 #include <eagle/core/Core.h>
 
@@ -37,4 +37,4 @@ const std::string ProjectRoot = PROJECT_ROOT;
 
 EG_ENGINE_END
 
-#endif //EAGLE_ENGINECORE_H
+#endif //EAGLE_GLOBALDEFS_H

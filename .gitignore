@@ -72,5 +72,6 @@ fabric.properties
 external/glslang/*
 !external/glslang/include/
 
-external/boost/*
+external/*
+*.a
 

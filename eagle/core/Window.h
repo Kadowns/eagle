@@ -8,9 +8,8 @@
 #include <memory>
 #include <queue>
 
-#include "Core.h"
+#include "GlobalDefinitions.h"
 #include "events/Event.h"
-#include "renderer/RenderingContext.h"
 
 
 #define BIND_EVENT_FN(func) std::bind(&func, this, std::placeholders::_1)
@@ -23,15 +22,14 @@ public:
 
     using PFN_EventCallback = std::function<void(Reference<Event>)>;
 
-    Window(RenderingContext* renderingContext, uint32_t width, uint32_t height);
+    Window(uint32_t width, uint32_t height);
 
     virtual ~Window();
 
     virtual void init() = 0;
     virtual void deinit() = 0;
 
-    virtual void refresh() = 0;
-    virtual void handle_events() = 0;
+    virtual void pool_events() = 0;
 
     virtual void* get_native_window() = 0;
 
@@ -40,11 +38,9 @@ public:
     virtual bool is_minimized() = 0;
     virtual void wait_native_events() = 0;
 
-    virtual void set_cursor_shape(EG_CURSOR cursorType) = 0;
+    virtual void set_cursor_shape(Cursor cursorType) = 0;
     virtual void set_cursor_visible(bool visible) = 0;
 
-
-    Reference<RenderingContext> get_rendering_context();
     uint32_t get_width();
     uint32_t get_height();
 
@@ -52,11 +48,10 @@ protected:
 
     struct WindowData {
 
-        WindowData(uint32_t w, uint32_t h, RenderingContext* renderingContext) : width(w), height(h), context(renderingContext){}
+        WindowData(uint32_t w, uint32_t h) : width(w), height(h){}
 
         uint32_t width, height;
         PFN_EventCallback eventCallback;
-        Reference<RenderingContext> context;
 
     } m_windowData;
 };

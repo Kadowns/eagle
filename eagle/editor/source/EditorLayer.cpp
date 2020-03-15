@@ -1,132 +1,20 @@
 //
 // Created by Novak on 16/07/2019.
 //
-#include "eagle/editor/EditorLayer.h"
+#include <eagle/editor/EditorLayer.h>
+#include <eagle/editor/windows/InspectorWindow.h>
+#include <eagle/editor/windows/HierarchyWindow.h>
+#include <eagle/editor/windows/ResourcesWindow.h>
+#include <eagle/editor/windows/SceneWindow.h>
 
-#include <eagle/editor/InspectorWindow.h>
-#include <eagle/editor/HierarchyWindow.h>
-#include <eagle/editor/ResourcesWindow.h>
-#include <eagle/editor/SceneWindow.h>
-
-#include <imgui/imgui.h>
-#include <eagle/engine/components/Transform.h>
-#include <eagle/editor/Serializer.h>
-#include <eagle/engine/resources/ResourcesPool.h>
-
-EG_ENGINE_BEGIN
+EG_EDITOR_BEGIN
 
 void EditorLayer::handle_attach() {
 
-    //ResourceManager::initialize(ProjectRoot);
-    m_renderingContext = Application::instance().get_window()->get_rendering_context();
-
-    VertexLayout vertexLayout(5, {
-            EG_FORMAT_R32G32B32_SFLOAT,
-            EG_FORMAT_R32G32_SFLOAT
+    m_dispatcher.add_listener<WindowCloseEvent>([&](Event& e){
+        Application::instance().quit();
+        return true;
     });
-
-    std::vector<float> vertices  = {
-            1.0f, -1.0f, 1.0f,      0.0f, 1.0f,  //0.0f, 0.0f, 1.0f,      // 0
-            1.0f, 1.0f, 1.0f,       0.0f, 0.0f,  //0.0f, 0.0f, 1.0f,      // 1
-            -1.0f, 1.0f, 1.0f,      1.0f, 0.0f,  //0.0f, 0.0f, 1.0f,      // 2
-            -1.0f, -1.0f, 1.0f,     1.0f, 1.0f,  //0.0f, 0.0f, 1.0f,      // 3
-
-            1.0f, 1.0f, -1.0f,      0.0f, 0.0f,  //0.0f, 0.0f, -1.0f,     // 4
-            1.0f, -1.0f, -1.0f,     0.0f, 1.0f,  //0.0f, 0.0f, -1.0f,     // 5
-            -1.0f, -1.0f, -1.0f,    1.0f, 1.0f,  //0.0f, 0.0f, -1.0f,     // 6
-            -1.0f, 1.0f, -1.0f,     1.0f, 0.0f,  //0.0f, 0.0f, -1.0f,     // 7
-
-            -1.0f, 1.0f, 1.0f,      0.0f, 0.0f,  //-1.0f, 0.0f, 0.0f,     // 8
-            -1.0f, 1.0f, -1.0f,     0.0f, 1.0f,  //-1.0f, 0.0f, 0.0f,     // 9
-            -1.0f, -1.0f, -1.0f,    1.0f, 1.0f,  //-1.0f, 0.0f, 0.0f,     // 10
-            -1.0f, -1.0f, 1.0f,     1.0f, 0.0f,  //-1.0f, 0.0f, 0.0f,     // 11
-
-            1.0f, -1.0f, 1.0f,      1.0f, 0.0f,  //1.0f, 0.0f, 0.0f,      // 12
-            1.0f, -1.0f, -1.0f,     1.0f, 1.0f,  //1.0f, 0.0f, 0.0f,      // 13
-            1.0f, 1.0f, -1.0f,      0.0f, 1.0f,  //1.0f, 0.0f, 0.0f,      // 14
-            1.0f, 1.0f, 1.0f,       0.0f, 0.0f,  //1.0f, 0.0f, 0.0f,      // 15
-
-            1.0f, -1.0f, -1.0f,     0.0f, 1.0f,  //0.0f, -1.0f, 0.0f,     // 16
-            1.0f, -1.0f, 1.0f,      0.0f, 0.0f,  //0.0f, -1.0f, 0.0f,     // 17
-            -1.0f, -1.0f, 1.0f,     1.0f, 0.0f,  //0.0f, -1.0f, 0.0f,     // 18
-            -1.0f, -1.0f, -1.0f,    1.0f, 1.0f,  //0.0f, -1.0f, 0.0f,     // 19
-
-            1.0f, 1.0f, 1.0f,       0.0f, 0.0f,  //0.0f, 1.0f, 0.0f,      // 20
-            1.0f, 1.0f, -1.0f,      0.0f, 1.0f,  //0.0f, 1.0f, 0.0f,      // 21
-            -1.0f, 1.0f, -1.0f,     1.0f, 1.0f,  //0.0f, 1.0f, 0.0f,      // 22
-            -1.0f, 1.0f, 1.0f,      1.0f, 0.0f,  //0.0f, 1.0f, 0.0f,      // 23
-
-    };
-
-    std::vector<uint16_t> indices = {
-            0, 1, 2, 0, 2, 3,
-            4, 5, 6, 4, 6, 7,
-            8, 9, 10, 8, 10, 11,
-            12, 13, 14, 12, 14, 15,
-            16, 17, 18, 16, 18, 19,
-            20, 21, 22, 20, 22, 23
-    };
-
-    ResourcesPool::instance().store<Mesh>(new Mesh(m_renderingContext, vertexLayout, vertices.data(), indices.data(), 24, indices.size(), "Cube"), 0);
-
-    vertices  = {
-            1.0f, -1.0f, 1.0f,      0.0f, 1.0f,  //0.0f, 0.0f, 1.0f,      // 0
-            1.0f, 1.0f, 1.0f,       0.0f, 0.0f,  //0.0f, 0.0f, 1.0f,      // 1
-            -1.0f, 1.0f, 1.0f,      1.0f, 0.0f,  //0.0f, 0.0f, 1.0f,      // 2
-            -1.0f, -1.0f, 1.0f,     1.0f, 1.0f,  //0.0f, 0.0f, 1.0f,      // 3
-    };
-
-    indices = {
-            0, 1, 2, 0, 2, 3,
-    };
-
-    ResourcesPool::instance().store<Mesh>(new Mesh(m_renderingContext, vertexLayout, vertices.data(), indices.data(), 4, indices.size(), "Plano"), 1);
-
-
-    DescriptorBinding worldBinding = {};
-    worldBinding.binding = 0;
-    worldBinding.descriptorType = EG_DESCRIPTOR_TYPE::UNIFORM_BUFFER;
-    worldBinding.shaderStage = EG_SHADER_STAGE::VERTEX;
-
-    auto worldDescriptorSetLayout = m_renderingContext->create_descriptor_set_layout({worldBinding});
-
-    DescriptorBinding materialBinding = {};
-    materialBinding.binding = 0;
-    materialBinding.descriptorType = EG_DESCRIPTOR_TYPE::IMAGE_2D;
-    materialBinding.shaderStage = EG_SHADER_STAGE::FRAGMENT;
-
-    auto materialDescriptorSetLayout = m_renderingContext->create_descriptor_set_layout({materialBinding});
-
-    ShaderPipelineInfo pipelineInfo(vertexLayout);
-    pipelineInfo.blendEnable = false;
-    pipelineInfo.dynamicStates = false;
-    pipelineInfo.depthTesting = true;
-    pipelineInfo.offscreenRendering = true;
-
-    auto shader = m_renderingContext->create_shader(ProjectRoot + "/shaders/shader.vert",
-                                                    ProjectRoot + "/shaders/shader.frag",
-                                                    {worldDescriptorSetLayout.lock(), materialDescriptorSetLayout.lock()},
-                                                    pipelineInfo);
-
-    Texture2DCreateInfo textureInfo = load_texture("/textures/box.png");
-
-    auto texture = m_renderingContext->create_texture_2d(textureInfo);
-
-    std::vector<Material::MaterialItem> materialItems = {
-            {"_MainTex", texture.lock()->get_image()}
-    };
-
-    ResourcesPool::instance().store<Material>(new Material(shader.lock(), materialDescriptorSetLayout.lock(), materialItems, "Madeira"), 0);
-
-    textureInfo = load_texture("/textures/metal.png");
-
-    texture = m_renderingContext->create_texture_2d(textureInfo);
-
-    std::vector<Material::MaterialItem> metalProperties = {
-            {"_MainTex", texture.lock()->get_image()}
-    };
-
-    ResourcesPool::instance().store<Material>(new Material(shader.lock(), materialDescriptorSetLayout.lock(), metalProperties, "Metal"), 1);
 
     m_dispatcher.add_listener<MouseMoveEvent>([&](Event &e) {
         return handle_mouse_moved(*(MouseMoveEvent*) &e);
@@ -151,29 +39,29 @@ void EditorLayer::handle_attach() {
     ImGui::CreateContext();
 
     ImGuiStyle &style = ImGui::GetStyle();
-    style.Colors[ImGuiCol_TitleBg] = ImVec4(0.25f, 0.46f, 0.45f, 0.7f);
-    style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.26f, 0.5f, 0.46f, 0.8f);
+    style.Colors[ImGuiCol_TitleBg] = ImVec4(0.25f, 0.26f, 0.25f, 0.7f);
+    style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.46f, 0.4f, 0.46f, 0.8f);
     style.Colors[ImGuiCol_MenuBarBg] = ImVec4(0.15f, 0.16f, 0.15f, 0.4f);
     style.Colors[ImGuiCol_Header] = ImVec4(0.3f, 0.32f, 0.3f, 0.4f);
     style.Colors[ImGuiCol_CheckMark] = ImVec4(0.0f, 0.6f, 0.0f, 1.0f);
-    style.Colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.115f, 0.1f, 1.0f);
-    style.Colors[ImGuiCol_ChildBg] = ImVec4(0.1f, 0.125f, 0.11f, 1.0f);
-    style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.1f, 0.125f, 0.11f, 1.0f);
-    style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.2f, 0.215f, 0.75f, 1.0f);
+    style.Colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.1f, 0.1f, 1.0f);
+    style.Colors[ImGuiCol_ChildBg] = ImVec4(0.12f, 0.125f, 0.12f, 1.0f);
+    style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.12f, 0.125f, 0.12f, 1.0f);
+    style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.215f, 0.215f, 0.75f, 1.0f);
     style.Colors[ImGuiCol_DragDropTarget] = ImVec4(0.2f, 0.215f, 0.75f, 1.0f);
-    style.Colors[ImGuiCol_Tab] = ImVec4(0.1f, 0.475f, 0.65f, 0.8f);
-    style.Colors[ImGuiCol_TabActive] = ImVec4(0.15f, 0.6f, 0.75f, 0.8f);
-    style.Colors[ImGuiCol_TabHovered] = ImVec4(0.15f, 0.5f, 0.65f, 0.8f);
-    style.Colors[ImGuiCol_TabUnfocused] = ImVec4(0.1f, 0.45f, 0.6f, 0.8f);
-    style.Colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.15f, 0.55f, 0.7f, 0.8f);
-    style.Colors[ImGuiCol_FrameBg] = ImVec4(0.15f, 0.35f, 0.365f, 0.8f);
-    style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0.15f, 0.45f, 0.46f, 0.8f);
-    style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.15f, 0.4f, 0.425f, 0.8f);
-    style.ChildRounding = 8;
-    style.FrameRounding = 8;
-    style.GrabRounding = 8;
-    style.PopupRounding = 4;
-    style.WindowRounding = 8;
+    style.Colors[ImGuiCol_Tab] = ImVec4(0.4f, 0.475f, 0.45f, 0.8f);
+    style.Colors[ImGuiCol_TabActive] = ImVec4(0.65f, 0.6f, 0.65f, 0.8f);
+    style.Colors[ImGuiCol_TabHovered] = ImVec4(0.45f, 0.5f, 0.55f, 0.8f);
+    style.Colors[ImGuiCol_TabUnfocused] = ImVec4(0.4f, 0.45f, 0.6f, 0.8f);
+    style.Colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.55f, 0.55f, 0.7f, 0.8f);
+    style.Colors[ImGuiCol_FrameBg] = ImVec4(0.35f, 0.35f, 0.365f, 0.8f);
+    style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0.45f, 0.45f, 0.46f, 0.8f);
+    style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.45f, 0.4f, 0.425f, 0.8f);
+    style.ChildRounding = 2;
+    style.FrameRounding = 2;
+    style.GrabRounding = 2;
+    style.PopupRounding = 1;
+    style.WindowRounding = 2;
     style.WindowPadding = ImVec2(2, 2);
 
     ImGuiIO &io = ImGui::GetIO();
@@ -203,7 +91,7 @@ void EditorLayer::handle_attach() {
     io.KeyMap[ImGuiKey_Z] = EG_KEY_Z;
 
 
-    io.DisplaySize = ImVec2(Application::instance().get_window()->get_width(), Application::instance().get_window()->get_height());
+    io.DisplaySize = ImVec2(Application::instance().window().get_width(), Application::instance().window().get_height());
     io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
@@ -215,51 +103,58 @@ void EditorLayer::handle_attach() {
     Pixel *pixels;
     Texture2DCreateInfo fontCreateInfo = {};
     io.Fonts->GetTexDataAsRGBA32(&pixels, &fontCreateInfo.width, &fontCreateInfo.height);
-    fontCreateInfo.format = EG_FORMAT_R8G8B8A8_UNORM;
+    fontCreateInfo.format = Format::R8G8B8A8_UNORM;
+    fontCreateInfo.filter = Filter::LINEAR;
     fontCreateInfo.layerCount = 1;
     fontCreateInfo.mipLevels = 1;
     fontCreateInfo.channels = 4;
     fontCreateInfo.pixels = std::vector<Pixel>(pixels,
                                                       pixels + fontCreateInfo.width * fontCreateInfo.height * 4);
+    
+    
+    RenderingContext& context = Renderer::instance().context();
 
-    m_font = m_renderingContext->create_texture_2d(fontCreateInfo);
+    m_font = context.create_texture_2d(fontCreateInfo);
 
 
-    vertexLayout = VertexLayout(5, {
-            EG_FORMAT_R32G32_SFLOAT,
-            EG_FORMAT_R32G32_SFLOAT,
-            EG_FORMAT_R8G8B8A8_UNORM
+    VertexLayout vertexLayout = VertexLayout(5, {
+            Format::R32G32_SFLOAT,
+            Format::R32G32_SFLOAT,
+            Format::R8G8B8A8_UNORM
     });
 
 
-    DescriptorBinding binding = {};
-    binding.shaderStage = EG_SHADER_STAGE::FRAGMENT;
-    binding.descriptorType = EG_DESCRIPTOR_TYPE::IMAGE_2D;
+    DescriptorBindingDescription binding = {};
+    binding.shaderStage = ShaderStage::FRAGMENT;
+    binding.descriptorType = DescriptorType::IMAGE_2D;
     binding.binding = 0;
 
-    m_descriptorLayout = m_renderingContext->create_descriptor_set_layout({binding});
+    m_descriptorLayout = context.create_descriptor_set_layout({binding});
 
 
-    pipelineInfo = ShaderPipelineInfo(vertexLayout);
+    ShaderPipelineInfo pipelineInfo = ShaderPipelineInfo(vertexLayout);
     pipelineInfo.blendEnable = true;
     pipelineInfo.dynamicStates = true;
     pipelineInfo.depthTesting = false;
+    pipelineInfo.offscreenRendering = false;
 
-    m_shader = m_renderingContext->create_shader(ProjectRoot + "/shaders/text.vert",
-                                                 ProjectRoot + "/shaders/text.frag", {m_descriptorLayout.lock()}, pipelineInfo);
+    m_shader = context.create_shader({
+        {ShaderStage::VERTEX, ProjectRoot + "/shaders/text.vert"},
+        {ShaderStage::FRAGMENT, ProjectRoot + "/shaders/text.frag"},
+    }, pipelineInfo);
 
-    m_descriptor = m_renderingContext->create_descriptor_set(m_descriptorLayout.lock(), {m_font.lock()->get_image().lock()});
+    m_descriptor = context.create_descriptor_set(m_descriptorLayout.lock(), {m_font.lock()->get_image().lock()});
 
     io.Fonts->TexID = (ImTextureID)&m_descriptor;
 
-    m_vertexBuffer = m_renderingContext->create_vertex_buffer(nullptr, 0, vertexLayout,
-                                                                   EG_BUFFER_USAGE::DYNAMIC);
-    m_indexBuffer = m_renderingContext->create_index_buffer(nullptr, 0, INDEX_BUFFER_TYPE::UINT_16,
-                                                                 EG_BUFFER_USAGE::DYNAMIC);
+    m_vertexBuffer = context.create_vertex_buffer(nullptr, 0, vertexLayout,
+                                                                   BufferUsage::DYNAMIC);
+    m_indexBuffer = context.create_index_buffer(nullptr, 0, IndexBufferType::UINT_16,
+                                                                 BufferUsage::DYNAMIC);
 
     m_editors.push_back(std::make_shared<InspectorWindow>());
     m_editors.push_back(std::make_shared<SceneWindow>());
-    m_editors.push_back(std::make_shared<HierarchyWindow>(std::static_pointer_cast<SceneWindow>(m_editors.back())->scene()->entities()));
+    m_editors.push_back(std::make_shared<HierarchyWindow>());
     m_editors.push_back(std::make_shared<ResourcesWindow>());
 
 }
@@ -297,13 +192,9 @@ void EditorLayer::handle_update() {
     ImGui::PopStyleVar(3);
     if (ImGui::BeginMenuBar()){
 
-        if (ImGui::BeginMenu("Styles")){
-            ImGuiStyle& style = ImGui::GetStyle();
-//            for (int i = 0; i < ImGuiCol_COUNT; i++){
-//                std::string styleName = "Style " + std::to_string(i);
-//                ImGui::ColorEdit4(styleName.c_str(), &style.Colors[i].x);
-//            }
-            ImGui::ShowStyleEditor(&style);
+        if (ImGui::BeginMenu("File")){
+            ImGui::MenuItem("New project");
+            ImGui::MenuItem("Open project");
             ImGui::EndMenu();
         }
 
@@ -328,35 +219,45 @@ void EditorLayer::handle_update() {
 
     update_mouse_cursor();
     submit_buffers();
+    draw();
 }
 
-void EditorLayer::handle_draw() {
+void EditorLayer::draw() {
 
+    RenderingContext& context = Renderer::instance().context();
+
+    if (!context.prepare_frame()){
+        EG_WARNING("Skipped frame rendering!");
+        return;
+    }
+
+    auto commandBuffer = context.create_command_buffer();
 
     for (auto& editor : m_editors){
-        editor->draw();
+        editor->draw(commandBuffer);
     }
 
     ImGuiIO &io = ImGui::GetIO();
     ImDrawData *imDrawData = ImGui::GetDrawData();
 
+    commandBuffer->begin_render_pass(context.main_render_target());
     // Render commands
     if (imDrawData->CmdListsCount > 0) {
-        m_renderingContext->bind_shader(m_shader.lock());
+        commandBuffer->bind_shader(m_shader.lock());
 
-        m_renderingContext->set_viewport(io.DisplaySize.x, io.DisplaySize.y, 0, 0, 0, 1);
+        commandBuffer->set_viewport(io.DisplaySize.x, io.DisplaySize.y, 0, 0, 0, 1);
 
         pushConstBlock.scale = glm::vec2(2.0f / io.DisplaySize.x, 2.0f / io.DisplaySize.y);
         pushConstBlock.translate = glm::vec2(-1.0f);
 
-        m_renderingContext->push_constants(m_shader.lock(), EG_SHADER_STAGE::VERTEX, 0,
-                                                sizeof(pushConstBlock), &pushConstBlock);
+        commandBuffer->push_constants(m_shader.lock(), ShaderStage::VERTEX, 0,
+                                      sizeof(pushConstBlock), &pushConstBlock);
 
         int32_t vertexOffset = 0;
         int32_t indexOffset = 0;
 
-        m_renderingContext->bind_vertex_buffer(m_vertexBuffer.lock());
-        m_renderingContext->bind_index_buffer(m_indexBuffer.lock());
+        commandBuffer->bind_vertex_buffer(m_vertexBuffer.lock());
+        commandBuffer->bind_index_buffer(m_indexBuffer.lock());
 
         for (int32_t i = 0; i < imDrawData->CmdListsCount; i++) {
 
@@ -368,21 +269,27 @@ void EditorLayer::handle_draw() {
                 uint32_t y = std::max((int32_t) (cmd->ClipRect.y), 0);
                 uint32_t w = (uint32_t) (cmd->ClipRect.z - cmd->ClipRect.x);
                 uint32_t h = (uint32_t) (cmd->ClipRect.w - cmd->ClipRect.y);
-                m_renderingContext->set_scissor(w, h, x, y);
+                commandBuffer->set_scissor(w, h, x, y);
 
-                m_renderingContext->bind_descriptor_sets(m_shader.lock(), static_cast<Handle<DescriptorSet>*>(cmd->TextureId)->lock(), 0);
+                commandBuffer->bind_descriptor_sets(m_shader.lock(), static_cast<Handle<DescriptorSet>*>(cmd->TextureId)->lock(), 0);
 
-                m_renderingContext->draw_indexed(cmd->ElemCount, indexOffset, vertexOffset);
+                commandBuffer->draw_indexed(cmd->ElemCount, indexOffset, vertexOffset);
 
                 indexOffset += cmd->ElemCount;
             }
             vertexOffset += cmdList->VtxBuffer.Size;
         }
     }
+    commandBuffer->end_render_pass();
+    commandBuffer->finish();
+    context.submit_command_buffer(commandBuffer);
+    context.present_frame();
+
 }
 
 void EditorLayer::handle_deattach() {
     ImGui::DestroyContext();
+    Renderer::terminate();
 }
 
 void EditorLayer::submit_buffers() {
@@ -407,8 +314,8 @@ void EditorLayer::submit_buffers() {
         idxOffset += cmdList->IdxBuffer.Size;
     }
 
-    m_renderingContext->vertex_buffer_flush(m_vertexBuffer.lock(), vtxDst, imDrawData->TotalVtxCount);
-    m_renderingContext->index_buffer_flush(m_indexBuffer.lock(), idxDst, imDrawData->TotalIdxCount);
+    m_vertexBuffer.lock()->upload(vtxDst, imDrawData->TotalVtxCount);
+    m_indexBuffer.lock()->upload(idxDst, imDrawData->TotalIdxCount);
 
     delete[] vtxDst;
     delete[] idxDst;
@@ -466,26 +373,26 @@ bool EditorLayer::handle_key_typed(KeyTypedEvent &e) {
 void EditorLayer::update_mouse_cursor() {
     ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
 
-    EG_CURSOR cursorType;
+    Cursor cursorType;
     switch (imgui_cursor) {
         case ImGuiMouseCursor_TextInput:
-            cursorType = EG_CURSOR::TEXT;
+            cursorType = Cursor::TEXT;
             break;
         case ImGuiMouseCursor_ResizeNS:
-            cursorType = EG_CURSOR::VERT_RESIZE;
+            cursorType = Cursor::VERT_RESIZE;
             break;
         case ImGuiMouseCursor_ResizeEW:
-            cursorType = EG_CURSOR::HORI_RESIZE;
+            cursorType = Cursor::HORI_RESIZE;
             break;
         case ImGuiMouseCursor_Hand:
-            cursorType = EG_CURSOR::HAND;
+            cursorType = Cursor::HAND;
             break;
         default:
-            cursorType = EG_CURSOR::ARROW;
+            cursorType = Cursor::ARROW;
             break;
     }
-    Application::instance().get_window()->set_cursor_shape(cursorType);
+    Application::instance().window().set_cursor_shape(cursorType);
 
 }
 
-EG_ENGINE_END
+EG_EDITOR_END

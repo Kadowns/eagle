@@ -5,16 +5,23 @@
 #ifndef EG_ENGINE_RESOURCELOADER_H
 #define EG_ENGINE_RESOURCELOADER_H
 
-#include "eagle/engine/EngineCore.h"
+#include "EditorCore.h"
 
-EG_ENGINE_BEGIN
+EG_EDITOR_BEGIN
 
 class ResourceLoader {
 public:
 
+    ResourceLoader(const std::string& root);
+    ~ResourceLoader();
+
+private:
+
+    void load_file(const boost::filesystem::path& path);
+
 
 };
 
-EG_ENGINE_END
+EG_EDITOR_END
 
 #endif //EG_ENGINE_RESOURCELOADER_H

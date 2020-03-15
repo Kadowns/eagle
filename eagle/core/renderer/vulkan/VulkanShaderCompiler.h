@@ -126,13 +126,13 @@ class VulkanShaderCompiler {
 
 public:
     static std::vector<uint32_t>
-    compile_glsl(const std::string &filename, EG_SHADER_STAGE stage);
+    compile_glsl(const std::string &filename, ShaderStage stage);
 
 private:
 
     static std::string get_file_path(const std::string& file);
     static std::string get_suffix(const std::string& file);
-    static EShLanguage get_shader_stage(EG_SHADER_STAGE stage);
+    static EShLanguage get_shader_stage(ShaderStage stage);
 
     static bool m_glslangIntitialized;
 

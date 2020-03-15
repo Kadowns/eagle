@@ -16,7 +16,7 @@ public:
     virtual ~SceneWindow();
 
     virtual void handle_update() override;
-    virtual void draw() override;
+    virtual void draw(Scope <CommandBuffer> &commandBuffer) override;
 
 private:
 

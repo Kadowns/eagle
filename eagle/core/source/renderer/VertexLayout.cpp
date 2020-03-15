@@ -8,12 +8,12 @@
 
 EG_BEGIN
 
-VertexLayout::VertexLayout(size_t elementCount, std::vector<Eagle::EG_FORMAT> components) :
+VertexLayout::VertexLayout(size_t elementCount, std::vector<Eagle::Format> components) :
     m_components(std::move(components)), m_elementCount(elementCount) {
 }
 
-VertexLayout::VertexLayout(size_t elementCount, std::initializer_list<EG_FORMAT> components) :
-        VertexLayout(elementCount, std::vector<EG_FORMAT>(components)) {
+VertexLayout::VertexLayout(size_t elementCount, std::initializer_list<Format> components) :
+        VertexLayout(elementCount, std::vector<Format>(components)) {
 }
 
 size_t VertexLayout::get_stride() {
@@ -28,11 +28,11 @@ size_t VertexLayout::get_component_count() {
     return m_components.size();
 }
 
-std::vector<EG_FORMAT> &VertexLayout::get_components() {
+std::vector<Format> &VertexLayout::get_components() {
     return m_components;
 }
 
-EG_FORMAT VertexLayout::get_component(uint32_t index) {
+Format VertexLayout::get_component(uint32_t index) {
     return m_components[index];
 }
 

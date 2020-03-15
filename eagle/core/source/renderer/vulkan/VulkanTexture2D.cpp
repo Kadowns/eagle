@@ -2,6 +2,7 @@
 // Created by Novak on 19/06/2019.
 //
 
+#include <eagle/core/renderer/vulkan/VulkanConversor.h>
 #include "eagle/core/renderer/vulkan/VulkanTexture2D.h"
 #include "eagle/core/renderer/vulkan/VulkanHelper.h"
 
@@ -52,7 +53,7 @@ void VulkanTexture2D::upload_pixel_data() {
     VulkanHelper::create_image(m_vulkanInfo.physicalDevice, m_vulkanInfo.device,
                                m_image->get_width(), m_image->get_height(), m_mipLevels,
                                m_layerCount,
-                               VulkanHelper::get_vk_format(m_format),
+                               VulkanConversor::to_vk(m_format),
                                VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                                VK_SHARING_MODE_EXCLUSIVE,
                                imageAttachment->image, imageAttachment->memory, 0);
@@ -66,27 +67,26 @@ void VulkanTexture2D::upload_pixel_data() {
 
     VK_CALL
     VulkanHelper::transition_image_layout(m_vulkanInfo.device, m_vulkanInfo.commandPool, m_vulkanInfo.graphicsQueue,
-                                          imageAttachment->image, VulkanHelper::get_vk_format(m_format), VK_IMAGE_LAYOUT_UNDEFINED,
+                                          imageAttachment->image, VulkanConversor::to_vk(m_format), VK_IMAGE_LAYOUT_UNDEFINED,
                                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, subresourceRange);
 
     copy_buffer_to_image(stagingBuffer, imageAttachment->image, m_image->get_width(), m_image->get_height());
 
     VK_CALL
     VulkanHelper::transition_image_layout(m_vulkanInfo.device, m_vulkanInfo.commandPool, m_vulkanInfo.graphicsQueue,
-                                          imageAttachment->image, VulkanHelper::get_vk_format(m_format), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                          imageAttachment->image, VulkanConversor::to_vk(m_format), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                                           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, subresourceRange);
 
     stagingBuffer->destroy();
 
-    VulkanHelper::create_image_view(m_vulkanInfo.device, imageAttachment->image, imageAttachment->view, VulkanHelper::get_vk_format(m_format),
+    VulkanHelper::create_image_view(m_vulkanInfo.device, imageAttachment->image, imageAttachment->view, VulkanConversor::to_vk(m_format),
                                     VK_IMAGE_VIEW_TYPE_2D, subresourceRange);
 
 
     VulkanHelper::create_image_sampler(
             m_vulkanInfo.device,
             std::static_pointer_cast<VulkanImageSampler>(m_image->get_sampler().lock())->sampler,
-            VK_SAMPLER_ADDRESS_MODE_REPEAT
-            );
+            VK_SAMPLER_ADDRESS_MODE_REPEAT, VulkanConversor::to_vk(m_filter));
 }
 
 void
