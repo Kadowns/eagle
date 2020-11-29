@@ -6,7 +6,7 @@
 #define EAGLE_VERTEXBUFFER_H
 
 #include <vector>
-#include "eagle/core/GlobalDefinitions.h"
+#include "eagle/core/CoreGlobalDefinitions.h"
 #include "RenderingCore.h"
 
 EG_BEGIN

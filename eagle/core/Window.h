@@ -8,7 +8,7 @@
 #include <memory>
 #include <queue>
 
-#include "GlobalDefinitions.h"
+#include "CoreGlobalDefinitions.h"
 #include "events/Event.h"
 
 

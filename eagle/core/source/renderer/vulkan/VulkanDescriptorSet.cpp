@@ -1,3 +1,5 @@
+#include <eagle/core/renderer/vulkan/VulkanStorageBuffer.h>
+#include <eagle/core/renderer/vulkan/VulkanConverter.h>
 #include "eagle/core/renderer/vulkan/VulkanDescriptorSet.h"
 #include "eagle/core/renderer/vulkan/VulkanImage.h"
 
@@ -5,12 +7,16 @@ EG_BEGIN
 
 VulkanDescriptorSet::VulkanDescriptorSet(const Reference<VulkanDescriptorSetLayout> &descriptorSetLayout,
                                          const std::vector<Reference<DescriptorItem>> &descriptorItems,
-                                         VulkanCleaner& cleaner,
-                                         VulkanDescriptorSetCreateInfo createInfo) :
-    VulkanCleanable(cleaner),
+                                         const VulkanDescriptorSetCreateInfo& createInfo) :
     m_descriptorSetLayout(descriptorSetLayout), m_descriptorItems(descriptorItems), m_info(createInfo){
     create_descriptor_sets();
     update_descriptor_sets();
+}
+
+VulkanDescriptorSet::VulkanDescriptorSet(const Reference<VulkanDescriptorSetLayout> &descriptorSetLayout,
+                                         const VulkanDescriptorSetCreateInfo &createInfo) :
+    m_descriptorSetLayout(descriptorSetLayout), m_info(createInfo){
+    create_descriptor_sets();
 }
 
 VulkanDescriptorSet::~VulkanDescriptorSet() {
@@ -63,7 +69,7 @@ void VulkanDescriptorSet::update(const std::vector<Reference<DescriptorItem>> &d
     for (uint32_t i = 0; i < m_descriptorSets.size(); i++){
         m_dirtyDescriptors.insert(i);
     }
-    m_cleaner.push(this);
+    VulkanCleaner::push(this);
 }
 
 bool VulkanDescriptorSet::is_dirty() const {
@@ -84,21 +90,44 @@ void VulkanDescriptorSet::flush(uint32_t index) {
             case DescriptorType::UNIFORM_BUFFER:{
                 auto buffer = std::static_pointer_cast<VulkanUniformBuffer>(m_descriptorItems[j]);
                 VkDescriptorBufferInfo bufferInfo = {};
-                bufferInfo.buffer = buffer->get_buffers()[index]->get_native_buffer();
+                bufferInfo.buffer = buffer->get_buffers()[index]->native_buffer();
                 bufferInfo.offset = 0;
                 bufferInfo.range = buffer->size();
                 bufferInfos.push_back(bufferInfo);
                 break;
             }
-            case DescriptorType::IMAGE_2D:{
-                auto image = std::static_pointer_cast<VulkanImage>(m_descriptorItems[j]);
+            case DescriptorType::STORAGE_BUFFER:{
+                auto buffer = std::static_pointer_cast<VulkanStorageBuffer>(m_descriptorItems[j]);
+                VkDescriptorBufferInfo bufferInfo = {};
+                bufferInfo.buffer = buffer->get_buffers()[index]->native_buffer();
+                bufferInfo.offset = 0;
+                bufferInfo.range = buffer->size();
+                bufferInfos.push_back(bufferInfo);
+                break;
+            }
+            case DescriptorType::TEXTURE:{
+                auto texture = std::static_pointer_cast<VulkanTexture>(m_descriptorItems[j]);
                 VkDescriptorImageInfo imageInfo = {};
-                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                imageInfo.imageView = std::static_pointer_cast<VulkanImageAttachment>(image->get_attachment().lock())->view;
-                imageInfo.sampler = std::static_pointer_cast<VulkanImageSampler>(image->get_sampler().lock())->sampler;
+                imageInfo.imageLayout = VulkanConverter::to_vk(texture->image()->layout());
+                imageInfo.imageView = texture->native_image()->native_image_view();
+                imageInfo.sampler = texture->sampler();
                 imageInfos.push_back(imageInfo);
                 break;
             }
+            case DescriptorType::IMAGE:{
+                auto image = std::static_pointer_cast<VulkanImage>(m_descriptorItems[j]);
+                VkDescriptorImageInfo imageInfo = {};
+                imageInfo.imageLayout = VulkanConverter::to_vk(image->layout());
+                imageInfo.imageView = image->native_image_view();
+                imageInfos.push_back(imageInfo);
+            }break;
+            case DescriptorType::STORAGE_IMAGE:{
+                auto image = std::static_pointer_cast<VulkanImage>(m_descriptorItems[j]);
+                VkDescriptorImageInfo imageInfo = {};
+                imageInfo.imageLayout = VulkanConverter::to_vk(image->layout());
+                imageInfo.imageView = image->native_image_view();
+                imageInfos.push_back(imageInfo);
+            }break;
         }
     }
 
@@ -114,11 +143,16 @@ void VulkanDescriptorSet::flush(uint32_t index) {
         descriptorWrite[j].dstArrayElement = 0;
         descriptorWrite[j].descriptorType = descriptorBindings[j].descriptorType;
         descriptorWrite[j].descriptorCount = 1;
-        if (descriptorWrite[j].descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER){
+        if (descriptorWrite[j].descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ||
+            descriptorWrite[j].descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+            ){
             descriptorWrite[j].pBufferInfo = &bufferInfos[bufferIndex];
             bufferIndex++;
         }
-        else if (descriptorWrite[j].descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER){
+        else if (descriptorWrite[j].descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ||
+                 descriptorWrite[j].descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE ||
+                 descriptorWrite[j].descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE
+                 ){
             descriptorWrite[j].pImageInfo = &imageInfos[imageIndex];
             imageIndex++;
         }
@@ -145,6 +179,8 @@ void VulkanDescriptorSet::cleanup() {
     VK_CALL vkDestroyDescriptorPool(m_info.device, m_descriptorPool, nullptr);
     m_cleared = true;
 }
+
+
 
 EG_END
 

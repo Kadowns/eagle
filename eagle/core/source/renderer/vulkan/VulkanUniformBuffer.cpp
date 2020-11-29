@@ -7,9 +7,8 @@
 
 EG_BEGIN
 
-VulkanUniformBuffer::VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createInfo, VulkanCleaner &cleaner,
-                                         size_t size, void *data) :
-        UniformBuffer(size), VulkanCleanable(cleaner), m_info(createInfo) {
+VulkanUniformBuffer::VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createInfo, size_t size, void *data) :
+        UniformBuffer(size), m_info(createInfo) {
 
     if (data != nullptr){
         memcpy(m_bytes.data(), data, size);
@@ -62,7 +61,7 @@ void VulkanUniformBuffer::cleanup() {
     m_cleared = true;
 }
 
-void VulkanUniformBuffer::update() {
+void VulkanUniformBuffer::push() {
     if (!m_dirtyBytes){
         return;
     }
@@ -71,7 +70,7 @@ void VulkanUniformBuffer::update() {
     for (int i = 0; i < m_buffers.size(); i++){
         m_dirtyBuffers.insert(i);
     }
-    m_cleaner.push(this);
+    VulkanCleaner::push(this);
     m_dirtyBytes = false;
 }
 
@@ -79,7 +78,7 @@ bool VulkanUniformBuffer::is_dirty() const {
     return !m_dirtyBuffers.empty();
 }
 
-void VulkanUniformBuffer::set_bytes(void* data, size_t size, size_t offset) {
+void VulkanUniformBuffer::set_data(void *data, size_t size, size_t offset) {
     assert(size + offset <= m_bytes.size());
     memcpy(m_bytes.data() + offset, data, size);
     m_dirtyBytes = true;

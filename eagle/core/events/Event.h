@@ -6,16 +6,11 @@
 
 #define EAGLE_EVENT_H
 
-#include <functional>
-#include <utility>
-#include <map>
-#include <typeindex>
-
-#include "eagle/core/GlobalDefinitions.h"
+#include "eagle/core/CoreGlobalDefinitions.h"
 
 EG_BEGIN
 
-class EventDispatcher;
+class LayerEventDispatcher;
 
 class Event {
 public:
@@ -28,15 +23,15 @@ public:
 
     bool is_handled() { return m_handled; }
 private:
-    friend class EventDispatcher;
+    friend class LayerEventDispatcher;
     bool m_handled = false;
 };
 
 
-class EventDispatcher {
+class LayerEventDispatcher {
     using EventFunctionHandle = std::function<bool(Eagle::Event&)>;
 public:
-    EventDispatcher() = default;
+    LayerEventDispatcher() = default;
 
     template<typename T>
     void add_listener(EventFunctionHandle func){

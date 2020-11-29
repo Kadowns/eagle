@@ -7,10 +7,8 @@
 
 EG_BEGIN
 
-VulkanVertexBuffer::VulkanVertexBuffer(VkDevice device, VulkanCleaner &cleaner,
-                                       VulkanVertexBufferCreateInfo &createInfo,
+VulkanVertexBuffer::VulkanVertexBuffer(VkDevice device, VulkanVertexBufferCreateInfo &createInfo,
                                        BufferUsage usageFlags) :
-    VulkanCleanable(cleaner),
     m_device(device),
     m_physicalDevice(createInfo.physicalDevice),
     m_layout(createInfo.vertexLayout),
@@ -66,8 +64,8 @@ VulkanVertexBuffer::VulkanVertexBuffer(VkDevice device, VulkanCleaner &cleaner,
                     device,
                     createInfo.commandPool,
                     createInfo.graphicsQueue,
-                    stagingBuffer->get_native_buffer(),
-                    m_buffers[0]->get_native_buffer(),
+                    stagingBuffer->native_buffer(),
+                    m_buffers[0]->native_buffer(),
                     bufferSize,
                     0);
 
@@ -149,7 +147,7 @@ void VulkanVertexBuffer::upload(void *data, uint32_t elementCount) {
         for (int i = 0; i < m_buffers.size(); i++){
             m_dirtyBuffers.insert(i);
         }
-        m_cleaner.push(this);
+        VulkanCleaner::push(this);
     }
     m_elementCount = elementCount;
 

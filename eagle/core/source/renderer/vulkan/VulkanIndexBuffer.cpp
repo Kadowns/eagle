@@ -7,10 +7,9 @@
 
 EG_BEGIN
 
-VulkanIndexBuffer::VulkanIndexBuffer(VkDevice device, VulkanCleaner &cleaner,
-                                     VulkanIndexBufferCreateInfo &createInfo, void *indexData, size_t indexCount,
+VulkanIndexBuffer::VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInfo &createInfo, void *indexData,
+                                     size_t indexCount,
                                      IndexBufferType indexType, BufferUsage usage) :
-        VulkanCleanable(cleaner),
         m_device(device),
         m_physicalDevice(createInfo.physicalDevice),
         m_indexCount(indexCount),
@@ -63,8 +62,8 @@ VulkanIndexBuffer::VulkanIndexBuffer(VkDevice device, VulkanCleaner &cleaner,
                     device,
                     createInfo.commandPool,
                     createInfo.graphicsQueue,
-                    stagingBuffer->get_native_buffer(),
-                    m_buffers[0]->get_native_buffer(),
+                    stagingBuffer->native_buffer(),
+                    m_buffers[0]->native_buffer(),
                     bufferSize,
                     0);
 
@@ -158,7 +157,7 @@ void VulkanIndexBuffer::upload(void *data, uint32_t indexCount) {
         for (int i = 0; i < m_buffers.size(); i++){
             m_dirtyBuffers.insert(i);
         }
-        m_cleaner.push(this);
+        VulkanCleaner::push(this);
     }
     m_indexCount = indexCount;
 }

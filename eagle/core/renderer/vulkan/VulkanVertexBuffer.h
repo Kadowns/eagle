@@ -30,8 +30,7 @@ class VulkanVertexBuffer : public VertexBuffer, public VulkanCleanable {
 
 public:
 
-    VulkanVertexBuffer(VkDevice device, VulkanCleaner &cleaner, VulkanVertexBufferCreateInfo &createInfo,
-                       BufferUsage usageFlags);
+    VulkanVertexBuffer(VkDevice device, VulkanVertexBufferCreateInfo &createInfo, BufferUsage usageFlags);
     virtual ~VulkanVertexBuffer();
 
 

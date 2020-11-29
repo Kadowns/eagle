@@ -8,7 +8,7 @@
 #include <memory>
 #include <set>
 
-#include "GlobalDefinitions.h"
+#include "CoreGlobalDefinitions.h"
 #include "events/InputEvents.h"
 #include "events/KeyCodes.h"
 

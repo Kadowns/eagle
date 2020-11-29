@@ -13,22 +13,20 @@ class VulkanCleaner;
 
 class VulkanCleanable {
 public:
-    VulkanCleanable(VulkanCleaner& cleaner) : m_cleaner(cleaner){}
-
     virtual bool is_dirty() const = 0;
     virtual void flush(uint32_t index) = 0;
-protected:
-    VulkanCleaner& m_cleaner;
 };
 
 
 class VulkanCleaner {
 public:
-    virtual void flush(uint32_t index);
+    static void flush(uint32_t index);
 
-    virtual void push(VulkanCleanable* object);
+    static void push(VulkanCleanable* object);
+
+    static void clear();
 private:
-    std::vector<VulkanCleanable*> m_dirtyObjects;
+    static std::vector<VulkanCleanable*> m_dirtyObjects;
 };
 
 EG_END

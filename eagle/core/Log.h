@@ -1,7 +1,7 @@
 #ifndef EAGLE_LOG_H
 #define EAGLE_LOG_H
 
-#include "GlobalDefinitions.h"
+#include "CoreGlobalDefinitions.h"
 #include <spdlog/spdlog.h>
 #include <memory>
 

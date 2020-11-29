@@ -30,7 +30,7 @@ public:
     void flush(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
     void destroy();
 
-    inline VkBuffer&       get_native_buffer() { return m_buffer; }
+    inline VkBuffer&       native_buffer() { return m_buffer; }
     inline VkDeviceMemory& get_memory()        { return m_memory; }
     inline void*           get_data()          { return m_mapped; }
 

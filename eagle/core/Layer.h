@@ -6,7 +6,7 @@
 #ifndef EAGLE_LAYER_H
 #define EAGLE_LAYER_H
 
-#include "GlobalDefinitions.h"
+#include "CoreGlobalDefinitions.h"
 #include "events/Event.h"
 
 EG_BEGIN

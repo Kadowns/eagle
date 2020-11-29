@@ -38,8 +38,13 @@ public:
 
     static void
     transition_image_layout(VkDevice device, VkCommandPool commandPool, VkQueue graphicsQueue, VkImage image,
-                            VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout,
-                            VkImageSubresourceRange subresourceRange);
+                            VkImageLayout oldLayout, VkImageLayout newLayout,
+                            VkImageSubresourceRange subresourceRange,
+                            VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                            VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
+
+    static VkFormat find_supported_format(VkPhysicalDevice physicalDevice, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+    static VkFormat find_depth_format(VkPhysicalDevice physicalDevice);
 
 };
 

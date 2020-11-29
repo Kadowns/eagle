@@ -6,18 +6,26 @@
 #define EAGLE_RENDERINGCORE_H
 
 #include "eagle/core/Log.h"
-#include "eagle/core/GlobalDefinitions.h"
+#include "eagle/core/CoreGlobalDefinitions.h"
 
 EG_BEGIN
 
-enum class DescriptorType{
+enum class DescriptorType {
     UNIFORM_BUFFER = 0,
-    IMAGE_2D = 1
+    STORAGE_BUFFER = 1,
+    TEXTURE = 2,
+    IMAGE = 3,
+    STORAGE_IMAGE = 4
 };
 
 enum class BufferUsage {
     CONSTANT  = 0,
     DYNAMIC    = 1
+};
+
+enum TextureUsage {
+    READ,
+    STORAGE
 };
 
 enum class ShaderStage{
@@ -33,6 +41,21 @@ enum class ShaderStage{
 enum class Filter{
     LINEAR = 1,
     NEAREST = 2
+};
+
+
+enum class PrimitiveTopology {
+    POINT_LIST = 0,
+    LINE_LIST = 1,
+    LINE_STRIP = 2,
+    TRIANGLE_LIST = 3,
+    TRIANGLE_STRIP = 4,
+    TRIANGLE_FAN = 5,
+    LINE_LIST_WITH_ADJACENCY = 6,
+    LINE_STRIP_WITH_ADJACENCY = 7,
+    TRIANGLE_LIST_WITH_ADJACENCY = 8,
+    TRIANGLE_STRIP_WITH_ADJACENCY = 9,
+    PATCH_LIST = 10,
 };
 
 enum class Format{
@@ -297,10 +320,6 @@ enum class Format{
     G16_B16_R16_3PLANE_422_UNORM_KHR = G16_B16_R16_3PLANE_422_UNORM,
     G16_B16R16_2PLANE_422_UNORM_KHR = G16_B16R16_2PLANE_422_UNORM,
     G16_B16_R16_3PLANE_444_UNORM_KHR = G16_B16_R16_3PLANE_444_UNORM,
-    BEGIN_RANGE = UNDEFINED,
-    END_RANGE = ASTC_12x12_SRGB_BLOCK,
-    RANGE_SIZE = (ASTC_12x12_SRGB_BLOCK - UNDEFINED + 1),
-    MAX_ENUM = 0x7FFFFFFF
 };
 
 static uint32_t format_size(Format format){
@@ -437,8 +456,82 @@ static uint32_t format_size(Format format){
     return result;
 }
 
+enum class AttachmentLoadOperator {
+    LOAD = 0,
+    CLEAR = 1,
+    DONT_CARE = 2
+};
 
+enum class AttachmentStoreOperator {
+    STORE = 0,
+    DONT_CARE = 1,
+    NONE_QCOM = 1000301000
+};
 
+enum class ImageLayout {
+    UNDEFINED = 0,
+    GENERAL = 1,
+    COLOR_ATTACHMENT_OPTIMAL = 2,
+    DEPTH_STENCIL_ATTACHMENT_OPTIMAL = 3,
+    DEPTH_STENCIL_READ_ONLY_OPTIMAL = 4,
+    SHADER_READ_ONLY_OPTIMAL = 5,
+    TRANSFER_SRC_OPTIMAL = 6,
+    TRANSFER_DST_OPTIMAL = 7,
+    PREINITIALIZED = 8,
+    DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL = 1000117000,
+    DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL = 1000117001,
+    PRESENT_SRC_KHR = 1000001002,
+    SHARED_PRESENT_KHR = 1000111000,
+    SHADING_RATE_OPTIMAL_NV = 1000164003,
+    FRAGMENT_DENSITY_MAP_OPTIMAL_EXT = 1000218000
+};
+
+enum class ImageTiling {
+    OPTIMAL = 0,
+    LINEAR = 1,
+    DRM_FORMAT_MODIFIER_EXT = 1000158000
+};
+
+enum class ImageUsage {
+    TRANSFER_SRC = 0x00000001,
+    TRANSFER_DST = 0x00000002,
+    SAMPLED = 0x00000004,
+    STORAGE = 0x00000008,
+    COLOR_ATTACHMENT = 0x00000010,
+    DEPTH_STENCIL_ATTACHMENT = 0x00000020,
+    TRANSIENT_ATTACHMENT = 0x00000040,
+    INPUT_ATTACHMENT = 0x00000080,
+    SHADING_RATE_IMAGE_NV = 0x00000100,
+    FRAGMENT_DENSITY_MAP_EXT = 0x00000200
+};
+
+enum class MemoryProperty {
+    DEVICE_LOCAL = 0x00000001,
+    HOST_VISIBLE = 0x00000002,
+    HOST_COHERENT = 0x00000004,
+    HOST_CACHED = 0x00000008,
+    LAZILY_ALLOCATED = 0x00000010,
+    PROTECTED = 0x00000020,
+    DEVICE_COHERENT_AMD = 0x00000040,
+    DEVICE_UNCACHED_AMD = 0x00000080
+};
+
+enum class ImageAspect {
+    COLOR = 0x00000001,
+    DEPTH = 0x00000002,
+    STENCIL = 0x00000004,
+    METADATA = 0x00000008,
+    PLANE_0 = 0x00000010,
+    PLANE_1 = 0x00000020,
+    PLANE_2 = 0x00000040,
+    MEMORY_PLANE_0_EXT = 0x00000080,
+    MEMORY_PLANE_1_EXT = 0x00000100,
+    MEMORY_PLANE_2_EXT = 0x00000200,
+    MEMORY_PLANE_3_EXT = 0x00000400,
+    PLANE_0_KHR = PLANE_0,
+    PLANE_1_KHR = PLANE_1,
+    PLANE_2_KHR = PLANE_2
+};
 
 EG_END
 

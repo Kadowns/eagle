@@ -94,7 +94,7 @@ void VulkanCustomRenderTarget::create(uint32_t width, uint32_t height) {
         return;
 
     if (!m_image){
-        m_image = std::make_shared<VulkanImage>(m_extent.width, m_extent.height);
+        m_image = std::make_shared<VulkanImage>(DescriptorType::TEXTURE, m_extent.width, m_extent.height);
     }else {
         m_image->resize(width, height);
     }
@@ -147,7 +147,7 @@ VulkanMainRenderTarget::VulkanMainRenderTarget(const VulkanRenderTargetCreateInf
     m_extent.width = width;
     m_extent.height = height;
 
-    m_image = std::make_shared<VulkanImage>(width, height);
+    m_image = std::make_shared<VulkanImage>(DescriptorType::TEXTURE, width, height);
     auto attachment = std::static_pointer_cast<VulkanImageAttachment>(m_image->get_attachment().lock());
     attachment->image = image;
 

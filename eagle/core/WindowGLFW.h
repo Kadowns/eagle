@@ -6,7 +6,7 @@
 #define EAGLE_WINDOWGLFW_H
 
 
-#include "GlobalDefinitions.h"
+#include "CoreGlobalDefinitions.h"
 #include "Window.h"
 
 struct GLFWwindow;

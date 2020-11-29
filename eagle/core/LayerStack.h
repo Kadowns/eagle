@@ -8,7 +8,7 @@
 #include <memory>
 #include <vector>
 
-#include "GlobalDefinitions.h"
+#include "CoreGlobalDefinitions.h"
 #include "Layer.h"
 
 EG_BEGIN

@@ -7,8 +7,6 @@
 
 
 #include <eagle/core/Core.h>
-#include <eagle/engine/Engine.h>
-#include <eagle/editor/Editor.h>
 
 
 #endif //EAGLE_EAGLE_H

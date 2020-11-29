@@ -5,7 +5,7 @@
 #ifndef EAGLE_INPUTLAYER_H
 #define EAGLE_INPUTLAYER_H
 
-#include "GlobalDefinitions.h"
+#include "CoreGlobalDefinitions.h"
 #include "Layer.h"
 
 EG_BEGIN
@@ -27,7 +27,7 @@ public:
 
 private:
 
-    EventDispatcher m_dispatcher;
+    LayerEventDispatcher m_dispatcher;
 };
 
 EG_END

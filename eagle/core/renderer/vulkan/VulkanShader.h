@@ -3,7 +3,7 @@
 
 #include "eagle/core/renderer/Shader.h"
 #include "VulkanCore.h"
-#include "VulkanRenderTarget.h"
+//#include "VulkanRenderTarget.h"
 #include "VulkanDescriptorSetLayout.h"
 
 EG_BEGIN
@@ -14,7 +14,6 @@ public:
 
     struct VulkanShaderCreateInfo {
         VkDevice device;
-        VkRenderPass* pRenderPass;
         VkExtent2D* pExtent;
     };
 
@@ -36,14 +35,10 @@ public:
 
     VkPipelineLayout &get_layout();
 
-    inline const Reference<VulkanDescriptorSetLayout>& descriptor_set_layout(uint32_t index) { return m_descriptorSetLayouts[index]; }
-    inline const std::vector<Reference<VulkanDescriptorSetLayout>>& descriptor_set_layouts() { return m_descriptorSetLayouts; }
-
 private:
 
     void create_pipeline_layout();
 
-    VkShaderModule create_shader_module(const std::vector<uint32_t> &code);
 private:
 
     ShaderPipelineInfo m_pipelineInfo;
@@ -55,7 +50,7 @@ private:
     uint32_t m_outputAttachmentCount = 0;
     std::vector<Reference<VulkanDescriptorSetLayout>> m_descriptorSetLayouts;
     std::vector<VkVertexInputAttributeDescription> m_inputAttributes;
-    std::vector<uint32_t> m_vertShaderCode, m_fragShaderCode;
+    std::unordered_map<VkShaderStageFlags, std::vector<uint32_t>> m_shaderCodes;
 
     bool m_cleared;
 

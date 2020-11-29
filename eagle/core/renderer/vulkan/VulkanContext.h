@@ -19,10 +19,15 @@
 #include "VulkanUniformBuffer.h"
 #include "VulkanDescriptorSet.h"
 #include "VulkanDescriptorSetLayout.h"
-#include "VulkanTexture2D.h"
-#include "VulkanRenderTarget.h"
+#include "VulkanTexture.h"
+//#include "VulkanRenderTarget.h"
 #include "VulkanCommand.h"
 #include "VulkanCommandList.h"
+#include "VulkanCommandBuffer.h"
+#include "VulkanComputeShader.h"
+#include "VulkanStorageBuffer.h"
+#include "VulkanRenderPass.h"
+#include "VulkanFramebuffer.h"
 
 EG_BEGIN
 
@@ -43,9 +48,10 @@ protected:
 
         std::optional<uint32_t> graphicsFamily;
         std::optional<uint32_t> presentFamily;
+        std::optional<uint32_t> computeFamily;
 
         bool isComplete() {
-            return graphicsFamily.has_value() && presentFamily.has_value();
+            return graphicsFamily.has_value() && presentFamily.has_value() && computeFamily.has_value();
         }
     };
 
@@ -66,9 +72,13 @@ public:
     virtual void deinit() override;
     virtual void handle_window_resized(int width, int height) override;
     virtual bool prepare_frame() override;
-    virtual Scope <Eagle::CommandBuffer> create_command_buffer() override;
-    virtual const Reference <Eagle::RenderTarget> main_render_target() override;
-    virtual void submit_command_buffer(Scope <Eagle::CommandBuffer> &commandBuffer) override;
+    virtual Reference <Eagle::CommandBuffer> create_command_buffer() override;
+
+    virtual Reference<RenderPass> main_render_pass() override;
+    virtual Reference<Framebuffer> main_frambuffer() override;
+
+    virtual void set_recreation_callback(std::function<void()> recreation_callback) override;
+
     virtual void present_frame() override;
     //------
 
@@ -95,27 +105,26 @@ protected:
 
     virtual void create_swapchain();
 
-    virtual void create_render_targets();
-
     virtual void create_command_pool();
 
     virtual void allocate_command_buffers();
 
     virtual void create_sync_objects();
 
-    virtual void create_depth_resources();
-
     virtual void create_render_pass();
 
-    virtual void create_offscreen_render_pass();
-
     virtual void create_framebuffers();
+
+    virtual void create_offscreen_render_pass();
 
     virtual void recreate_swapchain();
 
     virtual void cleanup_swapchain();
 
     bool validation_layers_supported();
+
+
+protected:
 
     std::vector<const char *> get_required_extensions();
 
@@ -132,8 +141,6 @@ protected:
     VkPresentModeKHR choose_swap_present_mode(const std::vector<VkPresentModeKHR>& presentModes);
 
     VkExtent2D choose_swap_extent(const VkSurfaceCapabilitiesKHR& capabilities);
-    VkFormat find_supported_format(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
-    VkFormat find_depth_format();
 
 public:
     //inherited via RenderingContext
@@ -159,11 +166,28 @@ public:
     create_descriptor_set(const Reference<DescriptorSetLayout> &descriptorLayout,
                           const std::vector<Reference<DescriptorItem>> &descriptorItems) override;
 
-    virtual Handle<Texture2D>
-    create_texture_2d(const Texture2DCreateInfo &createInfo) override;
+    virtual Handle<Texture>
+    create_texture(const TextureCreateInfo &createInfo) override;
 
-    virtual Handle<RenderTarget>
-    create_render_target(const std::vector<RENDER_TARGET_ATTACHMENT> &attachments) override;
+    virtual Handle<RenderPass>
+    create_render_pass(const std::vector<RenderAttachmentDescription>& colorAttachments, const RenderAttachmentDescription& depthAttachment) override;
+
+    virtual Handle<Framebuffer>
+    create_framebuffer(const FramebufferCreateInfo& createInfo) override;
+
+    virtual Handle<Image>
+    create_image(const ImageCreateInfo& createInfo) override;
+
+    virtual Handle <StorageBuffer> create_storage_buffer(size_t size, void *data, BufferUsage usage) override;
+
+    virtual Handle<ComputeShader>
+    create_compute_shader(const std::string& path) override;
+
+    virtual void destroy_texture_2d(const Reference<Texture> &texture) override;
+
+private:
+
+    void submit_command_buffer(VkCommandBuffer& commandBuffer);
 
 
 protected:
@@ -179,38 +203,43 @@ protected:
     VkQueue m_graphicsQueue;
 
     struct {
-        uint32_t imageIndex;
+        uint32_t imageIndex = 0;
         uint32_t imageCount;
-        VulkanImageAttachment depth;
         VkFormat swapchainFormat;
         VkExtent2D extent2D;
         VkSwapchainKHR swapchain;
-        VkRenderPass renderPass, offscreenPass;
-        std::vector<Reference<VulkanMainRenderTarget>> renderTargets;
-        VkCommandBuffer commandBuffer;
+        Reference<VulkanRenderPass> renderPass;
+        std::vector<Reference<VulkanFramebuffer>> framebuffers;
     } m_present;
 
-    VkCommandPool m_commandPool;
-    std::vector<VkCommandBuffer> m_commandBuffers;
+    VkCommandPool m_graphicsCommandPool, m_computeCommandPool;
+    std::vector<Reference<VulkanCommandBuffer>> m_commandBuffers;
     std::vector<VkSemaphore> m_imageAvailableSemaphores;
     std::vector<VkSemaphore> m_renderFinishedSemaphores;
     std::vector<VkFence> m_inFlightFences;
     VkQueue m_presentQueue;
 
-    VulkanCleaner m_cleaner;
+
+    //compute
+    VkQueue m_computeQueue;
 
     std::vector<Reference<VulkanVertexBuffer>> m_vertexBuffers;
     std::vector<Reference<VulkanIndexBuffer>> m_indexBuffers;
     std::vector<Reference<VulkanUniformBuffer>> m_uniformBuffers;
+    std::vector<Reference<VulkanStorageBuffer>> m_storageBuffers;
     std::vector<Reference<VulkanDescriptorSet>> m_descriptorSets;
     std::vector<Reference<VulkanDescriptorSetLayout>> m_descriptorSetsLayouts;
     std::vector<Reference<VulkanShader>> m_shaders;
-    std::vector<Reference<VulkanTexture2D>> m_textures;
-    std::vector<Reference<VulkanCustomRenderTarget>> m_renderTargets;
+    std::vector<Reference<VulkanComputeShader>> m_computeShaders;
+    std::vector<Reference<VulkanTexture>> m_textures;
+    std::vector<Reference<VulkanImage>> m_images;
+    std::vector<Reference<VulkanRenderPass>> m_renderPasses;
+    std::vector<Reference<VulkanFramebuffer>> m_framebuffers;
 
     uint32_t m_currentFrame = 0;
 
     bool m_windowResized = false;
+    std::function<void()> recreation_callback;
 
     const std::vector<const char *> validationLayers = {
             "VK_LAYER_LUNARG_standard_validation"

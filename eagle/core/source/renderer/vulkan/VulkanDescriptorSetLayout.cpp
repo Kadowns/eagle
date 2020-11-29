@@ -3,7 +3,7 @@
 //
 
 #include <eagle/core/renderer/vulkan/VulkanDescriptorSetLayout.h>
-#include <eagle/core/renderer/vulkan/VulkanConversor.h>
+#include <eagle/core/renderer/vulkan/VulkanConverter.h>
 
 EG_BEGIN
 
@@ -16,8 +16,8 @@ VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(VkDevice device, const std:
         descriptorBinding.binding = bindings[i].binding;
         descriptorBinding.descriptorCount = 1;
         descriptorBinding.pImmutableSamplers = nullptr;
-        descriptorBinding.descriptorType = VulkanConversor::to_vk(bindings[i].descriptorType);
-        descriptorBinding.stageFlags = VulkanConversor::to_vk(bindings[i].shaderStage);
+        descriptorBinding.descriptorType = VulkanConverter::to_vk(bindings[i].descriptorType);
+        descriptorBinding.stageFlags = VulkanConverter::to_vk(bindings[i].shaderStage);
         vkBindings[i] = descriptorBinding;
     }
 

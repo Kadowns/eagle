@@ -7,7 +7,7 @@
 
 #include <vector>
 
-#include "eagle/core/GlobalDefinitions.h"
+#include "eagle/core/CoreGlobalDefinitions.h"
 #include "UniformBuffer.h"
 
 EG_BEGIN

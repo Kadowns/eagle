@@ -12,36 +12,47 @@
 
 EG_BEGIN
 
-struct VulkanImageAttachment : public ImageAttachment {
-    VkImage image;
-    VkDeviceMemory memory;
-    VkImageView view;
+struct VulkanImageCreateInfo {
+    VkPhysicalDevice physicalDevice;
+    VkDevice device;
+    VkCommandPool commandPool;
+    VkQueue graphicsQueue;
 };
 
-struct VulkanImageSampler : public ImageSampler {
-    VkSampler sampler;
-};
 
 class VulkanImage : public Image {
 
 public:
 
-    VulkanImage(uint32_t width, uint32_t height) :
-        Image(width, height),
-        m_attachment(std::make_shared<VulkanImageAttachment>()),
-        m_sampler(std::make_shared<VulkanImageSampler>()) {}
+    VulkanImage(const ImageCreateInfo& imageCreateInfo, const VulkanImageCreateInfo& nativeCreateInfo);
 
-    virtual Handle<ImageAttachment> get_attachment() override {
-        return m_attachment;
-    }
+    //Used for swapchain images
+    VulkanImage(const ImageCreateInfo& imageCreateInfo, const VulkanImageCreateInfo& nativeCreateInfo, VkImage image);
+    virtual ~VulkanImage();
 
-    virtual Handle<ImageSampler> get_sampler() override {
-        return m_sampler;
-    }
+    inline VkImage& native_image() { return m_image; }
+    inline VkDeviceMemory& native_memory() { return m_memory; }
+    inline VkImageView& native_image_view() { return m_view; }
+
+    inline const VkImage& native_image() const { return m_image; }
+    inline const VkDeviceMemory& native_memory() const { return m_memory; }
+    inline const VkImageView& native_image_view() const { return m_view; }
+
+protected:
+    virtual void on_resize() override;
+
+    void copy_buffer_data_to_image(VkImageSubresourceRange subresourceRange);
 
 private:
-    Reference<VulkanImageAttachment> m_attachment;
-    Reference<VulkanImageSampler> m_sampler;
+    void create();
+    void clear();
+
+private:
+    VulkanImageCreateInfo m_nativeCreateInfo;
+    VkImage m_image = nullptr;
+    VkDeviceMemory m_memory = nullptr;
+    VkImageView m_view = nullptr;
+    bool m_createdFromExternalImage = false;
 };
 
 

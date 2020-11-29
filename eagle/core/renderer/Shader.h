@@ -8,18 +8,19 @@
 #include "RenderingCore.h"
 #include "VertexLayout.h"
 #include "DescriptorSetLayout.h"
+#include "RenderPass.h"
 
 EG_BEGIN
 
 
 struct ShaderPipelineInfo {
-    ShaderPipelineInfo(const VertexLayout& layout) : vertexLayout(layout) {}
-
+    ShaderPipelineInfo(const Reference<RenderPass>& renderPass) : renderPass(renderPass) {}
+    Reference<RenderPass> renderPass;
     bool blendEnable;
     bool depthTesting;
     bool dynamicStates;
-    bool offscreenRendering;
     VertexLayout vertexLayout;
+    PrimitiveTopology primitiveTopology = PrimitiveTopology::TRIANGLE_LIST;
     struct{
         float x = 0, y = 0;
         float widthPercent = 1, heightPercent = 1;
@@ -29,7 +30,7 @@ struct ShaderPipelineInfo {
 class Shader {
 
 public:
-    Shader();
+    Shader() = default;
     virtual ~Shader() = default;
 
     virtual void create_pipeline() = 0;

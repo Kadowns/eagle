@@ -28,7 +28,6 @@ void WindowGLFW::init() {
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-    glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUSED , GLFW_TRUE);
 
     m_window = glfwCreateWindow(m_windowData.width, m_windowData.height, ("Eagle - " + EAGLE_GET_INFO(EAGLE_APP_NAME)).c_str(), nullptr, nullptr);

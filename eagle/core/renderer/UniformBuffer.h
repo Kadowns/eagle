@@ -14,14 +14,13 @@ class UniformBuffer : public DescriptorItem {
 
 public:
 
-    explicit UniformBuffer(size_t size);
-    virtual ~UniformBuffer();
+    explicit UniformBuffer(size_t size) : DescriptorItem(DescriptorType::UNIFORM_BUFFER), m_bytes(size) {}
+    virtual ~UniformBuffer() = default;
 
-    virtual void set_bytes(void *data, size_t size, size_t offset) = 0;
-    virtual void update() = 0;
+    virtual void set_data(void *data, size_t size, size_t offset) = 0;
+    virtual void push() = 0;
     size_t size() {return m_bytes.size();}
     const std::vector<char>& data() const { return m_bytes; }
-    std::vector<char>& bytes() { return m_bytes; }
 
 protected:
     std::vector<char> m_bytes;

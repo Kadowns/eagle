@@ -24,8 +24,7 @@ class VulkanIndexBuffer : public IndexBuffer, public VulkanCleanable {
 
 public:
 
-    VulkanIndexBuffer(VkDevice device, VulkanCleaner &cleaner,
-                      VulkanIndexBufferCreateInfo &createInfo, void *indexData, size_t indexCount,
+    VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInfo &createInfo, void *indexData, size_t indexCount,
                       IndexBufferType indexType, BufferUsage usage);
     virtual ~VulkanIndexBuffer();
     virtual void * get_data() override;

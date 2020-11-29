@@ -9,9 +9,12 @@
 #include <eagle/core/Log.h>
 #include <eagle/core/Layer.h>
 #include <eagle/core/InputLayer.h>
+#include <eagle/core/Random.h>
+#include <eagle/core/Time.h>
+#include <eagle/core/events/ImmediateEvent.h>
 #include <eagle/core/events/InputEvents.h>
-#include <eagle/core/events/KeyCodes.h>
 #include <eagle/core/events/WindowEvents.h>
+#include <eagle/core/events/KeyCodes.h>
 
 #include <eagle/core/WindowGLFW.h>
 #include <eagle/core/renderer/RenderingCore.h>

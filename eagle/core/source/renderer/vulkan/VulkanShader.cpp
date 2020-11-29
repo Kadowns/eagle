@@ -1,9 +1,10 @@
 #include <eagle/core/renderer/vulkan/VulkanShader.h>
 #include <eagle/core/renderer/vulkan/VulkanShaderCompiler.h>
 #include <eagle/core/renderer/vulkan/VulkanHelper.h>
-#include <eagle/core/renderer/vulkan/VulkanConversor.h>
-#include <eagle/core/renderer/vulkan/spirv_reflect.h>
+#include <eagle/core/renderer/vulkan/VulkanConverter.h>
+#include <eagle/core/renderer/vulkan/VulkanShaderUtils.h>
 #include <eagle/core/Log.h>
+#include <eagle/core/renderer/vulkan/VulkanRenderPass.h>
 
 EG_BEGIN
 
@@ -14,8 +15,16 @@ VulkanShader::VulkanShader(const std::unordered_map<ShaderStage, std::string> &s
     m_cleared(true),
     m_info(createInfo){
 
-    m_vertShaderCode = VulkanShaderCompiler::compile_glsl(shaderPaths.at(ShaderStage::VERTEX), ShaderStage::VERTEX);
-    m_fragShaderCode = VulkanShaderCompiler::compile_glsl(shaderPaths.at(ShaderStage::FRAGMENT), ShaderStage::FRAGMENT);
+
+    for(auto& kv : shaderPaths){
+        ShaderStage stage = kv.first;
+        std::string path = kv.second;
+        if (stage == ShaderStage::COMPUTE){
+            throw std::runtime_error("Compute shaders are not allowed on a graphics shader!");
+        }
+
+        m_shaderCodes.emplace(VulkanConverter::to_vk(stage), VulkanShaderCompiler::compile_glsl(path, stage));
+    }
 
     create_pipeline_layout();
     create_pipeline();
@@ -30,16 +39,13 @@ VulkanShader::~VulkanShader() {
 
 void VulkanShader::create_pipeline_layout() {
 
-    SpvReflectShaderModule vertexShaderReflection, fragmentShaderReflection;
-    SPV_REFLECT_ASSERT(spvReflectCreateShaderModule(m_vertShaderCode.size() * sizeof(unsigned int), m_vertShaderCode.data(), &vertexShaderReflection));
-    SPV_REFLECT_ASSERT(spvReflectCreateShaderModule(m_fragShaderCode.size() * sizeof(unsigned int), m_fragShaderCode.data(), &fragmentShaderReflection));
 
     //vertex input-----------------------------
     m_inputAttributes.clear();
     m_inputAttributes.resize(m_vertexLayout.get_component_count());
     uint32_t offset = 0;
     for (uint32_t i = 0; i < m_inputAttributes.size(); i++){
-        m_inputAttributes[i].format = VulkanConversor::to_vk(m_vertexLayout[i]);
+        m_inputAttributes[i].format = VulkanConverter::to_vk(m_vertexLayout[i]);
         m_inputAttributes[i].binding = 0;
         m_inputAttributes[i].location = i;
         m_inputAttributes[i].offset = offset;
@@ -50,162 +56,21 @@ void VulkanShader::create_pipeline_layout() {
     m_inputBinding.stride = offset;
     m_inputBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
+
     //map for each descriptor set with respective descriptor bindings
     std::map<uint32_t, std::map<uint32_t, DescriptorBindingDescription>> descriptorSetMap;
     std::vector<VkPushConstantRange> pushConstantsRanges;
-    uint32_t pushConstantsOffset = 0;
 
-    auto add_bindings_from_shader_stage = [&](const SpvReflectShaderModule* shaderReflectionModule, const VkShaderStageFlags shaderStage) {
+    for (auto& shaderCode : m_shaderCodes){
+        VkShaderStageFlags stage = shaderCode.first;
+        std::vector<uint32_t>& code = shaderCode.second;
 
-        uint32_t descriptorBindingCount = 0;
-        SPV_REFLECT_ASSERT(spvReflectEnumerateDescriptorBindings(shaderReflectionModule, &descriptorBindingCount, nullptr));
-
-        if (descriptorBindingCount > 0) {
-
-            std::vector<SpvReflectDescriptorBinding*> reflectedDescriptorBindings(descriptorBindingCount);
-
-            SPV_REFLECT_ASSERT(spvReflectEnumerateDescriptorBindings(shaderReflectionModule, &descriptorBindingCount, reflectedDescriptorBindings.data()));
-
-            //Sort by binding so we can easily check if the binding has already been added by a previous shader stage
-            std::sort(std::begin(reflectedDescriptorBindings), std::end(reflectedDescriptorBindings),
-                      [](const SpvReflectDescriptorBinding* a, const SpvReflectDescriptorBinding* b)
-                      {
-                          return a->set < b->set || a->binding < b->binding;
-                      });
-
-            for (auto& reflectedBinding : reflectedDescriptorBindings){
-
-                DescriptorBindingDescription description = {};
-
-                description.name = std::string(reflectedBinding->name);
-                description.binding = reflectedBinding->binding;
-                description.shaderStage = VulkanConversor::to_eg(shaderStage);
-                description.descriptorType = VulkanConversor::to_eg((VkDescriptorType)reflectedBinding->descriptor_type);
-                if (description.descriptorType == DescriptorType::UNIFORM_BUFFER){
-                    description.size = reflectedBinding->block.size;
-
-                    auto get_member_type = [&](const SpvReflectTypeDescription& type){
-
-                        SpvReflectTypeFlags flags = type.type_flags;
-
-                        if (SPV_REFLECT_TYPE_FLAG_BOOL == flags){
-                            return DataType::BOOL;
-                        }
-                        if (SPV_REFLECT_TYPE_FLAG_INT == flags){
-                            return DataType::INT;
-                        }
-                        if (SPV_REFLECT_TYPE_FLAG_FLOAT & flags){
-                            if ((SPV_REFLECT_TYPE_FLAG_VECTOR | SPV_REFLECT_TYPE_FLAG_MATRIX) & flags){
-                                switch (type.traits.numeric.matrix.column_count) {
-                                    case 4:
-                                        return DataType::MATRIX4X4;
-                                    case 3:
-                                        return DataType::MATRIX3X3;
-                                    case 2:
-                                        return DataType::MATRIX2X2;
-
-                                }
-                            }
-                            if ((SPV_REFLECT_TYPE_FLAG_VECTOR) & flags) {
-                                switch (type.traits.numeric.vector.component_count) {
-                                    case 2:
-                                        return DataType::VECTOR2F;
-                                    case 3:
-                                        return DataType::VECTOR3F;
-                                    case 4:
-                                        return DataType::VECTOR4F;
-                                }
-                            }
-                            return DataType::FLOAT;
-                        }
-
-
-                        if (SPV_REFLECT_TYPE_FLAG_EXTERNAL_IMAGE == flags){
-                            return DataType::EXTERNAL_IMAGE;
-                        }
-                        if (SPV_REFLECT_TYPE_FLAG_EXTERNAL_SAMPLER & flags){
-                            return DataType::EXTERNAL_SAMPLER;
-                        }
-                        if (SPV_REFLECT_TYPE_FLAG_EXTERNAL_SAMPLED_IMAGE & flags){
-                            return DataType::EXTERNAL_SAMPLED_IMAGE;
-                        }
-                        if (SPV_REFLECT_TYPE_FLAG_EXTERNAL_BLOCK & flags){
-                            return DataType::EXTERNAL_BLOCK;
-                        }
-                        if (SPV_REFLECT_TYPE_FLAG_EXTERNAL_MASK & flags){
-                            return DataType::EXTERNAL_MASK;
-                        }
-                        if (SPV_REFLECT_TYPE_FLAG_STRUCT & flags){
-                            return DataType::STRUCT;
-                        }
-                        if (SPV_REFLECT_TYPE_FLAG_ARRAY & flags){
-                            return DataType::ARRAY;
-                        }
-                        return DataType::UNDEFINED;
-                    };
-
-                    for (int i = 0; i < reflectedBinding->block.member_count; i++) {
-
-                        DescriptorBindingMemberDescription member = {};
-                        member.type = get_member_type(*reflectedBinding->block.members[i].type_description);
-                        member.name = reflectedBinding->block.members[i].name;
-                        member.size = reflectedBinding->block.members[i].size;
-                        member.offset = reflectedBinding->block.members[i].offset;
-
-                        description.members.emplace(member.name, member);
-                    }
-                }
-
-
-
-
-                auto existingSet = descriptorSetMap.find(reflectedBinding->set);
-                if (existingSet != descriptorSetMap.end()){
-                    //If this set already exists append this binding to it
-                    auto existingBinding = existingSet->second.find(reflectedBinding->binding);
-                    if (existingBinding != existingSet->second.end()){
-                        //TODO existingBinding->second.stageFlags |= shaderStage;
-                    }
-                    else{ //Otherwise a new binding needs to be added
-                        existingSet->second.emplace(description.binding, description);
-                    }
-                }
-                else { //Otherwise a new set needs to be added
-
-                    descriptorSetMap.emplace(reflectedBinding->set, std::map<uint32_t, DescriptorBindingDescription>());
-                    descriptorSetMap[reflectedBinding->set].emplace(description.binding, description);
-                }
-            }
+        VulkanShaderUtils::add_bindings_from_shader_stage(code, stage, descriptorSetMap, pushConstantsRanges);
+        //fragment shader output count
+        if (stage == VK_SHADER_STAGE_FRAGMENT_BIT){
+           VulkanShaderUtils::enumerate_output_variables(code, m_outputAttachmentCount);
         }
-
-
-
-        uint32_t pushConstantsCount = 0;
-        SPV_REFLECT_ASSERT(spvReflectEnumeratePushConstantBlocks(shaderReflectionModule, &pushConstantsCount, nullptr));
-
-        if (pushConstantsCount > 0){
-
-            std::vector<SpvReflectBlockVariable*> pushConstants(pushConstantsCount);
-
-            SPV_REFLECT_ASSERT(spvReflectEnumeratePushConstantBlocks(shaderReflectionModule, &pushConstantsCount, pushConstants.data()));
-
-            for (uint32_t i = 0; i < pushConstants.size(); i++){
-                VkPushConstantRange pushConstantRange = {};
-                pushConstantRange.stageFlags = shaderStage;
-                pushConstantRange.size = pushConstants[i]->size - pushConstantsOffset; //for some reason, spv reflect counts size as real size + offset
-                pushConstantRange.offset = pushConstantsOffset;
-                pushConstantsOffset += pushConstantRange.size;
-                pushConstantsRanges.emplace_back(pushConstantRange);
-            }
-        }
-    };
-
-    add_bindings_from_shader_stage(&vertexShaderReflection, VK_SHADER_STAGE_VERTEX_BIT);
-    add_bindings_from_shader_stage(&fragmentShaderReflection, VK_SHADER_STAGE_FRAGMENT_BIT);
-
-    //fragment shader output count
-    SPV_REFLECT_ASSERT(spvReflectEnumerateOutputVariables(&fragmentShaderReflection, &m_outputAttachmentCount, nullptr));
-
+    }
 
     for (auto& descriptorSetLayout : descriptorSetMap){
 
@@ -237,8 +102,8 @@ void VulkanShader::create_pipeline_layout() {
 void VulkanShader::create_pipeline() {
     EG_CORE_TRACE("Creating shader pipeline!");
 
-    VkShaderModule vertShaderModule = create_shader_module(m_vertShaderCode);
-    VkShaderModule fragShaderModule = create_shader_module(m_fragShaderCode);
+    VkShaderModule vertShaderModule = VulkanShaderUtils::create_shader_module(m_info.device, m_shaderCodes.at(VK_SHADER_STAGE_VERTEX_BIT));
+    VkShaderModule fragShaderModule = VulkanShaderUtils::create_shader_module(m_info.device, m_shaderCodes.at(VK_SHADER_STAGE_FRAGMENT_BIT));
 
     VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -254,17 +119,25 @@ void VulkanShader::create_pipeline() {
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
-
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount = 1;
-    vertexInputInfo.pVertexBindingDescriptions = &m_inputBinding;
-    vertexInputInfo.vertexAttributeDescriptionCount = m_inputAttributes.size();
-    vertexInputInfo.pVertexAttributeDescriptions = m_inputAttributes.data();
+    if (m_inputAttributes.empty()){
+        vertexInputInfo.vertexBindingDescriptionCount = 0;
+        vertexInputInfo.pVertexBindingDescriptions = nullptr;
+        vertexInputInfo.vertexAttributeDescriptionCount = 0;
+        vertexInputInfo.pVertexAttributeDescriptions = nullptr;
+    }
+    else {
+        vertexInputInfo.vertexBindingDescriptionCount = 1;
+        vertexInputInfo.pVertexBindingDescriptions = &m_inputBinding;
+        vertexInputInfo.vertexAttributeDescriptionCount = m_inputAttributes.size();
+        vertexInputInfo.pVertexAttributeDescriptions = m_inputAttributes.data();
+    }
+
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    inputAssembly.topology = VulkanConverter::to_vk(m_pipelineInfo.primitiveTopology);
     inputAssembly.primitiveRestartEnable = VK_FALSE;
 
 
@@ -385,7 +258,7 @@ void VulkanShader::create_pipeline() {
         pipelineInfo.pDynamicState = &dynamicState;
     }
     pipelineInfo.layout = m_pipelineLayout;
-    pipelineInfo.renderPass = *m_info.pRenderPass;
+    pipelineInfo.renderPass = std::static_pointer_cast<VulkanRenderPass>(m_pipelineInfo.renderPass)->native_render_pass();
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
@@ -405,23 +278,6 @@ void VulkanShader::cleanup_pipeline(){
     if (m_cleared){ return; }
     VK_CALL vkDestroyPipeline(m_info.device, m_graphicsPipeline, nullptr);
     m_cleared = true;
-}
-
-VkShaderModule VulkanShader::create_shader_module(const std::vector<uint32_t> &code) {
-
-    EG_CORE_TRACE("Creating shader module!");
-
-    VkShaderModuleCreateInfo createInfo = {};
-    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    createInfo.codeSize = code.size() * sizeof(uint32_t);
-    createInfo.pCode = code.data();
-
-    VkShaderModule shaderModule;
-    VK_CALL_ASSERT(vkCreateShaderModule(m_info.device, &createInfo, nullptr, &shaderModule)) {
-        throw std::runtime_error("failed to create shader module!");
-    }
-
-    return shaderModule;
 }
 
 VkPipeline& VulkanShader::get_pipeline() {

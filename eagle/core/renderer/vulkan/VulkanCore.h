@@ -5,7 +5,7 @@
 #ifndef EAGLE_VULKANCORE_H
 #define EAGLE_VULKANCORE_H
 
-#include "eagle/core/GlobalDefinitions.h"
+#include "eagle/core/CoreGlobalDefinitions.h"
 #include "eagle/core/renderer/RenderingCore.h"
 #include <vulkan/vulkan.h>
 

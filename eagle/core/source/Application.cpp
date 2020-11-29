@@ -3,6 +3,7 @@
 //
 
 
+#include <eagle/core/Time.h>
 #include "eagle/core/Log.h"
 #include "eagle/core/Application.h"
 #include "eagle/core/Window.h"
@@ -48,12 +49,16 @@ void Application::run() {
 
     EG_CORE_TRACE_F("Initializing {0}", EAGLE_GET_INFO(EAGLE_APP_NAME));
 
+    Time::init();
+
     m_window->init();
     m_window->set_event_callback(BIND_EVENT_FN(Application::handle_event));
 
     m_layerStack.init();
 
     while(!m_quit){
+
+        Time::update();
         m_window->pool_events();
 
         dispatch_events();
@@ -68,26 +73,6 @@ void Application::run() {
     m_window->deinit();
     EG_CORE_TRACE("Application terminated!");
 
-}
-
-void Application::layer_emplace_back(Reference<Layer> layer) {
-    m_layerStack.emplace_back(layer);
-}
-
-void Application::layer_emplace_front(Reference<Layer> layer) {
-    m_layerStack.emplace_front(layer);
-}
-
-void Application::layer_pop(Reference<Layer> layer) {
-    m_layerStack.pop_layer(layer);
-}
-
-void Application::layer_emplace(std::vector<Reference<Layer>> layers) {
-    m_layerStack.emplace(layers);
-}
-
-void Application::event_emplace_back(Reference<Event> e) {
-    m_eventQueue.emplace(e);
 }
 
 void Application::quit() {

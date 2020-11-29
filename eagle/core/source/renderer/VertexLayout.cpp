@@ -8,6 +8,10 @@
 
 EG_BEGIN
 
+VertexLayout::VertexLayout() : m_elementCount(0) {
+
+}
+
 VertexLayout::VertexLayout(size_t elementCount, std::vector<Eagle::Format> components) :
     m_components(std::move(components)), m_elementCount(elementCount) {
 }
@@ -39,6 +43,8 @@ Format VertexLayout::get_component(uint32_t index) {
 size_t VertexLayout::get_element_count() {
     return m_elementCount;
 }
+
+
 
 VertexLayout::~VertexLayout() = default;
 

@@ -7,6 +7,8 @@
 
 EG_BEGIN
 
+std::vector<VulkanCleanable*> VulkanCleaner::m_dirtyObjects;
+
 void VulkanCleaner::flush(uint32_t index){
 
     std::vector<VulkanCleanable*> dirtyObjects;
@@ -25,6 +27,10 @@ void VulkanCleaner::push(VulkanCleanable* object){
     if (it == m_dirtyObjects.end()){
         m_dirtyObjects.emplace_back(object);
     }
+}
+
+void VulkanCleaner::clear() {
+    m_dirtyObjects.clear();
 }
 
 

@@ -15,6 +15,7 @@ EG_BEGIN
 class VertexLayout {
 
 public:
+    VertexLayout();
     VertexLayout(size_t elementCount, std::initializer_list<Format> components);
     VertexLayout(size_t elementCount, std::vector<Eagle::Format> components);
     ~VertexLayout();
