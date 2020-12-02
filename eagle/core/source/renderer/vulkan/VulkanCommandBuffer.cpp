@@ -158,6 +158,8 @@ void VulkanCommandBuffer::pipeline_barrier(const Reference<Image> &image, Shader
     imageMemoryBarrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
     imageMemoryBarrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
     imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    imageMemoryBarrier.srcQueueFamilyIndex = 0;
+    imageMemoryBarrier.dstQueueFamilyIndex = 0;
     VK_CALL vkCmdPipelineBarrier(
             m_commandBuffer,
             VulkanConverter::to_vk(srcStage),

@@ -6,7 +6,6 @@
 #include "eagle/core/Log.h"
 #include "eagle/core/events/WindowEvents.h"
 #include "eagle/core/events/InputEvents.h"
-#include "eagle/core/renderer/RenderingContext.h"
 
 #include <GLFW/glfw3.h>
 

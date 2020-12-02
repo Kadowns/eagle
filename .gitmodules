@@ -7,3 +7,12 @@
 [submodule "external/spdlog"]
 	path = external/spdlog
 	url = git@github.com:gabime/spdlog.git
+[submodule "examples/external/entityx"]
+	path = examples/external/entityx
+	url = git@github.com:alecthomas/entityx.git
+[submodule "examples/external/glm"]
+	path = examples/external/glm
+	url = git@github.com:g-truc/glm.git
+[submodule "examples/external/imgui"]
+	path = examples/external/imgui
+	url = git@github.com:Kadowns/imgui.git
