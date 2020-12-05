@@ -574,14 +574,17 @@ void VulkanContext::create_swapchain() {
     //-----------------------------
 
     QueueFamilyIndices indices = find_family_indices(m_physicalDevice);
-    uint32_t queueFamilyIndices[] = {(uint32_t) indices.graphicsFamily.value(),
-                                     (uint32_t) indices.presentFamily.value(),
-                                     (uint32_t) indices.computeFamily.value()};
+    std::set<uint32_t> uniqueFamilies = {(uint32_t) indices.graphicsFamily.value(),
+                                         (uint32_t) indices.presentFamily.value(),
+                                         (uint32_t) indices.computeFamily.value()};
+
+
+    std::vector<uint32_t> queueFamilyIndices(uniqueFamilies.begin(), uniqueFamilies.end());
 
     if (indices.graphicsFamily != indices.presentFamily) {
         createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-        createInfo.queueFamilyIndexCount = 3;
-        createInfo.pQueueFamilyIndices = queueFamilyIndices;
+        createInfo.queueFamilyIndexCount = queueFamilyIndices.size();
+        createInfo.pQueueFamilyIndices = queueFamilyIndices.data();
     } else {
         createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
         createInfo.queueFamilyIndexCount = 0; // Optional
