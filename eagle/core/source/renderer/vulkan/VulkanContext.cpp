@@ -922,14 +922,13 @@ void VulkanContext::cleanup_swapchain() {
 }
 
 Handle <Shader>
-VulkanContext::create_shader(const std::unordered_map<ShaderStage, std::string> &shaderPaths,
-                             const ShaderPipelineInfo &pipelineInfo) {
+VulkanContext::create_shader(const ShaderCreateInfo &createInfo) {
     EG_CORE_TRACE("Creating a vulkan shader!");
 
-    VulkanShader::VulkanShaderCreateInfo createInfo = {};
-    createInfo.device = m_device;
-    createInfo.pExtent = &m_present.extent2D;
-    m_shaders.emplace_back(std::make_shared<VulkanShader>(shaderPaths, pipelineInfo, createInfo));
+    VulkanShaderCreateInfo nativeCreateInfo = {};
+    nativeCreateInfo.device = m_device;
+    nativeCreateInfo.pExtent = &m_present.extent2D;
+    m_shaders.emplace_back(std::make_shared<VulkanShader>(createInfo, nativeCreateInfo));
     return m_shaders.back();
 }
 

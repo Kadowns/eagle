@@ -145,8 +145,7 @@ protected:
 public:
     //inherited via RenderingContext
     virtual Handle <Shader>
-    create_shader(const std::unordered_map<ShaderStage, std::string> &shaderPaths,
-                  const ShaderPipelineInfo &pipelineInfo) override;
+    create_shader(const ShaderCreateInfo &pipelineInfo) override;
 
     virtual Handle<VertexBuffer>
     create_vertex_buffer(void *vertices, uint32_t count, const VertexLayout &vertexLayout,

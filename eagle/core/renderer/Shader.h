@@ -13,12 +13,16 @@
 EG_BEGIN
 
 
-struct ShaderPipelineInfo {
-    ShaderPipelineInfo(const Reference<RenderPass>& renderPass) : renderPass(renderPass) {}
+struct ShaderCreateInfo {
+    ShaderCreateInfo(const Reference<RenderPass>& renderPass,
+                     const std::unordered_map<ShaderStage, std::string>& shaderStages) :
+                     renderPass(renderPass),
+                     shaderStages(shaderStages){}
     Reference<RenderPass> renderPass;
-    bool blendEnable;
-    bool depthTesting;
-    bool dynamicStates;
+    std::unordered_map<ShaderStage, std::string> shaderStages;
+    bool blendEnable = false;
+    bool depthTesting = false;
+    bool dynamicStates = false;
     VertexLayout vertexLayout;
     PrimitiveTopology primitiveTopology = PrimitiveTopology::TRIANGLE_LIST;
     struct{

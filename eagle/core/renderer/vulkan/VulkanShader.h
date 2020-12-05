@@ -3,24 +3,19 @@
 
 #include "eagle/core/renderer/Shader.h"
 #include "VulkanCore.h"
-//#include "VulkanRenderTarget.h"
 #include "VulkanDescriptorSetLayout.h"
 
 EG_BEGIN
 
+struct VulkanShaderCreateInfo {
+    VkDevice device;
+    VkExtent2D* pExtent;
+};
+
 class VulkanShader : public Shader {
-
 public:
 
-    struct VulkanShaderCreateInfo {
-        VkDevice device;
-        VkExtent2D* pExtent;
-    };
-
-public:
-
-    VulkanShader(const std::unordered_map<ShaderStage, std::string> &shaderPaths,
-                 const ShaderPipelineInfo &pipelineInfo, const VulkanShaderCreateInfo &createInfo);
+    VulkanShader(const ShaderCreateInfo &createInfo, const VulkanShaderCreateInfo &nativeCreateInfo);
 
     ~VulkanShader();
 
@@ -41,8 +36,8 @@ private:
 
 private:
 
-    ShaderPipelineInfo m_pipelineInfo;
-    VulkanShaderCreateInfo m_info;
+    ShaderCreateInfo m_createInfo;
+    VulkanShaderCreateInfo m_nativeCreateInfo;
     VertexLayout m_vertexLayout;
     VkPipelineLayout m_pipelineLayout;
     VkPipeline m_graphicsPipeline;

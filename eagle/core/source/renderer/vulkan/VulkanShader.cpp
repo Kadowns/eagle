@@ -8,15 +8,14 @@
 
 EG_BEGIN
 
-VulkanShader::VulkanShader(const std::unordered_map<ShaderStage, std::string> &shaderPaths,
-                           const ShaderPipelineInfo &pipelineInfo, const VulkanShaderCreateInfo &createInfo) :
-    m_pipelineInfo(pipelineInfo),
-    m_vertexLayout(pipelineInfo.vertexLayout),
-    m_cleared(true),
-    m_info(createInfo){
+VulkanShader::VulkanShader(const ShaderCreateInfo &createInfo, const VulkanShaderCreateInfo &nativeCreateInfo) :
+        m_createInfo(createInfo),
+        m_vertexLayout(createInfo.vertexLayout),
+        m_cleared(true),
+        m_nativeCreateInfo(nativeCreateInfo){
 
 
-    for(auto& kv : shaderPaths){
+    for(auto& kv : createInfo.shaderStages){
         ShaderStage stage = kv.first;
         std::string path = kv.second;
         if (stage == ShaderStage::COMPUTE){
@@ -32,7 +31,7 @@ VulkanShader::VulkanShader(const std::unordered_map<ShaderStage, std::string> &s
 
 VulkanShader::~VulkanShader() {
     cleanup_pipeline();
-    VK_CALL vkDestroyPipelineLayout(m_info.device, m_pipelineLayout, nullptr);
+    VK_CALL vkDestroyPipelineLayout(m_nativeCreateInfo.device, m_pipelineLayout, nullptr);
 
     m_descriptorSetLayouts.clear();
 }
@@ -79,7 +78,7 @@ void VulkanShader::create_pipeline_layout() {
             descriptions.emplace_back(binding.second);
         }
 
-        m_descriptorSetLayouts.emplace_back(std::make_shared<VulkanDescriptorSetLayout>(m_info.device, descriptions));
+        m_descriptorSetLayouts.emplace_back(std::make_shared<VulkanDescriptorSetLayout>(m_nativeCreateInfo.device, descriptions));
     }
 
     std::vector<VkDescriptorSetLayout> layouts(m_descriptorSetLayouts.size());
@@ -94,7 +93,7 @@ void VulkanShader::create_pipeline_layout() {
     pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
     pipelineLayoutInfo.pSetLayouts = layouts.data();
 
-    VK_CALL_ASSERT(vkCreatePipelineLayout(m_info.device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout)) {
+    VK_CALL_ASSERT(vkCreatePipelineLayout(m_nativeCreateInfo.device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout)) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
 }
@@ -102,8 +101,8 @@ void VulkanShader::create_pipeline_layout() {
 void VulkanShader::create_pipeline() {
     EG_CORE_TRACE("Creating shader pipeline!");
 
-    VkShaderModule vertShaderModule = VulkanShaderUtils::create_shader_module(m_info.device, m_shaderCodes.at(VK_SHADER_STAGE_VERTEX_BIT));
-    VkShaderModule fragShaderModule = VulkanShaderUtils::create_shader_module(m_info.device, m_shaderCodes.at(VK_SHADER_STAGE_FRAGMENT_BIT));
+    VkShaderModule vertShaderModule = VulkanShaderUtils::create_shader_module(m_nativeCreateInfo.device, m_shaderCodes.at(VK_SHADER_STAGE_VERTEX_BIT));
+    VkShaderModule fragShaderModule = VulkanShaderUtils::create_shader_module(m_nativeCreateInfo.device, m_shaderCodes.at(VK_SHADER_STAGE_FRAGMENT_BIT));
 
     VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -137,23 +136,23 @@ void VulkanShader::create_pipeline() {
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    inputAssembly.topology = VulkanConverter::to_vk(m_pipelineInfo.primitiveTopology);
+    inputAssembly.topology = VulkanConverter::to_vk(m_createInfo.primitiveTopology);
     inputAssembly.primitiveRestartEnable = VK_FALSE;
 
 
     VkExtent2D extent = {};
-    extent.width = m_info.pExtent->width * m_pipelineInfo.viewport.widthPercent;
-    extent.height = m_info.pExtent->height * m_pipelineInfo.viewport.heightPercent;
+    extent.width = m_nativeCreateInfo.pExtent->width * m_createInfo.viewport.widthPercent;
+    extent.height = m_nativeCreateInfo.pExtent->height * m_createInfo.viewport.heightPercent;
     VkViewport viewport = {};
-    viewport.x = m_pipelineInfo.viewport.x;
-    viewport.y = m_pipelineInfo.viewport.y;
+    viewport.x = m_createInfo.viewport.x;
+    viewport.y = m_createInfo.viewport.y;
     viewport.width = (float)extent.width;
     viewport.height = (float)extent.height;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     VkRect2D scissor = {};
-    scissor.offset = {static_cast<int32_t>(m_pipelineInfo.viewport.x), static_cast<int32_t>(m_pipelineInfo.viewport.y)};
+    scissor.offset = {static_cast<int32_t>(m_createInfo.viewport.x), static_cast<int32_t>(m_createInfo.viewport.y)};
     scissor.extent = extent;
 
     VkPipelineViewportStateCreateInfo viewportState = {};
@@ -180,7 +179,7 @@ void VulkanShader::create_pipeline() {
 
     std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachment(m_outputAttachmentCount);
     for (size_t i = 0; i < colorBlendAttachment.size(); i++){
-        if (m_pipelineInfo.blendEnable){
+        if (m_createInfo.blendEnable){
             colorBlendAttachment[i].blendEnable = VK_TRUE;
             colorBlendAttachment[i].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
             colorBlendAttachment[i].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
@@ -205,7 +204,7 @@ void VulkanShader::create_pipeline() {
 
     VkPipelineDepthStencilStateCreateInfo depthStencil = {};
     depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    if (m_pipelineInfo.depthTesting){
+    if (m_createInfo.depthTesting){
         depthStencil.depthTestEnable = VK_TRUE;
         depthStencil.depthWriteEnable = VK_TRUE;
         depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
@@ -254,20 +253,20 @@ void VulkanShader::create_pipeline() {
     pipelineInfo.pMultisampleState = &multisampling;
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDepthStencilState = &depthStencil;
-    if (m_pipelineInfo.dynamicStates) {
+    if (m_createInfo.dynamicStates) {
         pipelineInfo.pDynamicState = &dynamicState;
     }
     pipelineInfo.layout = m_pipelineLayout;
-    pipelineInfo.renderPass = std::static_pointer_cast<VulkanRenderPass>(m_pipelineInfo.renderPass)->native_render_pass();
+    pipelineInfo.renderPass = std::static_pointer_cast<VulkanRenderPass>(m_createInfo.renderPass)->native_render_pass();
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-    VK_CALL_ASSERT(vkCreateGraphicsPipelines(m_info.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_graphicsPipeline)) {
+    VK_CALL_ASSERT(vkCreateGraphicsPipelines(m_nativeCreateInfo.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_graphicsPipeline)) {
         throw std::runtime_error("failed to create graphics pipeline!");
     }
 
-    VK_CALL vkDestroyShaderModule(m_info.device, fragShaderModule, nullptr);
-    VK_CALL vkDestroyShaderModule(m_info.device, vertShaderModule, nullptr);
+    VK_CALL vkDestroyShaderModule(m_nativeCreateInfo.device, fragShaderModule, nullptr);
+    VK_CALL vkDestroyShaderModule(m_nativeCreateInfo.device, vertShaderModule, nullptr);
 
     m_cleared = false;
 
@@ -276,7 +275,7 @@ void VulkanShader::create_pipeline() {
 
 void VulkanShader::cleanup_pipeline(){
     if (m_cleared){ return; }
-    VK_CALL vkDestroyPipeline(m_info.device, m_graphicsPipeline, nullptr);
+    VK_CALL vkDestroyPipeline(m_nativeCreateInfo.device, m_graphicsPipeline, nullptr);
     m_cleared = true;
 }
 
