@@ -15,7 +15,7 @@
 
 EG_BEGIN
 
-bool VulkanContext::enableValidationLayers = true;
+bool VulkanContext::enableValidationLayers = false;
 
 VulkanContext::VulkanContext() { // NOLINT(cppcoreguidelines-pro-type-member-init)
     EAGLE_SET_INFO(EAGLE_RENDERING_CONTEXT, "Vulkan");
@@ -243,9 +243,9 @@ int VulkanContext::evaluate_device(VkPhysicalDevice device) {
         return 0;
     }
 
-    if (!deviceFeatures.geometryShader) {
-        return 0;
-    }
+//    if (!deviceFeatures.geometryShader) {
+//        return 0;
+//    }
 
     if (!deviceFeatures.samplerAnisotropy) {
         return 0;
