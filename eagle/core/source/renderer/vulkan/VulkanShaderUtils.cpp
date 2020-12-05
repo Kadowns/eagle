@@ -9,6 +9,10 @@
 
 EG_BEGIN
 
+void SPV_REFLECT_ASSERT(SpvReflectResult result){
+    assert(result == SPV_REFLECT_RESULT_SUCCESS);
+}
+
 void VulkanShaderUtils::add_bindings_from_shader_stage(const std::vector<uint32_t> &code, VkShaderStageFlags stage,
                                                             std::map<uint32_t, std::map<uint32_t, DescriptorBindingDescription>> &descriptorSetMap,
                                                             std::vector<VkPushConstantRange> &pushConstantsRanges) {
