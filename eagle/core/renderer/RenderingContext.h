@@ -45,8 +45,7 @@ public:
     virtual void present_frame() = 0;
 
     virtual Handle <Shader>
-    create_shader(const std::unordered_map<ShaderStage, std::string> &shaderPaths,
-                  const ShaderPipelineInfo &pipelineInfo) = 0;
+    create_shader(const ShaderCreateInfo &pipelineInfo) = 0;
 
     virtual Handle<VertexBuffer>
     create_vertex_buffer(void *vertices, uint32_t count, const VertexLayout &vertexLayout,
