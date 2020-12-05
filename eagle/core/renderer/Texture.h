@@ -22,7 +22,6 @@ struct TextureCreateInfo {
 class Texture : public DescriptorItem {
 public:
     explicit Texture(TextureCreateInfo createInfo) :
-        DescriptorItem(DescriptorType::TEXTURE),
         m_createInfo(std::move(createInfo)) {}
     virtual ~Texture() = default;
 

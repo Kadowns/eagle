@@ -29,6 +29,7 @@ public:
     //Used for swapchain images
     VulkanImage(const ImageCreateInfo& imageCreateInfo, const VulkanImageCreateInfo& nativeCreateInfo, VkImage image);
     virtual ~VulkanImage();
+    virtual DescriptorType type() const override;
 
     inline VkImage& native_image() { return m_image; }
     inline VkDeviceMemory& native_memory() { return m_memory; }
@@ -53,6 +54,7 @@ private:
     VkDeviceMemory m_memory = nullptr;
     VkImageView m_view = nullptr;
     bool m_createdFromExternalImage = false;
+    DescriptorType m_descriptorType;
 };
 
 

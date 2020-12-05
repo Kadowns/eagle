@@ -11,10 +11,8 @@
 EG_BEGIN
 
 class UniformBuffer : public DescriptorItem {
-
 public:
-
-    explicit UniformBuffer(size_t size) : DescriptorItem(DescriptorType::UNIFORM_BUFFER), m_bytes(size) {}
+    explicit UniformBuffer(size_t size) : m_bytes(size) {}
     virtual ~UniformBuffer() = default;
 
     virtual void set_data(void *data, size_t size, size_t offset) = 0;

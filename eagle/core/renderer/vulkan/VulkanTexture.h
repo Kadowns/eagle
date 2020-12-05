@@ -28,6 +28,7 @@ public:
 
     virtual void resize(uint32_t width, uint32_t height) override;
 
+    virtual DescriptorType type() const override;
     virtual Reference<Image> image() const override { return m_image; }
     inline const Reference<VulkanImage>& native_image() const { return m_image; }
     inline VkSampler sampler() const { return m_sampler; }

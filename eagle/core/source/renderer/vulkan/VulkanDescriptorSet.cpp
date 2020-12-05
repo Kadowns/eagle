@@ -105,29 +105,32 @@ void VulkanDescriptorSet::flush(uint32_t index) {
                 bufferInfos.push_back(bufferInfo);
                 break;
             }
-            case DescriptorType::TEXTURE:{
-                auto texture = std::static_pointer_cast<VulkanTexture>(m_descriptorItems[j]);
-                VkDescriptorImageInfo imageInfo = {};
-                imageInfo.imageLayout = VulkanConverter::to_vk(texture->image()->layout());
-                imageInfo.imageView = texture->native_image()->native_image_view();
-                imageInfo.sampler = texture->sampler();
-                imageInfos.push_back(imageInfo);
-                break;
-            }
-            case DescriptorType::IMAGE:{
+            case DescriptorType::SAMPLED_IMAGE:{
                 auto image = std::static_pointer_cast<VulkanImage>(m_descriptorItems[j]);
                 VkDescriptorImageInfo imageInfo = {};
                 imageInfo.imageLayout = VulkanConverter::to_vk(image->layout());
                 imageInfo.imageView = image->native_image_view();
                 imageInfos.push_back(imageInfo);
-            }break;
+                break;
+            }
             case DescriptorType::STORAGE_IMAGE:{
                 auto image = std::static_pointer_cast<VulkanImage>(m_descriptorItems[j]);
                 VkDescriptorImageInfo imageInfo = {};
                 imageInfo.imageLayout = VulkanConverter::to_vk(image->layout());
                 imageInfo.imageView = image->native_image_view();
                 imageInfos.push_back(imageInfo);
-            }break;
+                break;
+            }
+            case DescriptorType::COMBINED_IMAGE_SAMPLER:{
+
+                auto texture = std::static_pointer_cast<VulkanTexture>(m_descriptorItems[j]);
+                VkDescriptorImageInfo imageInfo = {};
+                imageInfo.imageLayout = VulkanConverter::to_vk(texture->native_image()->layout());
+                imageInfo.imageView = texture->native_image()->native_image_view();
+                imageInfo.sampler = texture->sampler();
+                imageInfos.push_back(imageInfo);
+                break;
+            }
         }
     }
 

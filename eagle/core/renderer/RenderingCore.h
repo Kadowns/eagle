@@ -13,8 +13,8 @@ EG_BEGIN
 enum class DescriptorType {
     UNIFORM_BUFFER = 0,
     STORAGE_BUFFER = 1,
-    TEXTURE = 2,
-    IMAGE = 3,
+    SAMPLED_IMAGE = 2,
+    COMBINED_IMAGE_SAMPLER = 3,
     STORAGE_IMAGE = 4
 };
 
@@ -28,7 +28,7 @@ enum TextureUsage {
     STORAGE
 };
 
-enum class ShaderStage{
+enum class ShaderStage {
     INVALID = 0,
     VERTEX = 1,
     FRAGMENT = 2,

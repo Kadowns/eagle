@@ -11,13 +11,8 @@ EG_BEGIN
 
 class DescriptorItem {
 public:
-    explicit DescriptorItem(DescriptorType type): m_type(type){}
-    virtual ~DescriptorItem() {}
-
-    inline DescriptorType type() const {return m_type;}
-
-private:
-    DescriptorType m_type;
+    virtual ~DescriptorItem() = default;
+    virtual DescriptorType type() const = 0;
 };
 
 

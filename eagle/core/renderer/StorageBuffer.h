@@ -13,7 +13,7 @@ EG_BEGIN
 class StorageBuffer : public DescriptorItem {
 public:
 
-    explicit StorageBuffer(size_t size, BufferUsage usage) : DescriptorItem(DescriptorType::STORAGE_BUFFER), m_bytes(size), m_usage(usage) {}
+    explicit StorageBuffer(size_t size, BufferUsage usage) : m_bytes(size), m_usage(usage) {}
     virtual ~StorageBuffer() = default;
 
     virtual void set_data(void *data, size_t size, size_t offset) = 0;

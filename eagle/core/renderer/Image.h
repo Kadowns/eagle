@@ -26,7 +26,6 @@ class Image : public DescriptorItem {
 public:
 
     Image(const ImageCreateInfo& createInfo) :
-        DescriptorItem(DescriptorType::IMAGE),
         m_createInfo(createInfo) {}
 
     virtual ~Image() = default;

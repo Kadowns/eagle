@@ -59,4 +59,8 @@ void VulkanTexture::resize(uint32_t width, uint32_t height) {
     EG_CORE_TRACE("Vulkan texture resized!");
 }
 
+DescriptorType VulkanTexture::type() const {
+    return DescriptorType::COMBINED_IMAGE_SAMPLER;
+}
+
 EG_END

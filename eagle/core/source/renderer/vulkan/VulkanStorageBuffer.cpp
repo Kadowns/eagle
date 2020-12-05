@@ -129,4 +129,8 @@ void VulkanStorageBuffer::cleanup() {
     m_cleared = true;
 }
 
+DescriptorType VulkanStorageBuffer::type() const {
+    return DescriptorType::STORAGE_BUFFER;
+}
+
 EG_END

@@ -24,6 +24,8 @@ VulkanImage::VulkanImage(const ImageCreateInfo &imageCreateInfo, const VulkanIma
     m_createdFromExternalImage(true){
     EG_CORE_TRACE("Creating a vulkan image from a swapchain image!");
 
+    m_descriptorType = DescriptorType::SAMPLED_IMAGE;
+
     VkImageSubresourceRange subresourceRange = {};
     subresourceRange.layerCount = 1;
     subresourceRange.baseArrayLayer = 0;
@@ -77,6 +79,9 @@ void VulkanImage::create() {
     VK_CALL_ASSERT(vkCreateImage(m_nativeCreateInfo.device, &imageInfo, nullptr, &m_image)) {
         throw std::runtime_error("failed to create image!");
     }
+
+    m_descriptorType = imageInfo.usage & VK_IMAGE_USAGE_STORAGE_BIT ? DescriptorType::STORAGE_IMAGE : DescriptorType::SAMPLED_IMAGE;
+
 
     VkMemoryRequirements memRequirements;
     VK_CALL vkGetImageMemoryRequirements(m_nativeCreateInfo.device, m_image, &memRequirements);
@@ -231,6 +236,10 @@ void VulkanImage::clear() {
     m_memory = nullptr;
     m_image = nullptr;
     EG_CORE_TRACE("Vulkan image cleared!");
+}
+
+DescriptorType VulkanImage::type() const {
+    return m_descriptorType;
 }
 
 EG_END

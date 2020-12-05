@@ -28,6 +28,8 @@ public:
     inline std::vector<Reference<VulkanBuffer>>& get_buffers() { return m_buffers; }
     void create_uniform_buffer();
 
+    DescriptorType type() const override;
+
     void cleanup();
     virtual void flush(uint32_t bufferIndex) override;
     virtual void set_data(void *data, size_t size, size_t offset) override;

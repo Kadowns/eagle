@@ -84,5 +84,9 @@ void VulkanUniformBuffer::set_data(void *data, size_t size, size_t offset) {
     m_dirtyBytes = true;
 }
 
+DescriptorType VulkanUniformBuffer::type() const {
+    return DescriptorType::UNIFORM_BUFFER;
+}
+
 
 EG_END

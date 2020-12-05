@@ -27,6 +27,8 @@ public:
     virtual void set_data(void *data, size_t size, size_t offset) override;
     virtual void push() override;
 
+    DescriptorType type() const override;
+
     virtual bool is_dirty() const override;
     virtual void flush(uint32_t index) override;
 
