@@ -34,7 +34,7 @@ public:
     virtual void draw_indexed(uint32_t indicesCount, uint32_t indexOffset, uint32_t vertexOffset) override;
     virtual void set_viewport(float w, float h, float x, float y, float minDepth, float maxDepth) override;
     virtual void set_scissor(uint32_t w, uint32_t h, uint32_t x, uint32_t y) override;
-    virtual void pipeline_barrier(const Reference <Image> &image, ShaderStage srcStage, ShaderStage dstStage) override;
+    virtual void pipeline_barrier(const Reference <Image> &image, const std::vector<PipelineStage> &srcPipelineStages, const std::vector<PipelineStage> &dstPipelineStages) override;
     virtual void dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
     virtual void submit() override;
 

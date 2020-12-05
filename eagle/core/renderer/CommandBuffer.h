@@ -71,8 +71,8 @@ public:
     begin_render_pass(const Reference<RenderPass> &renderPass, const Reference<Framebuffer>& framebuffer) = 0;
 
     virtual void
-    pipeline_barrier(const Reference <Image> &image, ShaderStage srcStage,
-                     ShaderStage dstStage) = 0;
+    pipeline_barrier(const Reference <Image> &image, const std::vector<PipelineStage> &srcPipelineStages,
+                     const std::vector<PipelineStage> &dstPipelineStages) = 0;
 
     virtual void
     dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
