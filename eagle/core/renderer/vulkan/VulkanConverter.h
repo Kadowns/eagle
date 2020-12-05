@@ -34,10 +34,12 @@ public:
     static ImageTiling to_eg(VkImageTiling tiling);
     static ImageUsage to_eg(VkImageUsageFlagBits usage);
     static VkImageUsageFlagBits to_vk(ImageUsage usage);
-    static ImageAspect to_eg(VkImageAspectFlagBits usage);
-    static VkImageAspectFlagBits to_vk(ImageAspect usage);
-    static MemoryProperty to_eg(VkMemoryPropertyFlagBits usage);
-    static VkMemoryPropertyFlagBits to_vk(MemoryProperty usage);
+    static ImageAspect to_eg(VkImageAspectFlagBits aspect);
+    static VkImageAspectFlagBits to_vk(ImageAspect aspect);
+    static MemoryProperty to_eg(VkMemoryPropertyFlagBits property);
+    static VkMemoryPropertyFlagBits to_vk(MemoryProperty property);
+    static PipelineStage to_eg(VkPipelineStageFlagBits stage);
+    static VkPipelineStageFlagBits to_vk(PipelineStage stage);
 
     template<typename EG, typename VK>
     static std::vector<EG> eg_vector_from_vk_flags(VK flags){
