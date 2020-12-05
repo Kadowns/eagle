@@ -31,7 +31,7 @@ VulkanComputeShader::~VulkanComputeShader(){
 }
 
 void VulkanComputeShader::create_pipeline_layout() {
-
+    EG_CORE_TRACE("BEGIN");
     std::map<uint32_t, std::map<uint32_t, DescriptorBindingDescription>> descriptorSetMap;
     std::vector<VkPushConstantRange> pushConstantsRanges;
 
@@ -59,10 +59,11 @@ void VulkanComputeShader::create_pipeline_layout() {
     VK_CALL_ASSERT(vkCreatePipelineLayout(m_createInfo.device, &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout)) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
+    EG_CORE_TRACE("END");
 }
 
 void VulkanComputeShader::create_pipeline(){
-
+    EG_CORE_TRACE("BEGIN");
     if (!m_cleared){
         cleanup_pipeline();
     }
@@ -87,18 +88,21 @@ void VulkanComputeShader::create_pipeline(){
 
     VK_CALL vkDestroyShaderModule(m_createInfo.device, shaderModule, nullptr);
     m_cleared = false;
+    EG_CORE_TRACE("END");
 }
 
 void VulkanComputeShader::create_descriptor_sets() {
+    EG_CORE_TRACE("BEGIN");
     VulkanDescriptorSetCreateInfo descriptorSetCreateInfo = {};
     descriptorSetCreateInfo.device = m_createInfo.device;
     descriptorSetCreateInfo.bufferCount = m_createInfo.bufferCount;
     m_descriptorSet = std::make_shared<VulkanDescriptorSet>(m_descriptorLayout, descriptorSetCreateInfo);
+    EG_CORE_TRACE("END");
 }
 
 
 void VulkanComputeShader::create_command_buffer() {
-
+    EG_CORE_TRACE("BEGIN");
     VkCommandBufferAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool = m_createInfo.commandPool;
@@ -108,24 +112,29 @@ void VulkanComputeShader::create_command_buffer() {
     VK_CALL_ASSERT(vkAllocateCommandBuffers(m_createInfo.device, &allocInfo, &m_commandBuffer)) {
         throw std::runtime_error("failed to allocate compute shader command buffer!");
     }
+    EG_CORE_TRACE("END");
 }
 
 void VulkanComputeShader::create_fence() {
-
+    EG_CORE_TRACE("BEGIN");
     VkFenceCreateInfo fenceCreateInfo = {};
     fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
     VK_CALL vkCreateFence(m_createInfo.device, &fenceCreateInfo, nullptr, &m_fence);
+    EG_CORE_TRACE("END");
 }
 
 void VulkanComputeShader::cleanup_pipeline(){
+    EG_CORE_TRACE("BEGIN");
     if (m_cleared){
+        EG_CORE_WARNING("END - ALREADY CLEARED");
         return;
     }
     VK_CALL vkDestroyPipeline(m_createInfo.device, m_computePipeline, nullptr);
 
     m_cleared = true;
+    EG_CORE_TRACE("BEGIN");
 }
 
 void VulkanComputeShader::dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
