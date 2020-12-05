@@ -20,12 +20,12 @@ void TriangleLayer::handle_attach() {
 
     Eagle::VertexLayout vertexLayout(3, {Eagle::Format::R32G32_SFLOAT, Eagle::Format::R32G32B32_SFLOAT});
 
-    Eagle::ShaderPipelineInfo pipelineInfo = {m_renderingContext->main_render_pass()};
+    Eagle::ShaderCreateInfo pipelineInfo = {m_renderingContext->main_render_pass(), {
+            {Eagle::ShaderStage::VERTEX, "data/color.vert"},
+            {Eagle::ShaderStage::FRAGMENT, "data/color.frag"}
+    }};
     pipelineInfo.vertexLayout = vertexLayout;
-    m_shader = m_renderingContext->create_shader({
-        {Eagle::ShaderStage::VERTEX, "data/color.vert"},
-        {Eagle::ShaderStage::FRAGMENT, "data/color.frag"}
-    }, pipelineInfo);
+    m_shader = m_renderingContext->create_shader(pipelineInfo);
 
     std::vector<float> vertices = {
             -0.5f, 0.5f, 1.0f, 1.0f, 0.0f,

@@ -128,8 +128,6 @@ void RaytracerSystem::init_render_target() {
 
     data.compute.color = RenderMaster::context().create_texture(textureCreateInfo);
 
-
-
     data.ubo.sampleCount = 0;
     if (!data.uniformBuffer.lock()){
         data.uniformBuffer= RenderMaster::context().create_uniform_buffer(sizeof(data.ubo), &data.ubo);
@@ -143,42 +141,44 @@ void RaytracerSystem::init_render_target() {
         data.quad.descriptorSet = RenderMaster::context().create_descriptor_set(
                 data.quad.shader.lock()->get_descriptor_set_layout(0).lock(),
                 {
-                        data.compute.color.lock()
+                    data.compute.color.lock()
                 }
         );
     }
     else{
         data.quad.descriptorSet.lock()->update({
-                                                       data.compute.color.lock()
-                                               });
+            data.compute.color.lock()
+        });
     }
 
     data.compute.shader.lock()->update_descriptor_items({
-                                                                data.compute.color.lock()->image(),
-                                                                data.uniformBuffer.lock(),
-                                                                data.compute.spheresBuffer.lock(),
-                                                                data.compute.boxesBuffer.lock(),
-                                                                data.compute.skybox.lock()->image()
-                                                        });
+        data.compute.color.lock()->image(),
+        data.uniformBuffer.lock(),
+        data.compute.spheresBuffer.lock(),
+        data.compute.boxesBuffer.lock(),
+        data.compute.skybox.lock()
+    });
 
     EventMaster::instance().emit(OnRaytracerTargetCreated(data.compute.color.lock()->image()));
     EG_TRACE("END");
 }
 
 void RaytracerSystem::handle_context_init() {
+    EG_TRACE("BEGIN");
     RaytracerData& data = SingletonComponent::get<RaytracerData>();
-    data.compute.shader = RenderMaster::context().create_compute_shader(ProjectRoot + "/shaders/compute.comp");
-    data.compute.skybox = RenderMaster::context().create_texture(TextureLoader::load_pixels(ProjectRoot + "/textures/stars.hdr"));
+    data.compute.shader = RenderMaster::context().create_compute_shader("data/shaders/compute.comp");
+    data.compute.skybox = RenderMaster::context().create_texture(TextureLoader::load_pixels("data/textures/stars.hdr"));
     data.compute.spheresBuffer = RenderMaster::context().create_storage_buffer(sizeof(RaytracerData::SphereData) * data.spheresData.size(), data.spheresData.data(), BufferUsage::DYNAMIC);
     data.compute.boxesBuffer = RenderMaster::context().create_storage_buffer(sizeof(RaytracerData::BoxData) * data.boxesData.size(), data.boxesData.data(), BufferUsage::DYNAMIC);
 
-    ShaderPipelineInfo pipelineInfo = {RenderMaster::context().main_render_pass()};
-    data.quad.shader = RenderMaster::context().create_shader({
-                                                                     {ShaderStage::VERTEX, ProjectRoot + "/shaders/quad.vert"},
-                                                                     {ShaderStage::FRAGMENT, ProjectRoot + "/shaders/quad.frag"},
-                                                             }, pipelineInfo);
+    ShaderCreateInfo pipelineInfo = {RenderMaster::context().main_render_pass(), {
+            {ShaderStage::VERTEX, "data/shaders/quad.vert"},
+            {ShaderStage::FRAGMENT, "data/shaders/quad.frag"},
+    }};
+    data.quad.shader = RenderMaster::context().create_shader(pipelineInfo);
 
     init_render_target();
+    EG_TRACE("END");
 }
 
 void RaytracerSystem::handle_context_deinit() {
@@ -193,7 +193,10 @@ void RaytracerSystem::handle_frame_begin() {
 
 void RaytracerSystem::handle_command_buffer_begin(const Reference<CommandBuffer> &commandBuffer) {
     RaytracerData& data = SingletonComponent::get<RaytracerData>();
-    commandBuffer->pipeline_barrier(data.compute.color.lock()->image(), ShaderStage::COMPUTE, ShaderStage::FRAGMENT);
+    commandBuffer->pipeline_barrier(data.compute.color.lock()->image(),
+        {PipelineStage::COMPUTE_SHADER_BIT},
+        {PipelineStage::FRAGMENT_SHADER_BIT}
+    );
 }
 
 void RaytracerSystem::handle_command_buffer_main_render_pass(const Reference<CommandBuffer> &commandBuffer) {

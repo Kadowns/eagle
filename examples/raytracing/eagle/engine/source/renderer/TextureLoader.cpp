@@ -31,7 +31,7 @@ TextureCreateInfo TextureLoader::load_pixels(const std::string &path) {
     imageCreateInfo.tiling = ImageTiling::LINEAR;
     imageCreateInfo.memoryProperties = {MemoryProperty::DEVICE_LOCAL};
     imageCreateInfo.aspects = {ImageAspect::COLOR};
-    imageCreateInfo.usages = {ImageUsage::SAMPLED};
+    imageCreateInfo.usages = {ImageUsage::SAMPLED, ImageUsage::TRANSFER_DST};
     imageCreateInfo.layout = ImageLayout::SHADER_READ_ONLY_OPTIMAL;
 
     TextureCreateInfo textureCreateInfo = {};

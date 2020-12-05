@@ -56,7 +56,7 @@ void SceneWindow::handle_raytracer_target_created(const Reference<Image> &target
         DescriptorBindingDescription bindingDescription = {};
         bindingDescription.name = "uTexture";
         bindingDescription.shaderStage = ShaderStage::FRAGMENT;
-        bindingDescription.descriptorType = DescriptorType::TEXTURE;
+        bindingDescription.descriptorType = DescriptorType::SAMPLED_IMAGE;
         bindingDescription.binding = 0;
         auto layout = Engine::RenderMaster::context().create_descriptor_set_layout({bindingDescription});
         m_descriptorSet = Engine::RenderMaster::context().create_descriptor_set(layout.lock(), {target});

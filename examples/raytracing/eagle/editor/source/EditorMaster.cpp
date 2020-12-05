@@ -111,7 +111,7 @@ void EditorMaster::handle_context_init(RenderingContext &context) {
                                                                            pixels + fontCreateInfo.imageCreateInfo.width * fontCreateInfo.imageCreateInfo.height * 4);
     fontCreateInfo.imageCreateInfo.aspects = {ImageAspect::COLOR};
     fontCreateInfo.imageCreateInfo.memoryProperties = {MemoryProperty::DEVICE_LOCAL};
-    fontCreateInfo.imageCreateInfo.usages = {ImageUsage::SAMPLED};
+    fontCreateInfo.imageCreateInfo.usages = {ImageUsage::SAMPLED, ImageUsage::TRANSFER_DST};
     fontCreateInfo.imageCreateInfo.layout = ImageLayout::SHADER_READ_ONLY_OPTIMAL;
     fontCreateInfo.imageCreateInfo.tiling = ImageTiling::OPTIMAL;
     fontCreateInfo.imageCreateInfo.format = Format::R8G8B8A8_UNORM;
@@ -131,27 +131,22 @@ void EditorMaster::handle_context_init(RenderingContext &context) {
 
     DescriptorBindingDescription binding = {};
     binding.shaderStage = ShaderStage::FRAGMENT;
-    binding.descriptorType = DescriptorType::TEXTURE;
+    binding.descriptorType = DescriptorType::COMBINED_IMAGE_SAMPLER;
     binding.binding = 0;
 
     m_descriptorLayout = context.create_descriptor_set_layout({binding});
 
 
-    ShaderPipelineInfo pipelineInfo = {context.main_render_pass()};
+    ShaderCreateInfo pipelineInfo = {context.main_render_pass(), {
+            {ShaderStage::VERTEX, "data/shaders/text.vert"},
+            {ShaderStage::FRAGMENT, "data/shaders/text.frag"},
+    }};
     pipelineInfo.vertexLayout = vertexLayout;
-    pipelineInfo.blendEnable = true;
     pipelineInfo.dynamicStates = true;
+    m_blendDisabledShader = context.create_shader(pipelineInfo);
 
-    m_blendEnabledShader = context.create_shader({
-                                                         {ShaderStage::VERTEX, ProjectRoot + "/shaders/text.vert"},
-                                                         {ShaderStage::FRAGMENT, ProjectRoot + "/shaders/text.frag"},
-                                                 }, pipelineInfo);
-
-    pipelineInfo.blendEnable = false;
-    m_blendDisabledShader = context.create_shader({
-                                                          {ShaderStage::VERTEX, ProjectRoot + "/shaders/text.vert"},
-                                                          {ShaderStage::FRAGMENT, ProjectRoot + "/shaders/text.frag"},
-                                                  }, pipelineInfo);
+    pipelineInfo.blendEnable = true;
+    m_blendEnabledShader = context.create_shader(pipelineInfo);
 
     m_descriptor = context.create_descriptor_set(m_descriptorLayout.lock(), {m_font.lock()});
 
