@@ -16,7 +16,7 @@ void LayerStack::emplace_back(Reference<Layer> layer) {
     if (!m_initialized)
         return;
 
-    layer->handle_attach();
+    layer->handle_attach(m_eventBus);
 }
 
 void LayerStack::pop_layer(Reference<Layer> layer) {
@@ -28,7 +28,7 @@ void LayerStack::pop_layer(Reference<Layer> layer) {
         if (!m_initialized)
             return;
 
-        layer->handle_deattach();
+        layer->handle_detach();
         EG_CORE_TRACE("Layer popped!");
     } else {
         EG_CORE_TRACE("Layer not found!");
@@ -46,7 +46,7 @@ void LayerStack::emplace_front(Reference<Layer> layer) {
     if (!m_initialized)
         return;
 
-    layer->handle_attach();
+    layer->handle_attach(m_eventBus);
 }
 
 void LayerStack::emplace(const std::vector<Reference<Layer>>& layers) {
@@ -55,15 +55,16 @@ void LayerStack::emplace(const std::vector<Reference<Layer>>& layers) {
     }
 }
 
-void LayerStack::init() {
+void LayerStack::init(EventBus<EventStream>* eventBus) {
 
     if (m_initialized) return;
 
     EG_CORE_TRACE("Initializing layer stack!");
 
     m_initialized = true;
+    m_eventBus = eventBus;
     for (auto& layer : m_layers){
-        layer->handle_attach();
+        layer->handle_attach(eventBus);
     }
 }
 
@@ -73,7 +74,7 @@ void LayerStack::deinit() {
     EG_CORE_TRACE("Deinitializing layer stack!");
 
     for (auto& layer : m_layers){
-        layer->handle_deattach();
+        layer->handle_detach();
     }
     m_layers.clear();
 

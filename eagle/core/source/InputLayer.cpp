@@ -9,41 +9,16 @@
 
 EG_BEGIN
 
-void InputLayer::handle_attach() {
-
-    m_dispatcher.add_listener<MouseMoveEvent>([&](Event& e){
-        Input::instance().handle_mouse_move(*(MouseMoveEvent*)&e);
-        return false;
-    });
-
-    m_dispatcher.add_listener<MouseButtonEvent>([&](Event& e){
-        Input::instance().handle_mouse_button(*(MouseButtonEvent*)&e);
-        return false;
-    });
-
-    m_dispatcher.add_listener<MouseScrolledEvent>([&](Event& e){
-        Input::instance().handle_mouse_scroll(*(MouseScrolledEvent*)&e);
-        return false;
-    });
-
-    m_dispatcher.add_listener<KeyEvent>([&](Event& e){
-        Input::instance().handle_key(*(KeyEvent*)&e);
-        return false;
-    });
+void InputLayer::handle_attach(EventBus<EventStream> *eventBus) {
+    Input::instance().init(eventBus);
 }
 
-void InputLayer::handle_deattach() {
-
+void InputLayer::handle_detach() {
+    Input::instance().deinit();
 }
 
 void InputLayer::handle_update() {
     Input::instance().refresh();
 }
 
-void InputLayer::handle_event(Event &e) {
-    m_dispatcher.dispatch(e);
-}
-
-
 EG_END
-

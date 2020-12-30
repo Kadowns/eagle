@@ -7,6 +7,7 @@
 #include "eagle/core/events/WindowEvents.h"
 #include "eagle/core/events/InputEvents.h"
 
+
 #include <GLFW/glfw3.h>
 
 
@@ -45,55 +46,56 @@ void WindowGLFW::init() {
 
     //window resize
     glfwSetWindowSizeCallback(m_window, [](GLFWwindow* window, int width, int height){
-        auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
-        data.width = width;
-        data.height = height;
+        auto data = (WindowData*)glfwGetWindowUserPointer(window);
+        data->width = width;
+        data->height = height;
         if (width != 0 && height != 0){
-            data.eventCallback(std::make_shared<WindowResizedEvent>(width, height));
+            data->eventBus.emit(OnWindowResized{static_cast<uint32_t>(width), static_cast<uint32_t>(height)});
         }
     });
-    glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+
     //window focus
     glfwSetWindowFocusCallback(m_window, [](GLFWwindow* window, int focused){
-        auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
+        auto data = (WindowData*)glfwGetWindowUserPointer(window);
         if (focused == GLFW_TRUE){
-            data.eventCallback(std::make_shared<WindowFocusEvent>());
-        } else{
-            data.eventCallback(std::make_shared<WindowLostFocusEvent>());
+            data->eventBus.emit(OnWindowFocus{});
+        }
+        else {
+            data->eventBus.emit(OnWindowLostFocus{});
         }
     });
 
     //window close
     glfwSetWindowCloseCallback(m_window, [](GLFWwindow* window){
-        auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
-        data.eventCallback(std::make_shared<WindowCloseEvent>());
+        auto data = (WindowData*)glfwGetWindowUserPointer(window);
+        data->eventBus.emit(OnWindowClose{});
     });
 
     //mouse move
     glfwSetCursorPosCallback(m_window, [](GLFWwindow* window, double x, double y){
-        auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
-        data.eventCallback(std::make_shared<MouseMoveEvent>(static_cast<float>(x), static_cast<float>(y)));
+        auto data = (WindowData*)glfwGetWindowUserPointer(window);
+        data->eventBus.emit(OnMouseMove{static_cast<float>(x), static_cast<float>(y)});
     });
 
     glfwSetScrollCallback(m_window, [](GLFWwindow* window, double x, double y){
-       auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
-       data.eventCallback(std::make_shared<MouseScrolledEvent>(static_cast<float>(x),static_cast<float>(y)));
+        auto data = (WindowData*)glfwGetWindowUserPointer(window);
+        data->eventBus.emit(OnMouseScrolled{static_cast<float>(x), static_cast<float>(y)});
     });
 
     //mouse click
     glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int key, int action, int mod){
-        auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
-        data.eventCallback(std::make_shared<MouseButtonEvent>(key, action, mod));
+        auto data = (WindowData*)glfwGetWindowUserPointer(window);
+        data->eventBus.emit(OnMouseButton{key, action, mod});
     });
 
     glfwSetKeyCallback(m_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
-        auto &data = *(WindowData *) glfwGetWindowUserPointer(window);
-        data.eventCallback(std::make_shared<KeyEvent>(key, action, mods));
+        auto data = (WindowData*)glfwGetWindowUserPointer(window);
+        data->eventBus.emit(OnKey{key, action, mods});
     });
 
     glfwSetCharCallback(m_window, [](GLFWwindow* window, unsigned int c){
-        auto& data = *(WindowData*)glfwGetWindowUserPointer(window);
-        data.eventCallback(std::make_shared<KeyTypedEvent>(c));
+        auto data = (WindowData*)glfwGetWindowUserPointer(window);
+        data->eventBus.emit(OnKeyTyped{c});
     });
 
     m_mouseCursors[Cursor::ARROW] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
@@ -134,10 +136,6 @@ void WindowGLFW::wait_native_events() {
     glfwWaitEvents();
 }
 
-void WindowGLFW::set_event_callback(Window::PFN_EventCallback callback) {
-    m_windowData.eventCallback = callback;
-}
-
 void WindowGLFW::set_cursor_shape(Cursor cursorType) {
     auto cursor = m_mouseCursors.find(cursorType);
     glfwSetCursor(m_window, cursor != m_mouseCursors.end() ? cursor->second : m_mouseCursors[Cursor::ARROW]);
@@ -145,6 +143,10 @@ void WindowGLFW::set_cursor_shape(Cursor cursorType) {
 
 void WindowGLFW::set_cursor_visible(bool visible) {
     glfwSetInputMode(m_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+}
+
+EventBus<EventStream>* WindowGLFW::event_bus() {
+    return &m_windowData.eventBus;
 }
 
 EG_END

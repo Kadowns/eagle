@@ -28,22 +28,6 @@ Application::Application(const ApplicationCreateInfo& config) :
     m_layerStack.emplace(config.layers);
 }
 
-void Application::handle_event(Reference<Event> e){
-    m_eventQueue.emplace(e);
-}
-
-void Application::dispatch_events() {
-    while (!m_eventQueue.empty()){
-        auto& e = m_eventQueue.front();
-        for (auto& layer : m_layerStack){
-            layer->handle_event(*e);
-            if ((*e).is_handled())
-                break;
-        }
-        m_eventQueue.pop();
-    }
-}
-
 
 void Application::run() {
 
@@ -52,16 +36,12 @@ void Application::run() {
     Time::init();
 
     m_window->init();
-    m_window->set_event_callback(BIND_EVENT_FN(Application::handle_event));
-
-    m_layerStack.init();
+    m_layerStack.init(m_window->event_bus());
 
     while(!m_quit){
 
         Time::update();
         m_window->pool_events();
-
-        dispatch_events();
 
         for (auto& layer : m_layerStack){
             layer->handle_update();

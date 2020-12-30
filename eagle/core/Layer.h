@@ -7,7 +7,7 @@
 #define EAGLE_LAYER_H
 
 #include "CoreGlobalDefinitions.h"
-#include "events/Event.h"
+#include "events/EventBus.h"
 
 EG_BEGIN
 
@@ -17,10 +17,9 @@ public:
     Layer()                         = default;
     virtual ~Layer()                = default;
 
-    virtual void handle_attach()        {}
-    virtual void handle_deattach()      {}
+    virtual void handle_attach(EventBus<EventStream>* eventBus) {}
+    virtual void handle_detach()      {}
     virtual void handle_update()        {}
-    virtual void handle_event(Event& e) {}
 };
 
 EG_END

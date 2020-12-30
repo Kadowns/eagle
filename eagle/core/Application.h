@@ -10,7 +10,6 @@
 #include "CoreGlobalDefinitions.h"
 #include "LayerStack.h"
 #include "Log.h"
-#include "events/Event.h"
 #include "events/WindowEvents.h"
 #include "Input.h"
 
@@ -37,28 +36,18 @@ public:
      ~Application() = default;
 
     void run();
-    void handle_event(Reference<Event> e);
-    void dispatch_events();
     void quit();
-    void layer_pop(Reference<Layer> layer);
 
     inline LayerStack& layer_stack() { return m_layerStack; }
     inline Window& window() { return *m_window; }
 
 private:
-
-    using EventQueue = std::queue<Reference<Event>>;
-
     static Application* m_instance;
 
     Reference<Window> m_window;
+    LayerStack m_layerStack;
 
     bool m_quit = false;
-
-    LayerStack m_layerStack;
-    EventQueue m_eventQueue;
-
-
 };
 
 EG_END

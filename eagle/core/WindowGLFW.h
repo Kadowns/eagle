@@ -23,7 +23,6 @@ public:
     virtual void deinit() override;
 
     virtual void pool_events() override;
-    virtual void set_event_callback(PFN_EventCallback callback) override;
 
     virtual void* get_native_window() override;
 
@@ -32,6 +31,8 @@ public:
 
     virtual void set_cursor_shape(Cursor cursorType) override;
     virtual void set_cursor_visible(bool visible) override;
+
+    virtual EventBus<EventStream>* event_bus() override;
 
 private:
 

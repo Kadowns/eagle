@@ -65,44 +65,56 @@ void Input::refresh() {
     m_scrollDelta = {0, 0};
 }
 
-void Input::handle_key(KeyEvent &e) {
-    if (e.get_action() == EG_PRESS){
-        m_downKeys.insert(e.get_key());
-        m_pressedKeys.insert(e.get_key());
+bool Input::receive(const OnKey &e) {
+    if (e.action == EG_PRESS) {
+        m_downKeys.insert(e.key);
+        m_pressedKeys.insert(e.key);
+    } else if (e.action == EG_RELEASE) {
+        m_downKeys.erase(e.key);
+        m_releasedKeys.insert(e.key);
     }
-    else if (e.get_action() == EG_RELEASE){
-        m_downKeys.erase(e.get_key());
-        m_releasedKeys.insert(e.get_key());
-    }
+    return false;
 }
 
-void Input::handle_mouse_move(MouseMoveEvent &e) {
-
+bool Input::receive(const OnMouseMove &e) {
     if (m_firstMouseMove){
-        m_mousePosition = {e.get_x(), e.get_y()};
+        m_mousePosition = {e.x, e.y};
         m_firstMouseMove = false;
     }
 
-    m_mouseDelta = {e.get_x() - m_mousePosition.first, e.get_y() - m_mousePosition.second};
+    m_mouseDelta = {e.x - m_mousePosition.first, e.y - m_mousePosition.second};
 
-    m_mousePosition = {e.get_x(), e.get_y()};
+    m_mousePosition = {e.x, e.y};
+    return false;
 }
 
-void Input::handle_mouse_button(MouseButtonEvent &e) {
-    if (e.get_action() == EG_PRESS){
-        m_downMouseButtons.insert(e.get_key());
-        m_pressedMouseButtons.insert(e.get_key());
+bool Input::receive(const OnMouseButton &e) {
+    if (e.action == EG_PRESS){
+        m_downMouseButtons.insert(e.key);
+        m_pressedMouseButtons.insert(e.key);
     }
-    else if (e.get_action() == EG_RELEASE){
-        m_downMouseButtons.erase(e.get_key());
-        m_releasedMouseButtons.insert(e.get_key());
+    else if (e.action == EG_RELEASE){
+        m_downMouseButtons.erase(e.key);
+        m_releasedMouseButtons.insert(e.key);
     }
+    return false;
 }
 
-void Input::handle_mouse_scroll(MouseScrolledEvent &e) {
-    m_scrollDelta = {e.get_x(), e.get_y()};
+bool Input::receive(const OnMouseScrolled &e) {
+    m_scrollDelta = {e.x, e.y};
+    return false;
 }
 
+void Input::init(EventBus<EventStream> *eventBus) {
+    m_listener.attach(eventBus);
+    m_listener.subscribe<OnKey>(this);
+    m_listener.subscribe<OnMouseMove>(this);
+    m_listener.subscribe<OnMouseButton>(this);
+    m_listener.subscribe<OnMouseScrolled>(this);
+}
 
+void Input::deinit() {
+    m_listener.detach();
+}
 
 EG_END
