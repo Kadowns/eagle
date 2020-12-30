@@ -9,22 +9,18 @@
 
 class TriangleLayer : public Eagle::Layer {
 public:
-    void handle_attach() override;
+    void handle_attach(Eagle::EventBus<Eagle::EventStream>* eventBus) override;
 
     void handle_update() override;
 
-    void handle_event(Eagle::Event &e) override;
+    void handle_detach() override;
 
-    void handle_deattach() override;
-private:
-
-    bool on_window_close(const Eagle::WindowCloseEvent& e);
-    bool on_window_resized(const Eagle::WindowResizedEvent& e);
-
+    bool receive(const Eagle::OnWindowClose& e);
+    bool receive(const Eagle::OnWindowResized& e);
 
 private:
     Eagle::Reference<Eagle::RenderingContext> m_renderingContext;
-    Eagle::LayerEventDispatcher m_dispatcher;
+    Eagle::EventListener<TriangleLayer, Eagle::EventBus<Eagle::EventStream>> m_listener;
 
     Eagle::Handle<Eagle::Shader> m_shader;
     Eagle::Handle<Eagle::VertexBuffer> m_vertexBuffer;

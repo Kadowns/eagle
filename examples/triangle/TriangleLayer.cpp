@@ -5,18 +5,14 @@
 #include "TriangleLayer.h"
 
 
-void TriangleLayer::handle_attach() {
+void TriangleLayer::handle_attach(Eagle::EventBus<Eagle::EventStream>* eventBus) {
     EG_INFO("Triangle attached!");
     m_renderingContext = std::make_shared<Eagle::VulkanContext>();
     m_renderingContext->init(&Eagle::Application::instance().window());
 
-    m_dispatcher.add_listener<Eagle::WindowCloseEvent>([this](const Eagle::Event& e){
-        return on_window_close(static_cast<const Eagle::WindowCloseEvent&>(e));
-    });
-
-    m_dispatcher.add_listener<Eagle::WindowResizedEvent>([this](const Eagle::Event& e){
-        return on_window_resized(static_cast<const Eagle::WindowResizedEvent&>(e));
-    });
+    m_listener.attach(eventBus);
+    m_listener.subscribe<Eagle::OnWindowClose>(this);
+    m_listener.subscribe<Eagle::OnWindowResized>(this);
 
     Eagle::VertexLayout vertexLayout(3, {Eagle::Format::R32G32_SFLOAT, Eagle::Format::R32G32B32_SFLOAT});
 
@@ -37,8 +33,10 @@ void TriangleLayer::handle_attach() {
     m_vertexBuffer = m_renderingContext->create_vertex_buffer(vertices.data(), vertices.size(), vertexLayout, Eagle::BufferUsage::CONSTANT);
 }
 
-void TriangleLayer::handle_deattach() {
+void TriangleLayer::handle_detach() {
     EG_INFO("Triangle deattached!");
+    m_listener.detach();
+
     m_renderingContext->deinit();
     m_renderingContext.reset();
 }
@@ -63,16 +61,13 @@ void TriangleLayer::handle_update() {
     m_renderingContext->present_frame();
 }
 
-void TriangleLayer::handle_event(Eagle::Event &e) {
-    m_dispatcher.dispatch(e);
-}
-
-bool TriangleLayer::on_window_close(const Eagle::WindowCloseEvent &e) {
+bool TriangleLayer::receive(const Eagle::OnWindowClose &e) {
     Eagle::Application::instance().quit();
     return false;
 }
 
-bool TriangleLayer::on_window_resized(const Eagle::WindowResizedEvent &e) {
-    m_renderingContext->handle_window_resized(e.get_width(), e.get_height());
+bool TriangleLayer::receive(const Eagle::OnWindowResized &e) {
+    m_renderingContext->handle_window_resized(e.width, e.height);
     return false;
 }
+
