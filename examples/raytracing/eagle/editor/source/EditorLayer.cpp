@@ -11,52 +11,53 @@ EG_EDITOR_BEGIN
 
 EditorLayer::EditorLayer() {
     //EditorMaster::add_window(std::make_shared<EditorDockingWindow>());
-    EditorMaster::add_window(std::make_shared<DebugSettingsWindow>());
+
 }
 
 EditorLayer::~EditorLayer() {
 
 }
 
-void EditorLayer::handle_attach() {
+void EditorLayer::handle_attach(EventBus<EventStream>* eventBus) {
 
-    m_dispatcher.add_listener<MouseMoveEvent>([&](Event &e) {
-        return m_editorMaster.handle_mouse_moved(*(MouseMoveEvent*) &e);
+    EditorMaster::add_window(std::make_shared<DebugSettingsWindow>(eventBus));
+
+    m_listener.attach(eventBus);
+
+    m_listener.subscribe<OnMouseMove>([this](const OnMouseMove& ev){
+        return m_editorMaster.handle_mouse_moved(ev);
     });
-    m_dispatcher.add_listener<MouseButtonEvent>([&](Event &e) {
-        return m_editorMaster.handle_mouse_button(*(MouseButtonEvent*) &e);
+
+    m_listener.subscribe<OnMouseButton>([this](const OnMouseButton& ev){
+        return m_editorMaster.handle_mouse_button(ev);
     });
-    m_dispatcher.add_listener<MouseScrolledEvent>([&](Event &e) {
-        return m_editorMaster.handle_mouse_scrolled(*(MouseScrolledEvent*) &e);
+
+    m_listener.subscribe<OnMouseScrolled>([this](const OnMouseScrolled& ev){
+        return m_editorMaster.handle_mouse_scrolled(ev);
     });
-    m_dispatcher.add_listener<KeyTypedEvent>([&](Event &e) {
-        return m_editorMaster.handle_key_typed(*(KeyTypedEvent*) &e);
+
+    m_listener.subscribe<OnKeyTyped>([this](const OnKeyTyped& ev){
+        return m_editorMaster.handle_key_typed(ev);
     });
-    m_dispatcher.add_listener<KeyEvent>([&](Event &e) {
-        return m_editorMaster.handle_key(*(KeyEvent*) &e);
+
+    m_listener.subscribe<OnKey>([this](const OnKey& ev){
+        return m_editorMaster.handle_key(ev);
     });
-    m_dispatcher.add_listener<WindowResizedEvent>([&](Event &e) {
-        return m_editorMaster.handle_window_resized(*(WindowResizedEvent*) &e);
+
+    m_listener.subscribe<OnWindowResized>([this](const OnWindowResized& ev){
+        return m_editorMaster.handle_window_resized(ev);
     });
 
     m_editorMaster.init();
-
 }
 
-void EditorLayer::handle_deattach() {
+void EditorLayer::handle_detach() {
     m_editorMaster.deinit();
+    m_listener.detach();
 }
 
 void EditorLayer::handle_update() {
     m_editorMaster.update();
 }
 
-void EditorLayer::handle_event(Event &e) {
-    m_dispatcher.dispatch(e);
-}
-
-
-
 EG_EDITOR_END
-
-

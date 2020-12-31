@@ -7,17 +7,11 @@
 EG_EDITOR_BEGIN
 
 SceneWindow::SceneWindow() : EditorWindow("SceneLayer") {
-    raytracer_target_created_callback = [&](const Engine::OnRaytracerTargetCreated& ev){
-        handle_raytracer_target_created(ev.target);
-    };
-    Engine::EventMaster::instance().subscribe<Engine::OnRaytracerTargetCreated>(&raytracer_target_created_callback);
-
 
 
 }
 
 SceneWindow::~SceneWindow() {
-    Engine::EventMaster::instance().unsubscribe<Engine::OnRaytracerTargetCreated>(&raytracer_target_created_callback);
 }
 
 void SceneWindow::handle_window_update() {

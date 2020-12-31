@@ -8,7 +8,9 @@ using namespace Eagle::Engine;
 
 EG_EDITOR_BEGIN
 
-DebugSettingsWindow::DebugSettingsWindow() : EditorWindow("Physics Settings") {
+DebugSettingsWindow::DebugSettingsWindow(EventBus<EventStream>* eventBus) :
+    EditorWindow("Physics Settings"),
+    m_eventBus(eventBus){
 
 }
 
@@ -32,7 +34,7 @@ void DebugSettingsWindow::handle_window_update() {
     ImGui::InputFloat3("Cube rotation:", &sceneData.cubeRotation[0]);
 
     if (ImGui::Button("Reset scene")){
-        EventMaster::instance().emit(OnSceneRecreate{});
+        m_eventBus->emit(OnSceneRecreate{});
     }
 
     ImGui::Checkbox("Static spawn", &spawner.isStatic);

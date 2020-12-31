@@ -27,12 +27,12 @@ public:
     static void add_window(const Reference<EditorWindow>& window);
     static void remove_window(const Reference<EditorWindow>& window);
 
-    bool handle_window_resized(WindowResizedEvent &e);
-    bool handle_mouse_moved(MouseMoveEvent& e);
-    bool handle_mouse_button(MouseButtonEvent &e);
-    bool handle_mouse_scrolled(MouseScrolledEvent& e);
-    bool handle_key(KeyEvent &e);
-    bool handle_key_typed(KeyTypedEvent& e);
+    bool handle_window_resized(const OnWindowResized &e);
+    bool handle_mouse_moved(const OnMouseMove &e);
+    bool handle_mouse_button(const OnMouseButton &e);
+    bool handle_mouse_scrolled(const OnMouseScrolled &e);
+    bool handle_key(const OnKey &e);
+    bool handle_key_typed(const OnKeyTyped &e);
 
 private:
     void init_imgui();

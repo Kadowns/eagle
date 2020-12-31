@@ -158,8 +158,6 @@ void RaytracerSystem::init_render_target() {
         data.compute.boxesBuffer.lock(),
         data.compute.skybox.lock()
     });
-
-    EventMaster::instance().emit(OnRaytracerTargetCreated(data.compute.color.lock()->image()));
     EG_TRACE("END");
 }
 

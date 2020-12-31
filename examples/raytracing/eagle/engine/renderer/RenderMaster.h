@@ -6,7 +6,6 @@
 #define EAGLE_RENDERMASTER_H
 
 #include <eagle/engine/EngineGlobalDefinitions.h>
-#include <eagle/engine/EventMaster.h>
 
 EG_ENGINE_BEGIN
 

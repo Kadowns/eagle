@@ -116,7 +116,7 @@ public:
             return;
         }
         std::lock_guard lock(m_eventStreamMutex);
-        m_eventStreams[eventStreamIndex].emit(&ev);
+        m_eventStreams[eventStreamIndex].emit(ev);
     }
 
     template<typename TEvent>
@@ -192,6 +192,11 @@ public:
         m_bus->template subscribe<TEvent>([receiver](const TEvent& ev) -> bool{
             return receiver->receive(ev);
         }, m_id, priority);
+    }
+
+    template<typename TEvent, typename TFunc>
+    void subscribe(TFunc&& func, uint32_t priority = 0x7FFFFFFF){
+        m_bus->template subscribe<TEvent>(std::forward<TFunc>(func), m_id, priority);
     }
 
     template<typename TEvent>

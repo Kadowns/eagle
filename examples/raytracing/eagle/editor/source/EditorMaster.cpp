@@ -236,35 +236,35 @@ void EditorMaster::handle_command_buffer_main_render_pass(Reference<CommandBuffe
     }
 }
 
-bool EditorMaster::handle_window_resized(WindowResizedEvent &e) {
+bool EditorMaster::handle_window_resized(const OnWindowResized &e) {
     ImGuiIO &io = ImGui::GetIO();
-    io.DisplaySize = ImVec2(e.get_width(), e.get_height());
+    io.DisplaySize = ImVec2(e.width, e.height);
     return false;
 }
 
-bool EditorMaster::handle_mouse_moved(MouseMoveEvent &e) {
+bool EditorMaster::handle_mouse_moved(const OnMouseMove &e) {
     ImGuiIO &io = ImGui::GetIO();
-    io.MousePos = ImVec2(e.get_x(), e.get_y());
+    io.MousePos = ImVec2(e.x, e.y);
     return false;
 }
 
-bool EditorMaster::handle_mouse_button(MouseButtonEvent &e) {
+bool EditorMaster::handle_mouse_button(const OnMouseButton &e) {
     ImGuiIO& io = ImGui::GetIO();
-    io.MouseDown[e.get_key()] = e.get_action() == EG_PRESS || e.get_action() == EG_REPEAT;
+    io.MouseDown[e.key] = e.action == EG_PRESS || e.action == EG_REPEAT;
     return ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow);
 }
 
-bool EditorMaster::handle_mouse_scrolled(MouseScrolledEvent &e) {
+bool EditorMaster::handle_mouse_scrolled(const OnMouseScrolled &e) {
     ImGuiIO &io = ImGui::GetIO();
-    io.MouseWheel = e.get_y();
-    io.MouseWheelH = e.get_x();
+    io.MouseWheel = e.y;
+    io.MouseWheelH = e.x;
     return ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
 }
 
-bool EditorMaster::handle_key(KeyEvent &e) {
+bool EditorMaster::handle_key(const OnKey &e) {
     ImGuiIO &io = ImGui::GetIO();
 
-    io.KeysDown[e.get_key()] = e.get_action() == EG_PRESS || e.get_action() == EG_REPEAT;
+    io.KeysDown[e.key] = e.action == EG_PRESS || e.action == EG_REPEAT;
 
     // Modifiers are not reliable across m_systems
     io.KeyCtrl = io.KeysDown[EG_KEY_LEFT_CONTROL] || io.KeysDown[EG_KEY_RIGHT_CONTROL];
@@ -274,9 +274,9 @@ bool EditorMaster::handle_key(KeyEvent &e) {
     return ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
 }
 
-bool EditorMaster::handle_key_typed(KeyTypedEvent &e) {
+bool EditorMaster::handle_key_typed(const OnKeyTyped &e) {
     ImGuiIO &io = ImGui::GetIO();
-    io.AddInputCharacter(e.get_key());
+    io.AddInputCharacter(e.key);
     return ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
 }
 
