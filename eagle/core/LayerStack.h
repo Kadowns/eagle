@@ -20,7 +20,7 @@ public:
     ~LayerStack() = default;
 
 
-    void init(EventBus<EventStream>* eventBus);
+    void init(GenericEventBus<ConsumableEventStream>* eventBus);
     void deinit();
     void emplace_back(Reference<Layer> layer);
     void emplace_front(Reference<Layer> layer);
@@ -33,7 +33,7 @@ public:
 private:
 
     std::vector<Reference<Layer>> m_layers;
-    EventBus<EventStream>* m_eventBus;
+    GenericEventBus<ConsumableEventStream>* m_eventBus;
 
     bool m_initialized = false;
 };

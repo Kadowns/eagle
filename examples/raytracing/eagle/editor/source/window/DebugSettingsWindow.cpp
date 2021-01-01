@@ -8,7 +8,7 @@ using namespace Eagle::Engine;
 
 EG_EDITOR_BEGIN
 
-DebugSettingsWindow::DebugSettingsWindow(EventBus<EventStream>* eventBus) :
+DebugSettingsWindow::DebugSettingsWindow(EventBus* eventBus) :
     EditorWindow("Physics Settings"),
     m_eventBus(eventBus){
 

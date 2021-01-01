@@ -17,7 +17,7 @@ public:
 
     virtual ~InputLayer() = default;
 
-    virtual void handle_attach(EventBus<EventStream>* eventBus) override;
+    virtual void handle_attach(GenericEventBus<ConsumableEventStream>* eventBus) override;
 
     virtual void handle_detach() override;
 

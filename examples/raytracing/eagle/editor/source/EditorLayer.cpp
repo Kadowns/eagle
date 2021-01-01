@@ -18,7 +18,7 @@ EditorLayer::~EditorLayer() {
 
 }
 
-void EditorLayer::handle_attach(EventBus<EventStream>* eventBus) {
+void EditorLayer::handle_attach(EventBus* eventBus) {
 
     EditorMaster::add_window(std::make_shared<DebugSettingsWindow>(eventBus));
 

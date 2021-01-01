@@ -32,10 +32,16 @@ public:
     virtual void set_cursor_shape(Cursor cursorType) = 0;
     virtual void set_cursor_visible(bool visible) = 0;
 
-    virtual EventBus<EventStream>* event_bus() = 0;
+    virtual EventBus* event_bus() = 0;
 
-    uint32_t get_width();
-    uint32_t get_height();
+    uint32_t width();
+    uint32_t height();
+
+    uint32_t framebuffer_width();
+    uint32_t framebuffer_height();
+
+    float framebuffer_width_scale();
+    float framebuffer_height_scale();
 
 protected:
 
@@ -43,7 +49,8 @@ protected:
         WindowData(uint32_t w, uint32_t h) : width(w), height(h){}
 
         uint32_t width, height;
-        EventBus<EventStream> eventBus;
+        uint32_t framebufferWidth, framebufferHeight;
+        EventBus eventBus;
     } m_windowData;
 };
 

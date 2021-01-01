@@ -37,6 +37,11 @@ void WindowGLFW::init() {
         throw std::runtime_error("Failed to create glfw window!");
     }
 
+    int framebufferWidth, framebufferHeight;
+    glfwGetFramebufferSize(m_window, &framebufferWidth, &framebufferHeight);
+    m_windowData.framebufferWidth = framebufferWidth;
+    m_windowData.framebufferHeight = framebufferHeight;
+
     glfwMakeContextCurrent(m_window);
     glfwShowWindow(m_window);
 
@@ -49,6 +54,12 @@ void WindowGLFW::init() {
         auto data = (WindowData*)glfwGetWindowUserPointer(window);
         data->width = width;
         data->height = height;
+
+        int framebufferWidth, framebufferHeight;
+        glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
+        data->framebufferWidth = framebufferWidth;
+        data->framebufferHeight = framebufferHeight;
+
         if (width != 0 && height != 0){
             data->eventBus.emit(OnWindowResized{static_cast<uint32_t>(width), static_cast<uint32_t>(height)});
         }
@@ -145,7 +156,7 @@ void WindowGLFW::set_cursor_visible(bool visible) {
     glfwSetInputMode(m_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
 }
 
-EventBus<EventStream>* WindowGLFW::event_bus() {
+EventBus* WindowGLFW::event_bus() {
     return &m_windowData.eventBus;
 }
 

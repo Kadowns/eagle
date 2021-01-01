@@ -20,7 +20,7 @@ private:
     static size_t s_eventStreamIndexCounter;
 };
 
-class EventStream {
+class ConsumableEventStream {
 public:
     using ReturnType = bool;
     typedef std::function<ReturnType(void*)> CallbackType;
@@ -104,7 +104,7 @@ protected:
 
 
 template<typename TEventStream>
-class EventBus {
+class GenericEventBus {
 public:
     template<typename TEvent>
     void emit(const TEvent& ev){
@@ -151,7 +151,7 @@ public:
 private:
 
     template<typename TReceiver, typename TBus>
-    friend class EventListener;
+    friend class GenericEventListener;
 
     size_t next_listener_id(){
         return ++m_listenerIdCounter;
@@ -165,10 +165,10 @@ private:
 };
 
 template<typename TReceiver, typename TBus>
-class EventListener {
+class GenericEventListener {
 public:
 
-    virtual ~EventListener() {
+    virtual ~GenericEventListener() {
         detach();
     }
 
@@ -189,7 +189,7 @@ public:
 
     template<typename TEvent>
     void subscribe(TReceiver* receiver, uint32_t priority = 0x7FFFFFFF){
-        m_bus->template subscribe<TEvent>([receiver](const TEvent& ev) -> bool{
+        m_bus->template subscribe<TEvent>([receiver](const TEvent& ev) {
             return receiver->receive(ev);
         }, m_id, priority);
     }
@@ -208,6 +208,11 @@ private:
     TBus* m_bus = nullptr;
     size_t m_id = 0;
 };
+
+using EventBus = GenericEventBus<ConsumableEventStream>;
+
+template<typename TReceiver>
+using EventListener = GenericEventListener<TReceiver, EventBus>;
 
 EG_END
 

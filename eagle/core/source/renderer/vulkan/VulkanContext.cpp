@@ -627,9 +627,9 @@ VkExtent2D VulkanContext::choose_swap_extent(const VkSurfaceCapabilitiesKHR &cap
         return capabilities.currentExtent;
     } else {
         VkExtent2D actualExtent = {};
-        actualExtent.width = std::clamp<uint32_t>(m_window->get_width(), capabilities.minImageExtent.width,
+        actualExtent.width = std::clamp<uint32_t>(m_window->width(), capabilities.minImageExtent.width,
                                                   capabilities.maxImageExtent.width);
-        actualExtent.height = std::clamp<uint32_t>(m_window->get_height(), capabilities.minImageExtent.height,
+        actualExtent.height = std::clamp<uint32_t>(m_window->height(), capabilities.minImageExtent.height,
                                                    capabilities.maxImageExtent.height);
 
         EG_CORE_INFO_F("Swap extent: width:{0} height:{1}", actualExtent.width, actualExtent.height);

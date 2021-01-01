@@ -32,7 +32,7 @@ public:
     virtual void set_cursor_shape(Cursor cursorType) override;
     virtual void set_cursor_visible(bool visible) override;
 
-    virtual EventBus<EventStream>* event_bus() override;
+    virtual EventBus* event_bus() override;
 
 private:
 

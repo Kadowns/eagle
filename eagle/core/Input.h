@@ -21,7 +21,7 @@ public:
 
     static Input& instance();
 
-    void init(EventBus<EventStream>* eventBus);
+    void init(EventBus* eventBus);
     void deinit();
 
     void refresh();
@@ -43,7 +43,7 @@ public:
 
 protected:
 
-    friend class EventListener<Input, EventBus<EventStream>>;
+    friend class GenericEventListener<Input, EventBus>;
     bool receive(const OnKey &e);
     bool receive(const OnMouseMove &e);
     bool receive(const OnMouseButton &e);
@@ -57,7 +57,7 @@ private:
     std::set<int> m_downMouseButtons, m_pressedMouseButtons, m_releasedMouseButtons;
 
     Position m_mousePosition, m_mouseDelta, m_scrollDelta;
-    EventListener<Input, EventBus<EventStream>> m_listener;
+    EventListener<Input> m_listener;
     bool m_firstMouseMove = true;
 
 };

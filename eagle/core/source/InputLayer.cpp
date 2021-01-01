@@ -9,7 +9,7 @@
 
 EG_BEGIN
 
-void InputLayer::handle_attach(EventBus<EventStream> *eventBus) {
+void InputLayer::handle_attach(GenericEventBus<ConsumableEventStream> *eventBus) {
     Input::instance().init(eventBus);
 }
 

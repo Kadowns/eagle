@@ -55,7 +55,7 @@ void LayerStack::emplace(const std::vector<Reference<Layer>>& layers) {
     }
 }
 
-void LayerStack::init(EventBus<EventStream>* eventBus) {
+void LayerStack::init(GenericEventBus<ConsumableEventStream>* eventBus) {
 
     if (m_initialized) return;
 
