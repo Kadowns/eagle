@@ -13,7 +13,7 @@ EG_ENGINE_BEGIN
 class RenderLayer : public Layer {
 
 public:
-    virtual void handle_attach(EventBus<EventStream>* eventBus) override;
+    virtual void handle_attach(EventBus* eventBus) override;
 
     virtual void handle_detach() override;
 
@@ -21,7 +21,7 @@ public:
 
 private:
     RenderMaster m_renderMaster;
-    EventListener<RenderLayer, EventBus<EventStream>> m_listener;
+    EventListener<RenderLayer> m_listener;
 };
 
 

@@ -38,7 +38,8 @@ private:
     void init_imgui();
     void handle_context_init(RenderingContext &context);
     void handle_command_buffer_main_render_pass(Reference<CommandBuffer> &commandBuffer);
-    void init_render_state(const Reference <Eagle::Shader> &shader, Reference <CommandBuffer> &commandBuffer);
+    void init_render_state(const Reference <Shader> &shader, Reference <CommandBuffer> &commandBuffer,
+                           ImDrawData *drawData);
     void update_mouse_cursor();
     void update_buffers();
 

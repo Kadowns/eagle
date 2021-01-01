@@ -15,7 +15,7 @@ EG_ENGINE_BEGIN
 
 class SceneLayer : public Layer {
 public:
-    virtual void handle_attach(EventBus<EventStream>* eventBus) override;
+    virtual void handle_attach(EventBus* eventBus) override;
 
     virtual void handle_detach() override;
 
@@ -26,7 +26,7 @@ private:
     void generate_playground();
     glm::vec2 random_inside_unit_circle();
 private:
-    EventListener<SceneLayer, EventBus<EventStream>> m_listener;
+    EventListener<SceneLayer> m_listener;
 };
 
 EG_ENGINE_END

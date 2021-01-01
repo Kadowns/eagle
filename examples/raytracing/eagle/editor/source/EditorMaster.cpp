@@ -89,9 +89,12 @@ void EditorMaster::init_imgui() {
     io.KeyMap[ImGuiKey_Y] = EG_KEY_Y;
     io.KeyMap[ImGuiKey_Z] = EG_KEY_Z;
 
+    auto& window = Application::instance().window();
+    float width = static_cast<float>(window.width());
+    float height = static_cast<float>(window.height());
 
-    io.DisplaySize = ImVec2(Application::instance().window().get_width(), Application::instance().window().get_height());
-    io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+    io.DisplaySize = ImVec2(width, height);
+    io.DisplayFramebufferScale = ImVec2( window.framebuffer_width_scale(), window.framebuffer_height_scale());
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 }
@@ -175,12 +178,13 @@ void EditorMaster::update() {
     update_buffers();
 }
 
-void EditorMaster::init_render_state(const Reference<Shader> &shader, Reference<CommandBuffer> &commandBuffer) {
+void EditorMaster::init_render_state(const Reference <Shader> &shader, Reference <CommandBuffer> &commandBuffer,
+                                     ImDrawData *drawData) {
     ImGuiIO &io = ImGui::GetIO();
-    commandBuffer->set_viewport(io.DisplaySize.x, io.DisplaySize.y, 0, 0, 0, 1);
+    commandBuffer->set_viewport(io.DisplaySize.x * io.DisplayFramebufferScale.x, io.DisplaySize.y * io.DisplayFramebufferScale.y, 0, 0, 0, 1);
     commandBuffer->bind_shader(shader);
-    pushConstBlock.scale = glm::vec2(2.0f / io.DisplaySize.x, 2.0f / io.DisplaySize.y);
-    pushConstBlock.translate = glm::vec2(-1.0f);
+    pushConstBlock.scale = glm::vec2(2.0f / drawData->DisplaySize.x, 2.0f / drawData->DisplaySize.y);
+    pushConstBlock.translate = glm::vec2(-1.0f) - glm::vec2(drawData->DisplayPos.x, drawData->DisplayPos.y) * pushConstBlock.scale;
     commandBuffer->push_constants(ShaderStage::VERTEX, 0, sizeof(pushConstBlock), &pushConstBlock);
 }
 
@@ -191,8 +195,10 @@ void EditorMaster::handle_command_buffer_main_render_pass(Reference<CommandBuffe
     // Render commands
     if (imDrawData->CmdListsCount > 0) {
 
-        init_render_state(m_blendEnabledShader.lock(), commandBuffer);
+        init_render_state(m_blendEnabledShader.lock(), commandBuffer, imDrawData);
 
+        ImVec2 clip_off = imDrawData->DisplayPos;         // (0,0) unless using multi-viewports
+        ImVec2 clip_scale = imDrawData->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
 
         int32_t vertexOffset = 0;
         int32_t indexOffset = 0;
@@ -208,20 +214,27 @@ void EditorMaster::handle_command_buffer_main_render_pass(Reference<CommandBuffe
                 ImDrawCmd *cmd = &cmdList->CmdBuffer[j];
                 if (cmd->UserCallback != NULL) {
                     if (cmd->UserCallback == EnableBlending){
-                        init_render_state(m_blendEnabledShader.lock(), commandBuffer);
+                        init_render_state(m_blendEnabledShader.lock(), commandBuffer, nullptr);
                     }
                     else if (cmd->UserCallback == DisableBlending){
-                        init_render_state(m_blendDisabledShader.lock(), commandBuffer);
+                        init_render_state(m_blendDisabledShader.lock(), commandBuffer, nullptr);
                     }
                     else{
                         cmd->UserCallback(cmdList, cmd);
                     }
                 }
                 else {
-                    uint32_t x = std::max((int32_t) (cmd->ClipRect.x), 0);
-                    uint32_t y = std::max((int32_t) (cmd->ClipRect.y), 0);
-                    uint32_t w = (uint32_t) (cmd->ClipRect.z - cmd->ClipRect.x);
-                    uint32_t h = (uint32_t) (cmd->ClipRect.w - cmd->ClipRect.y);
+                    // Project scissor/clipping rectangles into framebuffer space
+                    ImVec4 clip_rect;
+                    clip_rect.x = (cmd->ClipRect.x - clip_off.x) * clip_scale.x;
+                    clip_rect.y = (cmd->ClipRect.y - clip_off.y) * clip_scale.y;
+                    clip_rect.z = (cmd->ClipRect.z - clip_off.x) * clip_scale.x;
+                    clip_rect.w = (cmd->ClipRect.w - clip_off.y) * clip_scale.y;
+
+                    uint32_t x = std::max((int32_t) (clip_rect.x), 0);
+                    uint32_t y = std::max((int32_t) (clip_rect.y), 0);
+                    uint32_t w = (uint32_t) (clip_rect.z - clip_rect.x);
+                    uint32_t h = (uint32_t) (clip_rect.w - clip_rect.y);
                     commandBuffer->set_scissor(w, h, x, y);
 
                     commandBuffer->bind_descriptor_sets(static_cast<Handle<DescriptorSet> *>(cmd->TextureId)->lock(), 0);
@@ -237,8 +250,12 @@ void EditorMaster::handle_command_buffer_main_render_pass(Reference<CommandBuffe
 }
 
 bool EditorMaster::handle_window_resized(const OnWindowResized &e) {
+
+    auto& window = Application::instance().window();
+
     ImGuiIO &io = ImGui::GetIO();
     io.DisplaySize = ImVec2(e.width, e.height);
+    io.DisplayFramebufferScale = ImVec2( window.framebuffer_width_scale(), window.framebuffer_height_scale());
     return false;
 }
 

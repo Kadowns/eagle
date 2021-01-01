@@ -24,7 +24,7 @@
 
 EG_ENGINE_BEGIN
 
-void SceneLayer::handle_attach(EventBus<EventStream>* eventBus) {
+void SceneLayer::handle_attach(EventBus* eventBus) {
 
     m_listener.attach(eventBus);
     m_listener.subscribe<OnSceneRecreate>([this](const OnSceneRecreate& ev){

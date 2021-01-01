@@ -6,7 +6,7 @@
 
 EG_ENGINE_BEGIN
 
-void RenderLayer::handle_attach(EventBus<EventStream>* eventBus) {
+void RenderLayer::handle_attach(EventBus* eventBus) {
     m_listener.attach(eventBus);
     m_listener.subscribe<OnWindowResized>([this](const OnWindowResized& ev){
        m_renderMaster.handle_window_resized(ev.width, ev.height);

@@ -11,12 +11,12 @@ EG_EDITOR_BEGIN
 
 class DebugSettingsWindow : public EditorWindow {
 public:
-    DebugSettingsWindow(EventBus<EventStream>* eventBus);
+    DebugSettingsWindow(EventBus* eventBus);
     virtual ~DebugSettingsWindow();
 
     virtual void handle_window_update() override;
 private:
-    EventBus<EventStream>* m_eventBus;
+    EventBus* m_eventBus;
 
 };
 

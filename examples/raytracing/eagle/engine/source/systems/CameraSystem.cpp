@@ -23,7 +23,7 @@ void CameraSystem::configure(entityx::EntityManager &entities, entityx::EventMan
     auto& window = Application::instance().window();
     entities.each<Camera, CameraController, Transform>([&](Entity e, Camera& camera, CameraController& controller, Transform& transform){
         camera.set_view(transform.position(), transform.position() + transform.front(), transform.up());
-        camera.set_projection(70.0f, window.get_width() / (float)window.get_height());
+        camera.set_projection(70.0f, window.width() / (float) window.height());
         controller.originalRotation = transform.rotation();
     });
 }

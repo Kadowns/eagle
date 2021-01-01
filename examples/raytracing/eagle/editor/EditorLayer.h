@@ -16,7 +16,7 @@ public:
     EditorLayer();
     ~EditorLayer();
 
-    virtual void handle_attach(EventBus<EventStream>* eventBus) override;
+    virtual void handle_attach(EventBus* eventBus) override;
 
     virtual void handle_detach() override;
 
@@ -24,7 +24,7 @@ public:
 
 private:
     EditorMaster m_editorMaster;
-    EventListener<EditorLayer, EventBus<EventStream>> m_listener;
+    EventListener<EditorLayer> m_listener;
 };
 
 EG_EDITOR_END

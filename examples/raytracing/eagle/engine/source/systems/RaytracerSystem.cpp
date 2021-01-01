@@ -121,8 +121,8 @@ void RaytracerSystem::init_render_target() {
     textureCreateInfo.imageCreateInfo.format = Format::R8G8B8A8_UNORM;
     textureCreateInfo.imageCreateInfo.memoryProperties = {MemoryProperty::DEVICE_LOCAL};
     textureCreateInfo.imageCreateInfo.tiling = ImageTiling::OPTIMAL;
-    textureCreateInfo.imageCreateInfo.width = window.get_width();
-    textureCreateInfo.imageCreateInfo.height = window.get_height();
+    textureCreateInfo.imageCreateInfo.width = window.width();
+    textureCreateInfo.imageCreateInfo.height = window.height();
     textureCreateInfo.imageCreateInfo.mipLevels = 1;
     textureCreateInfo.imageCreateInfo.arrayLayers = 1;
 

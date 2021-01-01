@@ -9,7 +9,7 @@
 
 class TriangleLayer : public Eagle::Layer {
 public:
-    void handle_attach(Eagle::EventBus<Eagle::EventStream>* eventBus) override;
+    void handle_attach(Eagle::EventBus* eventBus) override;
 
     void handle_update() override;
 
@@ -20,7 +20,7 @@ public:
 
 private:
     Eagle::Reference<Eagle::RenderingContext> m_renderingContext;
-    Eagle::EventListener<TriangleLayer, Eagle::EventBus<Eagle::EventStream>> m_listener;
+    Eagle::EventListener<TriangleLayer> m_listener;
 
     Eagle::Handle<Eagle::Shader> m_shader;
     Eagle::Handle<Eagle::VertexBuffer> m_vertexBuffer;

@@ -5,7 +5,7 @@
 #include "TriangleLayer.h"
 
 
-void TriangleLayer::handle_attach(Eagle::EventBus<Eagle::EventStream>* eventBus) {
+void TriangleLayer::handle_attach(Eagle::EventBus* eventBus) {
     EG_INFO("Triangle attached!");
     m_renderingContext = std::make_shared<Eagle::VulkanContext>();
     m_renderingContext->init(&Eagle::Application::instance().window());
