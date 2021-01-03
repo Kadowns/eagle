@@ -327,8 +327,8 @@ void EditorMaster::update_buffers() {
         idxOffset += cmdList->IdxBuffer.Size;
     }
 
-    m_vertexBuffer.lock()->upload(vtxDst, imDrawData->TotalVtxCount);
-    m_indexBuffer.lock()->upload(idxDst, imDrawData->TotalIdxCount);
+    m_vertexBuffer.lock()->upload(vtxDst, imDrawData->TotalVtxCount * sizeof(ImDrawVert));
+    m_indexBuffer.lock()->upload(idxDst, imDrawData->TotalIdxCount * sizeof(ImDrawIdx));
 
     delete[] vtxDst;
     delete[] idxDst;

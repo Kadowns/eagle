@@ -9,14 +9,13 @@
 
 class TriangleLayer : public Eagle::Layer {
 public:
-    void handle_attach(Eagle::EventBus* eventBus) override;
+    void handle_attach() override;
 
     void handle_update() override;
 
     void handle_detach() override;
 
     bool receive(const Eagle::OnWindowClose& e);
-    bool receive(const Eagle::OnWindowResized& e);
 
 private:
     Eagle::Reference<Eagle::RenderingContext> m_renderingContext;
@@ -24,6 +23,7 @@ private:
 
     Eagle::Handle<Eagle::Shader> m_shader;
     Eagle::Handle<Eagle::VertexBuffer> m_vertexBuffer;
+    Eagle::Handle<Eagle::IndexBuffer> m_indexBuffer;
 
 };
 
