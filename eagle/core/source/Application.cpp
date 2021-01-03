@@ -35,8 +35,8 @@ void Application::run() {
 
     Time::init();
 
-    m_window->init();
-    m_layerStack.init(m_window->event_bus());
+    m_window->init(&m_eventBus);
+    m_layerStack.init();
 
     while(!m_quit){
 

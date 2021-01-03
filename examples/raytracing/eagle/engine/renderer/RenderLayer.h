@@ -13,7 +13,7 @@ EG_ENGINE_BEGIN
 class RenderLayer : public Layer {
 
 public:
-    virtual void handle_attach(EventBus* eventBus) override;
+    virtual void handle_attach() override;
 
     virtual void handle_detach() override;
 

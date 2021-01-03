@@ -18,11 +18,11 @@ EditorLayer::~EditorLayer() {
 
 }
 
-void EditorLayer::handle_attach(EventBus* eventBus) {
+void EditorLayer::handle_attach() {
 
-    EditorMaster::add_window(std::make_shared<DebugSettingsWindow>(eventBus));
+    EditorMaster::add_window(std::make_shared<DebugSettingsWindow>());
 
-    m_listener.attach(eventBus);
+    m_listener.attach(&Application::instance().event_bus());
 
     m_listener.subscribe<OnMouseMove>([this](const OnMouseMove& ev){
         return m_editorMaster.handle_mouse_moved(ev);

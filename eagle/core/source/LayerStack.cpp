@@ -16,7 +16,7 @@ void LayerStack::emplace_back(Reference<Layer> layer) {
     if (!m_initialized)
         return;
 
-    layer->handle_attach(m_eventBus);
+    layer->handle_attach();
 }
 
 void LayerStack::pop_layer(Reference<Layer> layer) {
@@ -46,7 +46,7 @@ void LayerStack::emplace_front(Reference<Layer> layer) {
     if (!m_initialized)
         return;
 
-    layer->handle_attach(m_eventBus);
+    layer->handle_attach();
 }
 
 void LayerStack::emplace(const std::vector<Reference<Layer>>& layers) {
@@ -55,16 +55,15 @@ void LayerStack::emplace(const std::vector<Reference<Layer>>& layers) {
     }
 }
 
-void LayerStack::init(GenericEventBus<ConsumableEventStream>* eventBus) {
+void LayerStack::init() {
 
     if (m_initialized) return;
 
     EG_CORE_TRACE("Initializing layer stack!");
 
     m_initialized = true;
-    m_eventBus = eventBus;
     for (auto& layer : m_layers){
-        layer->handle_attach(eventBus);
+        layer->handle_attach();
     }
 }
 

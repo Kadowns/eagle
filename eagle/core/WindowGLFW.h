@@ -19,7 +19,7 @@ public:
 
     WindowGLFW(uint32_t width, uint32_t height);
 
-    virtual void init() override;
+    virtual void init(EventBus* eventBus) override;
     virtual void deinit() override;
 
     virtual void pool_events() override;
@@ -31,8 +31,6 @@ public:
 
     virtual void set_cursor_shape(Cursor cursorType) override;
     virtual void set_cursor_visible(bool visible) override;
-
-    virtual EventBus* event_bus() override;
 
 private:
 

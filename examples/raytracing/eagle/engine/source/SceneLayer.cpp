@@ -24,9 +24,9 @@
 
 EG_ENGINE_BEGIN
 
-void SceneLayer::handle_attach(EventBus* eventBus) {
+void SceneLayer::handle_attach() {
 
-    m_listener.attach(eventBus);
+    m_listener.attach(&Application::instance().event_bus());
     m_listener.subscribe<OnSceneRecreate>([this](const OnSceneRecreate& ev){
         generate_playground();
         return false;

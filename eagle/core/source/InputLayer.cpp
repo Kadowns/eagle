@@ -3,14 +3,13 @@
 //
 
 #include <eagle/core/InputLayer.h>
-#include <eagle/core/events/WindowEvents.h>
-#include <eagle/core/events/InputEvents.h>
 #include <eagle/core/Input.h>
+#include <eagle/core/Application.h>
 
 EG_BEGIN
 
-void InputLayer::handle_attach(GenericEventBus<ConsumableEventStream> *eventBus) {
-    Input::instance().init(eventBus);
+void InputLayer::handle_attach() {
+    Input::instance().init(&Application::instance().event_bus());
 }
 
 void InputLayer::handle_detach() {

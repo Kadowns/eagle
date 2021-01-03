@@ -6,14 +6,10 @@
 
 EG_ENGINE_BEGIN
 
-void RenderLayer::handle_attach(EventBus* eventBus) {
-    m_listener.attach(eventBus);
-    m_listener.subscribe<OnWindowResized>([this](const OnWindowResized& ev){
-       m_renderMaster.handle_window_resized(ev.width, ev.height);
-       return false;
-    });
+void RenderLayer::handle_attach() {
+    m_listener.attach(&Application::instance().event_bus());
 
-    m_listener.subscribe<OnWindowClose>([this](const OnWindowClose& ev){
+    m_listener.subscribe<OnWindowClose>([](const OnWindowClose& ev){
         Application::instance().quit();
         return false;
     });

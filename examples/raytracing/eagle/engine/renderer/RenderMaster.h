@@ -20,15 +20,12 @@ public:
     void update();
     void deinit();
 
-    void handle_window_resized(uint32_t width, uint32_t height);
-
     inline static RenderingContext& context() { return *s_context; }
 public:
     static Event handle_context_init;
     static Event handle_context_deinit;
     static Event handle_frame_begin;
     static Event handle_frame_end;
-    static Event handle_context_recreated;
     static CommandBufferEvent handle_command_buffer_begin;
     static CommandBufferEvent handle_command_buffer_end;
     static CommandBufferEvent handle_command_buffer_main_render_pass;

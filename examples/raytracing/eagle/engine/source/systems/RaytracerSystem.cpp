@@ -26,10 +26,6 @@ RaytracerSystem::RaytracerSystem() {
         handle_frame_begin();
     };
 
-    context_recreated_callback = [&](){
-        init_render_target();
-    };
-
     command_buffer_begin_callback = [&](const Reference<CommandBuffer>& commandBuffer){
         handle_command_buffer_begin(commandBuffer);
     };
@@ -38,19 +34,21 @@ RaytracerSystem::RaytracerSystem() {
         handle_command_buffer_main_render_pass(commandBuffer);
     };
 
+    m_listener.attach(&Application::instance().event_bus());
+    m_listener.subscribe<OnRenderingContextRecreated>(this);
+
     RenderMaster::handle_context_init += &context_init_callback;
     RenderMaster::handle_context_deinit += &context_deinit_callback;
     RenderMaster::handle_frame_begin += &frame_begin_callback;
-    RenderMaster::handle_context_recreated += &context_recreated_callback;
     RenderMaster::handle_command_buffer_begin += &command_buffer_begin_callback;
     RenderMaster::handle_command_buffer_main_render_pass += &command_buffer_main_render_pass_callback;
 }
 
 RaytracerSystem::~RaytracerSystem() {
+
     RenderMaster::handle_context_init -= &context_init_callback;
     RenderMaster::handle_context_deinit -= &context_deinit_callback;
     RenderMaster::handle_frame_begin -= &frame_begin_callback;
-    RenderMaster::handle_context_recreated -= &context_recreated_callback;
     RenderMaster::handle_command_buffer_begin -= &command_buffer_begin_callback;
     RenderMaster::handle_command_buffer_main_render_pass -= &command_buffer_main_render_pass_callback;
 }
@@ -180,7 +178,7 @@ void RaytracerSystem::handle_context_init() {
 }
 
 void RaytracerSystem::handle_context_deinit() {
-
+    m_listener.detach();
 }
 
 void RaytracerSystem::handle_frame_begin() {
@@ -283,6 +281,11 @@ void RaytracerSystem::receive(const entityx::ComponentAddedEvent<Box> &ev) {
 
 void RaytracerSystem::receive(const entityx::ComponentRemovedEvent<Box> &ev) {
     m_updateBoxes = true;
+}
+
+bool RaytracerSystem::receive(const OnRenderingContextRecreated &ev) {
+    init_render_target();
+    return false;
 }
 
 

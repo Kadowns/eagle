@@ -19,7 +19,7 @@ public:
 
     virtual ~Window();
 
-    virtual void init() = 0;
+    virtual void init(EventBus* eventBus) = 0;
     virtual void deinit() = 0;
 
     virtual void pool_events() = 0;
@@ -31,8 +31,6 @@ public:
 
     virtual void set_cursor_shape(Cursor cursorType) = 0;
     virtual void set_cursor_visible(bool visible) = 0;
-
-    virtual EventBus* event_bus() = 0;
 
     uint32_t width();
     uint32_t height();
@@ -50,7 +48,7 @@ protected:
 
         uint32_t width, height;
         uint32_t framebufferWidth, framebufferHeight;
-        EventBus eventBus;
+        EventBus* eventBus;
     } m_windowData;
 };
 
