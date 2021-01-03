@@ -34,18 +34,17 @@ public:
     bool handle_key(const OnKey &e);
     bool handle_key_typed(const OnKeyTyped &e);
 
+    bool receive(const Engine::OnRenderContextInit& ev);
+    bool receive(const Engine::OnRenderCommandBufferMainRenderPass& ev);
+
 private:
     void init_imgui();
-    void handle_context_init(RenderingContext &context);
-    void handle_command_buffer_main_render_pass(Reference<CommandBuffer> &commandBuffer);
-    void init_render_state(const Reference <Shader> &shader, Reference <CommandBuffer> &commandBuffer,
+    void init_render_state(const Reference <Shader> &shader, CommandBuffer *commandBuffer,
                            ImDrawData *drawData);
     void update_mouse_cursor();
     void update_buffers();
 
 private:
-    Engine::RenderMaster::CommandBufferEvent::Listener handle_command_buffer_main_render_pass_callback;
-    Engine::RenderMaster::Event::Listener handle_context_init_callback;
 
     Handle<Texture> m_font;
     Handle<Shader> m_blendEnabledShader, m_blendDisabledShader;
@@ -53,6 +52,7 @@ private:
     Handle<DescriptorSet> m_descriptor;
     Handle<IndexBuffer> m_indexBuffer;
     Handle<VertexBuffer> m_vertexBuffer;
+    EventListener<EditorMaster> m_listener;
 
     static std::vector<Reference<EditorWindow>> m_windows;
 };

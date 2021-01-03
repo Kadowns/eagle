@@ -9,13 +9,7 @@ EG_EDITOR_BEGIN
 std::vector<Reference<EditorWindow>> EditorMaster::m_windows;
 
 EditorMaster::EditorMaster() {
-    handle_context_init_callback = [&](){
-        handle_context_init(Engine::RenderMaster::context());
-    };
 
-    handle_command_buffer_main_render_pass_callback = [&](Reference<CommandBuffer>& commandBuffer){
-        handle_command_buffer_main_render_pass(commandBuffer);
-    };
 }
 
 EditorMaster::~EditorMaster() {
@@ -23,15 +17,14 @@ EditorMaster::~EditorMaster() {
 }
 
 void EditorMaster::init() {
-    Engine::RenderMaster::handle_context_init += &handle_context_init_callback;
-    Engine::RenderMaster::handle_command_buffer_main_render_pass += &handle_command_buffer_main_render_pass_callback;
-
+    m_listener.attach(&Application::instance().event_bus());
+    m_listener.subscribe<Engine::OnRenderContextInit>(this);
+    m_listener.subscribe<Engine::OnRenderCommandBufferMainRenderPass>(this);
     init_imgui();
 }
 
 void EditorMaster::deinit() {
-    Engine::RenderMaster::handle_context_init -= &handle_context_init_callback;
-    Engine::RenderMaster::handle_command_buffer_main_render_pass -= &handle_command_buffer_main_render_pass_callback;
+    m_listener.detach();
     ImGui::DestroyContext();
 }
 
@@ -99,71 +92,6 @@ void EditorMaster::init_imgui() {
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 }
 
-
-void EditorMaster::handle_context_init(RenderingContext &context) {
-
-    EG_TRACE("BEGIN");
-
-    ImGuiIO &io = ImGui::GetIO();
-    unsigned char *pixels;
-    TextureCreateInfo fontCreateInfo = {};
-    io.Fonts->GetTexDataAsRGBA32(&pixels, &fontCreateInfo.imageCreateInfo.width, &fontCreateInfo.imageCreateInfo.height);
-    fontCreateInfo.filter = Filter::LINEAR;
-
-    fontCreateInfo.imageCreateInfo.bufferData = std::vector<unsigned char>(pixels,
-                                                                           pixels + fontCreateInfo.imageCreateInfo.width * fontCreateInfo.imageCreateInfo.height * 4);
-    fontCreateInfo.imageCreateInfo.aspects = {ImageAspect::COLOR};
-    fontCreateInfo.imageCreateInfo.memoryProperties = {MemoryProperty::DEVICE_LOCAL};
-    fontCreateInfo.imageCreateInfo.usages = {ImageUsage::SAMPLED, ImageUsage::TRANSFER_DST};
-    fontCreateInfo.imageCreateInfo.layout = ImageLayout::SHADER_READ_ONLY_OPTIMAL;
-    fontCreateInfo.imageCreateInfo.tiling = ImageTiling::OPTIMAL;
-    fontCreateInfo.imageCreateInfo.format = Format::R8G8B8A8_UNORM;
-    fontCreateInfo.imageCreateInfo.arrayLayers = 1;
-    fontCreateInfo.imageCreateInfo.mipLevels = 1;
-
-
-    m_font = context.create_texture(fontCreateInfo);
-
-
-    VertexLayout vertexLayout = VertexLayout(5, {
-            Format::R32G32_SFLOAT,
-            Format::R32G32_SFLOAT,
-            Format::R8G8B8A8_UNORM
-    });
-
-
-    DescriptorBindingDescription binding = {};
-    binding.shaderStage = ShaderStage::FRAGMENT;
-    binding.descriptorType = DescriptorType::COMBINED_IMAGE_SAMPLER;
-    binding.binding = 0;
-
-    m_descriptorLayout = context.create_descriptor_set_layout({binding});
-
-
-    ShaderCreateInfo pipelineInfo = {context.main_render_pass(), {
-            {ShaderStage::VERTEX, "data/shaders/text.vert"},
-            {ShaderStage::FRAGMENT, "data/shaders/text.frag"},
-    }};
-    pipelineInfo.vertexLayout = vertexLayout;
-    pipelineInfo.dynamicStates = true;
-    m_blendDisabledShader = context.create_shader(pipelineInfo);
-
-    pipelineInfo.blendEnable = true;
-    m_blendEnabledShader = context.create_shader(pipelineInfo);
-
-    m_descriptor = context.create_descriptor_set(m_descriptorLayout.lock(), {m_font.lock()});
-
-    io.Fonts->TexID = (ImTextureID)&m_descriptor;
-
-    m_vertexBuffer = context.create_vertex_buffer(nullptr, 0, vertexLayout,
-                                                  BufferUsage::DYNAMIC);
-    m_indexBuffer = context.create_index_buffer(nullptr, 0, IndexBufferType::UINT_16,
-                                                BufferUsage::DYNAMIC);
-
-    EG_TRACE("END");
-
-}
-
 void EditorMaster::update() {
     ImGuiIO &io = ImGui::GetIO();
     io.DeltaTime = Time::delta_time() + 0.0001f;
@@ -178,7 +106,7 @@ void EditorMaster::update() {
     update_buffers();
 }
 
-void EditorMaster::init_render_state(const Reference <Shader> &shader, Reference <CommandBuffer> &commandBuffer,
+void EditorMaster::init_render_state(const Reference <Shader> &shader, CommandBuffer *commandBuffer,
                                      ImDrawData *drawData) {
     ImGuiIO &io = ImGui::GetIO();
     commandBuffer->set_viewport(io.DisplaySize.x * io.DisplayFramebufferScale.x, io.DisplaySize.y * io.DisplayFramebufferScale.y, 0, 0, 0, 1);
@@ -186,67 +114,6 @@ void EditorMaster::init_render_state(const Reference <Shader> &shader, Reference
     pushConstBlock.scale = glm::vec2(2.0f / drawData->DisplaySize.x, 2.0f / drawData->DisplaySize.y);
     pushConstBlock.translate = glm::vec2(-1.0f) - glm::vec2(drawData->DisplayPos.x, drawData->DisplayPos.y) * pushConstBlock.scale;
     commandBuffer->push_constants(ShaderStage::VERTEX, 0, sizeof(pushConstBlock), &pushConstBlock);
-}
-
-void EditorMaster::handle_command_buffer_main_render_pass(Reference<CommandBuffer> &commandBuffer) {
-
-    ImGuiIO &io = ImGui::GetIO();
-    ImDrawData *imDrawData = ImGui::GetDrawData();
-    // Render commands
-    if (imDrawData->CmdListsCount > 0) {
-
-        init_render_state(m_blendEnabledShader.lock(), commandBuffer, imDrawData);
-
-        ImVec2 clip_off = imDrawData->DisplayPos;         // (0,0) unless using multi-viewports
-        ImVec2 clip_scale = imDrawData->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
-
-        int32_t vertexOffset = 0;
-        int32_t indexOffset = 0;
-
-        commandBuffer->bind_vertex_buffer(m_vertexBuffer.lock());
-        commandBuffer->bind_index_buffer(m_indexBuffer.lock());
-
-        for (int32_t i = 0; i < imDrawData->CmdListsCount; i++) {
-
-            ImDrawList *cmdList = imDrawData->CmdLists[i];
-            for (int32_t j = 0; j < cmdList->CmdBuffer.Size; j++) {
-
-                ImDrawCmd *cmd = &cmdList->CmdBuffer[j];
-                if (cmd->UserCallback != NULL) {
-                    if (cmd->UserCallback == EnableBlending){
-                        init_render_state(m_blendEnabledShader.lock(), commandBuffer, nullptr);
-                    }
-                    else if (cmd->UserCallback == DisableBlending){
-                        init_render_state(m_blendDisabledShader.lock(), commandBuffer, nullptr);
-                    }
-                    else{
-                        cmd->UserCallback(cmdList, cmd);
-                    }
-                }
-                else {
-                    // Project scissor/clipping rectangles into framebuffer space
-                    ImVec4 clip_rect;
-                    clip_rect.x = (cmd->ClipRect.x - clip_off.x) * clip_scale.x;
-                    clip_rect.y = (cmd->ClipRect.y - clip_off.y) * clip_scale.y;
-                    clip_rect.z = (cmd->ClipRect.z - clip_off.x) * clip_scale.x;
-                    clip_rect.w = (cmd->ClipRect.w - clip_off.y) * clip_scale.y;
-
-                    uint32_t x = std::max((int32_t) (clip_rect.x), 0);
-                    uint32_t y = std::max((int32_t) (clip_rect.y), 0);
-                    uint32_t w = (uint32_t) (clip_rect.z - clip_rect.x);
-                    uint32_t h = (uint32_t) (clip_rect.w - clip_rect.y);
-                    commandBuffer->set_scissor(w, h, x, y);
-
-                    commandBuffer->bind_descriptor_sets(static_cast<Handle<DescriptorSet> *>(cmd->TextureId)->lock(), 0);
-
-                    commandBuffer->draw_indexed(cmd->ElemCount, indexOffset, vertexOffset);
-
-                    indexOffset += cmd->ElemCount;
-                }
-            }
-            vertexOffset += cmdList->VtxBuffer.Size;
-        }
-    }
 }
 
 bool EditorMaster::handle_window_resized(const OnWindowResized &e) {
@@ -358,7 +225,134 @@ void EditorMaster::update_mouse_cursor() {
     Application::instance().window().set_cursor_shape(cursorType);
 }
 
+bool EditorMaster::receive(const Engine::OnRenderContextInit &ev) {
+    EG_TRACE("BEGIN");
 
+    auto& context = *ev.context;
+
+    ImGuiIO &io = ImGui::GetIO();
+    unsigned char *pixels;
+    TextureCreateInfo fontCreateInfo = {};
+    io.Fonts->GetTexDataAsRGBA32(&pixels, &fontCreateInfo.imageCreateInfo.width, &fontCreateInfo.imageCreateInfo.height);
+    fontCreateInfo.filter = Filter::LINEAR;
+
+    fontCreateInfo.imageCreateInfo.bufferData = std::vector<unsigned char>(pixels,
+                                                                           pixels + fontCreateInfo.imageCreateInfo.width * fontCreateInfo.imageCreateInfo.height * 4);
+    fontCreateInfo.imageCreateInfo.aspects = {ImageAspect::COLOR};
+    fontCreateInfo.imageCreateInfo.memoryProperties = {MemoryProperty::DEVICE_LOCAL};
+    fontCreateInfo.imageCreateInfo.usages = {ImageUsage::SAMPLED, ImageUsage::TRANSFER_DST};
+    fontCreateInfo.imageCreateInfo.layout = ImageLayout::SHADER_READ_ONLY_OPTIMAL;
+    fontCreateInfo.imageCreateInfo.tiling = ImageTiling::OPTIMAL;
+    fontCreateInfo.imageCreateInfo.format = Format::R8G8B8A8_UNORM;
+    fontCreateInfo.imageCreateInfo.arrayLayers = 1;
+    fontCreateInfo.imageCreateInfo.mipLevels = 1;
+
+
+    m_font = context.create_texture(fontCreateInfo);
+
+
+    VertexLayout vertexLayout = VertexLayout(5, {
+            Format::R32G32_SFLOAT,
+            Format::R32G32_SFLOAT,
+            Format::R8G8B8A8_UNORM
+    });
+
+
+    DescriptorBindingDescription binding = {};
+    binding.shaderStage = ShaderStage::FRAGMENT;
+    binding.descriptorType = DescriptorType::COMBINED_IMAGE_SAMPLER;
+    binding.binding = 0;
+
+    m_descriptorLayout = context.create_descriptor_set_layout({binding});
+
+
+    ShaderCreateInfo pipelineInfo = {context.main_render_pass(), {
+            {ShaderStage::VERTEX, "data/shaders/text.vert"},
+            {ShaderStage::FRAGMENT, "data/shaders/text.frag"},
+    }};
+    pipelineInfo.vertexLayout = vertexLayout;
+    pipelineInfo.dynamicStates = true;
+    m_blendDisabledShader = context.create_shader(pipelineInfo);
+
+    pipelineInfo.blendEnable = true;
+    m_blendEnabledShader = context.create_shader(pipelineInfo);
+
+    m_descriptor = context.create_descriptor_set(m_descriptorLayout.lock(), {m_font.lock()});
+
+    io.Fonts->TexID = (ImTextureID)&m_descriptor;
+
+    m_vertexBuffer = context.create_vertex_buffer(nullptr, 0, vertexLayout,
+                                                  BufferUsage::DYNAMIC);
+    m_indexBuffer = context.create_index_buffer(nullptr, 0, IndexBufferType::UINT_16,
+                                                BufferUsage::DYNAMIC);
+
+    EG_TRACE("END");
+    return false;
+}
+
+bool EditorMaster::receive(const Engine::OnRenderCommandBufferMainRenderPass &ev) {
+
+    auto commandBuffer = ev.commandBuffer;
+
+    ImGuiIO &io = ImGui::GetIO();
+    ImDrawData *imDrawData = ImGui::GetDrawData();
+    // Render commands
+    if (imDrawData->CmdListsCount > 0) {
+
+        init_render_state(m_blendEnabledShader.lock(), commandBuffer, imDrawData);
+
+        ImVec2 clip_off = imDrawData->DisplayPos;         // (0,0) unless using multi-viewports
+        ImVec2 clip_scale = imDrawData->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
+
+        int32_t vertexOffset = 0;
+        int32_t indexOffset = 0;
+
+        commandBuffer->bind_vertex_buffer(m_vertexBuffer.lock());
+        commandBuffer->bind_index_buffer(m_indexBuffer.lock());
+
+        for (int32_t i = 0; i < imDrawData->CmdListsCount; i++) {
+
+            ImDrawList *cmdList = imDrawData->CmdLists[i];
+            for (int32_t j = 0; j < cmdList->CmdBuffer.Size; j++) {
+
+                ImDrawCmd *cmd = &cmdList->CmdBuffer[j];
+                if (cmd->UserCallback != NULL) {
+                    if (cmd->UserCallback == EnableBlending){
+                        init_render_state(m_blendEnabledShader.lock(), commandBuffer, nullptr);
+                    }
+                    else if (cmd->UserCallback == DisableBlending){
+                        init_render_state(m_blendDisabledShader.lock(), commandBuffer, nullptr);
+                    }
+                    else{
+                        cmd->UserCallback(cmdList, cmd);
+                    }
+                }
+                else {
+                    // Project scissor/clipping rectangles into framebuffer space
+                    ImVec4 clip_rect;
+                    clip_rect.x = (cmd->ClipRect.x - clip_off.x) * clip_scale.x;
+                    clip_rect.y = (cmd->ClipRect.y - clip_off.y) * clip_scale.y;
+                    clip_rect.z = (cmd->ClipRect.z - clip_off.x) * clip_scale.x;
+                    clip_rect.w = (cmd->ClipRect.w - clip_off.y) * clip_scale.y;
+
+                    uint32_t x = std::max((int32_t) (clip_rect.x), 0);
+                    uint32_t y = std::max((int32_t) (clip_rect.y), 0);
+                    uint32_t w = (uint32_t) (clip_rect.z - clip_rect.x);
+                    uint32_t h = (uint32_t) (clip_rect.w - clip_rect.y);
+                    commandBuffer->set_scissor(w, h, x, y);
+
+                    commandBuffer->bind_descriptor_sets(static_cast<Handle<DescriptorSet> *>(cmd->TextureId)->lock(), 0);
+
+                    commandBuffer->draw_indexed(cmd->ElemCount, indexOffset, vertexOffset);
+
+                    indexOffset += cmd->ElemCount;
+                }
+            }
+            vertexOffset += cmdList->VtxBuffer.Size;
+        }
+    }
+    return false;
+}
 
 
 EG_EDITOR_END

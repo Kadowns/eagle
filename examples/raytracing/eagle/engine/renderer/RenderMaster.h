@@ -9,11 +9,23 @@
 
 EG_ENGINE_BEGIN
 
-class RenderMaster {
-public:
-    typedef ImmediateEvent<> Event;
-    typedef ImmediateEvent<Reference<CommandBuffer>&> CommandBufferEvent;
+struct OnRenderingEvent {
+    RenderingContext* context;
+};
 
+struct OnCommandBufferEvent {
+    CommandBuffer* commandBuffer;
+};
+
+struct OnRenderContextInit : public OnRenderingEvent {};
+struct OnRenderContextDeinit : public OnRenderingEvent {};
+struct OnRenderFrameBegin : public OnRenderingEvent {};
+struct OnRenderFrameEnd : public OnRenderingEvent {};
+struct OnRenderCommandBufferBegin : public OnRenderingEvent, public OnCommandBufferEvent {};
+struct OnRenderCommandBufferEnd : public OnRenderingEvent, public OnCommandBufferEvent {};
+struct OnRenderCommandBufferMainRenderPass : public OnRenderingEvent, public OnCommandBufferEvent {};
+
+class RenderMaster {
 public:
 
     void init();
@@ -21,17 +33,9 @@ public:
     void deinit();
 
     inline static RenderingContext& context() { return *s_context; }
-public:
-    static Event handle_context_init;
-    static Event handle_context_deinit;
-    static Event handle_frame_begin;
-    static Event handle_frame_end;
-    static CommandBufferEvent handle_command_buffer_begin;
-    static CommandBufferEvent handle_command_buffer_end;
-    static CommandBufferEvent handle_command_buffer_main_render_pass;
-
 private:
     static Reference<RenderingContext> s_context;
+    EventBus* m_eventBus;
 };
 
 EG_ENGINE_END

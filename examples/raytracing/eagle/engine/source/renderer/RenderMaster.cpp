@@ -4,28 +4,18 @@
 
 #include <eagle/engine/renderer/RenderMaster.h>
 
-
-
 EG_ENGINE_BEGIN
-
-RenderMaster::Event RenderMaster::handle_context_init;
-RenderMaster::Event RenderMaster::handle_context_deinit;
-RenderMaster::Event RenderMaster::handle_frame_begin;
-RenderMaster::Event RenderMaster::handle_frame_end;
-RenderMaster::CommandBufferEvent RenderMaster::handle_command_buffer_begin;
-RenderMaster::CommandBufferEvent RenderMaster::handle_command_buffer_end;
-RenderMaster::CommandBufferEvent RenderMaster::handle_command_buffer_main_render_pass;
 
 Reference<RenderingContext> RenderMaster::s_context;
 
 void RenderMaster::init() {
     Window& window = Application::instance().window();
-    EventBus& eventBus = Application::instance().event_bus();
+    m_eventBus = &Application::instance().event_bus();
 
     s_context = std::make_shared<VulkanContext>();
-    s_context->init(&window, &eventBus);
+    s_context->init(&window, m_eventBus);
 
-    handle_context_init();
+    m_eventBus->emit(OnRenderContextInit{s_context.get()});
 }
 
 void RenderMaster::update() {
@@ -34,32 +24,32 @@ void RenderMaster::update() {
         return;
     }
 
-    handle_frame_begin();
+    m_eventBus->emit(OnRenderFrameBegin{s_context.get()});
 
     auto commandBuffer = s_context->main_command_buffer();
     commandBuffer->begin();
 
-    handle_command_buffer_begin(commandBuffer);
+    m_eventBus->emit(OnRenderCommandBufferBegin{s_context.get(), commandBuffer.get()});
 
     commandBuffer->begin_render_pass(s_context->main_render_pass(), s_context->main_frambuffer());
 
-    handle_command_buffer_main_render_pass(commandBuffer);
+    m_eventBus->emit(OnRenderCommandBufferMainRenderPass{s_context.get(), commandBuffer.get()});
 
     commandBuffer->end_render_pass();
 
-    handle_command_buffer_end(commandBuffer);
+    m_eventBus->emit(OnRenderCommandBufferEnd{s_context.get(), commandBuffer.get()});
 
     commandBuffer->finish();
 
     s_context->submit_command_buffer(commandBuffer);
 
-    handle_frame_end();
+    m_eventBus->emit(OnRenderFrameEnd{s_context.get()});
 
     s_context->present_frame();
 }
 
 void RenderMaster::deinit() {
-    handle_context_deinit();
+    m_eventBus->emit(OnRenderContextDeinit{s_context.get()});
     s_context->deinit();
 }
 
