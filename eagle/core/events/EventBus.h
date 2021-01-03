@@ -43,17 +43,20 @@ public:
         m_emitting = false;
 
         //removes listeners that should be removed
-        m_listeners.erase(std::remove_if(m_listeners.begin(), m_listeners.end(), [this](const Listener& listener){
-            if (m_listenersToUnsubscribe.find(listener.id) != m_listenersToUnsubscribe.end()) {
-                m_listenersToUnsubscribe.erase(listener.id);
-                return true;
-            }
-            return false;
-        }), m_listeners.end());
-
+        if (!m_listenersToUnsubscribe.empty()) {
+            m_listeners.erase(std::remove_if(m_listeners.begin(), m_listeners.end(), [this](const Listener &listener) {
+                if (m_listenersToUnsubscribe.find(listener.id) != m_listenersToUnsubscribe.end()) {
+                    m_listenersToUnsubscribe.erase(listener.id);
+                    return true;
+                }
+                return false;
+            }), m_listeners.end());
+        }
         //adds new listeners
-        m_listeners.insert(m_listeners.end(), m_listenersToSubscribe.begin(), m_listenersToSubscribe.end());
-        m_listenersToSubscribe.clear();
+        if (!m_listenersToSubscribe.empty()){
+            m_listeners.insert(m_listeners.end(), m_listenersToSubscribe.begin(), m_listenersToSubscribe.end());
+            m_listenersToSubscribe.clear();
+        }
 
         sort();
     }
@@ -115,14 +118,14 @@ public:
         if (eventStreamIndex >= m_eventStreams.size()){
             return;
         }
-        std::lock_guard lock(m_eventStreamMutex);
+//        std::lock_guard lock(m_eventStreamMutex);
         m_eventStreams[eventStreamIndex].emit(ev);
     }
 
     template<typename TEvent>
     void subscribe(std::function<typename TEventStream::ReturnType(const TEvent&)>&& callback, size_t listenerId, uint32_t priority){
         size_t eventStreamIndex = EventHelper::event_index<TEvent>();
-        std::lock_guard lock(m_eventStreamMutex);
+//        std::lock_guard lock(m_eventStreamMutex);
         if (eventStreamIndex >= m_eventStreams.size()){
             m_eventStreams.resize(eventStreamIndex + 1);
         }
@@ -137,12 +140,12 @@ public:
         if (eventStreamIndex >= m_eventStreams.size()){
             return;
         }
-        std::lock_guard lock(m_eventStreamMutex);
+//        std::lock_guard lock(m_eventStreamMutex);
         m_eventStreams[eventStreamIndex].unsubscribe(listenerId);
     }
 
     void unsubscribe_all(size_t listenerId){
-        std::lock_guard lock(m_eventStreamMutex);
+//        std::lock_guard lock(m_eventStreamMutex);
         for (auto& stream : m_eventStreams){
             stream.unsubscribe(listenerId);
         }
