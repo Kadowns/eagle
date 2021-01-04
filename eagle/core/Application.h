@@ -10,8 +10,7 @@
 #include "CoreGlobalDefinitions.h"
 #include "LayerStack.h"
 #include "Log.h"
-#include "events/WindowEvents.h"
-#include "Input.h"
+#include "Time.h"
 
 
 EG_BEGIN
@@ -19,20 +18,13 @@ EG_BEGIN
 class Window;
 class RenderingContext;
 
-struct ApplicationCreateInfo {
-    std::string appName;
-    Window* windowType;
-    std::vector<Reference<Layer>> layers;
-    Log::LOG_LEVEL clientLogLevel, coreLogLevel;
-};
-
 class Application {
 
 public:
 
     static Application& instance();
 
-    explicit Application(const ApplicationCreateInfo& config);
+    explicit Application(const std::string &appName, Reference<Window> window);
      ~Application() = default;
 
     void run();
@@ -42,7 +34,7 @@ public:
     inline Window& window() { return *m_window; }
     inline EventBus& event_bus() { return m_eventBus; }
 
-private:
+protected:
     static Application* m_instance;
 
     Reference<Window> m_window;
