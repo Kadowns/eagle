@@ -10,7 +10,7 @@ EG_EDITOR_BEGIN
 
 DebugSettingsWindow::DebugSettingsWindow() :
     EditorWindow("Physics Settings"){
-
+    m_timer = &Application::instance().timer();
 }
 
 DebugSettingsWindow::~DebugSettingsWindow() {
@@ -25,9 +25,9 @@ void DebugSettingsWindow::handle_window_update() {
     auto& scene = SceneManager::current_scene();
 
     ImGui::SliderFloat3("Gravity", &settings.gravity[0], -50, 50);
-    float timeScale = Time::time_scale();
+    float timeScale = m_timer->time_scale();
     if (ImGui::SliderFloat("Time Step", &timeScale, 0.0f, 1.0f)){
-        Time::set_time_scale(timeScale);
+        m_timer->set_time_scale(timeScale);
     }
 
     ImGui::InputFloat3("Cube rotation:", &sceneData.cubeRotation[0]);

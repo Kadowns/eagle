@@ -13,19 +13,20 @@ EG_BEGIN
 class Time {
 public:
 
-    inline static float time()          { return s_instance.m_time; }
-    inline static float delta_time()    { return s_instance.m_deltaTime * s_instance.m_timeScale; }
-    inline static float unscaled_delta_time() { return s_instance.m_deltaTime; }
-    inline static float time_scale()    { return s_instance.m_timeScale; }
+    void start();
+    void stop();
+    void update();
 
-    inline static void set_time_scale(float timeScale) { s_instance.m_timeScale = timeScale; }
+    inline float time()          { return m_time; }
+    inline float delta_time()    { return unscaled_delta_time() * m_timeScale; }
+    inline float unscaled_delta_time() { return m_deltaTime; }
+    inline float time_scale() const { return m_timeScale; }
+    inline void set_time_scale(float timeScale) { m_timeScale = timeScale; }
+
 private:
-    friend class Application;
-    static void init();
-    static void update();
-private:
-    static Time s_instance;
-    float m_time = 0, m_deltaTime = 0, m_timeScale = 1;
+    float m_timeScale = 1, m_deltaTime = 0, m_time = 0;
+    std::chrono::time_point<std::chrono::high_resolution_clock> m_start, m_lastUpdate;
+    bool m_started = false;
 };
 
 EG_END

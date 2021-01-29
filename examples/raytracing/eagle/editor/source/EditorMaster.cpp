@@ -92,9 +92,9 @@ void EditorMaster::init_imgui() {
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 }
 
-void EditorMaster::update() {
+void EditorMaster::update(float dt) {
     ImGuiIO &io = ImGui::GetIO();
-    io.DeltaTime = Time::delta_time() + 0.0001f;
+    io.DeltaTime = dt + 0.0001f;
 
     ImGui::NewFrame();
     for (auto &window : m_windows) {

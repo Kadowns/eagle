@@ -15,6 +15,7 @@ public:
     virtual void update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) override;
 private:
     float clamp_angle(float angle, float min, float max);
+    Time* m_timer;
 };
 
 

@@ -27,6 +27,7 @@ private:
     glm::vec2 random_inside_unit_circle();
 private:
     EventListener<SceneLayer> m_listener;
+    Time* m_timer;
 };
 
 EG_ENGINE_END
