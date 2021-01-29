@@ -25,7 +25,7 @@ class VulkanIndexBuffer : public IndexBuffer, public VulkanCleanable {
 public:
 
     VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInfo &createInfo, void *indexData, size_t indexCount,
-                      IndexBufferType indexType, BufferUsage usage);
+                      IndexBufferType indexType, UpdateType usage);
     virtual ~VulkanIndexBuffer();
     virtual void * get_data() override;
     virtual size_t get_indices_count() override;
@@ -35,7 +35,7 @@ public:
 
     virtual void upload(void* data, uint32_t verticesCount) override;
     inline VulkanBuffer& get_buffer(uint32_t bufferIndex) {
-        if (m_usage == BufferUsage::CONSTANT){
+        if (m_usage == UpdateType::CONSTANT){
             return *(m_buffers[0]);
         }
         return *(m_buffers[bufferIndex]);
@@ -56,7 +56,7 @@ private:
     char* m_data = nullptr;
     size_t m_indexCount;
     IndexBufferType m_indexType;
-    BufferUsage m_usage;
+    UpdateType m_usage;
     bool m_resizing = false, m_initialized = false;
 };
 

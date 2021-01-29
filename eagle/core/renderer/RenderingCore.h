@@ -18,9 +18,10 @@ enum class DescriptorType {
     STORAGE_IMAGE = 4
 };
 
-enum class BufferUsage {
-    CONSTANT  = 0,
-    DYNAMIC    = 1
+enum class UpdateType {
+    CONSTANT = 0,
+    HOST = 1,
+    DEVICE = 2,
 };
 
 enum TextureUsage {

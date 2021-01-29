@@ -30,7 +30,7 @@ class VulkanVertexBuffer : public VertexBuffer, public VulkanCleanable {
 
 public:
 
-    VulkanVertexBuffer(VkDevice device, VulkanVertexBufferCreateInfo &createInfo, BufferUsage usageFlags);
+    VulkanVertexBuffer(VkDevice device, VulkanVertexBufferCreateInfo &createInfo, UpdateType usageFlags);
     virtual ~VulkanVertexBuffer();
 
 
@@ -42,7 +42,7 @@ public:
     virtual void upload(void* data, uint32_t elementCount) override;
 
     inline VulkanBuffer& get_buffer(uint32_t bufferIndex) {
-        if (m_usage == BufferUsage::CONSTANT){
+        if (m_usage == UpdateType::CONSTANT){
             return *(m_buffers[0]);
         }
         return *(m_buffers[bufferIndex]);
@@ -53,7 +53,7 @@ private:
     VkPhysicalDevice m_physicalDevice;
     VertexLayout m_layout;
     uint32_t m_elementCount;
-    BufferUsage m_usage;
+    UpdateType m_usage;
     char* m_data =  nullptr;
 
     std::vector<Reference<VulkanBuffer>> m_buffers;

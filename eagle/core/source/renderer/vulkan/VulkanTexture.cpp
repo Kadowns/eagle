@@ -19,6 +19,7 @@ VulkanTexture::VulkanTexture(const TextureCreateInfo &textureCreateInfo,
     nativeImageCreateInfo.physicalDevice = nativeCreateInfo.physicalDevice;
     nativeImageCreateInfo.commandPool = nativeCreateInfo.commandPool;
     nativeImageCreateInfo.graphicsQueue = nativeCreateInfo.graphicsQueue;
+    nativeImageCreateInfo.imageCount = nativeCreateInfo.imageCount;
 
     m_image = std::make_shared<VulkanImage>(textureCreateInfo.imageCreateInfo, nativeImageCreateInfo);
     create();

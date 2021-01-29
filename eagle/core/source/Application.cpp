@@ -9,6 +9,7 @@
 #include "eagle/core/Window.h"
 #include "eagle/core/events/InputEvents.h"
 #include "eagle/core/events/WindowEvents.h"
+#include <thread>
 
 EG_BEGIN
 

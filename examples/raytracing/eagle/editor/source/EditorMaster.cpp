@@ -153,9 +153,9 @@ void EditorMaster::handle_context_init(RenderingContext &context) {
     io.Fonts->TexID = (ImTextureID)&m_descriptor;
 
     m_vertexBuffer = context.create_vertex_buffer(nullptr, 0, vertexLayout,
-                                                  BufferUsage::DYNAMIC);
+                                                  UpdateType::HOST);
     m_indexBuffer = context.create_index_buffer(nullptr, 0, IndexBufferType::UINT_16,
-                                                BufferUsage::DYNAMIC);
+                                                UpdateType::HOST);
 
     EG_TRACE("END");
 

@@ -148,11 +148,11 @@ public:
 
     virtual Handle<VertexBuffer>
     create_vertex_buffer(void *vertices, uint32_t count, const VertexLayout &vertexLayout,
-                         BufferUsage usageFlags) override;
+                         UpdateType usageFlags) override;
 
     virtual Handle<IndexBuffer>
     create_index_buffer(void *indexData, size_t indexCount, IndexBufferType indexType,
-                        BufferUsage usage) override;
+                        UpdateType usage) override;
 
     virtual Handle<UniformBuffer>
     create_uniform_buffer(size_t size, void *data) override;
@@ -176,7 +176,7 @@ public:
     virtual Handle<Image>
     create_image(const ImageCreateInfo& createInfo) override;
 
-    virtual Handle <StorageBuffer> create_storage_buffer(size_t size, void *data, BufferUsage usage) override;
+    virtual Handle <StorageBuffer> create_storage_buffer(size_t size, void *data, UpdateType usage) override;
 
     virtual Handle<ComputeShader>
     create_compute_shader(const std::string& path) override;
@@ -207,7 +207,7 @@ protected:
         VkExtent2D extent2D;
         VkSwapchainKHR swapchain;
         Reference<VulkanRenderPass> renderPass;
-        std::vector<Reference<VulkanFramebuffer>> framebuffers;
+        Reference<VulkanFramebuffer> framebuffer;
     } m_present;
 
     VkCommandPool m_graphicsCommandPool, m_computeCommandPool;

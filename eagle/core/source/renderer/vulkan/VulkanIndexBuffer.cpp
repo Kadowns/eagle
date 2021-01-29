@@ -9,7 +9,7 @@ EG_BEGIN
 
 VulkanIndexBuffer::VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInfo &createInfo, void *indexData,
                                      size_t indexCount,
-                                     IndexBufferType indexType, BufferUsage usage) :
+                                     IndexBufferType indexType, UpdateType usage) :
         m_device(device),
         m_physicalDevice(createInfo.physicalDevice),
         m_indexCount(indexCount),
@@ -25,7 +25,7 @@ VulkanIndexBuffer::VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInf
     }
 
     switch(m_usage){
-        case BufferUsage::DYNAMIC:{
+        case UpdateType::HOST:{
 
             if (indexCount == 0) {
                 return;
@@ -41,7 +41,7 @@ VulkanIndexBuffer::VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInf
                 buffer->flush();
             }
         } break;
-        case BufferUsage::CONSTANT:{
+        case UpdateType::CONSTANT:{
             VulkanBufferCreateInfo createBufferInfo = {};
             createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
             createBufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
@@ -120,7 +120,7 @@ void VulkanIndexBuffer::flush(uint32_t bufferIndex) {
 }
 
 void VulkanIndexBuffer::upload(void *data, uint32_t indexCount) {
-    if (m_usage == BufferUsage::CONSTANT){
+    if (m_usage == UpdateType::CONSTANT){
         EG_CORE_ERROR("Trying to flush data to a index buffer created with CONSTANT flag! To be able to flush data, be sure to create the buffer with DYNAMIC flag!");
         return;
     }

@@ -23,6 +23,8 @@ void DebugSettingsWindow::handle_window_update() {
     auto& spawner = SingletonComponent::get<Spawner>();
     auto& scene = SceneManager::current_scene();
 
+    ImGui::LabelText("FPS", "%f", 1 / Time::unscaled_delta_time());
+
     ImGui::SliderFloat3("Gravity", &settings.gravity[0], -50, 50);
     float timeScale = Time::time_scale();
     if (ImGui::SliderFloat("Time Step", &timeScale, 0.0f, 1.0f)){

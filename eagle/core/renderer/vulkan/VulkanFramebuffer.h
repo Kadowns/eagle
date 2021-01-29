@@ -14,6 +14,7 @@ EG_BEGIN
 
 struct VulkanFramebufferCreateInfo {
     VkDevice device;
+    uint32_t imageCount;
 };
 
 
@@ -23,13 +24,13 @@ public:
                       const VulkanFramebufferCreateInfo& nativeFramebufferCreateInfo);
     virtual ~VulkanFramebuffer();
 
-    inline const VkFramebuffer& native_framebuffer() const { return m_framebuffer; }
+    inline const std::vector<VkFramebuffer>& native_framebuffers() const { return m_framebuffers; }
 private:
     void create_framebuffer();
 private:
     VulkanFramebufferCreateInfo m_nativeCreateInfo;
     std::vector<Reference<VulkanImage>> m_nativeImageAttachments;
-    VkFramebuffer m_framebuffer;
+    std::vector<VkFramebuffer> m_framebuffers;
 };
 
 EG_END

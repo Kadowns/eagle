@@ -15,7 +15,7 @@
 
 EG_BEGIN
 
-bool VulkanContext::enableValidationLayers = false;
+bool VulkanContext::enableValidationLayers = true;
 
 VulkanContext::VulkanContext() { // NOLINT(cppcoreguidelines-pro-type-member-init)
     EAGLE_SET_INFO(EAGLE_RENDERING_CONTEXT, "Vulkan");
@@ -696,14 +696,9 @@ void VulkanContext::create_framebuffers() {
     nativeImageCreateInfo.device = m_device;
     nativeImageCreateInfo.graphicsQueue = m_graphicsQueue;
     nativeImageCreateInfo.commandPool = m_graphicsCommandPool;
+    nativeImageCreateInfo.imageCount = m_present.imageCount;
 
-    std::vector<Reference<VulkanImage>> colorImages;
-
-    //color attachment and depth attachment for each framebuffer
-    colorImages.resize(m_present.imageCount);
-    for (size_t i = 0; i < colorImages.size(); i++){
-        colorImages[i] = std::make_shared<VulkanImage>(imageCreateInfo, nativeImageCreateInfo, swapchainImages[i]);
-    }
+    Reference<VulkanImage> colorImage = std::make_shared<VulkanImage>(imageCreateInfo, nativeImageCreateInfo, swapchainImages);
 
     //depth
     imageCreateInfo.format = VulkanConverter::to_eg(VulkanHelper::find_depth_format(m_physicalDevice));
@@ -719,25 +714,19 @@ void VulkanContext::create_framebuffers() {
         EG_CORE_INFO("Depth format allows stencil aspect");
     }
 
-    std::vector<Reference<VulkanImage>> depthImages;
-    depthImages.resize(m_present.imageCount);
-    for (size_t i = 0; i < depthImages.size(); i++){
-        depthImages[i] = std::make_shared<VulkanImage>(imageCreateInfo, nativeImageCreateInfo);
-    }
+    Reference<VulkanImage> depthImage = std::make_shared<VulkanImage>(imageCreateInfo, nativeImageCreateInfo);
 
     FramebufferCreateInfo framebufferCreateInfo = {};
     framebufferCreateInfo.width = m_present.extent2D.width;
     framebufferCreateInfo.height = m_present.extent2D.height;
     framebufferCreateInfo.renderPass = m_present.renderPass;
+    framebufferCreateInfo.attachments = {colorImage, depthImage};
 
     VulkanFramebufferCreateInfo nativeFramebufferCreateInfo = {};
     nativeFramebufferCreateInfo.device = m_device;
+    nativeFramebufferCreateInfo.imageCount = m_present.imageCount;
 
-    m_present.framebuffers.resize(m_present.imageCount);
-    for (size_t i = 0; i < m_present.framebuffers.size(); i++){
-        framebufferCreateInfo.attachments = {colorImages[i], depthImages[i]};
-        m_present.framebuffers[i] = std::make_shared<VulkanFramebuffer>(framebufferCreateInfo, nativeFramebufferCreateInfo);
-    }
+    m_present.framebuffer = std::make_shared<VulkanFramebuffer>(framebufferCreateInfo, nativeFramebufferCreateInfo);
 
     EG_CORE_TRACE("Framebuffers created!");
 }
@@ -857,11 +846,6 @@ void VulkanContext::recreate_swapchain() {
 
     create_framebuffers();
 
-//    for (auto& renderTarget : m_renderTargets){
-//        renderTarget->create(m_present.extent2D.width, m_present.extent2D.height);
-//    }
-
-
     for (auto &shader : m_shaders) {
         shader->create_pipeline();
     }
@@ -918,7 +902,7 @@ void VulkanContext::cleanup_swapchain() {
     }
 
 
-    m_present.framebuffers.clear();
+    m_present.framebuffer.reset();
 
     VK_CALL vkDestroySwapchainKHR(m_device, m_present.swapchain, nullptr);
     EG_CORE_TRACE("Swapchain cleared!");
@@ -949,7 +933,7 @@ VulkanContext::create_compute_shader(const std::string &path) {
 
 Handle<VertexBuffer>
 VulkanContext::create_vertex_buffer(void *vertices, uint32_t count, const VertexLayout &vertexLayout,
-                                    BufferUsage usage) {
+                                    UpdateType usage) {
     EG_CORE_TRACE("Creating a vulkan vertex buffer!");
     VulkanVertexBufferCreateInfo createInfo(vertexLayout);
     createInfo.data = vertices;
@@ -957,20 +941,20 @@ VulkanContext::create_vertex_buffer(void *vertices, uint32_t count, const Vertex
     createInfo.physicalDevice = m_physicalDevice;
     createInfo.commandPool = m_graphicsCommandPool;
     createInfo.graphicsQueue = m_graphicsQueue;
-    createInfo.bufferCount = usage == BufferUsage::DYNAMIC ? m_present.imageCount : 1;
+    createInfo.bufferCount = usage == UpdateType::HOST ? m_present.imageCount : 1;
     m_vertexBuffers.emplace_back(std::make_shared<VulkanVertexBuffer>(m_device, createInfo, usage));
     return m_vertexBuffers.back();
 }
 
 Handle<IndexBuffer>
 VulkanContext::create_index_buffer(void *indexData, size_t indexCount, IndexBufferType indexType,
-                                   BufferUsage usage) {
+                                   UpdateType usage) {
     EG_CORE_TRACE("Creating a vulkan index buffer!");
     VulkanIndexBufferCreateInfo createInfo = {};
     createInfo.graphicsQueue = m_graphicsQueue;
     createInfo.physicalDevice = m_physicalDevice;
     createInfo.commandPool = m_graphicsCommandPool;
-    createInfo.bufferCount = usage == BufferUsage::DYNAMIC ? m_present.imageCount : 1;
+    createInfo.bufferCount = usage == UpdateType::HOST ? m_present.imageCount : 1;
     m_indexBuffers.emplace_back(std::make_shared<VulkanIndexBuffer>(m_device, createInfo, indexData, indexCount, indexType, usage));
     return m_indexBuffers.back();
 }
@@ -987,7 +971,7 @@ VulkanContext::create_uniform_buffer(size_t size, void *data) {
 }
 
 Handle<StorageBuffer>
-VulkanContext::create_storage_buffer(size_t size, void *data, BufferUsage usage) {
+VulkanContext::create_storage_buffer(size_t size, void *data, UpdateType usage) {
     EG_CORE_TRACE("Creating a vulkan storage buffer!");
     VulkanStorageBufferCreateInfo createInfo = {};
     createInfo.device = m_device;
@@ -1033,6 +1017,7 @@ VulkanContext::create_texture(const TextureCreateInfo &createInfo) {
     vulkanTextureCreateInfo.physicalDevice = m_physicalDevice;
     vulkanTextureCreateInfo.commandPool = m_graphicsCommandPool;
     vulkanTextureCreateInfo.graphicsQueue = m_graphicsQueue;
+    vulkanTextureCreateInfo.imageCount = m_present.imageCount;
 
     m_textures.emplace_back(std::make_shared<VulkanTexture>(createInfo, vulkanTextureCreateInfo));
     return m_textures.back();
@@ -1046,6 +1031,7 @@ VulkanContext::create_image(const ImageCreateInfo &createInfo) {
     vulkanImageCreateInfo.physicalDevice = m_physicalDevice;
     vulkanImageCreateInfo.commandPool = m_graphicsCommandPool;
     vulkanImageCreateInfo.graphicsQueue = m_graphicsQueue;
+    vulkanImageCreateInfo.imageCount = m_present.imageCount;
 
     m_images.emplace_back(std::make_shared<VulkanImage>(createInfo, vulkanImageCreateInfo));
     return m_images.back();
@@ -1065,6 +1051,7 @@ Handle<Framebuffer> VulkanContext::create_framebuffer(const FramebufferCreateInf
 
     VulkanFramebufferCreateInfo vulkanCreateInfo = {};
     vulkanCreateInfo.device = m_device;
+    vulkanCreateInfo.imageCount = m_present.imageCount;
 
     m_framebuffers.emplace_back(std::make_shared<VulkanFramebuffer>(createInfo, vulkanCreateInfo));
     return m_framebuffers.back();
@@ -1205,7 +1192,7 @@ void VulkanContext::destroy_texture_2d(const Reference<Texture> &texture) {
 }
 
 void VulkanContext::set_recreation_callback(std::function<void()> recreation_callback) {
-    this->recreation_callback = recreation_callback;
+    this->recreation_callback = std::move(recreation_callback);
 }
 
 Reference<RenderPass> VulkanContext::main_render_pass() {
@@ -1213,7 +1200,7 @@ Reference<RenderPass> VulkanContext::main_render_pass() {
 }
 
 Reference<Framebuffer> VulkanContext::main_frambuffer() {
-    return m_present.framebuffers[m_present.imageIndex];
+    return m_present.framebuffer;
 }
 
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,

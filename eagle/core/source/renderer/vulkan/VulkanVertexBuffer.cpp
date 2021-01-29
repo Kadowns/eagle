@@ -8,7 +8,7 @@
 EG_BEGIN
 
 VulkanVertexBuffer::VulkanVertexBuffer(VkDevice device, VulkanVertexBufferCreateInfo &createInfo,
-                                       BufferUsage usageFlags) :
+                                       UpdateType usageFlags) :
     m_device(device),
     m_physicalDevice(createInfo.physicalDevice),
     m_layout(createInfo.vertexLayout),
@@ -25,7 +25,7 @@ VulkanVertexBuffer::VulkanVertexBuffer(VkDevice device, VulkanVertexBufferCreate
     }
 
     switch(usageFlags){
-        case BufferUsage::DYNAMIC:{
+        case UpdateType::HOST:{
 
             if (m_elementCount == 0) {
                 return;
@@ -42,7 +42,7 @@ VulkanVertexBuffer::VulkanVertexBuffer(VkDevice device, VulkanVertexBufferCreate
             }
 
         }break;
-        case BufferUsage::CONSTANT:{
+        case UpdateType::CONSTANT:{
             VulkanBufferCreateInfo createBufferInfo = {};
             createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
             createBufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
@@ -111,7 +111,7 @@ VulkanVertexBuffer::flush(uint32_t bufferIndex) {
 
 void VulkanVertexBuffer::upload(void *data, uint32_t elementCount) {
 
-    if (m_usage == BufferUsage::CONSTANT) {
+    if (m_usage == UpdateType::CONSTANT) {
         EG_CORE_ERROR("Trying to flush data to a vertex buffer created with CONSTANT flag! To be able to flush data, be sure to create the buffer with DYNAMIC flag!");
         return;
     }

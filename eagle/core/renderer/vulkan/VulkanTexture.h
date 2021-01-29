@@ -17,6 +17,7 @@ struct VulkanTextureCreateInfo {
     VkDevice device;
     VkCommandPool commandPool;
     VkQueue graphicsQueue;
+    uint32_t imageCount;
 };
 
 class VulkanTexture : public Texture {

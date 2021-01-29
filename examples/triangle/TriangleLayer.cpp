@@ -18,7 +18,7 @@ void TriangleLayer::handle_attach() {
         return on_window_resized(static_cast<const Eagle::WindowResizedEvent&>(e));
     });
 
-    Eagle::VertexLayout vertexLayout(3, {Eagle::Format::R32G32_SFLOAT, Eagle::Format::R32G32B32_SFLOAT});
+    Eagle::VertexLayout vertexLayout(5, {Eagle::Format::R32G32_SFLOAT, Eagle::Format::R32G32B32_SFLOAT});
 
     Eagle::ShaderCreateInfo pipelineInfo = {m_renderingContext->main_render_pass(), {
             {Eagle::ShaderStage::VERTEX, "data/color.vert"},
@@ -27,14 +27,18 @@ void TriangleLayer::handle_attach() {
     pipelineInfo.vertexLayout = vertexLayout;
     m_shader = m_renderingContext->create_shader(pipelineInfo);
 
+
     std::vector<float> vertices = {
             -0.5f, 0.5f, 1.0f, 1.0f, 0.0f,
             0.0f,  -0.5f, 0.0f, 1.0f, 1.0f,
-            0.5f, 0.5f, 1.0f, 0.0f, 1.0f
+            0.5f, 0.5f, 1.0f, 0.0f, 1.0f,
+
+            0.5f, 0.5f, 1.0f, 0.0f, 1.0f,
+            0.0f,  0.5f, 0.0f, 1.0f, 1.0f,
+            -0.5f, 0.5f, 1.0f, 1.0f, 0.0f
     };
 
-
-    m_vertexBuffer = m_renderingContext->create_vertex_buffer(vertices.data(), vertices.size(), vertexLayout, Eagle::BufferUsage::CONSTANT);
+    m_vertexBuffer = m_renderingContext->create_vertex_buffer(vertices.data(), vertices.size(), vertexLayout, Eagle::UpdateType::CONSTANT);
 }
 
 void TriangleLayer::handle_deattach() {
@@ -55,7 +59,7 @@ void TriangleLayer::handle_update() {
     commandBuffer->begin_render_pass(m_renderingContext->main_render_pass(), m_renderingContext->main_frambuffer());
     commandBuffer->bind_shader(m_shader.lock());
     commandBuffer->bind_vertex_buffer(m_vertexBuffer.lock());
-    commandBuffer->draw(3);
+    commandBuffer->draw(6);
     commandBuffer->end_render_pass();
     commandBuffer->finish();
     commandBuffer->submit();

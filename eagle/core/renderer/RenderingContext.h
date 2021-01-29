@@ -28,7 +28,7 @@ class Window;
 class RenderingContext {
 public:
 
-    RenderingContext() {}
+    RenderingContext() = default;
     virtual ~RenderingContext() = default;
 
     virtual void init(Window *window) = 0;
@@ -45,20 +45,20 @@ public:
     virtual void present_frame() = 0;
 
     virtual Handle <Shader>
-    create_shader(const ShaderCreateInfo &pipelineInfo) = 0;
+    create_shader(const ShaderCreateInfo &shaderCreateInfo) = 0;
 
     virtual Handle<VertexBuffer>
     create_vertex_buffer(void *vertices, uint32_t count, const VertexLayout &vertexLayout,
-                         BufferUsage usageFlags) = 0;
+                         UpdateType usageFlags) = 0;
 
     virtual Handle<IndexBuffer>
-    create_index_buffer(void *indexData, size_t indexCount, IndexBufferType indexType, BufferUsage usage) = 0;
+    create_index_buffer(void *indexData, size_t indexCount, IndexBufferType indexType, UpdateType usage) = 0;
 
     virtual Handle<UniformBuffer>
     create_uniform_buffer(size_t size, void *data) = 0;
 
     virtual Handle <StorageBuffer>
-    create_storage_buffer(size_t size, void *data, BufferUsage usage) = 0;
+    create_storage_buffer(size_t size, void *data, UpdateType usage) = 0;
 
     virtual Handle<DescriptorSetLayout>
     create_descriptor_set_layout(const std::vector<DescriptorBindingDescription> &bindings) = 0;

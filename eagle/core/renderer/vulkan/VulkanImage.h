@@ -17,32 +17,31 @@ struct VulkanImageCreateInfo {
     VkDevice device;
     VkCommandPool commandPool;
     VkQueue graphicsQueue;
+    uint32_t imageCount;
 };
 
 
 class VulkanImage : public Image {
-
 public:
-
     VulkanImage(const ImageCreateInfo& imageCreateInfo, const VulkanImageCreateInfo& nativeCreateInfo);
 
     //Used for swapchain images
-    VulkanImage(const ImageCreateInfo& imageCreateInfo, const VulkanImageCreateInfo& nativeCreateInfo, VkImage image);
+    VulkanImage(const ImageCreateInfo& imageCreateInfo, const VulkanImageCreateInfo& nativeCreateInfo, std::vector<VkImage> images);
     virtual ~VulkanImage();
     virtual DescriptorType type() const override;
 
-    inline VkImage& native_image() { return m_image; }
-    inline VkDeviceMemory& native_memory() { return m_memory; }
-    inline VkImageView& native_image_view() { return m_view; }
+    inline std::vector<VkImage>& native_images() { return m_images; }
+    inline std::vector<VkDeviceMemory>& native_memories() { return m_memories; }
+    inline std::vector<VkImageView>& native_image_views() { return m_views; }
 
-    inline const VkImage& native_image() const { return m_image; }
-    inline const VkDeviceMemory& native_memory() const { return m_memory; }
-    inline const VkImageView& native_image_view() const { return m_view; }
+    inline const std::vector<VkImage>& native_images() const  { return m_images; }
+    inline const std::vector<VkDeviceMemory>& native_memories() const  { return m_memories; }
+    inline const std::vector<VkImageView>& native_image_views() const  { return m_views; }
 
 protected:
     virtual void on_resize() override;
 
-    void copy_buffer_data_to_image(VkImageSubresourceRange subresourceRange);
+    void copy_buffer_data_to_image(VkImageSubresourceRange subresourceRange, uint32_t index);
 
 private:
     void create();
@@ -50,9 +49,9 @@ private:
 
 private:
     VulkanImageCreateInfo m_nativeCreateInfo;
-    VkImage m_image = nullptr;
-    VkDeviceMemory m_memory = nullptr;
-    VkImageView m_view = nullptr;
+    std::vector<VkImage> m_images;
+    std::vector<VkDeviceMemory> m_memories;
+    std::vector<VkImageView> m_views;
     bool m_createdFromExternalImage = false;
     DescriptorType m_descriptorType;
 };

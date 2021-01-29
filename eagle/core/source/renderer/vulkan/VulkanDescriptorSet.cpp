@@ -109,7 +109,7 @@ void VulkanDescriptorSet::flush(uint32_t index) {
                 auto image = std::static_pointer_cast<VulkanImage>(m_descriptorItems[j]);
                 VkDescriptorImageInfo imageInfo = {};
                 imageInfo.imageLayout = VulkanConverter::to_vk(image->layout());
-                imageInfo.imageView = image->native_image_view();
+                imageInfo.imageView = image->native_image_views()[index];
                 imageInfos.push_back(imageInfo);
                 break;
             }
@@ -117,7 +117,7 @@ void VulkanDescriptorSet::flush(uint32_t index) {
                 auto image = std::static_pointer_cast<VulkanImage>(m_descriptorItems[j]);
                 VkDescriptorImageInfo imageInfo = {};
                 imageInfo.imageLayout = VulkanConverter::to_vk(image->layout());
-                imageInfo.imageView = image->native_image_view();
+                imageInfo.imageView = image->native_image_views()[index];
                 imageInfos.push_back(imageInfo);
                 break;
             }
@@ -126,7 +126,7 @@ void VulkanDescriptorSet::flush(uint32_t index) {
                 auto texture = std::static_pointer_cast<VulkanTexture>(m_descriptorItems[j]);
                 VkDescriptorImageInfo imageInfo = {};
                 imageInfo.imageLayout = VulkanConverter::to_vk(texture->native_image()->layout());
-                imageInfo.imageView = texture->native_image()->native_image_view();
+                imageInfo.imageView = texture->native_image()->native_image_views()[index];
                 imageInfo.sampler = texture->sampler();
                 imageInfos.push_back(imageInfo);
                 break;
@@ -147,15 +147,13 @@ void VulkanDescriptorSet::flush(uint32_t index) {
         descriptorWrite[j].descriptorType = descriptorBindings[j].descriptorType;
         descriptorWrite[j].descriptorCount = 1;
         if (descriptorWrite[j].descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ||
-            descriptorWrite[j].descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
-            ){
+            descriptorWrite[j].descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER){
             descriptorWrite[j].pBufferInfo = &bufferInfos[bufferIndex];
             bufferIndex++;
         }
         else if (descriptorWrite[j].descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ||
                  descriptorWrite[j].descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE ||
-                 descriptorWrite[j].descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE
-                 ){
+                 descriptorWrite[j].descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE){
             descriptorWrite[j].pImageInfo = &imageInfos[imageIndex];
             imageIndex++;
         }
@@ -167,15 +165,14 @@ void VulkanDescriptorSet::flush(uint32_t index) {
 }
 
 void VulkanDescriptorSet::update_descriptor_sets() {
-
-    if (m_cleared) return;
-
+    if (m_cleared) {
+        return;
+    }
 
     for (uint32_t i = 0; i < m_descriptorSets.size(); i++){
         flush(i);
     }
 }
-
 
 void VulkanDescriptorSet::cleanup() {
     if (m_cleared) return;
@@ -183,8 +180,4 @@ void VulkanDescriptorSet::cleanup() {
     m_cleared = true;
 }
 
-
-
 EG_END
-
-

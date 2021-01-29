@@ -31,10 +31,6 @@ VulkanCommandBuffer::VulkanCommandBuffer(VkDevice &device, VkCommandPool &comman
 }
 
 VulkanCommandBuffer::~VulkanCommandBuffer() {
-//    if (!m_finished){
-//        VK_CALL vkEndCommandBuffer(m_commandBuffer);
-//    }
-
     VK_CALL vkFreeCommandBuffers(m_device, m_commandPool, 1, &m_commandBuffer);
 }
 
@@ -69,7 +65,7 @@ void VulkanCommandBuffer::begin_render_pass(const Reference<RenderPass> &renderP
     VkRenderPassBeginInfo renderPassInfo = {};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderPassInfo.renderPass = vrp->native_render_pass();
-    renderPassInfo.framebuffer = vf->native_framebuffer();
+    renderPassInfo.framebuffer = vf->native_framebuffers()[m_imageIndexRef];
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = {vf->width(), vf->height()};
     auto& clearValues = vrp->clear_values();
@@ -154,7 +150,7 @@ void VulkanCommandBuffer::pipeline_barrier(const Reference<Image> &image, const 
     // We won't be changing the layout of the image
     imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
     imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
-    imageMemoryBarrier.image = std::static_pointer_cast<VulkanImage>(image)->native_image();
+    imageMemoryBarrier.image = std::static_pointer_cast<VulkanImage>(image)->native_images()[m_imageIndexRef];
     imageMemoryBarrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
     imageMemoryBarrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
     imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;

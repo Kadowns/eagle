@@ -168,8 +168,8 @@ void RaytracerSystem::handle_context_init() {
     RaytracerData& data = SingletonComponent::get<RaytracerData>();
     data.compute.shader = RenderMaster::context().create_compute_shader("data/shaders/compute.comp");
     data.compute.skybox = RenderMaster::context().create_texture(TextureLoader::load_pixels("data/textures/stars.hdr"));
-    data.compute.spheresBuffer = RenderMaster::context().create_storage_buffer(sizeof(RaytracerData::SphereData) * data.spheresData.size(), data.spheresData.data(), BufferUsage::DYNAMIC);
-    data.compute.boxesBuffer = RenderMaster::context().create_storage_buffer(sizeof(RaytracerData::BoxData) * data.boxesData.size(), data.boxesData.data(), BufferUsage::DYNAMIC);
+    data.compute.spheresBuffer = RenderMaster::context().create_storage_buffer(sizeof(RaytracerData::SphereData) * data.spheresData.size(), data.spheresData.data(), UpdateType::HOST);
+    data.compute.boxesBuffer = RenderMaster::context().create_storage_buffer(sizeof(RaytracerData::BoxData) * data.boxesData.size(), data.boxesData.data(), UpdateType::HOST);
 
     ShaderCreateInfo pipelineInfo = {RenderMaster::context().main_render_pass(), {
             {ShaderStage::VERTEX, "data/shaders/quad.vert"},
