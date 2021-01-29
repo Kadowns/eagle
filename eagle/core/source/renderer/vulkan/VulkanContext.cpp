@@ -23,10 +23,17 @@ VulkanContext::VulkanContext() { // NOLINT(cppcoreguidelines-pro-type-member-ini
 
 VulkanContext::~VulkanContext() = default;
 
-void VulkanContext::init(Window *window) {
+void VulkanContext::init(Window *window, EventBus* eventBus) {
     EG_CORE_TRACE("Initializing vulkan context!");
 
     m_window = window;
+    m_eventBus = eventBus;
+
+    m_listener.attach(eventBus);
+    m_listener.subscribe<OnWindowResized>([this](const OnWindowResized& ev){
+       m_windowResized = true;
+       return false;
+    });
 
     create_instance();
     create_debug_callback();
@@ -50,6 +57,8 @@ void VulkanContext::deinit() {
 
     VK_CALL
     vkDeviceWaitIdle(m_device);
+
+    m_listener.detach();
 
     m_vertexBuffers.clear();
     m_indexBuffers.clear();
@@ -627,18 +636,14 @@ VkExtent2D VulkanContext::choose_swap_extent(const VkSurfaceCapabilitiesKHR &cap
         return capabilities.currentExtent;
     } else {
         VkExtent2D actualExtent = {};
-        actualExtent.width = std::clamp<uint32_t>(m_window->get_width(), capabilities.minImageExtent.width,
+        actualExtent.width = std::clamp<uint32_t>(m_window->width(), capabilities.minImageExtent.width,
                                                   capabilities.maxImageExtent.width);
-        actualExtent.height = std::clamp<uint32_t>(m_window->get_height(), capabilities.minImageExtent.height,
+        actualExtent.height = std::clamp<uint32_t>(m_window->height(), capabilities.minImageExtent.height,
                                                    capabilities.maxImageExtent.height);
 
         EG_CORE_INFO_F("Swap extent: width:{0} height:{1}", actualExtent.width, actualExtent.height);
         return actualExtent;
     }
-}
-
-void VulkanContext::handle_window_resized(int width, int height) {
-    m_windowResized = true;
 }
 
 void VulkanContext::create_render_pass() {
@@ -776,38 +781,11 @@ void VulkanContext::allocate_command_buffers() {
         m_commandBuffers[i] = std::make_shared<VulkanCommandBuffer>(
                 m_device,
                 m_graphicsCommandPool,
-                m_present.imageIndex,
-                [&](VkCommandBuffer &commandBuffer) { submit_command_buffer(commandBuffer); }
+                m_present.imageIndex
         );
     }
 
     EG_CORE_TRACE("Graphics command buffers allocated!");
-}
-
-void VulkanContext::submit_command_buffer(VkCommandBuffer& commandBuffer){
-    VkSubmitInfo submitInfo = {};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-    VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[m_currentFrame]};
-    VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-    submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = waitSemaphores;
-    submitInfo.pWaitDstStageMask = waitStages;
-
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &commandBuffer;
-
-    VkSemaphore signalSemaphores[] = {m_renderFinishedSemaphores[m_currentFrame]};
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = signalSemaphores;
-
-    VK_CALL vkResetFences(m_device, 1, &m_inFlightFences[m_currentFrame]);
-
-    VkResult result = vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]);
-
-    if (result != VK_SUCCESS){
-        throw std::runtime_error("failed to submit command buffer!");
-    }
 }
 
 void VulkanContext::create_sync_objects() {
@@ -857,11 +835,6 @@ void VulkanContext::recreate_swapchain() {
 
     create_framebuffers();
 
-//    for (auto& renderTarget : m_renderTargets){
-//        renderTarget->create(m_present.extent2D.width, m_present.extent2D.height);
-//    }
-
-
     for (auto &shader : m_shaders) {
         shader->create_pipeline();
     }
@@ -883,9 +856,7 @@ void VulkanContext::recreate_swapchain() {
         computeShader->recreate(m_present.imageCount);
     }
 
-    if (recreation_callback){
-        recreation_callback();
-    }
+    m_eventBus->emit(OnRenderingContextRecreated{this});
 
     EG_CORE_TRACE("Swapchain recreated!");
 }
@@ -948,12 +919,12 @@ VulkanContext::create_compute_shader(const std::string &path) {
 }
 
 Handle<VertexBuffer>
-VulkanContext::create_vertex_buffer(void *vertices, uint32_t count, const VertexLayout &vertexLayout,
+VulkanContext::create_vertex_buffer(void *vertices, uint32_t size, const VertexLayout &vertexLayout,
                                     BufferUsage usage) {
     EG_CORE_TRACE("Creating a vulkan vertex buffer!");
     VulkanVertexBufferCreateInfo createInfo(vertexLayout);
     createInfo.data = vertices;
-    createInfo.count = count;
+    createInfo.size = size;
     createInfo.physicalDevice = m_physicalDevice;
     createInfo.commandPool = m_graphicsCommandPool;
     createInfo.graphicsQueue = m_graphicsQueue;
@@ -1147,7 +1118,7 @@ void VulkanContext::create_offscreen_render_pass() {
 //    VK_CALL vkCreateRenderPass(m_device, &renderPassInfo, nullptr, &m_present.offscreenPass);
 }
 
-Reference<CommandBuffer> VulkanContext::create_command_buffer() {
+Reference<CommandBuffer> VulkanContext::main_command_buffer() {
     return m_commandBuffers[m_present.imageIndex];
 }
 
@@ -1169,6 +1140,35 @@ bool VulkanContext::prepare_frame() {
     //updates dirty buffers-------------------------
     VulkanCleaner::flush(m_present.imageIndex);
     return true;
+}
+
+void VulkanContext::submit_command_buffer(const Reference<CommandBuffer> &commandBuffer) {
+
+    auto vcb = std::static_pointer_cast<VulkanCommandBuffer>(commandBuffer);
+
+    VkSubmitInfo submitInfo = {};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+    VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[m_currentFrame]};
+    VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = waitSemaphores;
+    submitInfo.pWaitDstStageMask = waitStages;
+
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &vcb->native_command_buffer();
+
+    VkSemaphore signalSemaphores[] = {m_renderFinishedSemaphores[m_currentFrame]};
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = signalSemaphores;
+
+    VK_CALL vkResetFences(m_device, 1, &m_inFlightFences[m_currentFrame]);
+
+    VkResult result = vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]);
+
+    if (result != VK_SUCCESS){
+        throw std::runtime_error("failed to submit command buffer!");
+    }
 }
 
 void VulkanContext::present_frame() {
@@ -1202,10 +1202,6 @@ void VulkanContext::present_frame() {
 
 void VulkanContext::destroy_texture_2d(const Reference<Texture> &texture) {
     m_textures.erase(std::find(m_textures.begin(), m_textures.end(), std::static_pointer_cast<VulkanTexture>(texture)));
-}
-
-void VulkanContext::set_recreation_callback(std::function<void()> recreation_callback) {
-    this->recreation_callback = recreation_callback;
 }
 
 Reference<RenderPass> VulkanContext::main_render_pass() {

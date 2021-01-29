@@ -28,25 +28,20 @@ public:
     void receive(const entityx::ComponentAddedEvent<Box>& ev);
     void receive(const entityx::ComponentRemovedEvent<Sphere>& ev);
     void receive(const entityx::ComponentRemovedEvent<Box>& ev);
+    //event bus events
+    bool receive(const OnRenderingContextRecreated& ev);
+    bool receive(const OnRenderContextInit& ev);
+    bool receive(const OnRenderContextDeinit& ev);
+    bool receive(const OnRenderFrameBegin& ev);
+    bool receive(const OnRenderCommandBufferBegin& ev);
+    bool receive(const OnRenderCommandBufferMainRenderPass& ev);
 private:
     void init_render_target();
-
-    void handle_context_init();
-    void handle_context_deinit();
-    void handle_frame_begin();
-    void handle_command_buffer_begin(const Reference<CommandBuffer>& commandBuffer);
-    void handle_command_buffer_main_render_pass(const Reference<CommandBuffer>& commandBuffer);
-
     void update_sphere_buffer(entityx::EntityManager &entities);
     void update_box_buffer(entityx::EntityManager &entities);
 
 private:
-    RenderMaster::Event::Listener context_init_callback;
-    RenderMaster::Event::Listener context_deinit_callback;
-    RenderMaster::Event::Listener frame_begin_callback;
-    RenderMaster::Event::Listener context_recreated_callback;
-    RenderMaster::CommandBufferEvent::Listener command_buffer_begin_callback;
-    RenderMaster::CommandBufferEvent::Listener command_buffer_main_render_pass_callback;
+    EventListener<RaytracerSystem> m_listener;
     bool m_updateSpheres;
     bool m_updateBoxes;
 };

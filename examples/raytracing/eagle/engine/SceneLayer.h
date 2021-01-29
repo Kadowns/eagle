@@ -6,26 +6,27 @@
 #define EAGLE_SCENELAYER_H
 
 #include <eagle/engine/EngineGlobalDefinitions.h>
-#include <eagle/engine/EventMaster.h>
+
+struct OnSceneRecreate {
+
+};
 
 EG_ENGINE_BEGIN
 
 class SceneLayer : public Layer {
 public:
-    SceneLayer();
     virtual void handle_attach() override;
 
-    virtual void handle_deattach() override;
+    virtual void handle_detach() override;
 
     virtual void handle_update() override;
 
-    virtual void handle_event(Event &e) override;
 private:
     void generate_scene();
     void generate_playground();
     glm::vec2 random_inside_unit_circle();
 private:
-    std::function<void(const OnSceneRecreate&)> m_sceneRecreateCallback;
+    EventListener<SceneLayer> m_listener;
 };
 
 EG_ENGINE_END

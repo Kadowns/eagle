@@ -19,15 +19,10 @@ public:
 
     virtual void handle_attach() override;
 
-    virtual void handle_deattach() override;
+    virtual void handle_detach() override;
 
     virtual void handle_update() override;
 
-    virtual void handle_event(Event &e) override;
-
-private:
-
-    LayerEventDispatcher m_dispatcher;
 };
 
 EG_END

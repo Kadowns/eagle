@@ -33,8 +33,7 @@ set(CORE_INCLUDE
         eagle/core/Log.h
         eagle/core/Layer.h
         eagle/core/LayerStack.h
-        eagle/core/events/Event.h
-        eagle/core/events/EventDispatcher.h
+        eagle/core/events/EventBus.h
         eagle/core/events/WindowEvents.h
         eagle/core/events/InputEvents.h
         eagle/core/events/KeyCodes.h
@@ -55,6 +54,7 @@ set(CORE_SOURCE
         eagle/core/source/InputLayer.cpp
         eagle/core/source/Random.cpp
         eagle/core/source/Time.cpp
+        eagle/core/source/events/EventBus.cpp
         )
 
 

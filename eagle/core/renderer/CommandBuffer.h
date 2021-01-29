@@ -77,8 +77,6 @@ public:
     virtual void
     dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
 
-    virtual void submit() = 0;
-
 };
 
 EG_END

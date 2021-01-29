@@ -6,15 +6,10 @@
 
 EG_ENGINE_BEGIN
 
-
 void RenderLayer::handle_attach() {
-    m_dispatcher.add_listener<WindowResizedEvent>([&](Event& e){
-        auto& resized = *(WindowResizedEvent*)&e;
-        m_renderMaster.handle_window_resized(resized.get_width(), resized.get_height());
-        return false;
-    });
+    m_listener.attach(&Application::instance().event_bus());
 
-    m_dispatcher.add_listener<WindowCloseEvent>([&](Event& e){
+    m_listener.subscribe<OnWindowClose>([](const OnWindowClose& ev){
         Application::instance().quit();
         return false;
     });
@@ -22,17 +17,13 @@ void RenderLayer::handle_attach() {
     m_renderMaster.init();
 }
 
-void RenderLayer::handle_deattach() {
+void RenderLayer::handle_detach() {
     m_renderMaster.deinit();
+    m_listener.detach();
 }
 
 void RenderLayer::handle_update() {
     m_renderMaster.update();
-}
-
-void RenderLayer::handle_event(Event &e) {
-    m_dispatcher.dispatch(e);
-
 }
 
 EG_ENGINE_END

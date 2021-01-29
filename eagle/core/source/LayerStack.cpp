@@ -28,7 +28,7 @@ void LayerStack::pop_layer(Reference<Layer> layer) {
         if (!m_initialized)
             return;
 
-        layer->handle_deattach();
+        layer->handle_detach();
         EG_CORE_TRACE("Layer popped!");
     } else {
         EG_CORE_TRACE("Layer not found!");
@@ -73,7 +73,7 @@ void LayerStack::deinit() {
     EG_CORE_TRACE("Deinitializing layer stack!");
 
     for (auto& layer : m_layers){
-        layer->handle_deattach();
+        layer->handle_detach();
     }
     m_layers.clear();
 

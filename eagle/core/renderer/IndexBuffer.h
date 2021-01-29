@@ -20,9 +20,9 @@ class IndexBuffer {
 public:
     IndexBuffer() = default;
     virtual ~IndexBuffer() = default;
-    virtual void * get_data() = 0;
-    virtual size_t get_indices_count() = 0;
-    virtual void upload(void* data, uint32_t verticesCount) = 0;
+    virtual void * data() = 0;
+    virtual size_t size() = 0;
+    virtual void upload(void* data, uint32_t size) = 0;
 };
 
 EG_END

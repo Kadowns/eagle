@@ -1,47 +1,29 @@
 //
 // Created by Novak on 05/06/2019.
-// Code HEAVILY based on Hazel event system: https://github.com/TheCherno/Hazel
 //
 
 #ifndef EAGLE_WINDOWEVENTS_H
 #define EAGLE_WINDOWEVENTS_H
 
-#include "Event.h"
-
 EG_BEGIN
 
-class WindowResizedEvent : public Event {
+struct OnWindowResized {
+    uint32_t width, height;
+};
 
-public:
-
-    WindowResizedEvent(uint32_t width, uint32_t height) :
-        m_width(width), m_height(height){}
-
-    inline uint32_t get_width() const {return m_width;}
-    inline uint32_t get_height() const {return m_height;}
-
-private:
-    uint32_t m_width, m_height;
+struct OnWindowClose {
 
 };
 
-class WindowCloseEvent : public Event {
-public:
+struct OnWindowFocus {
 
 };
 
-class WindowFocusEvent : public Event{
-public:
+struct OnWindowLostFocus {
 
 };
 
-class WindowLostFocusEvent : public Event{
-public:
-
-};
-
-class WindowMoveEvent : public Event{
-public:
+struct OnWindowMove {
 
 };
 

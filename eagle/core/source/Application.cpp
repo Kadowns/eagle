@@ -3,12 +3,10 @@
 //
 
 
-#include <eagle/core/Time.h>
-#include "eagle/core/Log.h"
 #include "eagle/core/Application.h"
+#include "eagle/core/Time.h"
+#include "eagle/core/Log.h"
 #include "eagle/core/Window.h"
-#include "eagle/core/events/InputEvents.h"
-#include "eagle/core/events/WindowEvents.h"
 
 EG_BEGIN
 
@@ -18,32 +16,10 @@ Application& Application::instance() {
     return *m_instance;
 }
 
-Application::Application(const ApplicationCreateInfo& config) :
-    m_window(config.windowType){
-    EAGLE_SET_INFO(EAGLE_APP_NAME, config.appName);
-
+Application::Application(const std::string &appName, Reference<Window> window) : m_window(std::move(window)){
+    EAGLE_SET_INFO(EAGLE_APP_NAME, appName);
     m_instance = this;
-
-    Log::init(config.coreLogLevel, config.clientLogLevel);
-    m_layerStack.emplace(config.layers);
 }
-
-void Application::handle_event(Reference<Event> e){
-    m_eventQueue.emplace(e);
-}
-
-void Application::dispatch_events() {
-    while (!m_eventQueue.empty()){
-        auto& e = m_eventQueue.front();
-        for (auto& layer : m_layerStack){
-            layer->handle_event(*e);
-            if ((*e).is_handled())
-                break;
-        }
-        m_eventQueue.pop();
-    }
-}
-
 
 void Application::run() {
 
@@ -51,17 +27,13 @@ void Application::run() {
 
     Time::init();
 
-    m_window->init();
-    m_window->set_event_callback(BIND_EVENT_FN(Application::handle_event));
-
+    m_window->init(&m_eventBus);
     m_layerStack.init();
 
     while(!m_quit){
 
         Time::update();
         m_window->pool_events();
-
-        dispatch_events();
 
         for (auto& layer : m_layerStack){
             layer->handle_update();

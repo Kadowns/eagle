@@ -5,12 +5,11 @@
 #ifndef EAGLE_VULKANCONTEXT_H
 #define EAGLE_VULKANCONTEXT_H
 
-
-#include <vector>
 #include <optional>
 #include <functional>
 
 #include "eagle/core/renderer/RenderingContext.h"
+#include "eagle/core/events/WindowEvents.h"
 
 #include "VulkanCore.h"
 #include "VulkanShader.h"
@@ -67,18 +66,16 @@ public:
     virtual ~VulkanContext();
 
     //inherited via RenderingContext
-    virtual void init(Window *window) override;
+    virtual void init(Window *window, EventBus* eventBus) override;
     virtual void deinit() override;
-    virtual void handle_window_resized(int width, int height) override;
-    virtual bool prepare_frame() override;
-    virtual Reference <Eagle::CommandBuffer> create_command_buffer() override;
 
+    virtual bool prepare_frame() override;
+    virtual void present_frame() override;
+    virtual void submit_command_buffer(const Reference<CommandBuffer>& commandBuffer) override;
+
+    virtual Reference<CommandBuffer> main_command_buffer() override;
     virtual Reference<RenderPass> main_render_pass() override;
     virtual Reference<Framebuffer> main_frambuffer() override;
-
-    virtual void set_recreation_callback(std::function<void()> recreation_callback) override;
-
-    virtual void present_frame() override;
     //------
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
@@ -147,7 +144,7 @@ public:
     create_shader(const ShaderCreateInfo &pipelineInfo) override;
 
     virtual Handle<VertexBuffer>
-    create_vertex_buffer(void *vertices, uint32_t count, const VertexLayout &vertexLayout,
+    create_vertex_buffer(void *vertices, uint32_t size, const VertexLayout &vertexLayout,
                          BufferUsage usageFlags) override;
 
     virtual Handle<IndexBuffer>
@@ -236,8 +233,8 @@ protected:
 
     uint32_t m_currentFrame = 0;
 
-    bool m_windowResized = false;
-    std::function<void()> recreation_callback;
+    EventListener<VulkanContext> m_listener;
+    EventBus* m_eventBus;
 
     const std::vector<const char *> validationLayers = {
             "VK_LAYER_KHRONOS_validation"
@@ -248,6 +245,8 @@ protected:
     };
 
     const int MAX_FRAMES_IN_FLIGHT = 2;
+
+    bool m_windowResized = false;
 
 };
 

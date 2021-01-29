@@ -219,7 +219,7 @@ void main() {
         break;
     }
 
-    vec4 dst = imageLoad(colorImage, id);
-    imageStore(colorImage, id, blend(vec4(result, 1.0f / (ubo.sampleIndex + 1.0f)), dst));
+    //vec4 dst = imageLoad(colorImage, id);
+    imageStore(colorImage, id, vec4(result, 1.0));
 
 }

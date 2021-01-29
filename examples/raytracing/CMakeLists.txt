@@ -1,5 +1,5 @@
 set(RAYTRACER_INCLUDE
-        eagle/engine/EventMaster.h
+        RaytracingApp.h
         eagle/engine/EngineGlobalDefinitions.h
         eagle/engine/Engine.h
         eagle/engine/renderer/RenderLayer.h
@@ -46,6 +46,7 @@ set(RAYTRACER_INCLUDE
         )
 
 set(RAYTRACER_SOURCE
+        RaytracingApp.cpp
         eagle/engine/source/renderer/RenderLayer.cpp
         eagle/engine/source/renderer/RenderMaster.cpp
         eagle/engine/source/renderer/TextureLoader.cpp

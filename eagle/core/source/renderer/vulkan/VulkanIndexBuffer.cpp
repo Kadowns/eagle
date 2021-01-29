@@ -8,18 +8,18 @@
 EG_BEGIN
 
 VulkanIndexBuffer::VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInfo &createInfo, void *indexData,
-                                     size_t indexCount,
+                                     size_t size,
                                      IndexBufferType indexType, BufferUsage usage) :
         m_device(device),
         m_physicalDevice(createInfo.physicalDevice),
-        m_indexCount(indexCount),
+        m_size(size),
         m_indexType(indexType),
         m_usage(usage),
         m_buffers(createInfo.bufferCount){
 
-    VkDeviceSize bufferSize = static_cast<int>(indexType) * indexCount;
+    VkDeviceSize bufferSize = size;
 
-    if (indexCount != 0){
+    if (size != 0){
         m_data = new char[bufferSize];
         memcpy(m_data, indexData, bufferSize);
     }
@@ -27,7 +27,7 @@ VulkanIndexBuffer::VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInf
     switch(m_usage){
         case BufferUsage::DYNAMIC:{
 
-            if (indexCount == 0) {
+            if (size == 0) {
                 return;
             }
 
@@ -79,12 +79,12 @@ VulkanIndexBuffer::~VulkanIndexBuffer() {
     }
 }
 
-void* VulkanIndexBuffer::get_data() {
+void* VulkanIndexBuffer::data() {
     return m_data;
 }
 
-size_t VulkanIndexBuffer::get_indices_count() {
-    return m_indexCount;
+size_t VulkanIndexBuffer::size() {
+    return m_size;
 }
 
 
@@ -98,7 +98,7 @@ void VulkanIndexBuffer::flush(uint32_t bufferIndex) {
         return;
     }
 
-    VkDeviceSize bufferSize = m_indexCount * static_cast<int>(m_indexType);
+    VkDeviceSize bufferSize = m_size;
 
     if (m_resizing || !m_buffers[bufferIndex]){
         if (m_buffers[bufferIndex]){
@@ -119,13 +119,13 @@ void VulkanIndexBuffer::flush(uint32_t bufferIndex) {
 
 }
 
-void VulkanIndexBuffer::upload(void *data, uint32_t indexCount) {
+void VulkanIndexBuffer::upload(void *data, uint32_t size) {
     if (m_usage == BufferUsage::CONSTANT){
         EG_CORE_ERROR("Trying to flush data to a index buffer created with CONSTANT flag! To be able to flush data, be sure to create the buffer with DYNAMIC flag!");
         return;
     }
 
-    VkDeviceSize bufferSize = static_cast<int>(m_indexType) * indexCount;
+    VkDeviceSize bufferSize = size;
 
     if (m_data != nullptr){
         delete[](m_data);
@@ -149,7 +149,7 @@ void VulkanIndexBuffer::upload(void *data, uint32_t indexCount) {
         m_initialized = true;
     }
     else{
-        if (m_indexCount != indexCount){
+        if (m_size != size){
             m_resizing = true;
         }
 
@@ -159,7 +159,7 @@ void VulkanIndexBuffer::upload(void *data, uint32_t indexCount) {
         }
         VulkanCleaner::push(this);
     }
-    m_indexCount = indexCount;
+    m_size = size;
 }
 
 EG_END

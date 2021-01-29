@@ -13,21 +13,17 @@ public:
 
     void handle_update() override;
 
-    void handle_event(Eagle::Event &e) override;
+    void handle_detach() override;
 
-    void handle_deattach() override;
-private:
-
-    bool on_window_close(const Eagle::WindowCloseEvent& e);
-    bool on_window_resized(const Eagle::WindowResizedEvent& e);
-
+    bool receive(const Eagle::OnWindowClose& e);
 
 private:
     Eagle::Reference<Eagle::RenderingContext> m_renderingContext;
-    Eagle::LayerEventDispatcher m_dispatcher;
+    Eagle::EventListener<TriangleLayer> m_listener;
 
     Eagle::Handle<Eagle::Shader> m_shader;
     Eagle::Handle<Eagle::VertexBuffer> m_vertexBuffer;
+    Eagle::Handle<Eagle::IndexBuffer> m_indexBuffer;
 
 };
 

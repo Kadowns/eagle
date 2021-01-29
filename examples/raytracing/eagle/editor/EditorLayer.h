@@ -18,15 +18,13 @@ public:
 
     virtual void handle_attach() override;
 
-    virtual void handle_deattach() override;
+    virtual void handle_detach() override;
 
     virtual void handle_update() override;
 
-    virtual void handle_event(Event &e) override;
-
 private:
     EditorMaster m_editorMaster;
-    LayerEventDispatcher m_dispatcher;
+    EventListener<EditorLayer> m_listener;
 };
 
 EG_EDITOR_END

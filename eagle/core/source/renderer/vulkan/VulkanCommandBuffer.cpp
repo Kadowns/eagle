@@ -16,9 +16,8 @@
 
 EG_BEGIN
 
-VulkanCommandBuffer::VulkanCommandBuffer(VkDevice &device, VkCommandPool &commandPool, uint32_t &imageIndexRef,
-                                         const std::function<void(VkCommandBuffer&)>& submit_callback) :
-    m_device(device), m_commandPool(commandPool), m_imageIndexRef(imageIndexRef), submit_command_buffer_callback(submit_callback){
+VulkanCommandBuffer::VulkanCommandBuffer(VkDevice &device, VkCommandPool &commandPool, uint32_t &imageIndexRef) :
+    m_device(device), m_commandPool(commandPool), m_imageIndexRef(imageIndexRef){
     VkCommandBufferAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool = commandPool;
@@ -31,10 +30,6 @@ VulkanCommandBuffer::VulkanCommandBuffer(VkDevice &device, VkCommandPool &comman
 }
 
 VulkanCommandBuffer::~VulkanCommandBuffer() {
-//    if (!m_finished){
-//        VK_CALL vkEndCommandBuffer(m_commandBuffer);
-//    }
-
     VK_CALL vkFreeCommandBuffers(m_device, m_commandPool, 1, &m_commandBuffer);
 }
 
@@ -51,10 +46,6 @@ void VulkanCommandBuffer::finish() {
     VK_CALL vkEndCommandBuffer(m_commandBuffer);
     m_finished = true;
     m_boundShader.reset();
-}
-
-void VulkanCommandBuffer::submit() {
-    submit_command_buffer_callback(m_commandBuffer);
 }
 
 bool VulkanCommandBuffer::is_finished() {
