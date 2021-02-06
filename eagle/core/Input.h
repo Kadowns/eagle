@@ -5,10 +5,8 @@
 #ifndef EAGLE_INPUT_H
 #define EAGLE_INPUT_H
 
-#include <memory>
-#include <set>
-
 #include "CoreGlobalDefinitions.h"
+#include "events/EventBus.h"
 #include "events/InputEvents.h"
 #include "events/KeyCodes.h"
 
@@ -22,6 +20,9 @@ public:
     ~Input() = default;
 
     static Input& instance();
+
+    void init(EventBus* eventBus);
+    void deinit();
 
     void refresh();
 
@@ -42,11 +43,11 @@ public:
 
 protected:
 
-    friend class InputLayer;
-    void handle_key(KeyEvent& e);
-    void handle_mouse_move(MouseMoveEvent& e);
-    void handle_mouse_button(MouseButtonEvent& e);
-    void handle_mouse_scroll(MouseScrolledEvent& e);
+    friend class GenericEventListener<Input, EventBus>;
+    bool receive(const OnKey &e);
+    bool receive(const OnMouseMove &e);
+    bool receive(const OnMouseButton &e);
+    bool receive(const OnMouseScrolled &e);
 
 private:
 
@@ -55,8 +56,9 @@ private:
     std::set<int> m_downKeys, m_pressedKeys, m_releasedKeys;
     std::set<int> m_downMouseButtons, m_pressedMouseButtons, m_releasedMouseButtons;
 
-    bool m_firstMouseMove = true;
     Position m_mousePosition, m_mouseDelta, m_scrollDelta;
+    EventListener<Input> m_listener;
+    bool m_firstMouseMove = true;
 
 };
 

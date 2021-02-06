@@ -2,18 +2,14 @@
 // Created by Ricardo on 11/28/2020.
 //
 
-#include "TriangleLayer.h"
+#include "TriangleApp.h"
 
 int main(){
 
-    Eagle::ApplicationCreateInfo createInfo = {};
-    createInfo.appName = "Eagle triangle";
-    createInfo.clientLogLevel = Eagle::Log::TRACE;
-    createInfo.coreLogLevel = Eagle::Log::TRACE;
-    createInfo.windowType = new Eagle::WindowGLFW(1280, 720);
-    createInfo.layers.emplace_back(std::make_shared<TriangleLayer>());
 
-    Eagle::Application app(createInfo);
+    Eagle::Log::init(Eagle::Log::TRACE, Eagle::Log::TRACE);
+
+    TriangleApp app;
 
     try {
         app.run();

@@ -15,7 +15,6 @@
 #include <eagle/engine/components/SingletonComponent.h>
 #include <eagle/engine/components/Sphere.h>
 #include <eagle/engine/components/physics/Rigidbody.h>
-#include <eagle/engine/components/physics/shapes/PlaneCollider.h>
 #include <eagle/engine/components/physics/shapes/SphereCollider.h>
 #include <eagle/engine/components/physics/shapes/BoxCollider.h>
 #include <eagle/engine/systems/SpawnerSystem.h>
@@ -25,16 +24,15 @@
 
 EG_ENGINE_BEGIN
 
-SceneLayer::SceneLayer() {
-    m_sceneRecreateCallback = [this](const OnSceneRecreate& ev){
-        generate_playground();
-    };
-
-}
-
 void SceneLayer::handle_attach() {
 
-    EventMaster::instance().subscribe(&m_sceneRecreateCallback);
+    m_listener.attach(&Application::instance().event_bus());
+    m_listener.subscribe<OnSceneRecreate>([this](const OnSceneRecreate& ev){
+        generate_playground();
+        return false;
+    });
+
+    m_timer = &Application::instance().timer();
 
     Scene& scene = SceneManager::current_scene();
 
@@ -64,16 +62,12 @@ void SceneLayer::handle_attach() {
     scene.systems.configure();
 }
 
-void SceneLayer::handle_deattach() {
-    EventMaster::instance().unsubscribe(&m_sceneRecreateCallback);
+void SceneLayer::handle_detach() {
+    m_listener.detach();
 }
 
 void SceneLayer::handle_update() {
-    SceneManager::current_scene().systems.update_all(Time::delta_time());
-}
-
-void SceneLayer::handle_event(Event &e) {
-
+    SceneManager::current_scene().systems.update_all(m_timer->delta_time());
 }
 
 void SceneLayer::generate_scene() {

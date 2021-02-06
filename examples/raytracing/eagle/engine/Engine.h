@@ -29,7 +29,6 @@
 #include <eagle/engine/renderer/RenderMaster.h>
 #include <eagle/engine/renderer/TextureLoader.h>
 
-#include <eagle/engine/EventMaster.h>
 #include <eagle/engine/SceneLayer.h>
 #include <eagle/engine/SceneManager.h>
 

@@ -13,6 +13,8 @@
 #include <set>
 #include <memory>
 
+#include <cassert>
+#include <mutex>
 #include <random>
 #include <functional>
 #include <utility>

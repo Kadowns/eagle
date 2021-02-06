@@ -18,7 +18,7 @@ struct VulkanVertexBufferCreateInfo {
     VulkanVertexBufferCreateInfo(const VertexLayout& layout):vertexLayout(layout) {}
 
     void* data;
-    uint32_t count;
+    uint32_t size;
     VertexLayout vertexLayout;
     uint32_t bufferCount;
     VkPhysicalDevice physicalDevice;
@@ -39,7 +39,7 @@ public:
 
     virtual bool is_dirty() const override;
     virtual void flush(uint32_t bufferIndex) override;
-    virtual void upload(void* data, uint32_t elementCount) override;
+    virtual void upload(void* data, uint32_t size) override;
 
     inline VulkanBuffer& get_buffer(uint32_t bufferIndex) {
         if (m_usage == UpdateType::CONSTANT){
@@ -52,7 +52,7 @@ private:
     VkDevice m_device;
     VkPhysicalDevice m_physicalDevice;
     VertexLayout m_layout;
-    uint32_t m_elementCount;
+    uint32_t m_size;
     UpdateType m_usage;
     char* m_data =  nullptr;
 

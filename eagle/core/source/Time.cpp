@@ -6,18 +6,24 @@
 
 EG_BEGIN
 
-Time Time::s_instance;
-
-void Time::init() {
-    s_instance = Time();
+void Time::update() {
+    if (!m_started){
+        return;
+    }
+    auto now = std::chrono::high_resolution_clock::now();
+    m_deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(now - m_lastUpdate).count();
+    m_time = std::chrono::duration<float, std::chrono::seconds::period>(now - m_start).count();
+    m_lastUpdate = now;
 }
 
-void Time::update() {
-    static auto lastFrameTime = std::chrono::high_resolution_clock::now();
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    s_instance.m_deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - lastFrameTime).count();
-    s_instance.m_time += s_instance.m_deltaTime;
-    lastFrameTime = currentTime;
+void Time::start() {
+    m_start = m_lastUpdate = std::chrono::high_resolution_clock::now();
+    m_time = m_deltaTime = 0;
+    m_started = true;
+}
+
+void Time::stop() {
+    m_started = false;
 }
 
 EG_END

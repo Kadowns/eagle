@@ -20,7 +20,6 @@ private:
 
 private:
 
-    std::function<void(const Engine::OnRaytracerTargetCreated&)> raytracer_target_created_callback;
     Handle<DescriptorSet> m_descriptorSet;
     entityx::EntityX m_scene;
 };

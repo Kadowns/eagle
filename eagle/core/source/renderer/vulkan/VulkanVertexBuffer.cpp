@@ -9,17 +9,17 @@ EG_BEGIN
 
 VulkanVertexBuffer::VulkanVertexBuffer(VkDevice device, VulkanVertexBufferCreateInfo &createInfo,
                                        UpdateType usageFlags) :
-    m_device(device),
-    m_physicalDevice(createInfo.physicalDevice),
-    m_layout(createInfo.vertexLayout),
-    m_elementCount(createInfo.count),
-    m_buffers(createInfo.bufferCount),
-    m_usage(usageFlags){
+        m_device(device),
+        m_physicalDevice(createInfo.physicalDevice),
+        m_layout(createInfo.vertexLayout),
+        m_size(createInfo.size),
+        m_buffers(createInfo.bufferCount),
+        m_usage(usageFlags){
 
 
-    VkDeviceSize bufferSize = m_layout.get_stride() * m_elementCount;
+    VkDeviceSize bufferSize = m_size;
 
-    if (m_elementCount != 0){
+    if (m_size != 0){
         m_data = new char[bufferSize];
         memcpy(m_data, createInfo.data, bufferSize);
     }
@@ -27,7 +27,7 @@ VulkanVertexBuffer::VulkanVertexBuffer(VkDevice device, VulkanVertexBufferCreate
     switch(usageFlags){
         case UpdateType::HOST:{
 
-            if (m_elementCount == 0) {
+            if (m_size == 0) {
                 return;
             }
 
@@ -89,7 +89,7 @@ VulkanVertexBuffer::flush(uint32_t bufferIndex) {
         return;
     }
 
-    VkDeviceSize bufferSize = m_layout.get_stride() * m_elementCount;
+    VkDeviceSize bufferSize = m_size;
 
     if (m_resizing || !m_buffers[bufferIndex]){
         if (m_buffers[bufferIndex]){
@@ -109,14 +109,14 @@ VulkanVertexBuffer::flush(uint32_t bufferIndex) {
     m_dirtyBuffers.erase(bufferIndex);
 }
 
-void VulkanVertexBuffer::upload(void *data, uint32_t elementCount) {
+void VulkanVertexBuffer::upload(void *data, uint32_t size) {
 
     if (m_usage == UpdateType::CONSTANT) {
         EG_CORE_ERROR("Trying to flush data to a vertex buffer created with CONSTANT flag! To be able to flush data, be sure to create the buffer with DYNAMIC flag!");
         return;
     }
 
-    VkDeviceSize bufferSize = m_layout.get_stride() *  elementCount;
+    VkDeviceSize bufferSize = size;
 
     if (m_data != nullptr){
         delete[](m_data);
@@ -139,7 +139,7 @@ void VulkanVertexBuffer::upload(void *data, uint32_t elementCount) {
         m_initialized = true;
     }
     else{
-        if (m_elementCount != elementCount){
+        if (m_size != size){
             m_resizing = true;
         }
 
@@ -149,13 +149,13 @@ void VulkanVertexBuffer::upload(void *data, uint32_t elementCount) {
         }
         VulkanCleaner::push(this);
     }
-    m_elementCount = elementCount;
+    m_size = size;
 
 }
 
 uint32_t
 VulkanVertexBuffer::get_vertices_count() {
-    return m_elementCount;
+    return m_size;
 }
 
 uint32_t

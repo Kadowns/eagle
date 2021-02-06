@@ -13,7 +13,8 @@ ComputeDataEditor::ComputeDataEditor(Engine::SceneData &data, const std::functio
 
 void ComputeDataEditor::handle_window_update() {
 
-    ImGui::Text("FPS: %f", 1.0f / Time::delta_time());
+    auto& timer = Application::instance().timer();
+    ImGui::Text("FPS: %f", 1.0f / timer.unscaled_delta_time());
 
 //    glm::vec3 eulerRotation = glm::degrees(glm::eulerAngles(m_data.light.rotation()));
 //    if (ImGui::DragFloat3("Light rotation", &eulerRotation[0])){

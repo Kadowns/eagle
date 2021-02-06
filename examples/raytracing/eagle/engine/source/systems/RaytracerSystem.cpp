@@ -14,45 +14,17 @@
 EG_ENGINE_BEGIN
 
 RaytracerSystem::RaytracerSystem() {
-    context_init_callback = [&](){
-        handle_context_init();
-    };
-
-    context_deinit_callback = [&](){
-        handle_context_deinit();
-    };
-
-    frame_begin_callback = [&](){
-        handle_frame_begin();
-    };
-
-    context_recreated_callback = [&](){
-        init_render_target();
-    };
-
-    command_buffer_begin_callback = [&](const Reference<CommandBuffer>& commandBuffer){
-        handle_command_buffer_begin(commandBuffer);
-    };
-
-    command_buffer_main_render_pass_callback = [&](const Reference<CommandBuffer>& commandBuffer){
-        handle_command_buffer_main_render_pass(commandBuffer);
-    };
-
-    RenderMaster::handle_context_init += &context_init_callback;
-    RenderMaster::handle_context_deinit += &context_deinit_callback;
-    RenderMaster::handle_frame_begin += &frame_begin_callback;
-    RenderMaster::handle_context_recreated += &context_recreated_callback;
-    RenderMaster::handle_command_buffer_begin += &command_buffer_begin_callback;
-    RenderMaster::handle_command_buffer_main_render_pass += &command_buffer_main_render_pass_callback;
+    m_listener.attach(&Application::instance().event_bus());
+    m_listener.subscribe<OnRenderingContextRecreated>(this);
+    m_listener.subscribe<OnRenderContextInit>(this);
+    m_listener.subscribe<OnRenderContextDeinit>(this);
+    m_listener.subscribe<OnRenderFrameBegin>(this);
+    m_listener.subscribe<OnRenderCommandBufferBegin>(this);
+    m_listener.subscribe<OnRenderCommandBufferMainRenderPass>(this);
 }
 
 RaytracerSystem::~RaytracerSystem() {
-    RenderMaster::handle_context_init -= &context_init_callback;
-    RenderMaster::handle_context_deinit -= &context_deinit_callback;
-    RenderMaster::handle_frame_begin -= &frame_begin_callback;
-    RenderMaster::handle_context_recreated -= &context_recreated_callback;
-    RenderMaster::handle_command_buffer_begin -= &command_buffer_begin_callback;
-    RenderMaster::handle_command_buffer_main_render_pass -= &command_buffer_main_render_pass_callback;
+
 }
 
 void RaytracerSystem::configure(entityx::EntityManager &entities, entityx::EventManager &events) {
@@ -121,8 +93,8 @@ void RaytracerSystem::init_render_target() {
     textureCreateInfo.imageCreateInfo.format = Format::R8G8B8A8_UNORM;
     textureCreateInfo.imageCreateInfo.memoryProperties = {MemoryProperty::DEVICE_LOCAL};
     textureCreateInfo.imageCreateInfo.tiling = ImageTiling::OPTIMAL;
-    textureCreateInfo.imageCreateInfo.width = window.get_width();
-    textureCreateInfo.imageCreateInfo.height = window.get_height();
+    textureCreateInfo.imageCreateInfo.width = window.width();
+    textureCreateInfo.imageCreateInfo.height = window.height();
     textureCreateInfo.imageCreateInfo.mipLevels = 1;
     textureCreateInfo.imageCreateInfo.arrayLayers = 1;
 
@@ -159,65 +131,7 @@ void RaytracerSystem::init_render_target() {
         data.compute.skybox.lock()
     });
 
-    EventMaster::instance().emit(OnRaytracerTargetCreated(data.compute.color.lock()->image()));
     EG_TRACE("END");
-}
-
-void RaytracerSystem::handle_context_init() {
-    EG_TRACE("BEGIN");
-    RaytracerData& data = SingletonComponent::get<RaytracerData>();
-    data.compute.shader = RenderMaster::context().create_compute_shader("data/shaders/compute.comp");
-    data.compute.skybox = RenderMaster::context().create_texture(TextureLoader::load_pixels("data/textures/stars.hdr"));
-    data.compute.spheresBuffer = RenderMaster::context().create_storage_buffer(sizeof(RaytracerData::SphereData) * data.spheresData.size(), data.spheresData.data(), UpdateType::HOST);
-    data.compute.boxesBuffer = RenderMaster::context().create_storage_buffer(sizeof(RaytracerData::BoxData) * data.boxesData.size(), data.boxesData.data(), UpdateType::HOST);
-
-    ShaderCreateInfo pipelineInfo = {RenderMaster::context().main_render_pass(), {
-            {ShaderStage::VERTEX, "data/shaders/quad.vert"},
-            {ShaderStage::FRAGMENT, "data/shaders/quad.frag"},
-    }};
-    data.quad.shader = RenderMaster::context().create_shader(pipelineInfo);
-
-    init_render_target();
-    EG_TRACE("END");
-}
-
-void RaytracerSystem::handle_context_deinit() {
-
-}
-
-void RaytracerSystem::handle_frame_begin() {
-    RaytracerData& data = SingletonComponent::get<RaytracerData>();
-    auto image = data.compute.color.lock()->image();
-    data.compute.shader.lock()->dispatch(image->width() / 16, image->height() / 16, 1);
-}
-
-void RaytracerSystem::handle_command_buffer_begin(const Reference<CommandBuffer> &commandBuffer) {
-    RaytracerData& data = SingletonComponent::get<RaytracerData>();
-    commandBuffer->pipeline_barrier(data.compute.color.lock()->image(),
-        {PipelineStage::COMPUTE_SHADER_BIT},
-        {PipelineStage::FRAGMENT_SHADER_BIT}
-    );
-}
-
-void RaytracerSystem::handle_command_buffer_main_render_pass(const Reference<CommandBuffer> &commandBuffer) {
-    RaytracerData& data = SingletonComponent::get<RaytracerData>();
-    commandBuffer->bind_shader(data.quad.shader.lock());
-    commandBuffer->bind_descriptor_sets(data.quad.descriptorSet.lock(), 0);
-    commandBuffer->draw(3);
-}
-
-void RaytracerSystem::receive(const OnCameraUpdate &ev) {
-    RaytracerData& data = SingletonComponent::get<RaytracerData>();
-    data.ubo.sampleCount = 0;
-    data.ubo.view = ev.camera.view_matrix();
-    data.ubo.inverseProjection = glm::inverse(ev.camera.projection_matrix());
-    data.ubo.position = ev.camera.position();
-}
-
-void RaytracerSystem::receive(const OnLightUpdate &ev) {
-    RaytracerData& data = SingletonComponent::get<RaytracerData>();
-    data.ubo.sampleCount = 0;
-    data.ubo.light = glm::vec4(ev.light.direction, ev.light.intensity);
 }
 
 void RaytracerSystem::update_sphere_buffer(entityx::EntityManager &entities) {
@@ -270,6 +184,19 @@ void RaytracerSystem::update_box_buffer(entityx::EntityManager &entities) {
     }
 }
 
+void RaytracerSystem::receive(const OnCameraUpdate &ev) {
+    RaytracerData& data = SingletonComponent::get<RaytracerData>();
+    data.ubo.sampleCount = 0;
+    data.ubo.view = ev.camera.view_matrix();
+    data.ubo.inverseProjection = glm::inverse(ev.camera.projection_matrix());
+    data.ubo.position = ev.camera.position();
+}
+
+void RaytracerSystem::receive(const OnLightUpdate &ev) {
+    RaytracerData& data = SingletonComponent::get<RaytracerData>();
+    data.ubo.sampleCount = 0;
+    data.ubo.light = glm::vec4(ev.light.direction, ev.light.intensity);
+}
 
 void RaytracerSystem::receive(const entityx::ComponentAddedEvent<Sphere> &ev) {
     m_updateSpheres = true;
@@ -287,5 +214,58 @@ void RaytracerSystem::receive(const entityx::ComponentRemovedEvent<Box> &ev) {
     m_updateBoxes = true;
 }
 
+bool RaytracerSystem::receive(const OnRenderingContextRecreated &ev) {
+    init_render_target();
+    return false;
+}
+
+bool RaytracerSystem::receive(const OnRenderContextInit &ev) {
+    EG_TRACE("BEGIN");
+    RaytracerData& data = SingletonComponent::get<RaytracerData>();
+    data.compute.shader = RenderMaster::context().create_compute_shader("data/shaders/compute.comp");
+    data.compute.skybox = RenderMaster::context().create_texture(TextureLoader::load_pixels("data/textures/stars.hdr"));
+    data.compute.spheresBuffer = RenderMaster::context().create_storage_buffer(sizeof(RaytracerData::SphereData) * data.spheresData.size(), data.spheresData.data(), UpdateType::HOST);
+    data.compute.boxesBuffer = RenderMaster::context().create_storage_buffer(sizeof(RaytracerData::BoxData) * data.boxesData.size(), data.boxesData.data(), UpdateType::HOST);
+
+    ShaderCreateInfo pipelineInfo = {RenderMaster::context().main_render_pass(), {
+            {ShaderStage::VERTEX, "data/shaders/quad.vert"},
+            {ShaderStage::FRAGMENT, "data/shaders/quad.frag"},
+    }};
+    data.quad.shader = RenderMaster::context().create_shader(pipelineInfo);
+
+    init_render_target();
+    EG_TRACE("END");
+    return false;
+}
+
+bool RaytracerSystem::receive(const OnRenderContextDeinit &ev) {
+    m_listener.detach();
+    return false;
+}
+
+bool RaytracerSystem::receive(const OnRenderFrameBegin &ev) {
+    RaytracerData& data = SingletonComponent::get<RaytracerData>();
+    auto image = data.compute.color.lock()->image();
+    data.compute.shader.lock()->dispatch(image->width() / 16, image->height() / 16, 1);
+    return false;
+}
+
+bool RaytracerSystem::receive(const OnRenderCommandBufferBegin &ev) {
+    RaytracerData& data = SingletonComponent::get<RaytracerData>();
+    ev.commandBuffer->pipeline_barrier(data.compute.color.lock()->image(),
+        {PipelineStage::COMPUTE_SHADER_BIT},
+        {PipelineStage::FRAGMENT_SHADER_BIT}
+    );
+    return false;
+}
+
+bool RaytracerSystem::receive(const OnRenderCommandBufferMainRenderPass &ev) {
+    auto commandBuffer = ev.commandBuffer;
+    RaytracerData& data = SingletonComponent::get<RaytracerData>();
+    commandBuffer->bind_shader(data.quad.shader.lock());
+    commandBuffer->bind_descriptor_sets(data.quad.descriptorSet.lock(), 0);
+    commandBuffer->draw(3);
+    return false;
+}
 
 EG_ENGINE_END

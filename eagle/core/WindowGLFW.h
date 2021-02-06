@@ -19,11 +19,10 @@ public:
 
     WindowGLFW(uint32_t width, uint32_t height);
 
-    virtual void init() override;
+    virtual void init(EventBus* eventBus) override;
     virtual void deinit() override;
 
     virtual void pool_events() override;
-    virtual void set_event_callback(PFN_EventCallback callback) override;
 
     virtual void* get_native_window() override;
 

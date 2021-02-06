@@ -10,9 +10,7 @@
 #include "CoreGlobalDefinitions.h"
 #include "LayerStack.h"
 #include "Log.h"
-#include "events/Event.h"
-#include "events/WindowEvents.h"
-#include "Input.h"
+#include "Time.h"
 
 
 EG_BEGIN
@@ -20,45 +18,32 @@ EG_BEGIN
 class Window;
 class RenderingContext;
 
-struct ApplicationCreateInfo {
-    std::string appName;
-    Window* windowType;
-    std::vector<Reference<Layer>> layers;
-    Log::LOG_LEVEL clientLogLevel, coreLogLevel;
-};
-
 class Application {
 
 public:
 
     static Application& instance();
 
-    explicit Application(const ApplicationCreateInfo& config);
+    explicit Application(const std::string &appName, Reference<Window> window);
      ~Application() = default;
 
     void run();
-    void handle_event(Reference<Event> e);
-    void dispatch_events();
     void quit();
-    void layer_pop(Reference<Layer> layer);
 
     inline LayerStack& layer_stack() { return m_layerStack; }
     inline Window& window() { return *m_window; }
+    inline EventBus& event_bus() { return m_eventBus; }
+    inline Time& timer() { return m_timer; }
 
-private:
-
-    using EventQueue = std::queue<Reference<Event>>;
-
+protected:
     static Application* m_instance;
 
     Reference<Window> m_window;
+    LayerStack m_layerStack;
+    EventBus m_eventBus;
+    Time m_timer;
 
     bool m_quit = false;
-
-    LayerStack m_layerStack;
-    EventQueue m_eventQueue;
-
-
 };
 
 EG_END

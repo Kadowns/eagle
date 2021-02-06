@@ -8,8 +8,9 @@ using namespace Eagle::Engine;
 
 EG_EDITOR_BEGIN
 
-DebugSettingsWindow::DebugSettingsWindow() : EditorWindow("Physics Settings") {
-
+DebugSettingsWindow::DebugSettingsWindow() :
+    EditorWindow("Physics Settings"){
+    m_timer = &Application::instance().timer();
 }
 
 DebugSettingsWindow::~DebugSettingsWindow() {
@@ -23,18 +24,19 @@ void DebugSettingsWindow::handle_window_update() {
     auto& spawner = SingletonComponent::get<Spawner>();
     auto& scene = SceneManager::current_scene();
 
-    ImGui::LabelText("FPS", "%f", 1 / Time::unscaled_delta_time());
+    auto& timer = Application::instance().timer();
+    ImGui::Text("FPS: %f", 1.0f / timer.unscaled_delta_time());
 
     ImGui::SliderFloat3("Gravity", &settings.gravity[0], -50, 50);
-    float timeScale = Time::time_scale();
+    float timeScale = m_timer->time_scale();
     if (ImGui::SliderFloat("Time Step", &timeScale, 0.0f, 1.0f)){
-        Time::set_time_scale(timeScale);
+        m_timer->set_time_scale(timeScale);
     }
 
     ImGui::InputFloat3("Cube rotation:", &sceneData.cubeRotation[0]);
 
     if (ImGui::Button("Reset scene")){
-        EventMaster::instance().emit(OnSceneRecreate{});
+        Application::instance().event_bus().emit(OnSceneRecreate{});
     }
 
     ImGui::Checkbox("Static spawn", &spawner.isStatic);

@@ -6,6 +6,7 @@
 #define EAGLE_RENDERINGCONTEXT_H
 
 #include "eagle/core/CoreGlobalDefinitions.h"
+#include "eagle/core/events/EventBus.h"
 #include "RenderingCore.h"
 #include "Shader.h"
 #include "VertexBuffer.h"
@@ -31,24 +32,22 @@ public:
     RenderingContext() = default;
     virtual ~RenderingContext() = default;
 
-    virtual void init(Window *window) = 0;
+    virtual void init(Window *window, EventBus* eventBus) = 0;
     virtual void deinit() = 0;
-    virtual void handle_window_resized(int width, int height) = 0;
-    virtual void set_recreation_callback(std::function<void()> recreation_callback) = 0;
 
     virtual bool prepare_frame() = 0;
-    virtual Reference<CommandBuffer> create_command_buffer() = 0;
+    virtual void present_frame() = 0;
+    virtual void submit_command_buffer(const Reference<CommandBuffer>& commandBuffer) = 0;
 
+    virtual Reference<CommandBuffer> main_command_buffer() = 0;
     virtual Reference<RenderPass> main_render_pass() = 0;
     virtual Reference<Framebuffer> main_frambuffer() = 0;
-
-    virtual void present_frame() = 0;
 
     virtual Handle <Shader>
     create_shader(const ShaderCreateInfo &shaderCreateInfo) = 0;
 
     virtual Handle<VertexBuffer>
-    create_vertex_buffer(void *vertices, uint32_t count, const VertexLayout &vertexLayout,
+    create_vertex_buffer(void *vertices, uint32_t size, const VertexLayout &vertexLayout,
                          UpdateType usageFlags) = 0;
 
     virtual Handle<IndexBuffer>
@@ -85,6 +84,10 @@ public:
     virtual void
     destroy_texture_2d(const Reference<Texture>& texture) = 0;
 
+};
+
+struct OnRenderingContextRecreated {
+    RenderingContext* context;
 };
 
 EG_END
