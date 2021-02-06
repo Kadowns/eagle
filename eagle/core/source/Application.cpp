@@ -25,20 +25,21 @@ void Application::run() {
 
     EG_CORE_TRACE_F("Initializing {0}", EAGLE_GET_INFO(EAGLE_APP_NAME));
 
-    Time::init();
-
     m_window->init(&m_eventBus);
     m_layerStack.init();
 
+    m_timer.start();
+
     while(!m_quit){
 
-        Time::update();
+        m_timer.update();
         m_window->pool_events();
 
         for (auto& layer : m_layerStack){
             layer->handle_update();
         }
     }
+    m_timer.stop();
 
     m_layerStack.deinit();
 

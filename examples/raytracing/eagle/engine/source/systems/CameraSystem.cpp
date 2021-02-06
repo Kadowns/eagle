@@ -6,14 +6,7 @@
 #include <eagle/engine/components/Transform.h>
 #include <eagle/engine/components/Camera.h>
 #include <eagle/engine/components/CameraController.h>
-#include <eagle/engine/components/Sphere.h>
-#include <eagle/engine/components/SceneData.h>
-#include <eagle/engine/components/SingletonComponent.h>
-#include <eagle/engine/components/physics/Rigidbody.h>
-#include <eagle/engine/components/Box.h>
-#include <eagle/engine/components/physics/shapes/SphereCollider.h>
-#include <eagle/engine/components/physics/Collider.h>
-#include <eagle/engine/components/physics/shapes/BoxCollider.h>
+
 
 EG_ENGINE_BEGIN
 
@@ -26,6 +19,7 @@ void CameraSystem::configure(entityx::EntityManager &entities, entityx::EventMan
         camera.set_projection(70.0f, window.width() / (float) window.height());
         controller.originalRotation = transform.rotation();
     });
+    m_timer = &Application::instance().timer();
 }
 
 void CameraSystem::update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) {
@@ -57,7 +51,7 @@ void CameraSystem::update(entityx::EntityManager &entities, entityx::EventManage
             direction += transform.right();
         }
 
-        transform.translate(controller.speed * Time::unscaled_delta_time() * direction);
+        transform.translate(controller.speed * m_timer->unscaled_delta_time() * direction);
 
         if (Input::instance().mouse_button_pressed(EG_MOUSE_BUTTON_LEFT)) {
             controller.dragging = true;
@@ -80,7 +74,7 @@ void CameraSystem::update(entityx::EntityManager &entities, entityx::EventManage
         controller.rotArrayX.emplace_back(controller.rotationX);
         controller.rotArrayY.emplace_back(controller.rotationY);
 
-        controller.frameCounter = controller.frameCounterTime / Time::unscaled_delta_time();
+        controller.frameCounter = controller.frameCounterTime / m_timer->unscaled_delta_time();
 
         if (controller.rotArrayX.size() >= controller.frameCounter) {
             controller.rotArrayX.erase(controller.rotArrayX.begin());

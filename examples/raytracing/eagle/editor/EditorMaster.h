@@ -22,7 +22,7 @@ public:
 
     void init();
     void deinit();
-    void update();
+    void update(float dt);
 
     static void add_window(const Reference<EditorWindow>& window);
     static void remove_window(const Reference<EditorWindow>& window);

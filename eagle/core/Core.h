@@ -9,6 +9,7 @@
 #include <eagle/core/Log.h>
 #include <eagle/core/Layer.h>
 #include <eagle/core/InputLayer.h>
+#include <eagle/core/Input.h>
 #include <eagle/core/Random.h>
 #include <eagle/core/Time.h>
 #include <eagle/core/events/ImmediateEvent.h>

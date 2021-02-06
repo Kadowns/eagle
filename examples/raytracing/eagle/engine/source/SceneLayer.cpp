@@ -32,6 +32,8 @@ void SceneLayer::handle_attach() {
         return false;
     });
 
+    m_timer = &Application::instance().timer();
+
     Scene& scene = SceneManager::current_scene();
 
     auto& sceneData = SingletonComponent::get<SceneData>();
@@ -65,7 +67,7 @@ void SceneLayer::handle_detach() {
 }
 
 void SceneLayer::handle_update() {
-    SceneManager::current_scene().systems.update_all(Time::delta_time());
+    SceneManager::current_scene().systems.update_all(m_timer->delta_time());
 }
 
 void SceneLayer::generate_scene() {

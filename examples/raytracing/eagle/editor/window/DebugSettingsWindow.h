@@ -15,6 +15,8 @@ public:
     virtual ~DebugSettingsWindow();
 
     virtual void handle_window_update() override;
+private:
+    Time* m_timer;
 
 };
 

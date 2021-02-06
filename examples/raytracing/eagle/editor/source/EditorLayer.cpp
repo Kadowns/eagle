@@ -57,7 +57,7 @@ void EditorLayer::handle_detach() {
 }
 
 void EditorLayer::handle_update() {
-    m_editorMaster.update();
+    m_editorMaster.update(Application::instance().timer().unscaled_delta_time());
 }
 
 EG_EDITOR_END

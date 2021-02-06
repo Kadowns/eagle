@@ -33,6 +33,7 @@ public:
     inline LayerStack& layer_stack() { return m_layerStack; }
     inline Window& window() { return *m_window; }
     inline EventBus& event_bus() { return m_eventBus; }
+    inline Time& timer() { return m_timer; }
 
 protected:
     static Application* m_instance;
@@ -40,6 +41,7 @@ protected:
     Reference<Window> m_window;
     LayerStack m_layerStack;
     EventBus m_eventBus;
+    Time m_timer;
 
     bool m_quit = false;
 };

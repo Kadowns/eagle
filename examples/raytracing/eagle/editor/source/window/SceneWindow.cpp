@@ -21,7 +21,7 @@ void SceneWindow::handle_window_update() {
         configured = true;
     }
 
-    m_scene.systems.update_all(Time::delta_time());
+//    m_scene.systems.update_all(Time::delta_time());
     if (!m_descriptorSet.lock()){
         ImGui::Text("No target image set.");
         return;
