@@ -13,13 +13,13 @@ EG_ENGINE_BEGIN
 
 void CameraSystem::configure(entityx::EntityManager &entities, entityx::EventManager &events) {
     using namespace entityx;
-    auto& window = Application::instance().window();
+    auto& window = DesktopApplication::instance().window();
     entities.each<Camera, CameraController, Transform>([&](Entity e, Camera& camera, CameraController& controller, Transform& transform){
         camera.set_view(transform.position(), transform.position() + transform.front(), transform.up());
         camera.set_projection(70.0f, window.width() / (float) window.height());
         controller.originalRotation = transform.rotation();
     });
-    m_timer = &Application::instance().timer();
+    m_timer = &DesktopApplication::instance().timer();
 }
 
 void CameraSystem::update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) {
@@ -55,11 +55,11 @@ void CameraSystem::update(entityx::EntityManager &entities, entityx::EventManage
 
         if (Input::instance().mouse_button_pressed(EG_MOUSE_BUTTON_LEFT)) {
             controller.dragging = true;
-            Application::instance().window().set_cursor_visible(false);
+            DesktopApplication::instance().window().set_cursor_visible(false);
         }
         else if(Input::instance().mouse_button_released(EG_MOUSE_BUTTON_LEFT)) {
             controller.dragging = false;
-            Application::instance().window().set_cursor_visible(true);
+            DesktopApplication::instance().window().set_cursor_visible(true);
         }
 
         controller.rotAverageX = 0.0f;

@@ -1,21 +1,11 @@
 project(eagle_triangle VERSION 1.0.0)
 
-set(TRIANGLE_HEADER
-        TriangleApp.h
-        TriangleLayer.h
-        )
 
 set(TRIANGLE_SOURCE
         TriangleApp.cpp
-        TriangleLayer.cpp
         )
 
-set(TRIANGLE_ALL
-        ${TRIANGLE_HEADER}
-        ${TRIANGLE_SOURCE}
-        )
-
-add_executable(eagle_triangle ${TRIANGLE_ALL} main.cpp)
+add_executable(eagle_triangle ${TRIANGLE_SOURCE} main.cpp)
 
 define_file_basename_for_sources(eagle_triangle)
 

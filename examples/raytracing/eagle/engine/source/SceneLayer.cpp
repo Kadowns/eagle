@@ -26,13 +26,13 @@ EG_ENGINE_BEGIN
 
 void SceneLayer::handle_attach() {
 
-    m_listener.attach(&Application::instance().event_bus());
+    m_listener.attach(&DesktopApplication::instance().event_bus());
     m_listener.subscribe<OnSceneRecreate>([this](const OnSceneRecreate& ev){
         generate_playground();
         return false;
     });
 
-    m_timer = &Application::instance().timer();
+    m_timer = &DesktopApplication::instance().timer();
 
     Scene& scene = SceneManager::current_scene();
 

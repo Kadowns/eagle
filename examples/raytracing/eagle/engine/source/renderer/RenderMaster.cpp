@@ -9,8 +9,8 @@ EG_ENGINE_BEGIN
 Reference<RenderingContext> RenderMaster::s_context;
 
 void RenderMaster::init() {
-    Window& window = Application::instance().window();
-    m_eventBus = &Application::instance().event_bus();
+    Window& window = DesktopApplication::instance().window();
+    m_eventBus = &DesktopApplication::instance().event_bus();
 
     s_context = std::make_shared<VulkanContext>();
     s_context->init(&window, m_eventBus);

@@ -29,7 +29,7 @@ void PhysicsSystem::update(entityx::EntityManager &entities, entityx::EventManag
     settings.accumulator += dt;
     settings.accumulator = std::min(settings.accumulator, 0.2f);
 
-    float fixedStep = settings.fixedStep * Application::instance().timer().time_scale();
+    float fixedStep = settings.fixedStep * DesktopApplication::instance().timer().time_scale();
     if (fixedStep > 0) {
         while (settings.accumulator > fixedStep) {
             update_physics(entities, events, fixedStep);

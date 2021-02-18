@@ -6,7 +6,7 @@
 #define EAGLE_EAGLE_H
 
 
-#include <eagle/core/Core.h>
+#include <eagle/Core.h>
 
 
 #endif //EAGLE_EAGLE_H

@@ -7,11 +7,22 @@
 
 #include <eagle/Eagle.h>
 
-class TriangleApp : public Eagle::Application {
+class TriangleApp : public Eagle::ApplicationDelegate {
 public:
     TriangleApp();
     virtual ~TriangleApp() = default;
 
+    void init() override;
+
+    void step() override;
+
+    void destroy() override;
+private:
+    Eagle::RenderingContext* m_renderingContext;
+    Eagle::EventListener<TriangleApp> m_listener;
+    Eagle::Handle<Eagle::Shader> m_shader;
+    Eagle::Handle<Eagle::VertexBuffer> m_vertexBuffer;
+    Eagle::Handle<Eagle::IndexBuffer> m_indexBuffer;
 };
 
 

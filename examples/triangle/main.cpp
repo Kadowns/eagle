@@ -6,13 +6,12 @@
 
 int main(){
 
-
     Eagle::Log::init(Eagle::Log::TRACE, Eagle::Log::TRACE);
 
-    TriangleApp app;
+    Eagle::DesktopApplication application(1280, 720, new TriangleApp());
 
     try {
-        app.run();
+        application.run();
     } catch(const std::exception& e) {
         EG_FATAL_F("An exception occurred: {0}", e.what());
         return 1;

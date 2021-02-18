@@ -7,7 +7,7 @@
 
 #include <eagle/Eagle.h>
 
-class RaytracingApp : public Eagle::Application {
+class RaytracingApp : public Eagle::DesktopApplication {
 public:
     RaytracingApp();
 };

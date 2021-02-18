@@ -7,10 +7,10 @@
 EG_ENGINE_BEGIN
 
 void RenderLayer::handle_attach() {
-    m_listener.attach(&Application::instance().event_bus());
+    m_listener.attach(&DesktopApplication::instance().event_bus());
 
     m_listener.subscribe<OnWindowClose>([](const OnWindowClose& ev){
-        Application::instance().quit();
+        DesktopApplication::instance().quit();
         return false;
     });
 

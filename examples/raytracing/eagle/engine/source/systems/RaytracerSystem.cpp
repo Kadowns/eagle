@@ -14,7 +14,7 @@
 EG_ENGINE_BEGIN
 
 RaytracerSystem::RaytracerSystem() {
-    m_listener.attach(&Application::instance().event_bus());
+    m_listener.attach(&DesktopApplication::instance().event_bus());
     m_listener.subscribe<OnRenderingContextRecreated>(this);
     m_listener.subscribe<OnRenderContextInit>(this);
     m_listener.subscribe<OnRenderContextDeinit>(this);
@@ -83,7 +83,7 @@ void RaytracerSystem::init_render_target() {
         RenderMaster::context().destroy_texture_2d(data.compute.color.lock());
     }
 
-    auto& window = Application::instance().window();
+    auto& window = DesktopApplication::instance().window();
 
     TextureCreateInfo textureCreateInfo = {};
     textureCreateInfo.filter = Filter::NEAREST;

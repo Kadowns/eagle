@@ -8,7 +8,7 @@
 #include "RaytracingApp.h"
 
 RaytracingApp::RaytracingApp() :
-    Eagle::Application("Raytracing", std::make_shared<Eagle::WindowGLFW>(1280, 720)) {
+        Eagle::DesktopApplication(0, nullptr, nullptr) {
     m_layerStack.emplace_back(std::make_shared<Eagle::Engine::SceneLayer>());
     m_layerStack.emplace_back(std::make_shared<Eagle::Editor::EditorLayer>());
     m_layerStack.emplace_back(std::make_shared<Eagle::Engine::RenderLayer>());

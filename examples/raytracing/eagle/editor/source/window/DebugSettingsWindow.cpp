@@ -10,7 +10,7 @@ EG_EDITOR_BEGIN
 
 DebugSettingsWindow::DebugSettingsWindow() :
     EditorWindow("Physics Settings"){
-    m_timer = &Application::instance().timer();
+    m_timer = &DesktopApplication::instance().timer();
 }
 
 DebugSettingsWindow::~DebugSettingsWindow() {
@@ -24,7 +24,7 @@ void DebugSettingsWindow::handle_window_update() {
     auto& spawner = SingletonComponent::get<Spawner>();
     auto& scene = SceneManager::current_scene();
 
-    auto& timer = Application::instance().timer();
+    auto& timer = DesktopApplication::instance().timer();
     ImGui::Text("FPS: %f", 1.0f / timer.unscaled_delta_time());
 
     ImGui::SliderFloat3("Gravity", &settings.gravity[0], -50, 50);
@@ -36,7 +36,7 @@ void DebugSettingsWindow::handle_window_update() {
     ImGui::InputFloat3("Cube rotation:", &sceneData.cubeRotation[0]);
 
     if (ImGui::Button("Reset scene")){
-        Application::instance().event_bus().emit(OnSceneRecreate{});
+        DesktopApplication::instance().event_bus().emit(OnSceneRecreate{});
     }
 
     ImGui::Checkbox("Static spawn", &spawner.isStatic);

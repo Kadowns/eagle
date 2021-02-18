@@ -22,7 +22,7 @@ void EditorLayer::handle_attach() {
 
     EditorMaster::add_window(std::make_shared<DebugSettingsWindow>());
 
-    m_listener.attach(&Application::instance().event_bus());
+    m_listener.attach(&DesktopApplication::instance().event_bus());
 
     m_listener.subscribe<OnMouseMove>([this](const OnMouseMove& ev){
         return m_editorMaster.handle_mouse_moved(ev);
@@ -57,7 +57,7 @@ void EditorLayer::handle_detach() {
 }
 
 void EditorLayer::handle_update() {
-    m_editorMaster.update(Application::instance().timer().unscaled_delta_time());
+    m_editorMaster.update(DesktopApplication::instance().timer().unscaled_delta_time());
 }
 
 EG_EDITOR_END

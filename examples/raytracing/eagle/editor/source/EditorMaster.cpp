@@ -17,7 +17,7 @@ EditorMaster::~EditorMaster() {
 }
 
 void EditorMaster::init() {
-    m_listener.attach(&Application::instance().event_bus());
+    m_listener.attach(&DesktopApplication::instance().event_bus());
     m_listener.subscribe<Engine::OnRenderContextInit>(this);
     m_listener.subscribe<Engine::OnRenderCommandBufferMainRenderPass>(this);
     init_imgui();
@@ -82,7 +82,7 @@ void EditorMaster::init_imgui() {
     io.KeyMap[ImGuiKey_Y] = EG_KEY_Y;
     io.KeyMap[ImGuiKey_Z] = EG_KEY_Z;
 
-    auto& window = Application::instance().window();
+    auto& window = DesktopApplication::instance().window();
     float width = static_cast<float>(window.width());
     float height = static_cast<float>(window.height());
 
@@ -118,7 +118,7 @@ void EditorMaster::init_render_state(const Reference <Shader> &shader, CommandBu
 
 bool EditorMaster::handle_window_resized(const OnWindowResized &e) {
 
-    auto& window = Application::instance().window();
+    auto& window = DesktopApplication::instance().window();
 
     ImGuiIO &io = ImGui::GetIO();
     io.DisplaySize = ImVec2(e.width, e.height);
@@ -222,7 +222,7 @@ void EditorMaster::update_mouse_cursor() {
             cursorType = Cursor::ARROW;
             break;
     }
-    Application::instance().window().set_cursor_shape(cursorType);
+    DesktopApplication::instance().window().set_cursor_shape(cursorType);
 }
 
 bool EditorMaster::receive(const Engine::OnRenderContextInit &ev) {
