@@ -24,8 +24,8 @@ void TriangleApp::init() {
     Eagle::VertexLayout vertexLayout(5, {Eagle::Format::R32G32_SFLOAT, Eagle::Format::R32G32B32_SFLOAT});
 
     Eagle::ShaderCreateInfo pipelineInfo = {m_renderingContext->main_render_pass(), {
-            {Eagle::ShaderStage::VERTEX, "color.vert"},
-            {Eagle::ShaderStage::FRAGMENT, "color.frag"}
+            {Eagle::ShaderStage::VERTEX, "color.vert.spv"},
+            {Eagle::ShaderStage::FRAGMENT, "color.frag.spv"}
     }};
     pipelineInfo.vertexLayout = vertexLayout;
     m_shader = m_renderingContext->create_shader(pipelineInfo);
@@ -38,7 +38,7 @@ void TriangleApp::init() {
     std::vector<Vertex> vertices = {
             Vertex{{-0.5f, 0.5f}, {1.0f, 1.0f, 0.0f}},
             Vertex{{0.5f,  -0.5f}, {0.0f, 1.0f, 1.0f}},
-            Vertex{{-0.5f, -0.5f}, {1.0f, 0.0f, 1.0f}},
+            Vertex{{-0.7f, -0.5f}, {1.0f, 0.0f, 1.0f}},
             Vertex{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}}
     };
 
