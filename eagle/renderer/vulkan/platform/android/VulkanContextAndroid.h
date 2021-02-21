@@ -17,8 +17,10 @@ public:
     virtual ~VulkanContextAndroid();
 
     void init();
-    void on_surface_created();
-    void on_surface_destroyed();
+    void recreate_surface();
+    void destroy_surface();
+
+    inline bool is_initialized() const { return m_initialized; }
 
 protected:
     void create_surface() override;
@@ -26,7 +28,7 @@ protected:
     std::vector<const char *> get_platform_extensions() override;
 
 protected:
-
+    bool m_initialized = false;
 };
 
 EG_END

@@ -116,6 +116,10 @@ protected:
 
     virtual void cleanup_swapchain();
 
+    virtual void recreate_objects();
+
+    virtual void clear_objects();
+
     bool validation_layers_supported();
 
 

@@ -9,20 +9,30 @@
 Eagle::AndroidWindow::AndroidWindow(android_app *androidApp) :
     m_androidApp(androidApp) {
     m_renderingContext = std::make_shared<VulkanContextAndroid>(this);
-    m_renderingContext->init();
 }
 
 Eagle::AndroidWindow::~AndroidWindow() {
 
 }
 
-void Eagle::AndroidWindow::create_surface() {
-    m_renderingContext->on_surface_created();
+void Eagle::AndroidWindow::init() {
+    if (m_surfaceReady){
+        return;
+    }
+    if (m_renderingContext->is_initialized()){
+        m_renderingContext->recreate_surface();
+    }
+    else {
+        m_renderingContext->init();
+    }
     m_surfaceReady = true;
 }
 
-void Eagle::AndroidWindow::destroy_surface() {
-    m_renderingContext->on_surface_destroyed();
+void Eagle::AndroidWindow::destroy() {
+    if (!m_surfaceReady){
+        return;
+    }
+    m_renderingContext->destroy_surface();
     m_surfaceReady = false;
 }
 

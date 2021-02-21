@@ -88,5 +88,10 @@ DescriptorType VulkanUniformBuffer::type() const {
     return DescriptorType::UNIFORM_BUFFER;
 }
 
+void VulkanUniformBuffer::recreate(uint32_t bufferCount) {
+    m_info.bufferCount = bufferCount;
+    create_uniform_buffer();
+}
+
 
 EG_END

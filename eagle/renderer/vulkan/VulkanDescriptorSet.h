@@ -26,7 +26,8 @@ public:
     ~VulkanDescriptorSet();
 
     void cleanup();
-    void update_descriptor_sets();
+    void recreate(uint32_t bufferCount);
+
     void create_descriptor_sets();
 
     virtual void update(const std::vector<Reference<DescriptorItem>> &descriptorItems) override;

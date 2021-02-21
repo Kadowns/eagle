@@ -17,7 +17,7 @@ EG_BEGIN
 
 bool VulkanContext::enableValidationLayers = false;
 
-VulkanContext::VulkanContext() { // NOLINT(cppcoreguidelines-pro-type-member-init)
+VulkanContext::VulkanContext() {
 
 }
 
@@ -773,41 +773,38 @@ void VulkanContext::recreate_swapchain() {
 
     create_swapchain();
     allocate_command_buffers();
-
     create_framebuffers();
-
-    for (auto &shader : m_shaders) {
-        shader->create_pipeline();
-    }
-
-    for (auto &uniformBuffer : m_uniformBuffers) {
-        uniformBuffer->create_uniform_buffer();
-    }
-
-    for (auto& storageBuffer : m_storageBuffers){
-        storageBuffer->create_storage_buffer();
-    }
-
-    for (auto &descriptorSet : m_descriptorSets) {
-        descriptorSet->create_descriptor_sets();
-        descriptorSet->update_descriptor_sets();
-    }
-
-    for (auto& computeShader : m_computeShaders){
-        computeShader->recreate(m_present.imageCount);
-    }
+    recreate_objects();
 
     m_eventBus->emit(OnRenderingContextRecreated{this});
 
     EG_CORE_TRACE("Swapchain recreated!");
 }
 
-void VulkanContext::cleanup_swapchain() {
-    EG_CORE_TRACE("Clearing swapchain!");
+void VulkanContext::recreate_objects() {
+    for (auto &shader : m_shaders) {
+        shader->create_pipeline();
+    }
 
+    for (auto &uniformBuffer : m_uniformBuffers) {
+        uniformBuffer->recreate(m_present.imageCount);
+    }
+
+    for (auto& storageBuffer : m_storageBuffers){
+        storageBuffer->recreate(m_present.imageCount);
+    }
+
+    for (auto &descriptorSet : m_descriptorSets) {
+        descriptorSet->recreate(m_present.imageCount);
+    }
+
+    for (auto& computeShader : m_computeShaders){
+        computeShader->recreate(m_present.imageCount);
+    }
+}
+
+void VulkanContext::clear_objects() {
     VulkanCleaner::clear();
-
-    m_commandBuffers.clear();
 
     for (auto& computeShader : m_computeShaders){
         computeShader->clear_descriptor_set();
@@ -828,7 +825,15 @@ void VulkanContext::cleanup_swapchain() {
     for (auto &shader : m_shaders) {
         shader->cleanup_pipeline();
     }
+}
 
+
+void VulkanContext::cleanup_swapchain() {
+    EG_CORE_TRACE("Clearing swapchain!");
+
+    clear_objects();
+
+    m_commandBuffers.clear();
 
     m_present.framebuffer.reset();
 
@@ -1136,7 +1141,6 @@ void VulkanContext::present_frame() {
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_windowResized) {
         m_windowResized = false;
         recreate_swapchain();
-
     } else if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to present swapchain image!");
     }
@@ -1159,14 +1163,13 @@ Reference<Framebuffer> VulkanContext::main_frambuffer() {
 std::vector<const char*> VulkanContext::get_extensions() {
 
     auto extensions = std::move(get_platform_extensions());
-    extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
     if (enableValidationLayers) {
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     }
     return extensions;
 }
 
-VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
+    VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
                                       const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
                                       const VkAllocationCallbacks *pAllocator,
                                       VkDebugUtilsMessengerEXT *pCallback) {

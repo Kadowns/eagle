@@ -11,18 +11,49 @@
 void Eagle::AndroidApplication::handle_app_cmd(android_app *pApp, int32_t cmd) {
     auto self = (AndroidApplication*)pApp->userData;
     switch (cmd) {
+        case APP_CMD_INPUT_CHANGED:
+            break;
         case APP_CMD_INIT_WINDOW:
-            self->m_window->create_surface();
+            self->m_window->init();
             break;
         case APP_CMD_TERM_WINDOW:
-            self->m_window->destroy_surface();
+            self->m_window->destroy();
+            break;
+        case APP_CMD_WINDOW_RESIZED:
+            break;
+        case APP_CMD_WINDOW_REDRAW_NEEDED:
+            break;
+        case APP_CMD_CONTENT_RECT_CHANGED:
+            break;
+        case APP_CMD_GAINED_FOCUS:
+            break;
+        case APP_CMD_LOST_FOCUS:
+            break;
+        case APP_CMD_CONFIG_CHANGED:
+            break;
+        case APP_CMD_LOW_MEMORY:
+            break;
+        case APP_CMD_START:
+            break;
+        case APP_CMD_RESUME:
+            break;
+        case APP_CMD_SAVE_STATE:
+            break;
+        case APP_CMD_PAUSE:
             break;
         case APP_CMD_STOP:
+            break;
+        case APP_CMD_DESTROY:
             self->quit();
             break;
         default:
             break;
     }
+}
+
+void Eagle::AndroidApplication::handle_input(android_app *app, AInputEvent *event) {
+    int32_t type = AInputEvent_getType(event);
+
 }
 
 
@@ -57,3 +88,5 @@ void Eagle::AndroidApplication::run() {
 Eagle::Window& Eagle::AndroidApplication::window() {
     return *m_window.get();
 }
+
+

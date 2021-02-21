@@ -30,8 +30,8 @@ public:
 
     float framebuffer_height_scale() override;
 
-    void create_surface();
-    void destroy_surface();
+    void init();
+    void destroy();
 
     void pool_events() override;
 

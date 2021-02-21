@@ -31,6 +31,7 @@ public:
     DescriptorType type() const override;
 
     void cleanup();
+    void recreate(uint32_t bufferCount);
     virtual void flush(uint32_t bufferIndex) override;
     virtual void set_data(void *data, size_t size, size_t offset) override;
     virtual void push() override;

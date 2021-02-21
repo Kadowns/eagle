@@ -8,6 +8,7 @@
 #include <eagle/Application.h>
 
 struct android_app;
+struct AInputEvent;
 
 EG_BEGIN
 
@@ -26,6 +27,7 @@ public:
 protected:
 
     static void handle_app_cmd(android_app *pApp, int32_t cmd);
+    static void handle_input(android_app* app, AInputEvent* event);
 
 protected:
     android_app* m_androidApp;

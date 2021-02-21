@@ -33,6 +33,7 @@ public:
     virtual void flush(uint32_t index) override;
 
     void cleanup();
+    void recreate(uint32_t bufferCount);
     void create_storage_buffer();
 
     inline std::vector<Reference<VulkanBuffer>>& get_buffers() { return m_buffers; }

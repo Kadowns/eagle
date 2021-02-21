@@ -10,7 +10,9 @@ VulkanDescriptorSet::VulkanDescriptorSet(const Reference<VulkanDescriptorSetLayo
                                          const VulkanDescriptorSetCreateInfo& createInfo) :
     m_descriptorSetLayout(descriptorSetLayout), m_descriptorItems(descriptorItems), m_info(createInfo){
     create_descriptor_sets();
-    update_descriptor_sets();
+    for (uint32_t i = 0; i < m_descriptorSets.size(); i++){
+        flush(i);
+    }
 }
 
 VulkanDescriptorSet::VulkanDescriptorSet(const Reference<VulkanDescriptorSetLayout> &descriptorSetLayout,
@@ -164,20 +166,21 @@ void VulkanDescriptorSet::flush(uint32_t index) {
     m_dirtyDescriptors.erase(index);
 }
 
-void VulkanDescriptorSet::update_descriptor_sets() {
-    if (m_cleared) {
-        return;
-    }
-
-    for (uint32_t i = 0; i < m_descriptorSets.size(); i++){
-        flush(i);
-    }
-}
-
-void VulkanDescriptorSet::cleanup() {
+    void VulkanDescriptorSet::cleanup() {
     if (m_cleared) return;
     VK_CALL vkDestroyDescriptorPool(m_info.device, m_descriptorPool, nullptr);
     m_cleared = true;
+}
+
+void VulkanDescriptorSet::recreate(uint32_t bufferCount) {
+    if (!m_cleared) {
+        return;
+    }
+    m_info.bufferCount = bufferCount;
+    create_descriptor_sets();
+    for (uint32_t i = 0; i < m_descriptorSets.size(); i++){
+        flush(i);
+    }
 }
 
 EG_END

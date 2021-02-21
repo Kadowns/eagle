@@ -133,4 +133,9 @@ DescriptorType VulkanStorageBuffer::type() const {
     return DescriptorType::STORAGE_BUFFER;
 }
 
+void VulkanStorageBuffer::recreate(uint32_t bufferCount) {
+    m_createInfo.bufferCount = bufferCount;
+    create_storage_buffer();
+}
+
 EG_END
