@@ -14,6 +14,7 @@ class WindowGLFW;
 class VulkanContextGLFW : public VulkanContext {
 public:
     VulkanContextGLFW(WindowGLFW* windowGlfw);
+    void init(EventBus* eventBus);
 
 protected:
     std::vector<const char*> get_platform_extensions() override;

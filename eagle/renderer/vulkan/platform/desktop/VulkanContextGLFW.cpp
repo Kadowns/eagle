@@ -25,3 +25,32 @@ std::vector<const char*> Eagle::VulkanContextGLFW::get_platform_extensions() {
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
     return std::vector<const char*>(glfwExtensions, glfwExtensions + glfwExtensionCount);
 }
+
+
+void Eagle::VulkanContextGLFW::init(EventBus* eventBus) {
+    EG_CORE_TRACE("Initializing vulkan context!");
+
+    m_eventBus = eventBus;
+
+    m_listener.attach(eventBus);
+    m_listener.subscribe<OnWindowResized>([this](const OnWindowResized& ev){
+       m_windowResized = true;
+       return false;
+    });
+
+    create_instance();
+    create_debug_callback();
+    create_surface();
+    bind_physical_device();
+    create_logical_device();
+    create_sync_objects();
+    create_command_pool();
+
+
+    create_swapchain();
+    create_render_pass();
+    create_framebuffers();
+    allocate_command_buffers();
+
+    EG_CORE_TRACE("Vulkan ready!");
+}
