@@ -5,7 +5,6 @@
 #ifndef EG_ENGINE_EAGLECORE_H
 #define EG_ENGINE_EAGLECORE_H
 
-#include <eagle/platform/desktop/DesktopApplication.h>
 #include <eagle/Log.h>
 #include <eagle/Layer.h>
 #include <eagle/InputLayer.h>
@@ -18,9 +17,7 @@
 #include <eagle/events/WindowEvents.h>
 #include <eagle/events/KeyCodes.h>
 
-#include <eagle/platform/desktop/WindowGLFW.h>
 #include <eagle/renderer/RenderingCore.h>
 #include <eagle/renderer/RenderingContext.h>
-#include <eagle/renderer/vulkan/VulkanContext.h>
 
 #endif //EG_ENGINE_EAGLECORE_H
