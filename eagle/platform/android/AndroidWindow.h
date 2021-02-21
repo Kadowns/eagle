@@ -11,13 +11,27 @@ struct android_app;
 
 EG_BEGIN
 
+class VulkanContextAndroid;
+
 class AndroidWindow : public Window {
 public:
     AndroidWindow(android_app* androidApp);
     ~AndroidWindow() override;
 
-    void on_surface_created();
-    void on_surface_destroyed();
+    uint32_t width() override;
+
+    uint32_t height() override;
+
+    uint32_t framebuffer_width() override;
+
+    uint32_t framebuffer_height() override;
+
+    float framebuffer_width_scale() override;
+
+    float framebuffer_height_scale() override;
+
+    void create_surface();
+    void destroy_surface();
 
     void pool_events() override;
 
@@ -32,7 +46,8 @@ public:
 
 protected:
     android_app* m_androidApp;
-    Reference<RenderingContext> m_renderingContext;
+    Reference<VulkanContextAndroid> m_renderingContext;
+    bool m_surfaceReady;
 
 };
 

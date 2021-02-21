@@ -11,6 +11,8 @@ struct android_app;
 
 EG_BEGIN
 
+class AndroidWindow;
+
 class AndroidApplication : public Application {
 public:
     explicit AndroidApplication(android_app *androidApp, ApplicationDelegate *delegate);
@@ -18,7 +20,7 @@ public:
     void run();
 
     void quit() override { m_quit = true; }
-    Window& window() override { return *m_window; }
+    Window& window() override;
     EventBus& event_bus() override { return m_eventBus; }
     ApplicationDelegate& delegate() override { return *m_delegate; }
 protected:
@@ -28,7 +30,7 @@ protected:
 protected:
     android_app* m_androidApp;
     Reference<ApplicationDelegate> m_delegate;
-    Reference<Window> m_window;
+    Reference<AndroidWindow> m_window;
     EventBus m_eventBus;
 
     bool m_quit = false;
