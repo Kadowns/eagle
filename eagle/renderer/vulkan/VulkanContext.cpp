@@ -9,12 +9,13 @@
 #include <eagle/renderer/vulkan/VulkanCommandBuffer.h>
 #include "eagle/Window.h"
 
+
 #include "eagle/Log.h"
 #include <eagle/renderer/vulkan/VulkanConverter.h>
 
 EG_BEGIN
 
-bool VulkanContext::enableValidationLayers = true;
+bool VulkanContext::enableValidationLayers = false;
 
 VulkanContext::VulkanContext() { // NOLINT(cppcoreguidelines-pro-type-member-init)
 
@@ -22,34 +23,9 @@ VulkanContext::VulkanContext() { // NOLINT(cppcoreguidelines-pro-type-member-ini
 
 VulkanContext::~VulkanContext() = default;
 
-void VulkanContext::init(EventBus* eventBus) {
-    EG_CORE_TRACE("Initializing vulkan context!");
 
-    m_eventBus = eventBus;
 
-    m_listener.attach(eventBus);
-    m_listener.subscribe<OnWindowResized>([this](const OnWindowResized& ev){
-       m_windowResized = true;
-       return false;
-    });
-
-    create_instance();
-    create_debug_callback();
-    bind_physical_device();
-    create_logical_device();
-    create_sync_objects();
-    create_command_pool();
-
-    create_surface();
-    create_swapchain();
-    create_render_pass();
-    create_framebuffers();
-    allocate_command_buffers();
-
-    EG_CORE_TRACE("Vulkan ready!");
-}
-
-void VulkanContext::deinit() {
+void VulkanContext::destroy() {
 
     EG_CORE_TRACE("Terminating vulkan!");
 
@@ -202,6 +178,7 @@ void VulkanContext::bind_physical_device() {
     VK_CALL
     vkEnumeratePhysicalDevices(m_instance, &deviceCount, devices.data());
 
+#ifndef VK_USE_PLATFORM_ANDROID_KHR
     //map usado pra rankear a melhor placa de video
     std::multimap<int, VkPhysicalDevice> candidates;
 
@@ -220,6 +197,9 @@ void VulkanContext::bind_physical_device() {
         //caso nenhuma preste
         throw std::runtime_error("no suitable GPU found!");
     }
+#endif
+    m_physicalDevice = devices[0];
+
 
     EG_CORE_TRACE("Physical device selected!");
 }
@@ -1179,6 +1159,7 @@ Reference<Framebuffer> VulkanContext::main_frambuffer() {
 std::vector<const char*> VulkanContext::get_extensions() {
 
     auto extensions = std::move(get_platform_extensions());
+    extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
     if (enableValidationLayers) {
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     }

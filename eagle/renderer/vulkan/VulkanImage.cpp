@@ -80,7 +80,7 @@ void VulkanImage::create() {
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     imageInfo.flags = 0;
 
-    m_images.resize(m_nativeCreateInfo.imageCount, nullptr);
+    m_images.resize(m_nativeCreateInfo.imageCount);
     for (int i = 0; i < m_nativeCreateInfo.imageCount; i++) {
         VK_CALL_ASSERT(vkCreateImage(m_nativeCreateInfo.device, &imageInfo, nullptr, &m_images[i])) {
             throw std::runtime_error("failed to create image!");
@@ -102,7 +102,7 @@ void VulkanImage::create() {
             VulkanConverter::to_vk_flags<VkMemoryPropertyFlags>(m_createInfo.memoryProperties)
     );
 
-    m_memories.resize(m_images.size(), nullptr);
+    m_memories.resize(m_images.size());
     for (int i = 0; i < m_memories.size(); i++) {
         VK_CALL_ASSERT(vkAllocateMemory(m_nativeCreateInfo.device, &allocInfo, nullptr, &m_memories[i])) {
             throw std::runtime_error("failed to allocate image memory!");
@@ -117,7 +117,7 @@ void VulkanImage::create() {
     subresourceRange.levelCount = 1;
     subresourceRange.aspectMask = VulkanConverter::to_vk_flags<VkImageAspectFlags>(m_createInfo.aspects);
 
-    m_views.resize(m_memories.size(), nullptr);
+    m_views.resize(m_memories.size());
     for (int i = 0; i < m_views.size(); i++) {
         if (!m_createInfo.bufferData.empty()) {
             copy_buffer_data_to_image(subresourceRange, i);

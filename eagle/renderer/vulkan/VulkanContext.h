@@ -49,7 +49,7 @@ protected:
         std::optional<uint32_t> computeFamily;
 
         bool isComplete() {
-            return graphicsFamily.has_value() && presentFamily.has_value() && computeFamily.has_value();
+            return graphicsFamily.has_value() && computeFamily.has_value();
         }
     };
 
@@ -66,8 +66,7 @@ public:
     virtual ~VulkanContext();
 
     //inherited via RenderingContext
-    virtual void init(EventBus* eventBus) override;
-    virtual void deinit() override;
+    virtual void destroy();
 
     virtual bool prepare_frame() override;
     virtual void present_frame() override;

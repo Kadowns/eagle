@@ -16,6 +16,7 @@ public:
     VulkanContextAndroid(AndroidWindow* window);
     virtual ~VulkanContextAndroid();
 
+    void init();
     void on_surface_created();
     void on_surface_destroyed();
 

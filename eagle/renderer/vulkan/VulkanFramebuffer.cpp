@@ -38,7 +38,7 @@ void VulkanFramebuffer::create_framebuffer() {
     framebufferCreateInfo.height = m_createInfo.height;
     framebufferCreateInfo.layers = 1;
 
-    m_framebuffers.resize(m_nativeCreateInfo.imageCount, nullptr);
+    m_framebuffers.resize(m_nativeCreateInfo.imageCount);
     for (int i = 0; i < m_framebuffers.size(); i++) {
         std::vector<VkImageView> attachments;
         attachments.reserve(m_nativeImageAttachments.size());

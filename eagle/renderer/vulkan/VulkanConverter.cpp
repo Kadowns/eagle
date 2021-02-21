@@ -611,7 +611,7 @@ AttachmentStoreOperator VulkanConverter::to_eg(VkAttachmentStoreOp op) {
     switch(op){
         case VK_ATTACHMENT_STORE_OP_STORE: result = AttachmentStoreOperator::STORE; break;
         case VK_ATTACHMENT_STORE_OP_DONT_CARE: result = AttachmentStoreOperator::DONT_CARE; break;
-        case VK_ATTACHMENT_STORE_OP_NONE_QCOM: result = AttachmentStoreOperator::NONE_QCOM; break;
+//        case VK_ATTACHMENT_STORE_OP_NONE_QCOM: result = AttachmentStoreOperator::NONE_QCOM; break;
         default: throw std::runtime_error("Invalid VkAttachmentStoreOp on conversion");
     }
     return result;
@@ -622,7 +622,7 @@ VkAttachmentStoreOp VulkanConverter::to_vk(AttachmentStoreOperator op) {
     switch(op){
         case AttachmentStoreOperator::STORE: result = VK_ATTACHMENT_STORE_OP_STORE; break;
         case AttachmentStoreOperator::DONT_CARE: result = VK_ATTACHMENT_STORE_OP_DONT_CARE; break;
-        case AttachmentStoreOperator::NONE_QCOM: result = VK_ATTACHMENT_STORE_OP_NONE_QCOM; break;
+//        case AttachmentStoreOperator::NONE_QCOM: result = VK_ATTACHMENT_STORE_OP_NONE_QCOM; break;
     }
     return result;
 }
@@ -843,13 +843,13 @@ PipelineStage VulkanConverter::to_eg(VkPipelineStageFlagBits stage) {
         case VK_PIPELINE_STAGE_ALL_COMMANDS_BIT: result = PipelineStage::ALL_COMMANDS_BIT; break;
         case VK_PIPELINE_STAGE_TRANSFORM_FEEDBACK_BIT_EXT: result = PipelineStage::TRANSFORM_FEEDBACK_BIT_EXT; break;
         case VK_PIPELINE_STAGE_CONDITIONAL_RENDERING_BIT_EXT: result = PipelineStage::CONDITIONAL_RENDERING_BIT_EXT; break;
-        case VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR: result = PipelineStage::RAY_TRACING_SHADER_BIT_KHR; break;
-        case VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR: result = PipelineStage::ACCELERATION_STRUCTURE_BUILD_BIT_KHR; break;
+//        case VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR: result = PipelineStage::RAY_TRACING_SHADER_BIT_KHR; break;
+//        case VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR: result = PipelineStage::ACCELERATION_STRUCTURE_BUILD_BIT_KHR; break;
         case VK_PIPELINE_STAGE_SHADING_RATE_IMAGE_BIT_NV: result = PipelineStage::SHADING_RATE_IMAGE_BIT_NV; break;
         case VK_PIPELINE_STAGE_TASK_SHADER_BIT_NV: result = PipelineStage::TASK_SHADER_BIT_NV; break;
         case VK_PIPELINE_STAGE_MESH_SHADER_BIT_NV: result = PipelineStage::MESH_SHADER_BIT_NV; break;
         case VK_PIPELINE_STAGE_FRAGMENT_DENSITY_PROCESS_BIT_EXT: result = PipelineStage::FRAGMENT_DENSITY_PROCESS_BIT_EXT; break;
-        case VK_PIPELINE_STAGE_COMMAND_PREPROCESS_BIT_NV: result = PipelineStage::COMMAND_PREPROCESS_BIT_NV; break;
+//        case VK_PIPELINE_STAGE_COMMAND_PREPROCESS_BIT_NV: result = PipelineStage::COMMAND_PREPROCESS_BIT_NV; break;
         default: throw std::runtime_error("Invalid VkPipelineStageFlagBits on conversion");
     }
     return result;
@@ -877,13 +877,13 @@ VkPipelineStageFlagBits VulkanConverter::to_vk(PipelineStage stage) {
         case PipelineStage::ALL_COMMANDS_BIT: result = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT; break;
         case PipelineStage::TRANSFORM_FEEDBACK_BIT_EXT: result = VK_PIPELINE_STAGE_TRANSFORM_FEEDBACK_BIT_EXT; break;
         case PipelineStage::CONDITIONAL_RENDERING_BIT_EXT: result = VK_PIPELINE_STAGE_CONDITIONAL_RENDERING_BIT_EXT; break;
-        case PipelineStage::RAY_TRACING_SHADER_BIT_KHR: result = VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR; break;
-        case PipelineStage::ACCELERATION_STRUCTURE_BUILD_BIT_KHR: result = VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR; break;
+//        case PipelineStage::RAY_TRACING_SHADER_BIT_KHR: result = VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR; break;
+//        case PipelineStage::ACCELERATION_STRUCTURE_BUILD_BIT_KHR: result = VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR; break;
         case PipelineStage::SHADING_RATE_IMAGE_BIT_NV: result = VK_PIPELINE_STAGE_SHADING_RATE_IMAGE_BIT_NV; break;
         case PipelineStage::TASK_SHADER_BIT_NV: result = VK_PIPELINE_STAGE_TASK_SHADER_BIT_NV; break;
         case PipelineStage::MESH_SHADER_BIT_NV: result = VK_PIPELINE_STAGE_MESH_SHADER_BIT_NV; break;
         case PipelineStage::FRAGMENT_DENSITY_PROCESS_BIT_EXT: result = VK_PIPELINE_STAGE_FRAGMENT_DENSITY_PROCESS_BIT_EXT; break;
-        case PipelineStage::COMMAND_PREPROCESS_BIT_NV: result = VK_PIPELINE_STAGE_COMMAND_PREPROCESS_BIT_NV; break;
+//        case PipelineStage::COMMAND_PREPROCESS_BIT_NV: result = VK_PIPELINE_STAGE_COMMAND_PREPROCESS_BIT_NV; break;
         default: throw std::runtime_error("Invalid PipelineStage on conversion");
     }
     return result;

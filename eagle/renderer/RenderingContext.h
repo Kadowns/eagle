@@ -32,9 +32,6 @@ public:
     RenderingContext() = default;
     virtual ~RenderingContext() = default;
 
-    virtual void init(EventBus* eventBus) = 0;
-    virtual void deinit() = 0;
-
     virtual bool prepare_frame() = 0;
     virtual void present_frame() = 0;
     virtual void submit_command_buffer(const Reference<CommandBuffer>& commandBuffer) = 0;
