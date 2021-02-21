@@ -8,12 +8,13 @@
 
 #include <eagle/CoreGlobalDefinitions.h>
 #include <eagle/Window.h>
-#include <eagle/renderer/RenderingContext.h>
 
 struct GLFWwindow;
 struct GLFWcursor;
 
 EG_BEGIN
+
+class VulkanContextGLFW;
 
 class WindowGLFW : public Window {
 public:
@@ -55,7 +56,7 @@ private:
 
     GLFWwindow* m_window;
     std::map<Cursor, GLFWcursor*> m_mouseCursors;
-    Scope<RenderingContext> m_renderingContext;
+    Reference<VulkanContextGLFW> m_renderingContext;
 };
 
 EG_END

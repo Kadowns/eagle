@@ -117,7 +117,7 @@ void WindowGLFW::init(EventBus* eventBus) {
     m_mouseCursors[Cursor::HORI_RESIZE] = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
     m_mouseCursors[Cursor::VERT_RESIZE] = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
 
-    m_renderingContext = std::make_unique<VulkanContextGLFW>(this);
+    m_renderingContext = std::make_shared<VulkanContextGLFW>(this);
     m_renderingContext->init(eventBus);
 
     EG_CORE_TRACE("Window initialized!");
@@ -125,7 +125,7 @@ void WindowGLFW::init(EventBus* eventBus) {
 
 void WindowGLFW::destroy() {
 
-    m_renderingContext->deinit();
+    m_renderingContext->destroy();
 
     for (auto& it : m_mouseCursors){
         glfwDestroyCursor(it.second);
