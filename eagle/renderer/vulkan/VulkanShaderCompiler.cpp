@@ -6,7 +6,7 @@
 #include "eagle/Log.h"
 
 #include <iostream>
-#include <fstream>
+#include <eagle/FileSystem.h>
 
 EG_BEGIN
 
@@ -17,7 +17,6 @@ std::vector<uint32_t> VulkanShaderCompiler::compile_glsl(const std::string &file
     //initializes glslang
     if (!m_glslangIntitialized) {
         if (!glslang::InitializeProcess()){
-            EG_CORE_FATAL("Failed to initialize vulkan shader compiler!");
             throw std::runtime_error("Failed to initialize vulkan shader compiler!");
         }
         m_glslangIntitialized = true;
@@ -29,14 +28,7 @@ std::vector<uint32_t> VulkanShaderCompiler::compile_glsl(const std::string &file
     glslang::TShader shader(shaderStage);
 
 
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-        EG_CORE_FATAL_F("Failed to open shader file: {0}", filename);
-        throw std::runtime_error("failed to open file: " + filename);
-    }
-
-    //reads glsl file and stores on a const char* (otherwise it would not be possible to set the shader strings with a temporary value)
-    std::string glslInput((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string glslInput = FileSystem::instance()->read_text(filename);
 
     const char* cstrInput = glslInput.data();
 
