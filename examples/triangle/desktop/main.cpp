@@ -2,7 +2,9 @@
 // Created by Ricardo on 11/28/2020.
 //
 
-#include "TriangleApp.h"
+#include <TriangleApp.h>
+
+#include <eagle/platform/desktop/DesktopApplication.h>
 
 int main(){
 

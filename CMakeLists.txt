@@ -28,6 +28,7 @@ set(EAGLE_SOURCE
         eagle/InputLayer.cpp
         eagle/Random.cpp
         eagle/Time.cpp
+        eagle/FileSystem.cpp
         eagle/events/EventBus.cpp
 
         eagle/renderer/VertexLayout.cpp
@@ -63,14 +64,18 @@ set(EAGLE_PLATFORM_LIBS)
 if (WIN32)
     message(STATUS "Eagle -- Including win32 sources")
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR -DVK_NO_PROTOTYPES")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR -DVK_NO_PROTOTYPES")
 
-    find_package(GLFW REQUIRED)
+    set(GLFW_STANDALONE OFF)
+    set(GLFW_INSTALL OFF)
+    set(GLFW_BUILD_DOCS OFF)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/glfw ${CMAKE_CURRENT_BINARY_DIR}/glfw)
     find_package(Vulkan REQUIRED)
 
     list(APPEND EAGLE_SOURCE
             eagle/platform/desktop/WindowGLFW.cpp
             eagle/platform/desktop/DesktopApplication.cpp
+            eagle/platform/desktop/DesktopFileSystem.cpp
             eagle/renderer/vulkan/platform/desktop/VulkanContextGLFW.cpp
             )
 
@@ -95,6 +100,7 @@ elseif(ANDROID)
     list(APPEND EAGLE_SOURCE
             eagle/platform/android/AndroidWindow.cpp
             eagle/platform/android/AndroidApplication.cpp
+            eagle/platform/android/AndroidFileSystem.cpp
             eagle/renderer/vulkan/platform/android/VulkanContextAndroid.cpp
             eagle/renderer/vulkan/platform/android/vulkan_wrapper.cpp
             )
@@ -126,6 +132,7 @@ set_target_properties(
         eagle
         PROPERTIES
         LINKER_LANGUAGE CXX
+        CXX_STANDARD 17
 )
 
 include(cmake/Eagle.cmake)
@@ -134,4 +141,4 @@ define_file_basename_for_sources(eagle)
 
 target_link_libraries(eagle PUBLIC spdlog glslang OSDependent OGLCompiler HLSL SPIRV ${EAGLE_PLATFORM_LIBS})
 
-add_subdirectory(examples)
+#add_subdirectory(examples)

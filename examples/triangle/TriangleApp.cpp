@@ -4,25 +4,28 @@
 
 #include "TriangleApp.h"
 
+#include <eagle/Application.h>
+#include <eagle/Window.h>
+
 TriangleApp::TriangleApp() {
 
 }
 
 void TriangleApp::init() {
     EG_INFO("Triangle attached!");
-    m_renderingContext = Eagle::DesktopApplication::instance().window().rendering_context();
+    m_renderingContext = Eagle::Application::instance().window().rendering_context();
 
-    m_listener.attach(&Eagle::DesktopApplication::instance().event_bus());
+    m_listener.attach(&Eagle::Application::instance().event_bus());
     m_listener.subscribe<Eagle::OnWindowClose>([](const Eagle::OnWindowClose& ev){
-        Eagle::DesktopApplication::instance().quit();
+        Eagle::Application::instance().quit();
         return false;
     });
 
     Eagle::VertexLayout vertexLayout(5, {Eagle::Format::R32G32_SFLOAT, Eagle::Format::R32G32B32_SFLOAT});
 
     Eagle::ShaderCreateInfo pipelineInfo = {m_renderingContext->main_render_pass(), {
-            {Eagle::ShaderStage::VERTEX, "data/color.vert"},
-            {Eagle::ShaderStage::FRAGMENT, "data/color.frag"}
+            {Eagle::ShaderStage::VERTEX, "color.vert"},
+            {Eagle::ShaderStage::FRAGMENT, "color.frag"}
     }};
     pipelineInfo.vertexLayout = vertexLayout;
     m_shader = m_renderingContext->create_shader(pipelineInfo);

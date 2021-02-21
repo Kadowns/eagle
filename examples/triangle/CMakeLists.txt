@@ -1,16 +1,13 @@
-project(eagle_triangle VERSION 1.0.0)
-
+add_subdirectory(../../ ${CMAKE_BINARY_DIR}/eagle)
 
 set(TRIANGLE_SOURCE
         TriangleApp.cpp
         )
 
-add_executable(eagle_triangle ${TRIANGLE_SOURCE} main.cpp)
+add_library(${EG_APP_LIB_NAME} STATIC ${TRIANGLE_SOURCE})
 
-define_file_basename_for_sources(eagle_triangle)
+define_file_basename_for_sources(${EG_APP_LIB_NAME})
 
-target_link_libraries(eagle_triangle PRIVATE eagle)
+target_include_directories(${EG_APP_LIB_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_custom_command(TARGET eagle_triangle PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_CURRENT_SOURCE_DIR}/data/ $<TARGET_FILE_DIR:eagle_triangle>/data/)
+target_link_libraries(${EG_APP_LIB_NAME} PUBLIC eagle)
