@@ -18,8 +18,19 @@
 
 namespace eagle {
 
+enum class CommandBufferLevel {
+    PRIMARY,
+    SECONDARY
+};
+
+struct CommandBufferCreateInfo {
+    CommandBufferLevel level;
+};
+
 class CommandBuffer {
 public:
+
+    explicit CommandBuffer(const CommandBufferCreateInfo& createInfo) : m_createInfo(createInfo) {}
 
     virtual ~CommandBuffer() = default;
 
@@ -66,7 +77,6 @@ public:
     virtual void
     end_render_pass() = 0;
 
-
     virtual void
     begin_render_pass(const std::shared_ptr<RenderPass> &renderPass, const std::shared_ptr<Framebuffer>& framebuffer) = 0;
 
@@ -76,6 +86,9 @@ public:
 
     virtual void
     dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
+
+protected:
+    CommandBufferCreateInfo m_createInfo;
 
 };
 

@@ -15,7 +15,7 @@
 
 namespace eagle {
 
-bool VulkanContext::enableValidationLayers = false;
+bool VulkanContext::enableValidationLayers = true;
 
 VulkanContext::VulkanContext() {
 
@@ -713,22 +713,6 @@ void VulkanContext::create_command_pool() {
     EG_CORE_TRACE("Command pool created!");
 }
 
-void VulkanContext::allocate_command_buffers() {
-
-    EG_CORE_TRACE("Allocating graphics command buffers!");
-
-    m_commandBuffers.resize(m_present.imageCount);
-    for (int i = 0; i < m_commandBuffers.size(); i++) {
-        m_commandBuffers[i] = std::make_shared<VulkanCommandBuffer>(
-                m_device,
-                m_graphicsCommandPool,
-                m_present.imageIndex
-        );
-    }
-
-    EG_CORE_TRACE("Graphics command buffers allocated!");
-}
-
 void VulkanContext::create_sync_objects() {
 
     EG_CORE_TRACE("Creating sync objects!");
@@ -772,7 +756,6 @@ void VulkanContext::recreate_swapchain() {
     cleanup_swapchain();
 
     create_swapchain();
-    allocate_command_buffers();
     create_framebuffers();
     recreate_objects();
 
@@ -801,10 +784,18 @@ void VulkanContext::recreate_objects() {
     for (auto& computeShader : m_computeShaders){
         computeShader->recreate(m_present.imageCount);
     }
+
+    for (auto& commandBuffer : m_commandBuffers){
+        commandBuffer->recreate(m_present.imageCount);
+    }
 }
 
 void VulkanContext::clear_objects() {
     VulkanCleaner::clear();
+
+    for (auto& commandBuffer : m_commandBuffers){
+        commandBuffer->cleanup();
+    }
 
     for (auto& computeShader : m_computeShaders){
         computeShader->clear_descriptor_set();
@@ -832,8 +823,6 @@ void VulkanContext::cleanup_swapchain() {
     EG_CORE_TRACE("Clearing swapchain!");
 
     clear_objects();
-
-    m_commandBuffers.clear();
 
     m_present.framebuffer.reset();
 
@@ -990,8 +979,15 @@ std::weak_ptr<Framebuffer> VulkanContext::create_framebuffer(const FramebufferCr
     return m_framebuffers.back();
 }
 
-std::shared_ptr<CommandBuffer> VulkanContext::main_command_buffer() {
-    return m_commandBuffers[m_present.imageIndex];
+std::weak_ptr<CommandBuffer> VulkanContext::create_command_buffer(const CommandBufferCreateInfo& createInfo) {
+
+    VulkanCommandBufferCreateInfo vkCreateInfo = {};
+    vkCreateInfo.commandPool = m_graphicsCommandPool;
+    vkCreateInfo.device = m_device;
+    vkCreateInfo.imageCount = m_present.imageCount;
+    vkCreateInfo.currentImageIndex = &m_present.imageIndex;
+    m_commandBuffers.emplace_back(std::make_shared<VulkanCommandBuffer>(createInfo, vkCreateInfo));
+    return m_commandBuffers.back();
 }
 
 bool VulkanContext::prepare_frame() {
@@ -1094,7 +1090,9 @@ std::vector<const char*> VulkanContext::get_extensions() {
     return extensions;
 }
 
-    VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
+
+
+VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
                                       const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
                                       const VkAllocationCallbacks *pAllocator,
                                       VkDebugUtilsMessengerEXT *pCallback) {

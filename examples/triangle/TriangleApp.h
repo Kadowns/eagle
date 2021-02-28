@@ -23,6 +23,7 @@ private:
     std::weak_ptr<eagle::Shader> m_shader;
     std::weak_ptr<eagle::VertexBuffer> m_vertexBuffer;
     std::weak_ptr<eagle::IndexBuffer> m_indexBuffer;
+    std::weak_ptr<eagle::CommandBuffer> m_commandBuffer;
 };
 
 

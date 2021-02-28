@@ -35,7 +35,6 @@ public:
     virtual bool prepare_frame() = 0;
     virtual void present_frame(const std::shared_ptr<CommandBuffer> &commandBuffer) = 0;
 
-    virtual std::shared_ptr<CommandBuffer> main_command_buffer() = 0;
     virtual std::shared_ptr<RenderPass> main_render_pass() = 0;
     virtual std::shared_ptr<Framebuffer> main_frambuffer() = 0;
 
@@ -54,6 +53,8 @@ public:
 
     virtual std::weak_ptr<StorageBuffer>
     create_storage_buffer(size_t size, void *data, UpdateType usage) = 0;
+
+    virtual std::weak_ptr<CommandBuffer> create_command_buffer(const CommandBufferCreateInfo& createInfo) = 0;
 
     virtual std::weak_ptr<DescriptorSetLayout>
     create_descriptor_set_layout(const std::vector<DescriptorBindingDescription> &bindings) = 0;

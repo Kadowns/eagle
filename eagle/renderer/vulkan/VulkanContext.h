@@ -71,7 +71,6 @@ public:
     virtual bool prepare_frame() override;
     virtual void present_frame(const std::shared_ptr<CommandBuffer> &commandBuffer) override;
 
-    virtual std::shared_ptr<CommandBuffer> main_command_buffer() override;
     virtual std::shared_ptr<RenderPass> main_render_pass() override;
     virtual std::shared_ptr<Framebuffer> main_frambuffer() override;
     //------
@@ -93,6 +92,7 @@ protected:
 
     virtual void bind_physical_device();
 
+protected:
     virtual void create_logical_device();
 
     virtual void create_surface() = 0;//implemented per platform
@@ -100,8 +100,6 @@ protected:
     virtual void create_swapchain();
 
     virtual void create_command_pool();
-
-    virtual void allocate_command_buffers();
 
     virtual void create_sync_objects();
 
@@ -142,45 +140,49 @@ protected:
 
 public:
     //inherited via RenderingContext
-    virtual std::weak_ptr<Shader>
+    std::weak_ptr<Shader>
     create_shader(const ShaderCreateInfo &pipelineInfo) override;
 
-    virtual std::weak_ptr<VertexBuffer>
+    std::weak_ptr<VertexBuffer>
     create_vertex_buffer(void *vertices, uint32_t size, const VertexLayout &vertexLayout,
                          UpdateType usage) override;
 
-    virtual std::weak_ptr<IndexBuffer>
+    std::weak_ptr<IndexBuffer>
     create_index_buffer(void *indexData, size_t indexCount, IndexBufferType indexType,
                         UpdateType usage) override;
 
-    virtual std::weak_ptr<UniformBuffer>
+    std::weak_ptr<UniformBuffer>
     create_uniform_buffer(size_t size, void *data) override;
 
-    virtual std::weak_ptr<DescriptorSetLayout>
+    std::weak_ptr<DescriptorSetLayout>
     create_descriptor_set_layout(const std::vector<DescriptorBindingDescription> &bindings) override;
 
-    virtual std::weak_ptr<DescriptorSet>
+    std::weak_ptr<DescriptorSet>
     create_descriptor_set(const std::shared_ptr<DescriptorSetLayout> &descriptorLayout,
                           const std::vector<std::shared_ptr<DescriptorItem>> &descriptorItems) override;
 
-    virtual std::weak_ptr<Texture>
+    std::weak_ptr<Texture>
     create_texture(const TextureCreateInfo &createInfo) override;
 
-    virtual std::weak_ptr<RenderPass>
+    std::weak_ptr<RenderPass>
     create_render_pass(const std::vector<RenderAttachmentDescription>& colorAttachments, const RenderAttachmentDescription& depthAttachment) override;
 
-    virtual std::weak_ptr<Framebuffer>
+    std::weak_ptr<Framebuffer>
     create_framebuffer(const FramebufferCreateInfo& createInfo) override;
 
-    virtual std::weak_ptr<Image>
+    std::weak_ptr<Image>
     create_image(const ImageCreateInfo& createInfo) override;
 
-    virtual std::weak_ptr<StorageBuffer> create_storage_buffer(size_t size, void *data, UpdateType usage) override;
+    std::weak_ptr<StorageBuffer>
+    create_storage_buffer(size_t size, void *data, UpdateType usage) override;
 
-    virtual std::weak_ptr<ComputeShader>
+    std::weak_ptr<ComputeShader>
     create_compute_shader(const std::string& path) override;
 
-    virtual void destroy_texture_2d(const std::shared_ptr<Texture> &texture) override;
+    std::weak_ptr<CommandBuffer>
+    create_command_buffer(const CommandBufferCreateInfo& createInfo) override;
+
+    void destroy_texture_2d(const std::shared_ptr<Texture> &texture) override;
 
 protected:
 
@@ -205,7 +207,6 @@ protected:
     } m_present;
 
     VkCommandPool m_graphicsCommandPool, m_computeCommandPool;
-    std::vector<std::shared_ptr<VulkanCommandBuffer>> m_commandBuffers;
     std::vector<VkSemaphore> m_imageAvailableSemaphores;
     std::vector<VkSemaphore> m_renderFinishedSemaphores;
     std::vector<VkFence> m_inFlightFences;
@@ -227,6 +228,7 @@ protected:
     std::vector<std::shared_ptr<VulkanImage>> m_images;
     std::vector<std::shared_ptr<VulkanRenderPass>> m_renderPasses;
     std::vector<std::shared_ptr<VulkanFramebuffer>> m_framebuffers;
+    std::vector<std::shared_ptr<VulkanCommandBuffer>> m_commandBuffers;
 
     uint32_t m_currentFrame = 0;
 

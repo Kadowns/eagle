@@ -53,6 +53,11 @@ void TriangleApp::init() {
 
     m_indexBuffer = m_renderingContext->create_index_buffer(indices.data(), indices.size() * sizeof(uint16_t), eagle::IndexBufferType::UINT_16, eagle::UpdateType::CONSTANT);
 
+    eagle::CommandBufferCreateInfo commandBufferCreateInfo = {};
+    commandBufferCreateInfo.level = eagle::CommandBufferLevel::PRIMARY;
+
+    m_commandBuffer = m_renderingContext->create_command_buffer(commandBufferCreateInfo);
+
 }
 
 void TriangleApp::step() {
@@ -61,7 +66,8 @@ void TriangleApp::step() {
         return;
     }
 
-    auto commandBuffer = m_renderingContext->main_command_buffer();
+    auto commandBuffer = m_commandBuffer.lock();
+
     commandBuffer->begin();
     commandBuffer->begin_render_pass(m_renderingContext->main_render_pass(), m_renderingContext->main_frambuffer());
     commandBuffer->bind_shader(m_shader.lock());
@@ -70,9 +76,7 @@ void TriangleApp::step() {
     commandBuffer->draw_indexed(6, 0, 0);
     commandBuffer->end_render_pass();
     commandBuffer->finish();
-
-    m_renderingContext->submit_command_buffer(commandBuffer);
-    m_renderingContext->present_frame(<#initializer#>);
+    m_renderingContext->present_frame(commandBuffer);
 }
 
 void TriangleApp::destroy() {

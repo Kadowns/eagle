@@ -46,11 +46,9 @@ void eagle::VulkanContextGLFW::init(EventBus* eventBus) {
     create_sync_objects();
     create_command_pool();
 
-
     create_swapchain();
     create_render_pass();
     create_framebuffers();
-    allocate_command_buffers();
 
     EG_CORE_TRACE("Vulkan ready!");
 }
