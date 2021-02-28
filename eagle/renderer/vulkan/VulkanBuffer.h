@@ -7,7 +7,7 @@
 
 #include "VulkanCore.h"
 
-EG_BEGIN
+namespace eagle {
 
 struct VulkanBufferCreateInfo {
 
@@ -36,7 +36,7 @@ public:
 
 
     static VkResult
-    create_buffer(VkPhysicalDevice physicalDevice, VkDevice device, Reference<VulkanBuffer> &buffer,
+    create_buffer(VkPhysicalDevice physicalDevice, VkDevice device, std::shared_ptr<VulkanBuffer> &buffer,
                   const VulkanBufferCreateInfo &info, VkDeviceSize size, void *data = nullptr);
 
     static void
@@ -63,7 +63,7 @@ private:
     VkMemoryPropertyFlags m_memoryFlags = VK_MEMORY_PROPERTY_FLAG_BITS_MAX_ENUM;
 };
 
-EG_END
+}
 
 
 #endif //EAGLE_VULKANBUFFER_H

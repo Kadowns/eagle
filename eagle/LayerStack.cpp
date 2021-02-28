@@ -7,9 +7,9 @@
 #include "LayerStack.h"
 #include "Log.h"
 
-EG_BEGIN
+namespace eagle {
 
-void LayerStack::emplace_back(Reference<Layer> layer) {
+void LayerStack::emplace_back(std::shared_ptr<Layer> layer) {
     EG_CORE_TRACE("Emplacing back a new layer!");
     m_layers.emplace_back(layer);
 
@@ -19,7 +19,7 @@ void LayerStack::emplace_back(Reference<Layer> layer) {
     layer->handle_attach();
 }
 
-void LayerStack::pop_layer(Reference<Layer> layer) {
+void LayerStack::pop_layer(std::shared_ptr<Layer> layer) {
     EG_CORE_TRACE("Popping a layer!");
     auto it = std::find(m_layers.begin(), m_layers.end(), layer);
     if (it != m_layers.end()){
@@ -35,11 +35,11 @@ void LayerStack::pop_layer(Reference<Layer> layer) {
     }
 }
 
-LayerStack::LayerStack(const std::vector<Reference<Layer>>& layers) {
+LayerStack::LayerStack(const std::vector<std::shared_ptr<Layer>>& layers) {
     emplace(layers);
 }
 
-void LayerStack::emplace_front(Reference<Layer> layer) {
+void LayerStack::emplace_front(std::shared_ptr<Layer> layer) {
     EG_CORE_TRACE("Emplacing front a new layer!");
     m_layers.emplace(m_layers.begin(), layer);
 
@@ -49,7 +49,7 @@ void LayerStack::emplace_front(Reference<Layer> layer) {
     layer->handle_attach();
 }
 
-void LayerStack::emplace(const std::vector<Reference<Layer>>& layers) {
+void LayerStack::emplace(const std::vector<std::shared_ptr<Layer>>& layers) {
     for (auto& it :layers){
         emplace_back(it);
     }
@@ -81,5 +81,5 @@ void LayerStack::deinit() {
 }
 
 
-EG_END
+}
 

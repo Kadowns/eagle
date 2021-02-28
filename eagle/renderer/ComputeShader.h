@@ -9,7 +9,7 @@
 #include "DescriptorSetLayout.h"
 #include "Image.h"
 
-EG_BEGIN
+namespace eagle {
 
 class ComputeShader {
 
@@ -19,14 +19,14 @@ public:
 
     virtual void dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
 
-    virtual void update_descriptor_items(const std::vector<Reference<DescriptorItem>>& descriptorItems) = 0;
-    virtual void set_image(const std::string& name, const Reference<Image>& image) = 0;
+    virtual void update_descriptor_items(const std::vector<std::shared_ptr<DescriptorItem>>& descriptorItems) = 0;
+    virtual void set_image(const std::string& name, const std::shared_ptr<Image>& image) = 0;
 
     virtual void create_pipeline() = 0;
     virtual void cleanup_pipeline() = 0;
 
 };
 
-EG_END
+}
 
 #endif //EAGLE_COMPUTESHADER_H

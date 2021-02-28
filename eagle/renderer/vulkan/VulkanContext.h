@@ -27,7 +27,7 @@
 #include "VulkanRenderPass.h"
 #include "VulkanFramebuffer.h"
 
-EG_BEGIN
+namespace eagle {
 
 extern VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
                                              const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
@@ -69,12 +69,11 @@ public:
     virtual void destroy();
 
     virtual bool prepare_frame() override;
-    virtual void present_frame() override;
-    virtual void submit_command_buffer(const Reference<CommandBuffer>& commandBuffer) override;
+    virtual void present_frame(const std::shared_ptr<CommandBuffer> &commandBuffer) override;
 
-    virtual Reference<CommandBuffer> main_command_buffer() override;
-    virtual Reference<RenderPass> main_render_pass() override;
-    virtual Reference<Framebuffer> main_frambuffer() override;
+    virtual std::shared_ptr<CommandBuffer> main_command_buffer() override;
+    virtual std::shared_ptr<RenderPass> main_render_pass() override;
+    virtual std::shared_ptr<Framebuffer> main_frambuffer() override;
     //------
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
@@ -110,8 +109,6 @@ protected:
 
     virtual void create_framebuffers();
 
-    virtual void create_offscreen_render_pass();
-
     virtual void recreate_swapchain();
 
     virtual void cleanup_swapchain();
@@ -145,45 +142,45 @@ protected:
 
 public:
     //inherited via RenderingContext
-    virtual Handle <Shader>
+    virtual std::weak_ptr<Shader>
     create_shader(const ShaderCreateInfo &pipelineInfo) override;
 
-    virtual Handle<VertexBuffer>
+    virtual std::weak_ptr<VertexBuffer>
     create_vertex_buffer(void *vertices, uint32_t size, const VertexLayout &vertexLayout,
                          UpdateType usage) override;
 
-    virtual Handle<IndexBuffer>
+    virtual std::weak_ptr<IndexBuffer>
     create_index_buffer(void *indexData, size_t indexCount, IndexBufferType indexType,
                         UpdateType usage) override;
 
-    virtual Handle<UniformBuffer>
+    virtual std::weak_ptr<UniformBuffer>
     create_uniform_buffer(size_t size, void *data) override;
 
-    virtual Handle<DescriptorSetLayout>
+    virtual std::weak_ptr<DescriptorSetLayout>
     create_descriptor_set_layout(const std::vector<DescriptorBindingDescription> &bindings) override;
 
-    virtual Handle<DescriptorSet>
-    create_descriptor_set(const Reference<DescriptorSetLayout> &descriptorLayout,
-                          const std::vector<Reference<DescriptorItem>> &descriptorItems) override;
+    virtual std::weak_ptr<DescriptorSet>
+    create_descriptor_set(const std::shared_ptr<DescriptorSetLayout> &descriptorLayout,
+                          const std::vector<std::shared_ptr<DescriptorItem>> &descriptorItems) override;
 
-    virtual Handle<Texture>
+    virtual std::weak_ptr<Texture>
     create_texture(const TextureCreateInfo &createInfo) override;
 
-    virtual Handle<RenderPass>
+    virtual std::weak_ptr<RenderPass>
     create_render_pass(const std::vector<RenderAttachmentDescription>& colorAttachments, const RenderAttachmentDescription& depthAttachment) override;
 
-    virtual Handle<Framebuffer>
+    virtual std::weak_ptr<Framebuffer>
     create_framebuffer(const FramebufferCreateInfo& createInfo) override;
 
-    virtual Handle<Image>
+    virtual std::weak_ptr<Image>
     create_image(const ImageCreateInfo& createInfo) override;
 
-    virtual Handle <StorageBuffer> create_storage_buffer(size_t size, void *data, UpdateType usage) override;
+    virtual std::weak_ptr<StorageBuffer> create_storage_buffer(size_t size, void *data, UpdateType usage) override;
 
-    virtual Handle<ComputeShader>
+    virtual std::weak_ptr<ComputeShader>
     create_compute_shader(const std::string& path) override;
 
-    virtual void destroy_texture_2d(const Reference<Texture> &texture) override;
+    virtual void destroy_texture_2d(const std::shared_ptr<Texture> &texture) override;
 
 protected:
 
@@ -203,12 +200,12 @@ protected:
         VkFormat swapchainFormat;
         VkExtent2D extent2D;
         VkSwapchainKHR swapchain;
-        Reference<VulkanRenderPass> renderPass;
-        Reference<VulkanFramebuffer> framebuffer;
+        std::shared_ptr<VulkanRenderPass> renderPass;
+        std::shared_ptr<VulkanFramebuffer> framebuffer;
     } m_present;
 
     VkCommandPool m_graphicsCommandPool, m_computeCommandPool;
-    std::vector<Reference<VulkanCommandBuffer>> m_commandBuffers;
+    std::vector<std::shared_ptr<VulkanCommandBuffer>> m_commandBuffers;
     std::vector<VkSemaphore> m_imageAvailableSemaphores;
     std::vector<VkSemaphore> m_renderFinishedSemaphores;
     std::vector<VkFence> m_inFlightFences;
@@ -218,18 +215,18 @@ protected:
     //compute
     VkQueue m_computeQueue;
 
-    std::vector<Reference<VulkanVertexBuffer>> m_vertexBuffers;
-    std::vector<Reference<VulkanIndexBuffer>> m_indexBuffers;
-    std::vector<Reference<VulkanUniformBuffer>> m_uniformBuffers;
-    std::vector<Reference<VulkanStorageBuffer>> m_storageBuffers;
-    std::vector<Reference<VulkanDescriptorSet>> m_descriptorSets;
-    std::vector<Reference<VulkanDescriptorSetLayout>> m_descriptorSetsLayouts;
-    std::vector<Reference<VulkanShader>> m_shaders;
-    std::vector<Reference<VulkanComputeShader>> m_computeShaders;
-    std::vector<Reference<VulkanTexture>> m_textures;
-    std::vector<Reference<VulkanImage>> m_images;
-    std::vector<Reference<VulkanRenderPass>> m_renderPasses;
-    std::vector<Reference<VulkanFramebuffer>> m_framebuffers;
+    std::vector<std::shared_ptr<VulkanVertexBuffer>> m_vertexBuffers;
+    std::vector<std::shared_ptr<VulkanIndexBuffer>> m_indexBuffers;
+    std::vector<std::shared_ptr<VulkanUniformBuffer>> m_uniformBuffers;
+    std::vector<std::shared_ptr<VulkanStorageBuffer>> m_storageBuffers;
+    std::vector<std::shared_ptr<VulkanDescriptorSet>> m_descriptorSets;
+    std::vector<std::shared_ptr<VulkanDescriptorSetLayout>> m_descriptorSetsLayouts;
+    std::vector<std::shared_ptr<VulkanShader>> m_shaders;
+    std::vector<std::shared_ptr<VulkanComputeShader>> m_computeShaders;
+    std::vector<std::shared_ptr<VulkanTexture>> m_textures;
+    std::vector<std::shared_ptr<VulkanImage>> m_images;
+    std::vector<std::shared_ptr<VulkanRenderPass>> m_renderPasses;
+    std::vector<std::shared_ptr<VulkanFramebuffer>> m_framebuffers;
 
     uint32_t m_currentFrame = 0;
 
@@ -250,6 +247,6 @@ protected:
 
 };
 
-EG_END
+}
 
 #endif //EAGLE_VULKANCONTEXT_H

@@ -7,7 +7,7 @@
 
 #include <eagle/CoreGlobalDefinitions.h>
 
-EG_BEGIN
+namespace eagle {
 
 class EventHelper {
 public:
@@ -217,6 +217,6 @@ using EventBus = GenericEventBus<ConsumableEventStream>;
 template<typename TReceiver>
 using EventListener = GenericEventListener<TReceiver, EventBus>;
 
-EG_END
+}
 
 #endif //EAGLE_EVENTBUS_H

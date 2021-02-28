@@ -10,14 +10,14 @@
 
 #include "RenderingCore.h"
 
-EG_BEGIN
+namespace eagle {
 
 class VertexLayout {
 
 public:
     VertexLayout();
     VertexLayout(size_t elementCount, std::initializer_list<Format> components);
-    VertexLayout(size_t elementCount, std::vector<Eagle::Format> components);
+    VertexLayout(size_t elementCount, std::vector<eagle::Format> components);
     ~VertexLayout();
 
     size_t get_stride();
@@ -37,6 +37,6 @@ private:
 
 
 
-EG_END
+}
 
 #endif //EAGLE_VERTEXLAYOUT_H

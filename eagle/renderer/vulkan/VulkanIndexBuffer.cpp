@@ -5,7 +5,7 @@
 #include "VulkanIndexBuffer.h"
 #include "eagle/Log.h"
 
-EG_BEGIN
+namespace eagle {
 
 VulkanIndexBuffer::VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInfo &createInfo, void *indexData,
                                      size_t size,
@@ -46,7 +46,7 @@ VulkanIndexBuffer::VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInf
             createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
             createBufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
-            Reference<VulkanBuffer> stagingBuffer;
+            std::shared_ptr<VulkanBuffer> stagingBuffer;
             VK_CALL
             VulkanBuffer::create_buffer(
                     createInfo.physicalDevice, m_device, stagingBuffer, createBufferInfo, bufferSize, m_data);
@@ -162,4 +162,4 @@ void VulkanIndexBuffer::upload(void *data, uint32_t size) {
     m_size = size;
 }
 
-EG_END
+}

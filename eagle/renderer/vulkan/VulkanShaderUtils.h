@@ -8,7 +8,7 @@
 #include "VulkanCore.h"
 #include <eagle/renderer/DescriptorSetLayout.h>
 
-EG_BEGIN
+namespace eagle {
 
 class VulkanShaderUtils {
 public:
@@ -24,6 +24,6 @@ public:
 
 };
 
-EG_END
+}
 
 #endif //EAGLE_VULKANSHADERUTILS_H

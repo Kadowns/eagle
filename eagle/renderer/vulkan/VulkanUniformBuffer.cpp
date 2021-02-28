@@ -5,7 +5,7 @@
 #include <algorithm>
 #include "VulkanUniformBuffer.h"
 
-EG_BEGIN
+namespace eagle {
 
 VulkanUniformBuffer::VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createInfo, size_t size, void *data) :
         UniformBuffer(size), m_info(createInfo) {
@@ -94,4 +94,4 @@ void VulkanUniformBuffer::recreate(uint32_t bufferCount) {
 }
 
 
-EG_END
+}

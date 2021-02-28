@@ -7,7 +7,7 @@
 
 #include <eagle/CoreGlobalDefinitions.h>
 
-EG_BEGIN
+namespace eagle {
 
 class Random {
 public:
@@ -25,6 +25,6 @@ private:
     std::uniform_real_distribution<float> m_distributor;
 };
 
-EG_END
+}
 
 #endif //EAGLE_RANDOM_H

@@ -7,7 +7,7 @@
 
 #include <eagle/CoreGlobalDefinitions.h>
 
-EG_BEGIN
+namespace eagle {
 
 class FileSystem {
 public:
@@ -19,6 +19,6 @@ protected:
 
 };
 
-EG_END
+}
 
 #endif //EG_FILESYSTEM_H

@@ -12,7 +12,7 @@
 #include "VulkanCore.h"
 #include "VulkanImage.h"
 
-EG_BEGIN
+namespace eagle {
 
 struct VulkanRenderTargetCreateInfo {
     VkPhysicalDevice physicalDevice;
@@ -40,7 +40,7 @@ public:
     void cleanup();
     void create(uint32_t width, uint32_t height);
 
-    virtual Handle <Image> get_image() override;
+    virtual std::weak_ptr<Image> get_image() override;
     virtual VkExtent2D& get_extent() override {return m_extent;}
     virtual VkRenderPass& get_render_pass() override {return m_renderPass;}
     virtual VkFramebuffer& get_framebuffer() override {return m_framebuffer;}
@@ -48,15 +48,15 @@ public:
 
 private:
 
-    void create_image_resources(Reference<VulkanImageAttachment> &image, VkFormat format,
+    void create_image_resources(std::shared_ptr<VulkanImageAttachment> &image, VkFormat format,
                                 VkImageUsageFlags usageFlags, VkImageAspectFlags aspectMask);
 
 private:
 
     VulkanRenderTargetCreateInfo m_info;
     VkRenderPass& m_renderPass;
-    Reference<VulkanImageAttachment> m_depthAttachment;
-    Reference<VulkanImage> m_image;
+    std::shared_ptr<VulkanImageAttachment> m_depthAttachment;
+    std::shared_ptr<VulkanImage> m_image;
     VkFramebuffer m_framebuffer;
     VkExtent2D m_extent;
 
@@ -70,7 +70,7 @@ public:
     VulkanMainRenderTarget(const VulkanRenderTargetCreateInfo &info, VkImage image, VkRenderPass& renderPass, uint32_t width, uint32_t height);
 
     virtual ~VulkanMainRenderTarget() override;
-    virtual Handle<Image> get_image() override;
+    virtual std::weak_ptr<Image> get_image() override;
     virtual VkRenderPass &get_render_pass() override;
     virtual VkFramebuffer &get_framebuffer() override;
     virtual VkExtent2D &get_extent() override;
@@ -79,14 +79,14 @@ public:
 private:
     VulkanRenderTargetCreateInfo m_info;
     VkRenderPass& m_renderPass;
-    Reference<VulkanImage> m_image;
-    Reference<VulkanImageAttachment> m_depthAttachment;
+    std::shared_ptr<VulkanImage> m_image;
+    std::shared_ptr<VulkanImageAttachment> m_depthAttachment;
     VkFramebuffer m_framebuffer;
     VkExtent2D m_extent;
 
 
 };
 
-EG_END
+}
 
 #endif //EAGLE_VULKANRENDERTARGET_H

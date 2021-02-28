@@ -12,7 +12,7 @@
 #include <eagle/renderer/vulkan/platform/desktop/VulkanContextGLFW.h>
 
 
-EG_BEGIN
+namespace eagle {
 
 WindowGLFW::WindowGLFW(uint32_t width, uint32_t height) : m_windowData(width, height) {
 }
@@ -191,4 +191,4 @@ float WindowGLFW::framebuffer_height_scale() {
 }
 
 
-EG_END
+}

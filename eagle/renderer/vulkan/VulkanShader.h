@@ -5,7 +5,7 @@
 #include "VulkanCore.h"
 #include "VulkanDescriptorSetLayout.h"
 
-EG_BEGIN
+namespace eagle {
 
 struct VulkanShaderCreateInfo {
     VkDevice device;
@@ -23,8 +23,8 @@ public:
 
     virtual void cleanup_pipeline() override;
 
-    virtual const std::vector<Handle<DescriptorSetLayout>> get_descriptor_set_layouts() override;
-    virtual const Handle<DescriptorSetLayout> get_descriptor_set_layout(uint32_t index) override;
+    virtual const std::vector<std::weak_ptr<DescriptorSetLayout>> get_descriptor_set_layouts() override;
+    virtual const std::weak_ptr<DescriptorSetLayout> get_descriptor_set_layout(uint32_t index) override;
 
     VkPipeline &get_pipeline();
 
@@ -43,7 +43,7 @@ private:
     VkPipeline m_graphicsPipeline;
     VkVertexInputBindingDescription m_inputBinding;
     uint32_t m_outputAttachmentCount = 0;
-    std::vector<Reference<VulkanDescriptorSetLayout>> m_descriptorSetLayouts;
+    std::vector<std::shared_ptr<VulkanDescriptorSetLayout>> m_descriptorSetLayouts;
     std::vector<VkVertexInputAttributeDescription> m_inputAttributes;
     std::unordered_map<VkShaderStageFlags, std::vector<uint32_t>> m_shaderCodes;
 
@@ -51,6 +51,6 @@ private:
 
 };
 
-EG_END
+}
 
 #endif //EAGLE_VULKANSHADER_H

@@ -8,7 +8,7 @@
 #include "VulkanCore.h"
 #include "eagle/renderer/DescriptorSetLayout.h"
 
-EG_BEGIN
+namespace eagle {
 
 class VulkanDescriptorSetLayout : public DescriptorSetLayout{
 public:
@@ -31,6 +31,6 @@ private:
 
 };
 
-EG_END
+}
 
 #endif //EAGLE_VULKANDESCRIPTORSETLAYOUT_H

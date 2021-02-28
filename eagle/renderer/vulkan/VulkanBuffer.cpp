@@ -7,7 +7,7 @@
 
 #include "eagle/Log.h"
 
-EG_BEGIN
+namespace eagle {
 
 VulkanBuffer::~VulkanBuffer() = default;
 
@@ -54,7 +54,7 @@ VulkanBuffer::copy_to(void *data, VkDeviceSize size) {
 }
 
 VkResult
-VulkanBuffer::create_buffer(VkPhysicalDevice physicalDevice, VkDevice device, Reference<VulkanBuffer> &buffer,
+VulkanBuffer::create_buffer(VkPhysicalDevice physicalDevice, VkDevice device, std::shared_ptr<VulkanBuffer> &buffer,
                             const VulkanBufferCreateInfo &info, VkDeviceSize size, void *data) {
     EG_CORE_TRACE("Creating vulkan buffer");
     buffer = std::make_shared<VulkanBuffer>(device, info);
@@ -133,6 +133,6 @@ void VulkanBuffer::flush(VkDeviceSize size, VkDeviceSize offset) {
 }
 
 
-EG_END
+}
 
 

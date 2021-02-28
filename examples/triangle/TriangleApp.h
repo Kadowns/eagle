@@ -7,7 +7,7 @@
 
 #include <eagle/Eagle.h>
 
-class TriangleApp : public Eagle::ApplicationDelegate {
+class TriangleApp : public eagle::ApplicationDelegate {
 public:
     TriangleApp();
     virtual ~TriangleApp() = default;
@@ -18,11 +18,11 @@ public:
 
     void destroy() override;
 private:
-    Eagle::RenderingContext* m_renderingContext;
-    Eagle::EventListener<TriangleApp> m_listener;
-    Eagle::Handle<Eagle::Shader> m_shader;
-    Eagle::Handle<Eagle::VertexBuffer> m_vertexBuffer;
-    Eagle::Handle<Eagle::IndexBuffer> m_indexBuffer;
+    eagle::RenderingContext* m_renderingContext;
+    eagle::EventListener<TriangleApp> m_listener;
+    std::weak_ptr<eagle::Shader> m_shader;
+    std::weak_ptr<eagle::VertexBuffer> m_vertexBuffer;
+    std::weak_ptr<eagle::IndexBuffer> m_indexBuffer;
 };
 
 

@@ -12,7 +12,7 @@
 #include "RenderingCore.h"
 #include "Image.h"
 
-EG_BEGIN
+namespace eagle {
 
 struct TextureCreateInfo {
     ImageCreateInfo imageCreateInfo;
@@ -26,12 +26,12 @@ public:
     virtual ~Texture() = default;
 
     virtual void resize(uint32_t width, uint32_t height) = 0;
-    virtual Reference<Image> image() const = 0;
+    virtual std::shared_ptr<Image> image() const = 0;
 
 protected:
     TextureCreateInfo m_createInfo;
 };
 
-EG_END
+}
 
 #endif //EAGLE_TEXTURE_H

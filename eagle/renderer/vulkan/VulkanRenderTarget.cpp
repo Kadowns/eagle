@@ -6,7 +6,7 @@
 #include "VulkanRenderTarget.h"
 #include "VulkanHelper.h"
 
-EG_BEGIN
+namespace eagle {
 
 VulkanCustomRenderTarget::VulkanCustomRenderTarget(uint32_t width, uint32_t height, VkRenderPass &renderPass,
                                                    VulkanRenderTargetCreateInfo &info) :
@@ -24,7 +24,7 @@ void VulkanCustomRenderTarget::cleanup() {
 
     EG_CORE_TRACE("Clearing render target!");
 
-    auto destroy_attachment = [&](Reference<VulkanImageAttachment>& attachment){
+    auto destroy_attachment = [&](std::shared_ptr<VulkanImageAttachment>& attachment){
         vkDestroyImageView(m_info.device, attachment->view, nullptr);
         vkDestroyImage(m_info.device, attachment->image, nullptr);
         vkFreeMemory(m_info.device, attachment->memory, nullptr);
@@ -106,7 +106,7 @@ void VulkanCustomRenderTarget::create(uint32_t width, uint32_t height) {
     m_cleared = false;
 }
 
-void VulkanCustomRenderTarget::create_image_resources(Reference<VulkanImageAttachment> &image, VkFormat format,
+void VulkanCustomRenderTarget::create_image_resources(std::shared_ptr<VulkanImageAttachment> &image, VkFormat format,
                                                 VkImageUsageFlags usageFlags, VkImageAspectFlags aspectMask) {
 
     VK_CALL VulkanHelper::create_image(m_info.physicalDevice, m_info.device, m_extent.width, m_extent.height,
@@ -125,7 +125,7 @@ void VulkanCustomRenderTarget::create_image_resources(Reference<VulkanImageAttac
 
 }
 
-Handle<Image> VulkanCustomRenderTarget::get_image() {
+std::weak_ptr<Image> VulkanCustomRenderTarget::get_image() {
     return m_image;
 }
 
@@ -220,7 +220,7 @@ VulkanMainRenderTarget::~VulkanMainRenderTarget() {
 
 }
 
-Handle<Image> VulkanMainRenderTarget::get_image() {
+std::weak_ptr<Image> VulkanMainRenderTarget::get_image() {
     return m_image;
 }
 
@@ -244,6 +244,6 @@ std::vector<VkClearValue> VulkanMainRenderTarget::get_clear_values() {
 }
 
 
-EG_END
+}
 
 

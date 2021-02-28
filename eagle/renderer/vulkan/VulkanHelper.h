@@ -8,7 +8,7 @@
 #include <vector>
 #include "VulkanCore.h"
 
-EG_BEGIN
+namespace eagle {
 
 class VulkanHelper {
 
@@ -48,6 +48,6 @@ public:
 
 };
 
-EG_END
+}
 
 #endif //EAGLE_VULKANHELPER_H

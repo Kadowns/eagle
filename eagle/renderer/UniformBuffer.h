@@ -8,7 +8,7 @@
 #include "DescriptorItem.h"
 #include "Shader.h"
 
-EG_BEGIN
+namespace eagle {
 
 class UniformBuffer : public DescriptorItem {
 public:
@@ -24,5 +24,5 @@ protected:
     std::vector<char> m_bytes;
 };
 
-EG_END
+}
 #endif //EAGLE_UNIFORMBUFFER_H

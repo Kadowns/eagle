@@ -5,7 +5,7 @@
 
 #include "VulkanHelper.h"
 
-EG_BEGIN
+namespace eagle {
 
 void VulkanHelper::create_image_view(VkDevice device, VkImage image, VkImageView &imageView, VkFormat format,
                                      VkImageViewType viewType,
@@ -281,6 +281,6 @@ VkFormat VulkanHelper::find_depth_format(VkPhysicalDevice physicalDevice) {
 }
 
 
-EG_END
+}
 
 

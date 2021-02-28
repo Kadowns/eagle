@@ -10,7 +10,7 @@
 #include "VulkanBuffer.h"
 #include "VulkanImage.h"
 
-EG_BEGIN
+namespace eagle {
 
 struct VulkanTextureCreateInfo {
     VkPhysicalDevice physicalDevice;
@@ -30,8 +30,8 @@ public:
     virtual void resize(uint32_t width, uint32_t height) override;
 
     virtual DescriptorType type() const override;
-    virtual Reference<Image> image() const override { return m_image; }
-    inline const Reference<VulkanImage>& native_image() const { return m_image; }
+    virtual std::shared_ptr<Image> image() const override { return m_image; }
+    inline const std::shared_ptr<VulkanImage>& native_image() const { return m_image; }
     inline VkSampler sampler() const { return m_sampler; }
 
 private:
@@ -40,10 +40,10 @@ private:
 
 private:
     VulkanTextureCreateInfo m_nativeCreateInfo;
-    Reference<VulkanImage> m_image;
+    std::shared_ptr<VulkanImage> m_image;
     VkSampler m_sampler;
 };
 
-EG_END
+}
 
 #endif //EAGLE_VULKANTEXTURE_H

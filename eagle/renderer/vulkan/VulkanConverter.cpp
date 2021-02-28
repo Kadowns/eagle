@@ -4,7 +4,7 @@
 
 #include <eagle/renderer/vulkan/VulkanConverter.h>
 
-EG_BEGIN
+namespace eagle {
 
 VkFormat VulkanConverter::to_vk(Format format) {
 
@@ -889,4 +889,4 @@ VkPipelineStageFlagBits VulkanConverter::to_vk(PipelineStage stage) {
     return result;
 }
 
-EG_END
+}

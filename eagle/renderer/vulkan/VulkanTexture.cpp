@@ -6,7 +6,7 @@
 #include "VulkanTexture.h"
 #include "VulkanHelper.h"
 
-EG_BEGIN
+namespace eagle {
 
 VulkanTexture::VulkanTexture(const TextureCreateInfo &textureCreateInfo,
                                  const VulkanTextureCreateInfo &nativeCreateInfo) :
@@ -64,4 +64,4 @@ DescriptorType VulkanTexture::type() const {
     return DescriptorType::COMBINED_IMAGE_SAMPLER;
 }
 
-EG_END
+}

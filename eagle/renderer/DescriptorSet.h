@@ -10,14 +10,14 @@
 #include "eagle/CoreGlobalDefinitions.h"
 #include "UniformBuffer.h"
 
-EG_BEGIN
+namespace eagle {
 
 class DescriptorSet {
 public:
     virtual ~DescriptorSet() = default;
-    virtual void update(const std::vector<Reference<DescriptorItem>>& descriptorItems) = 0;
+    virtual void update(const std::vector<std::shared_ptr<DescriptorItem>>& descriptorItems) = 0;
 };
 
-EG_END
+}
 
 #endif //EAGLE_DESCRIPTORSET_H

@@ -12,7 +12,7 @@
 #include "VulkanBuffer.h"
 #include "VulkanCleaner.h"
 
-EG_BEGIN
+namespace eagle {
 
 struct VulkanVertexBufferCreateInfo {
     VulkanVertexBufferCreateInfo(const VertexLayout& layout):vertexLayout(layout) {}
@@ -56,7 +56,7 @@ private:
     UpdateType m_usage;
     char* m_data =  nullptr;
 
-    std::vector<Reference<VulkanBuffer>> m_buffers;
+    std::vector<std::shared_ptr<VulkanBuffer>> m_buffers;
     std::set<int> m_dirtyBuffers;
 
 
@@ -64,6 +64,6 @@ private:
 
 };
 
-EG_END
+}
 
 #endif //EAGLE_VULKANVERTEXBUFFER_H

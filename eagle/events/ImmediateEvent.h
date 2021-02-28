@@ -7,7 +7,7 @@
 
 #include <eagle/CoreGlobalDefinitions.h>
 
-EG_BEGIN
+namespace eagle {
 
 template<typename... Args>
 class ImmediateEvent {
@@ -35,6 +35,6 @@ private:
     std::vector<Listener*> m_listeners;
 };
 
-EG_END
+}
 
 #endif //EAGLE_IMMEDIATEEVENT_H

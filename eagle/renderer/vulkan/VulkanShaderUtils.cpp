@@ -7,7 +7,7 @@
 #include <eagle/renderer/vulkan/VulkanConverter.h>
 
 
-EG_BEGIN
+namespace eagle {
 
 void SPV_REFLECT_ASSERT(SpvReflectResult result){
     assert(result == SPV_REFLECT_RESULT_SUCCESS);
@@ -194,4 +194,4 @@ VkShaderModule VulkanShaderUtils::create_shader_module(VkDevice device, const st
 }
 
 
-EG_END
+}

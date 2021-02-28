@@ -8,7 +8,7 @@
 #include <eagle/renderer/RenderingCore.h>
 #include <eagle/renderer/DescriptorItem.h>
 
-EG_BEGIN
+namespace eagle {
 
 class StorageBuffer : public DescriptorItem {
 public:
@@ -26,6 +26,6 @@ protected:
     std::vector<char> m_bytes;
 };
 
-EG_END
+}
 
 #endif //EAGLE_STORAGEBUFFER_H

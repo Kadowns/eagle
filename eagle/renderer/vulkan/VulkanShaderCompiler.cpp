@@ -8,7 +8,7 @@
 #include <iostream>
 #include <eagle/FileSystem.h>
 
-EG_BEGIN
+namespace eagle {
 
 bool VulkanShaderCompiler::m_glslangIntitialized = false;
 
@@ -110,4 +110,4 @@ EShLanguage VulkanShaderCompiler::get_shader_stage(ShaderStage stage) {
     }
 }
 
-EG_END
+}

@@ -8,7 +8,7 @@
 #include "eagle/Log.h"
 #include "eagle/CoreGlobalDefinitions.h"
 
-EG_BEGIN
+namespace eagle {
 
 enum class DescriptorType {
     UNIFORM_BUFFER = 0,
@@ -567,6 +567,6 @@ enum class ImageAspect {
     PLANE_2_KHR = PLANE_2
 };
 
-EG_END
+}
 
 #endif //EAGLE_RENDERINGCORE_H

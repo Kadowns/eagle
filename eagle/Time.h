@@ -8,7 +8,7 @@
 #include <eagle/CoreGlobalDefinitions.h>
 #include <chrono>
 
-EG_BEGIN
+namespace eagle {
 
 class Time {
 public:
@@ -29,6 +29,6 @@ private:
     bool m_started = false;
 };
 
-EG_END
+}
 
 #endif //EAGLE_TIME_H

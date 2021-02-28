@@ -10,7 +10,7 @@
 struct android_app;
 struct AInputEvent;
 
-EG_BEGIN
+namespace eagle {
 
 class AndroidWindow;
 
@@ -31,13 +31,13 @@ protected:
 
 protected:
     android_app* m_androidApp;
-    Reference<ApplicationDelegate> m_delegate;
-    Reference<AndroidWindow> m_window;
+    std::shared_ptr<ApplicationDelegate> m_delegate;
+    std::shared_ptr<AndroidWindow> m_window;
     EventBus m_eventBus;
 
     bool m_quit = false;
 };
 
-EG_END
+}
 
 #endif //EAGLE_ANDROIDAPPLICATION_H

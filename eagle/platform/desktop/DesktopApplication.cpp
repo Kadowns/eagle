@@ -11,11 +11,11 @@
 #include "eagle/platform/desktop/WindowGLFW.h"
 #include "DesktopFileSystem.h"
 
-EG_BEGIN
+namespace eagle {
 
 DesktopApplication::DesktopApplication(uint32_t width, uint32_t height, ApplicationDelegate* delegate) {
     s_instance = this;
-    m_delegate = Reference<ApplicationDelegate>(delegate);
+    m_delegate = std::shared_ptr<ApplicationDelegate>(delegate);
     m_window = std::make_shared<WindowGLFW>(width, height);
     DesktopFileSystem::init();
 }
@@ -38,4 +38,4 @@ Window &DesktopApplication::window() {
     return *m_window;
 }
 
-EG_END
+}

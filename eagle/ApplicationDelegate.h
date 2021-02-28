@@ -7,7 +7,7 @@
 
 #include <eagle/CoreGlobalDefinitions.h>
 
-EG_BEGIN
+namespace eagle {
 
 class ApplicationDelegate {
 public:
@@ -17,6 +17,6 @@ public:
     virtual void destroy() = 0;
 };
 
-EG_END
+}
 
 #endif //EAGLE_APPLICATIONDELEGATE_H

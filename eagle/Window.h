@@ -9,7 +9,7 @@
 #include <eagle/events/EventBus.h>
 
 
-EG_BEGIN
+namespace eagle {
 
 class RenderingContext;
 
@@ -39,6 +39,6 @@ public:
     virtual float framebuffer_height_scale() = 0;
 };
 
-EG_END
+}
 
 #endif //EAGLE_WINDOW_H

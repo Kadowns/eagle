@@ -9,7 +9,7 @@
 
 struct AAssetManager;
 
-EG_BEGIN
+namespace eagle {
 
 class AndroidFileSystem : public FileSystem {
 public:
@@ -22,6 +22,6 @@ private:
     AAssetManager* m_assetManager;
 };
 
-EG_END
+}
 
 #endif //EG_ANDROIDFILESYSTEM_H

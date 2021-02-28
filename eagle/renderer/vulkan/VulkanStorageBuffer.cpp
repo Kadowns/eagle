@@ -5,7 +5,7 @@
 #include <eagle/renderer/vulkan/VulkanStorageBuffer.h>
 #include <eagle/renderer/vulkan/VulkanCleaner.h>
 
-EG_BEGIN
+namespace eagle {
 
 VulkanStorageBuffer::VulkanStorageBuffer(VulkanStorageBufferCreateInfo createInfo, size_t size, void *data, UpdateType usage) :
     m_createInfo(createInfo),
@@ -74,7 +74,7 @@ void VulkanStorageBuffer::create_storage_buffer() {
             createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
             createBufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
-            Reference<VulkanBuffer> stagingBuffer;
+            std::shared_ptr<VulkanBuffer> stagingBuffer;
             VK_CALL
             VulkanBuffer::create_buffer(
                     m_createInfo.physicalDevice, m_createInfo.device, stagingBuffer, createBufferInfo, m_bytes.size(),
@@ -138,4 +138,4 @@ void VulkanStorageBuffer::recreate(uint32_t bufferCount) {
     create_storage_buffer();
 }
 
-EG_END
+}

@@ -5,7 +5,7 @@
 #include "eagle/Log.h"
 #include "VulkanVertexBuffer.h"
 
-EG_BEGIN
+namespace eagle {
 
 VulkanVertexBuffer::VulkanVertexBuffer(VkDevice device, VulkanVertexBufferCreateInfo &createInfo,
                                        UpdateType usageFlags) :
@@ -47,7 +47,7 @@ VulkanVertexBuffer::VulkanVertexBuffer(VkDevice device, VulkanVertexBufferCreate
             createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
             createBufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
-            Reference<VulkanBuffer> stagingBuffer;
+            std::shared_ptr<VulkanBuffer> stagingBuffer;
             VK_CALL
             VulkanBuffer::create_buffer(createInfo.physicalDevice, m_device, stagingBuffer, createBufferInfo,
                                         bufferSize, m_data);
@@ -167,6 +167,6 @@ bool VulkanVertexBuffer::is_dirty() const {
     return !m_dirtyBuffers.empty();
 }
 
-EG_END
+}
 
 

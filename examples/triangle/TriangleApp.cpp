@@ -13,19 +13,19 @@ TriangleApp::TriangleApp() {
 
 void TriangleApp::init() {
     EG_INFO("Triangle attached!");
-    m_renderingContext = Eagle::Application::instance().window().rendering_context();
+    m_renderingContext = eagle::Application::instance().window().rendering_context();
 
-    m_listener.attach(&Eagle::Application::instance().event_bus());
-    m_listener.subscribe<Eagle::OnWindowClose>([](const Eagle::OnWindowClose& ev){
-        Eagle::Application::instance().quit();
+    m_listener.attach(&eagle::Application::instance().event_bus());
+    m_listener.subscribe<eagle::OnWindowClose>([](const eagle::OnWindowClose& ev){
+        eagle::Application::instance().quit();
         return false;
     });
 
-    Eagle::VertexLayout vertexLayout(5, {Eagle::Format::R32G32_SFLOAT, Eagle::Format::R32G32B32_SFLOAT});
+    eagle::VertexLayout vertexLayout(5, {eagle::Format::R32G32_SFLOAT, eagle::Format::R32G32B32_SFLOAT});
 
-    Eagle::ShaderCreateInfo pipelineInfo = {m_renderingContext->main_render_pass(), {
-            {Eagle::ShaderStage::VERTEX, "color.vert.spv"},
-            {Eagle::ShaderStage::FRAGMENT, "color.frag.spv"}
+    eagle::ShaderCreateInfo pipelineInfo = {m_renderingContext->main_render_pass(), {
+            {eagle::ShaderStage::VERTEX, "color.vert.spv"},
+            {eagle::ShaderStage::FRAGMENT, "color.frag.spv"}
     }};
     pipelineInfo.vertexLayout = vertexLayout;
     m_shader = m_renderingContext->create_shader(pipelineInfo);
@@ -43,7 +43,7 @@ void TriangleApp::init() {
     };
 
 
-    m_vertexBuffer = m_renderingContext->create_vertex_buffer(vertices.data(), vertices.size() * sizeof(Vertex), vertexLayout, Eagle::UpdateType::CONSTANT);
+    m_vertexBuffer = m_renderingContext->create_vertex_buffer(vertices.data(), vertices.size() * sizeof(Vertex), vertexLayout, eagle::UpdateType::CONSTANT);
 
 
     std::vector<uint16_t> indices = {
@@ -51,7 +51,7 @@ void TriangleApp::init() {
             0, 1, 3
     };
 
-    m_indexBuffer = m_renderingContext->create_index_buffer(indices.data(), indices.size() * sizeof(uint16_t), Eagle::IndexBufferType::UINT_16, Eagle::UpdateType::CONSTANT);
+    m_indexBuffer = m_renderingContext->create_index_buffer(indices.data(), indices.size() * sizeof(uint16_t), eagle::IndexBufferType::UINT_16, eagle::UpdateType::CONSTANT);
 
 }
 
@@ -72,7 +72,7 @@ void TriangleApp::step() {
     commandBuffer->finish();
 
     m_renderingContext->submit_command_buffer(commandBuffer);
-    m_renderingContext->present_frame();
+    m_renderingContext->present_frame(<#initializer#>);
 }
 
 void TriangleApp::destroy() {

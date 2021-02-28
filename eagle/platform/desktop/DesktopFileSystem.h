@@ -7,7 +7,7 @@
 
 #include <eagle/FileSystem.h>
 
-EG_BEGIN
+namespace eagle {
 
 class DesktopFileSystem : public FileSystem {
 public:
@@ -16,7 +16,7 @@ public:
     std::string read_text(const std::string& path) override;
 };
 
-EG_END
+}
 
 
 #endif //EG_DESKTOPFILESYSTEM_H

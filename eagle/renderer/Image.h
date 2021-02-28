@@ -8,7 +8,7 @@
 #include "DescriptorItem.h"
 #include "RenderingCore.h"
 
-EG_BEGIN
+namespace eagle {
 
 struct ImageCreateInfo {
     int32_t width, height;
@@ -54,6 +54,6 @@ protected:
     ImageCreateInfo m_createInfo;
 };
 
-EG_END
+}
 
 #endif //EAGLE_IMAGE_H

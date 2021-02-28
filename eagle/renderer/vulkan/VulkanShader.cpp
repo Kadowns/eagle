@@ -7,7 +7,7 @@
 #include <eagle/renderer/vulkan/VulkanRenderPass.h>
 #include <eagle/FileSystem.h>
 
-EG_BEGIN
+namespace eagle {
 
 VulkanShader::VulkanShader(const ShaderCreateInfo &createInfo, const VulkanShaderCreateInfo &nativeCreateInfo) :
         m_createInfo(createInfo),
@@ -296,17 +296,17 @@ VkPipelineLayout& VulkanShader::get_layout() {
     return m_pipelineLayout;
 }
 
-const std::vector<Handle<DescriptorSetLayout>> VulkanShader::get_descriptor_set_layouts() {
-    std::vector<Handle<DescriptorSetLayout>> sets(m_descriptorSetLayouts.size());
+const std::vector<std::weak_ptr<DescriptorSetLayout>> VulkanShader::get_descriptor_set_layouts() {
+    std::vector<std::weak_ptr<DescriptorSetLayout>> sets(m_descriptorSetLayouts.size());
     for (size_t i = 0; i < sets.size(); i++){
         sets[i] = m_descriptorSetLayouts[i];
     }
     return sets;
 }
 
-const Handle<DescriptorSetLayout> VulkanShader::get_descriptor_set_layout(uint32_t index) {
+const std::weak_ptr<DescriptorSetLayout> VulkanShader::get_descriptor_set_layout(uint32_t index) {
     return m_descriptorSetLayouts[index];
 }
 
 
-EG_END
+}

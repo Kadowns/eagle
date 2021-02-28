@@ -6,7 +6,7 @@
 #include <eagle/Input.h>
 #include <eagle/platform/desktop/DesktopApplication.h>
 
-EG_BEGIN
+namespace eagle {
 
 void InputLayer::handle_attach() {
 //    Input::instance().init(&DesktopApplication::instance().event_bus());
@@ -20,4 +20,4 @@ void InputLayer::handle_update() {
     Input::instance().refresh();
 }
 
-EG_END
+}

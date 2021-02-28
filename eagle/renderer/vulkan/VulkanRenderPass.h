@@ -8,7 +8,7 @@
 #include "VulkanCore.h"
 #include <eagle/renderer/RenderPass.h>
 
-EG_BEGIN
+namespace eagle {
 
 struct VulkanRenderPassCreateInfo {
     VkDevice device;
@@ -50,6 +50,6 @@ private:
     VkRenderPass m_vkRenderPass;
 };
 
-EG_END
+}
 
 #endif //EAGLE_VULKANRENDERPASS_H

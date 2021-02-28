@@ -5,14 +5,14 @@
 #include "DesktopFileSystem.h"
 #include <fstream>
 
-using namespace Eagle;
+using namespace eagle;
 
 
 void DesktopFileSystem::init() {
     s_instance = new DesktopFileSystem();
 }
 
-std::vector<uint8_t> Eagle::DesktopFileSystem::read_bytes(const std::string &path) {
+std::vector<uint8_t> eagle::DesktopFileSystem::read_bytes(const std::string &path) {
     std::ifstream is("./data/" + path, std::ios::binary | std::ios::in | std::ios::ate);
 
     if (!is.is_open()) {

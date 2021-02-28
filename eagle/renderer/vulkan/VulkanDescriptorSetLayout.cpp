@@ -5,7 +5,7 @@
 #include <eagle/renderer/vulkan/VulkanDescriptorSetLayout.h>
 #include <eagle/renderer/vulkan/VulkanConverter.h>
 
-EG_BEGIN
+namespace eagle {
 
 VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(VkDevice device, const std::vector<DescriptorBindingDescription> &bindings) :
     m_device(device), m_bindings(bindings) {
@@ -44,4 +44,4 @@ const std::vector<DescriptorBindingDescription> &VulkanDescriptorSetLayout::bind
     return m_bindings;
 }
 
-EG_END
+}

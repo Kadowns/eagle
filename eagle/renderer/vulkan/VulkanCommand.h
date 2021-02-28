@@ -9,7 +9,7 @@
 
 #include <array>
 
-EG_BEGIN
+namespace eagle {
 
 class VulkanCommand {
 public:
@@ -228,6 +228,6 @@ private:
     VkCommandBuffer m_commandBuffer;
 };
 
-EG_END
+}
 
 #endif //EAGLE_VULKANCOMMAND_H

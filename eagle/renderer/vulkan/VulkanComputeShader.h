@@ -10,7 +10,7 @@
 #include <eagle/renderer/vulkan/VulkanDescriptorSetLayout.h>
 #include <eagle/renderer/vulkan/VulkanDescriptorSet.h>
 
-EG_BEGIN
+namespace eagle {
 
 struct VulkanComputeShaderCreateInfo{
     VkDevice device;
@@ -32,9 +32,9 @@ public:
 
     virtual void dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
-    virtual void update_descriptor_items(const std::vector<Reference<DescriptorItem>> &descriptorItems) override;
+    virtual void update_descriptor_items(const std::vector<std::shared_ptr<DescriptorItem>> &descriptorItems) override;
 
-    virtual void set_image(const std::string &name, const Reference<Image> &image) override;
+    virtual void set_image(const std::string &name, const std::shared_ptr<Image> &image) override;
 
     void clear_descriptor_set();
     void recreate(uint32_t bufferCount);
@@ -57,8 +57,8 @@ private:
     VkPipelineLayout m_pipelineLayout;
     VkPipeline m_computePipeline;
     std::vector<DescriptorBindingDescription> m_bindingDescriptions;
-    Reference<VulkanDescriptorSetLayout> m_descriptorLayout;
-    Reference<VulkanDescriptorSet> m_descriptorSet;
+    std::shared_ptr<VulkanDescriptorSetLayout> m_descriptorLayout;
+    std::shared_ptr<VulkanDescriptorSet> m_descriptorSet;
     VkCommandBuffer m_commandBuffer;
     VkFence m_fence;
 
@@ -67,6 +67,6 @@ private:
 
 
 
-EG_END
+}
 
 #endif //EAGLE_VULKANCOMPUTESHADER_H

@@ -4,4 +4,4 @@
 
 #include "FileSystem.h"
 
-Eagle::FileSystem* Eagle::FileSystem::s_instance = nullptr;
+eagle::FileSystem* eagle::FileSystem::s_instance = nullptr;

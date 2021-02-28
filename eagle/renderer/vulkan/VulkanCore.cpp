@@ -4,8 +4,8 @@
 
 #include "VulkanCore.h"
 
-EG_BEGIN
+namespace eagle {
 
 VkDebugInfo::VkCall VkDebugInfo::m_callInfo;
 
-EG_END
+}

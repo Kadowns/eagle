@@ -4,7 +4,7 @@
 
 #include <eagle/renderer/vulkan/VulkanFramebuffer.h>
 
-EG_BEGIN
+namespace eagle {
 
 VulkanFramebuffer::VulkanFramebuffer(const FramebufferCreateInfo &createInfo,
                                      const VulkanFramebufferCreateInfo &nativeFramebufferCreateInfo) :
@@ -53,4 +53,4 @@ void VulkanFramebuffer::create_framebuffer() {
     EG_CORE_TRACE("Vulkan frame buffer created!");
 }
 
-EG_END
+}

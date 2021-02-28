@@ -10,7 +10,7 @@
 #include <eagle/renderer/Framebuffer.h>
 #include "VulkanRenderPass.h"
 
-EG_BEGIN
+namespace eagle {
 
 struct VulkanFramebufferCreateInfo {
     VkDevice device;
@@ -29,10 +29,10 @@ private:
     void create_framebuffer();
 private:
     VulkanFramebufferCreateInfo m_nativeCreateInfo;
-    std::vector<Reference<VulkanImage>> m_nativeImageAttachments;
+    std::vector<std::shared_ptr<VulkanImage>> m_nativeImageAttachments;
     std::vector<VkFramebuffer> m_framebuffers;
 };
 
-EG_END
+}
 
 #endif //EAGLE_VULKANFRAMEBUFFER_H

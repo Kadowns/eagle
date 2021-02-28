@@ -8,7 +8,7 @@
 #include "CoreGlobalDefinitions.h"
 #include "Layer.h"
 
-EG_BEGIN
+namespace eagle {
 
 class InputLayer : public Layer {
 public:
@@ -25,6 +25,6 @@ public:
 
 };
 
-EG_END
+}
 
 #endif //EAGLE_INPUTLAYER_H

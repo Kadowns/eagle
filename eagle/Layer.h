@@ -9,7 +9,7 @@
 #include "CoreGlobalDefinitions.h"
 #include "eagle/events/EventBus.h"
 
-EG_BEGIN
+namespace eagle {
 
 class Layer {
 
@@ -22,6 +22,6 @@ public:
     virtual void handle_update()        {}
 };
 
-EG_END
+}
 
 #endif //EAGLE_LAYER_H

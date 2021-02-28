@@ -11,7 +11,7 @@
 #include "VulkanBuffer.h"
 #include "VulkanCleaner.h"
 
-EG_BEGIN
+namespace eagle {
 
 struct VulkanIndexBufferCreateInfo {
     VkPhysicalDevice physicalDevice;
@@ -51,7 +51,7 @@ public:
 private:
     VkDevice m_device;
     VkPhysicalDevice m_physicalDevice;
-    std::vector<Reference<VulkanBuffer>> m_buffers;
+    std::vector<std::shared_ptr<VulkanBuffer>> m_buffers;
     std::set<int> m_dirtyBuffers;
     char* m_data = nullptr;
     size_t m_size;
@@ -60,7 +60,7 @@ private:
     bool m_resizing = false, m_initialized = false;
 };
 
-EG_END
+}
 
 
 #endif //EAGLE_VULKANINDEXBUFFER_H

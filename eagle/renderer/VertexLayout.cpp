@@ -6,13 +6,13 @@
 
 #include "VertexLayout.h"
 
-EG_BEGIN
+namespace eagle {
 
 VertexLayout::VertexLayout() : m_elementCount(0) {
 
 }
 
-VertexLayout::VertexLayout(size_t elementCount, std::vector<Eagle::Format> components) :
+VertexLayout::VertexLayout(size_t elementCount, std::vector<eagle::Format> components) :
     m_components(std::move(components)), m_elementCount(elementCount) {
 }
 
@@ -49,4 +49,4 @@ size_t VertexLayout::get_element_count() {
 VertexLayout::~VertexLayout() = default;
 
 
-EG_END
+}

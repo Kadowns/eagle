@@ -7,7 +7,7 @@
 
 #include <eagle/renderer/vulkan/VulkanContext.h>
 
-EG_BEGIN
+namespace eagle {
 
 class WindowGLFW;
 
@@ -23,6 +23,6 @@ protected:
 
 };
 
-EG_END
+}
 
 #endif //EAGLE_VULKANCONTEXTGLFW_H

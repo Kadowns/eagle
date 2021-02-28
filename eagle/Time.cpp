@@ -4,7 +4,7 @@
 
 #include <eagle/Time.h>
 
-EG_BEGIN
+namespace eagle {
 
 void Time::update() {
     if (!m_started){
@@ -26,4 +26,4 @@ void Time::stop() {
     m_started = false;
 }
 
-EG_END
+}

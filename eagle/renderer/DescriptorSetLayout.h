@@ -8,7 +8,7 @@
 #include "RenderingCore.h"
 #include "DescriptorItem.h"
 
-EG_BEGIN
+namespace eagle {
 
 struct DescriptorBindingMemberDescription {
     std::string name;
@@ -34,7 +34,7 @@ public:
 };
 
 
-EG_END
+}
 
 
 

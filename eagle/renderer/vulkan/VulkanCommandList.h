@@ -11,7 +11,7 @@
 #include "VulkanCore.h"
 #include "VulkanCommand.h"
 
-EG_BEGIN
+namespace eagle {
 
 class VulkanCommandList {
 
@@ -20,7 +20,7 @@ public:
     VulkanCommandList() = default;
     ~VulkanCommandList() = default;
 
-    inline void push(Reference<VulkanCommand> cmd){
+    inline void push(std::shared_ptr<VulkanCommand> cmd){
         if (m_secondaryPass){
             m_commands.emplace(m_commands.begin() + m_secondaryPassIndex, cmd);
             m_secondaryPassIndex++;
@@ -47,12 +47,12 @@ public:
 
 private:
 
-    std::vector<Reference<VulkanCommand>> m_commands;
+    std::vector<std::shared_ptr<VulkanCommand>> m_commands;
     uint32_t m_secondaryPassIndex = 0;
     bool m_secondaryPass = false;
 
 };
 
-EG_END
+}
 
 #endif //EAGLE_VULKANCOMMANDLIST_H

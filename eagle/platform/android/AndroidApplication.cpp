@@ -61,7 +61,7 @@ Eagle::AndroidApplication::AndroidApplication(android_app *androidApp, Applicati
     s_instance = this;
     androidApp->onAppCmd = handle_app_cmd;
     androidApp->userData = this;
-    m_delegate = Reference<ApplicationDelegate>(delegate);
+    m_delegate = std::shared_ptr<ApplicationDelegate>(delegate);
     m_window = std::make_shared<AndroidWindow>(androidApp);
     m_androidApp = androidApp;
     AndroidFileSystem::init(androidApp->activity->assetManager);

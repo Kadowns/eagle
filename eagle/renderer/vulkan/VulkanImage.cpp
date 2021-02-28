@@ -7,7 +7,7 @@
 #include <eagle/renderer/vulkan/VulkanHelper.h>
 #include <eagle/renderer/vulkan/VulkanBuffer.h>
 
-EG_BEGIN
+namespace eagle {
 
 VulkanImage::VulkanImage(const ImageCreateInfo &imageCreateInfo, const VulkanImageCreateInfo &nativeCreateInfo) :
     Image(imageCreateInfo),
@@ -147,7 +147,7 @@ void VulkanImage::create() {
 
 void VulkanImage::copy_buffer_data_to_image(VkImageSubresourceRange subresourceRange, uint32_t index) {
     EG_CORE_TRACE("Copying buffer to image!");
-    Reference<VulkanBuffer> stagingBuffer;
+    std::shared_ptr<VulkanBuffer> stagingBuffer;
 
     VulkanBufferCreateInfo bufferInfo = {};
     bufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
@@ -258,4 +258,4 @@ DescriptorType VulkanImage::type() const {
     return m_descriptorType;
 }
 
-EG_END
+}

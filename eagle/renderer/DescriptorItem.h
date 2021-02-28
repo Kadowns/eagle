@@ -7,7 +7,7 @@
 
 #include "RenderingCore.h"
 
-EG_BEGIN
+namespace eagle {
 
 class DescriptorItem {
 public:
@@ -16,6 +16,6 @@ public:
 };
 
 
-EG_END
+}
 
 #endif //EAGLE_DESCRIPTORITEM_H

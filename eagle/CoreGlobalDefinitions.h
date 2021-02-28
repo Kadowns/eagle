@@ -21,26 +21,14 @@
 #include <typeindex>
 #include <any>
 
-#define EG_BEGIN namespace Eagle {
-#define EG_END   }
-
 #define EAGLE_GET_INFO(key) Eagle::EagleInfo::get_info(key)
 #define EAGLE_SET_INFO(key, value) Eagle::EagleInfo::set_info(key, value)
 
 #define BIT(x) (1 << x)
 
-EG_BEGIN
+namespace eagle {
 
-template<typename T>
-using Handle = std::weak_ptr<T>;
-
-template<typename T>
-using Reference = std::shared_ptr<T>;
-
-template<typename T>
-using Scope = std::unique_ptr<T>;
-
-enum class Cursor{
+enum class Cursor {
     ARROW = 0,
     TEXT = 1,
     VERT_RESIZE = 2,
@@ -72,6 +60,6 @@ enum DataType {
     ARRAY
 };
 
-EG_END
+}
 
 #endif //EAGLE_COREGLOBALDEFINITIONS_H

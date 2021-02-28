@@ -12,7 +12,7 @@
 struct GLFWwindow;
 struct GLFWcursor;
 
-EG_BEGIN
+namespace eagle {
 
 class VulkanContextGLFW;
 
@@ -56,10 +56,10 @@ private:
 
     GLFWwindow* m_window;
     std::map<Cursor, GLFWcursor*> m_mouseCursors;
-    Reference<VulkanContextGLFW> m_renderingContext;
+    std::shared_ptr<VulkanContextGLFW> m_renderingContext;
 };
 
-EG_END
+}
 
 
 #endif //EAGLE_WINDOWGLFW_H

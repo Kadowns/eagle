@@ -5,7 +5,7 @@
 #ifndef EAGLE_INPUTEVENTS_H
 #define EAGLE_INPUTEVENTS_H
 
-EG_BEGIN
+namespace eagle {
 
 struct OnMouseMove {
     double x, y;
@@ -28,6 +28,6 @@ struct OnKeyTyped {
 
 };
 
-EG_END
+}
 
 #endif //EAGLE_INPUTEVENTS_H

@@ -4,9 +4,9 @@
 
 #include "Input.h"
 
-EG_BEGIN
+namespace eagle {
 
-Scope<Input> Input::s_instance;
+std::unique_ptr<Input> Input::s_instance;
 
 Input& Input::instance() {
     return s_instance ? *s_instance : *(s_instance = std::make_unique<Input>());
@@ -117,4 +117,4 @@ void Input::deinit() {
     m_listener.detach();
 }
 
-EG_END
+}

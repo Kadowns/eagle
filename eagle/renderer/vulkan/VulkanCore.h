@@ -13,7 +13,7 @@
 #include <eagle/renderer/vulkan/platform/android/vulkan_wrapper.h>
 #endif
 
-EG_BEGIN
+namespace eagle {
 
 class VkDebugInfo {
 
@@ -42,9 +42,9 @@ private:
 };
 
 
-EG_END
+}
 
-#define VK_CALL Eagle::VkDebugInfo::set_call(EG_FILENAME, __FUNCTION__, __LINE__);
+#define VK_CALL eagle::VkDebugInfo::set_call(EG_FILENAME, __FUNCTION__, __LINE__);
 
 #define VK_CALL_ASSERT(result) VK_CALL if (result != VK_SUCCESS)
 

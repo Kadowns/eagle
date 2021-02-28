@@ -3,10 +3,10 @@
 #include "VulkanDescriptorSet.h"
 #include "VulkanImage.h"
 
-EG_BEGIN
+namespace eagle {
 
-VulkanDescriptorSet::VulkanDescriptorSet(const Reference<VulkanDescriptorSetLayout> &descriptorSetLayout,
-                                         const std::vector<Reference<DescriptorItem>> &descriptorItems,
+VulkanDescriptorSet::VulkanDescriptorSet(const std::shared_ptr<VulkanDescriptorSetLayout> &descriptorSetLayout,
+                                         const std::vector<std::shared_ptr<DescriptorItem>> &descriptorItems,
                                          const VulkanDescriptorSetCreateInfo& createInfo) :
     m_descriptorSetLayout(descriptorSetLayout), m_descriptorItems(descriptorItems), m_info(createInfo){
     create_descriptor_sets();
@@ -15,7 +15,7 @@ VulkanDescriptorSet::VulkanDescriptorSet(const Reference<VulkanDescriptorSetLayo
     }
 }
 
-VulkanDescriptorSet::VulkanDescriptorSet(const Reference<VulkanDescriptorSetLayout> &descriptorSetLayout,
+VulkanDescriptorSet::VulkanDescriptorSet(const std::shared_ptr<VulkanDescriptorSetLayout> &descriptorSetLayout,
                                          const VulkanDescriptorSetCreateInfo &createInfo) :
     m_descriptorSetLayout(descriptorSetLayout), m_info(createInfo){
     create_descriptor_sets();
@@ -61,7 +61,7 @@ void VulkanDescriptorSet::create_descriptor_sets() {
     m_cleared = false;
 }
 
-void VulkanDescriptorSet::update(const std::vector<Reference<DescriptorItem>> &descriptorItems) {
+void VulkanDescriptorSet::update(const std::vector<std::shared_ptr<DescriptorItem>> &descriptorItems) {
 
 
     m_descriptorItems = descriptorItems;
@@ -183,4 +183,4 @@ void VulkanDescriptorSet::recreate(uint32_t bufferCount) {
     }
 }
 
-EG_END
+}

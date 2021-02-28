@@ -7,7 +7,7 @@
 
 #include <eagle/renderer/vulkan/VulkanContext.h>
 
-EG_BEGIN
+namespace eagle {
 
 class AndroidWindow;
 
@@ -31,6 +31,6 @@ protected:
     bool m_initialized = false;
 };
 
-EG_END
+}
 
 #endif //EAGLE_VULKANCONTEXTANDROID_H

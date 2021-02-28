@@ -8,9 +8,9 @@
 
 int main(){
 
-    Eagle::Log::init(Eagle::Log::TRACE, Eagle::Log::TRACE);
+    eagle::Log::init(eagle::Log::TRACE, eagle::Log::TRACE);
 
-    Eagle::DesktopApplication application(1280, 720, new TriangleApp());
+    eagle::DesktopApplication application(1280, 720, new TriangleApp());
 
     try {
         application.run();

@@ -9,7 +9,7 @@
 
 #include <utility>
 
-EG_BEGIN
+namespace eagle {
 
 struct RenderAttachmentDescription {
     Format format;
@@ -40,7 +40,7 @@ protected:
     const RenderAttachmentDescription m_depthAttachment;
 };
 
-EG_END
+}
 
 
 #endif //EAGLE_RENDERPASS_H

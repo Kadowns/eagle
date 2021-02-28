@@ -16,7 +16,7 @@
 #include "RenderPass.h"
 #include "Framebuffer.h"
 
-EG_BEGIN
+namespace eagle {
 
 class CommandBuffer {
 public:
@@ -30,19 +30,19 @@ public:
     virtual bool is_finished() = 0;
 
     virtual void
-    bind_shader(const Reference<Shader> &shader) = 0;
+    bind_shader(const std::shared_ptr<Shader> &shader) = 0;
 
     virtual void
-    bind_compute_shader(const Reference<ComputeShader>& shader) = 0;
+    bind_compute_shader(const std::shared_ptr<ComputeShader>& shader) = 0;
 
     virtual void
     draw(uint32_t vertexCount) = 0;
 
     virtual void
-    bind_vertex_buffer(const Reference<VertexBuffer> &vertexBuffer) = 0;
+    bind_vertex_buffer(const std::shared_ptr<VertexBuffer> &vertexBuffer) = 0;
 
     virtual void
-    bind_index_buffer(const Reference<IndexBuffer> &indexBuffer) = 0;
+    bind_index_buffer(const std::shared_ptr<IndexBuffer> &indexBuffer) = 0;
 
     virtual void
     push_constants(ShaderStage stage, uint32_t offset, size_t size, void *data) = 0;
@@ -51,10 +51,10 @@ public:
     draw_indexed(uint32_t indicesCount, uint32_t indexOffset, uint32_t vertexOffset) = 0;
 
     virtual void
-    bind_descriptor_sets(const Reference<DescriptorSet> &descriptorSet, uint32_t setIndex) = 0;
+    bind_descriptor_sets(const std::shared_ptr<DescriptorSet> &descriptorSet, uint32_t setIndex) = 0;
 
     virtual void
-    bind_descriptor_sets(const Reference<ComputeShader> &shader, const Reference<DescriptorSet> &descriptorSet,
+    bind_descriptor_sets(const std::shared_ptr<ComputeShader> &shader, const std::shared_ptr<DescriptorSet> &descriptorSet,
                                       uint32_t setIndex) = 0;
 
     virtual void
@@ -68,10 +68,10 @@ public:
 
 
     virtual void
-    begin_render_pass(const Reference<RenderPass> &renderPass, const Reference<Framebuffer>& framebuffer) = 0;
+    begin_render_pass(const std::shared_ptr<RenderPass> &renderPass, const std::shared_ptr<Framebuffer>& framebuffer) = 0;
 
     virtual void
-    pipeline_barrier(const Reference <Image> &image, const std::vector<PipelineStage> &srcPipelineStages,
+    pipeline_barrier(const std::shared_ptr<Image> &image, const std::vector<PipelineStage> &srcPipelineStages,
                      const std::vector<PipelineStage> &dstPipelineStages) = 0;
 
     virtual void
@@ -79,6 +79,6 @@ public:
 
 };
 
-EG_END
+}
 
 #endif //EAGLE_COMMANDBUFFER_H

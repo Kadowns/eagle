@@ -8,7 +8,7 @@
 #include <eagle/renderer/RenderPass.h>
 #include "VulkanCore.h"
 
-EG_BEGIN
+namespace eagle {
 
 class VulkanConverter {
 public:
@@ -88,6 +88,6 @@ public:
 
 };
 
-EG_END
+}
 
 #endif //EAGLE_VULKANCONVERTER_H

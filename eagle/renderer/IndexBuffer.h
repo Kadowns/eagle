@@ -9,7 +9,7 @@
 #include "eagle/CoreGlobalDefinitions.h"
 #include "RenderingCore.h"
 
-EG_BEGIN
+namespace eagle {
 
 enum class IndexBufferType{
     UINT_16 = 2,
@@ -25,7 +25,7 @@ public:
     virtual void upload(void* data, uint32_t size) = 0;
 };
 
-EG_END
+}
 
 
 #endif //EAGLE_INDEXBUFFER_H

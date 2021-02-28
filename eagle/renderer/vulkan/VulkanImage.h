@@ -10,7 +10,7 @@
 #include "VulkanCore.h"
 #include <vector>
 
-EG_BEGIN
+namespace eagle {
 
 struct VulkanImageCreateInfo {
     VkPhysicalDevice physicalDevice;
@@ -57,6 +57,6 @@ private:
 };
 
 
-EG_END
+}
 
 #endif //EAGLE_VULKAN_IMAGE_H

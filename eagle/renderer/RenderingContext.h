@@ -22,7 +22,7 @@
 #include "Framebuffer.h"
 #include "RenderPass.h"
 
-EG_BEGIN
+namespace eagle {
 
 class Window;
 
@@ -33,53 +33,52 @@ public:
     virtual ~RenderingContext() = default;
 
     virtual bool prepare_frame() = 0;
-    virtual void present_frame() = 0;
-    virtual void submit_command_buffer(const Reference<CommandBuffer>& commandBuffer) = 0;
+    virtual void present_frame(const std::shared_ptr<CommandBuffer> &commandBuffer) = 0;
 
-    virtual Reference<CommandBuffer> main_command_buffer() = 0;
-    virtual Reference<RenderPass> main_render_pass() = 0;
-    virtual Reference<Framebuffer> main_frambuffer() = 0;
+    virtual std::shared_ptr<CommandBuffer> main_command_buffer() = 0;
+    virtual std::shared_ptr<RenderPass> main_render_pass() = 0;
+    virtual std::shared_ptr<Framebuffer> main_frambuffer() = 0;
 
-    virtual Handle <Shader>
+    virtual std::weak_ptr<Shader>
     create_shader(const ShaderCreateInfo &shaderCreateInfo) = 0;
 
-    virtual Handle<VertexBuffer>
+    virtual std::weak_ptr<VertexBuffer>
     create_vertex_buffer(void *vertices, uint32_t size, const VertexLayout &vertexLayout,
                          UpdateType usageFlags) = 0;
 
-    virtual Handle<IndexBuffer>
+    virtual std::weak_ptr<IndexBuffer>
     create_index_buffer(void *indexData, size_t indexCount, IndexBufferType indexType, UpdateType usage) = 0;
 
-    virtual Handle<UniformBuffer>
+    virtual std::weak_ptr<UniformBuffer>
     create_uniform_buffer(size_t size, void *data) = 0;
 
-    virtual Handle <StorageBuffer>
+    virtual std::weak_ptr<StorageBuffer>
     create_storage_buffer(size_t size, void *data, UpdateType usage) = 0;
 
-    virtual Handle<DescriptorSetLayout>
+    virtual std::weak_ptr<DescriptorSetLayout>
     create_descriptor_set_layout(const std::vector<DescriptorBindingDescription> &bindings) = 0;
 
-    virtual Handle<DescriptorSet>
-    create_descriptor_set(const Reference<DescriptorSetLayout> &descriptorLayout,
-                          const std::vector<Reference<DescriptorItem>> &descriptorItems) = 0;
+    virtual std::weak_ptr<DescriptorSet>
+    create_descriptor_set(const std::shared_ptr<DescriptorSetLayout> &descriptorLayout,
+                          const std::vector<std::shared_ptr<DescriptorItem>> &descriptorItems) = 0;
 
-    virtual Handle<Texture>
+    virtual std::weak_ptr<Texture>
     create_texture(const TextureCreateInfo &createInfo) = 0;
 
-    virtual Handle<RenderPass>
+    virtual std::weak_ptr<RenderPass>
     create_render_pass(const std::vector<RenderAttachmentDescription>& colorAttachments, const RenderAttachmentDescription& depthAttachment) = 0;
 
-    virtual Handle<Framebuffer>
+    virtual std::weak_ptr<Framebuffer>
     create_framebuffer(const FramebufferCreateInfo& createInfo) = 0;
 
-    virtual Handle<Image>
+    virtual std::weak_ptr<Image>
     create_image(const ImageCreateInfo& createInfo) = 0;
 
-    virtual Handle<ComputeShader>
+    virtual std::weak_ptr<ComputeShader>
     create_compute_shader(const std::string& path) = 0;
 
     virtual void
-    destroy_texture_2d(const Reference<Texture>& texture) = 0;
+    destroy_texture_2d(const std::shared_ptr<Texture>& texture) = 0;
 
 };
 
@@ -87,6 +86,6 @@ struct OnRenderingContextRecreated {
     RenderingContext* context;
 };
 
-EG_END
+}
 
 #endif //EAGLE_RENDERINGCONTEXT_H

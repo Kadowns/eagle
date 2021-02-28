@@ -9,7 +9,7 @@
 #include "eagle/CoreGlobalDefinitions.h"
 #include "RenderingCore.h"
 
-EG_BEGIN
+namespace eagle {
 
 
 class VertexBuffer {
@@ -23,6 +23,6 @@ public:
 
 };
 
-EG_END
+}
 
 #endif //EAGLE_VERTEXBUFFER_H

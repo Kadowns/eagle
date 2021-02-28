@@ -13,7 +13,7 @@
 #include "eagle/Log.h"
 #include <eagle/renderer/vulkan/VulkanConverter.h>
 
-EG_BEGIN
+namespace eagle {
 
 bool VulkanContext::enableValidationLayers = false;
 
@@ -655,7 +655,7 @@ void VulkanContext::create_framebuffers() {
     nativeImageCreateInfo.commandPool = m_graphicsCommandPool;
     nativeImageCreateInfo.imageCount = m_present.imageCount;
 
-    Reference<VulkanImage> colorImage = std::make_shared<VulkanImage>(imageCreateInfo, nativeImageCreateInfo, swapchainImages);
+    std::shared_ptr<VulkanImage> colorImage = std::make_shared<VulkanImage>(imageCreateInfo, nativeImageCreateInfo, swapchainImages);
 
     //depth
     imageCreateInfo.format = VulkanConverter::to_eg(VulkanHelper::find_depth_format(m_physicalDevice));
@@ -671,7 +671,7 @@ void VulkanContext::create_framebuffers() {
         EG_CORE_INFO("Depth format allows stencil aspect");
     }
 
-    Reference<VulkanImage> depthImage = std::make_shared<VulkanImage>(imageCreateInfo, nativeImageCreateInfo);
+    std::shared_ptr<VulkanImage> depthImage = std::make_shared<VulkanImage>(imageCreateInfo, nativeImageCreateInfo);
 
     FramebufferCreateInfo framebufferCreateInfo = {};
     framebufferCreateInfo.width = m_present.extent2D.width;
@@ -841,7 +841,7 @@ void VulkanContext::cleanup_swapchain() {
     EG_CORE_TRACE("Swapchain cleared!");
 }
 
-Handle <Shader>
+std::weak_ptr<Shader>
 VulkanContext::create_shader(const ShaderCreateInfo &createInfo) {
     EG_CORE_TRACE("Creating a vulkan shader!");
 
@@ -852,7 +852,7 @@ VulkanContext::create_shader(const ShaderCreateInfo &createInfo) {
     return m_shaders.back();
 }
 
-Handle<ComputeShader>
+std::weak_ptr<ComputeShader>
 VulkanContext::create_compute_shader(const std::string &path) {
     VulkanComputeShaderCreateInfo createInfo = {};
     createInfo.device = m_device;
@@ -864,7 +864,7 @@ VulkanContext::create_compute_shader(const std::string &path) {
     return m_computeShaders.back();
 }
 
-Handle<VertexBuffer>
+std::weak_ptr<VertexBuffer>
 VulkanContext::create_vertex_buffer(void *vertices, uint32_t size, const VertexLayout &vertexLayout,
                                     UpdateType usage) {
     EG_CORE_TRACE("Creating a vulkan vertex buffer!");
@@ -879,7 +879,7 @@ VulkanContext::create_vertex_buffer(void *vertices, uint32_t size, const VertexL
     return m_vertexBuffers.back();
 }
 
-Handle<IndexBuffer>
+std::weak_ptr<IndexBuffer>
 VulkanContext::create_index_buffer(void *indexData, size_t indexCount, IndexBufferType indexType,
                                    UpdateType usage) {
     EG_CORE_TRACE("Creating a vulkan index buffer!");
@@ -892,7 +892,7 @@ VulkanContext::create_index_buffer(void *indexData, size_t indexCount, IndexBuff
     return m_indexBuffers.back();
 }
 
-Handle<UniformBuffer>
+std::weak_ptr<UniformBuffer>
 VulkanContext::create_uniform_buffer(size_t size, void *data) {
     EG_CORE_TRACE("Creating a vulkan uniform buffer!");
     VulkanUniformBufferCreateInfo createInfo = {};
@@ -903,7 +903,7 @@ VulkanContext::create_uniform_buffer(size_t size, void *data) {
     return m_uniformBuffers.back();
 }
 
-Handle<StorageBuffer>
+std::weak_ptr<StorageBuffer>
 VulkanContext::create_storage_buffer(size_t size, void *data, UpdateType usage) {
     EG_CORE_TRACE("Creating a vulkan storage buffer!");
     VulkanStorageBufferCreateInfo createInfo = {};
@@ -917,16 +917,16 @@ VulkanContext::create_storage_buffer(size_t size, void *data, UpdateType usage) 
 }
 
 
-Handle<DescriptorSetLayout>
+std::weak_ptr<DescriptorSetLayout>
 VulkanContext::create_descriptor_set_layout(const std::vector<DescriptorBindingDescription> &bindings) {
     m_descriptorSetsLayouts.emplace_back(std::make_shared<VulkanDescriptorSetLayout>(m_device, bindings));
     return m_descriptorSetsLayouts.back();
 }
 
 
-Handle<DescriptorSet>
-VulkanContext::create_descriptor_set(const Reference<DescriptorSetLayout>& descriptorLayout,
-                                     const std::vector<Reference<DescriptorItem>> &descriptorItems) {
+std::weak_ptr<DescriptorSet>
+VulkanContext::create_descriptor_set(const std::shared_ptr<DescriptorSetLayout>& descriptorLayout,
+                                     const std::vector<std::shared_ptr<DescriptorItem>> &descriptorItems) {
     EG_CORE_TRACE("Creating a vulkan descriptor set!");
     VulkanDescriptorSetCreateInfo createInfo = {};
     createInfo.device = m_device;
@@ -941,7 +941,7 @@ VulkanContext::create_descriptor_set(const Reference<DescriptorSetLayout>& descr
     return m_descriptorSets.back();
 }
 
-Handle<Texture>
+std::weak_ptr<Texture>
 VulkanContext::create_texture(const TextureCreateInfo &createInfo) {
 
     EG_CORE_TRACE("Creating a vulkan texture!");
@@ -956,7 +956,7 @@ VulkanContext::create_texture(const TextureCreateInfo &createInfo) {
     return m_textures.back();
 }
 
-Handle<Image>
+std::weak_ptr<Image>
 VulkanContext::create_image(const ImageCreateInfo &createInfo) {
     EG_CORE_TRACE("Creating a vulkan image!");
     VulkanImageCreateInfo vulkanImageCreateInfo = {};
@@ -971,7 +971,7 @@ VulkanContext::create_image(const ImageCreateInfo &createInfo) {
 }
 
 
-Handle<RenderPass> VulkanContext::create_render_pass(const std::vector<RenderAttachmentDescription> &colorAttachments,
+std::weak_ptr<RenderPass> VulkanContext::create_render_pass(const std::vector<RenderAttachmentDescription> &colorAttachments,
                                                      const RenderAttachmentDescription &depthAttachment) {
     VulkanRenderPassCreateInfo createInfo = {};
     createInfo.device = m_device;
@@ -980,7 +980,7 @@ Handle<RenderPass> VulkanContext::create_render_pass(const std::vector<RenderAtt
     return m_renderPasses.back();
 }
 
-Handle<Framebuffer> VulkanContext::create_framebuffer(const FramebufferCreateInfo &createInfo) {
+std::weak_ptr<Framebuffer> VulkanContext::create_framebuffer(const FramebufferCreateInfo &createInfo) {
 
     VulkanFramebufferCreateInfo vulkanCreateInfo = {};
     vulkanCreateInfo.device = m_device;
@@ -990,84 +990,7 @@ Handle<Framebuffer> VulkanContext::create_framebuffer(const FramebufferCreateInf
     return m_framebuffers.back();
 }
 
-
-void VulkanContext::create_offscreen_render_pass() {
-    // + 1 for depth attachment
-//    std::array<VkAttachmentDescription, 2> attachmentDescriptions = {};
-//    // Color attachment
-//
-//    attachmentDescriptions[0].samples = VK_SAMPLE_COUNT_1_BIT;
-//    attachmentDescriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-//    attachmentDescriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-//    attachmentDescriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-//    attachmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-//    attachmentDescriptions[0].format = VK_FORMAT_R8G8B8A8_UNORM;
-//    attachmentDescriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-//    attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-//
-//    attachmentDescriptions[1].samples = VK_SAMPLE_COUNT_1_BIT;
-//    attachmentDescriptions[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-//    attachmentDescriptions[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-//    attachmentDescriptions[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-//    attachmentDescriptions[1].initialLayout = VK_IMAGE_LAYOUT_GENERAL;
-//    attachmentDescriptions[1].format = find_depth_format();
-//    attachmentDescriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-//    attachmentDescriptions[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-//
-//
-//    VkAttachmentReference colorReference = {};
-//    colorReference.attachment = 0;
-//    colorReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-//
-//    VkAttachmentReference depthReference = {};
-//    depthReference.attachment = 1;
-//    depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-//
-//    VkSubpassDescription subpassDescription = {};
-//    subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-//    subpassDescription.colorAttachmentCount = 1;
-//    subpassDescription.pColorAttachments = &colorReference;
-//    subpassDescription.pDepthStencilAttachment = &depthReference;
-//
-//    // Use subpass dependencies for layout transitions
-//    std::vector<VkSubpassDependency> dependencies(attachmentDescriptions.size());
-//    for (size_t i = 0; i < dependencies.size(); i++){
-//
-//        dependencies[i].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-//
-//        if (i != dependencies.size() - 1){
-//            //color
-//            dependencies[i].srcSubpass = VK_SUBPASS_EXTERNAL;
-//            dependencies[i].dstSubpass = 0;
-//            dependencies[i].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-//            dependencies[i].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-//            dependencies[i].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-//            dependencies[i].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-//        } else {
-//            //depth
-//            dependencies[i].srcSubpass = 0;
-//            dependencies[i].dstSubpass = VK_SUBPASS_EXTERNAL;
-//            dependencies[i].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-//            dependencies[i].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-//            dependencies[i].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-//            dependencies[i].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-//        }
-//    }
-//
-//
-//    VkRenderPassCreateInfo renderPassInfo = {};
-//    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-//    renderPassInfo.attachmentCount = static_cast<uint32_t>(attachmentDescriptions.size());
-//    renderPassInfo.pAttachments = attachmentDescriptions.data();
-//    renderPassInfo.subpassCount = 1;
-//    renderPassInfo.pSubpasses = &subpassDescription;
-//    renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
-//    renderPassInfo.pDependencies = dependencies.data();
-//
-//    VK_CALL vkCreateRenderPass(m_device, &renderPassInfo, nullptr, &m_present.offscreenPass);
-}
-
-Reference<CommandBuffer> VulkanContext::main_command_buffer() {
+std::shared_ptr<CommandBuffer> VulkanContext::main_command_buffer() {
     return m_commandBuffers[m_present.imageIndex];
 }
 
@@ -1091,72 +1014,74 @@ bool VulkanContext::prepare_frame() {
     return true;
 }
 
-void VulkanContext::submit_command_buffer(const Reference<CommandBuffer> &commandBuffer) {
+void VulkanContext::present_frame(const std::shared_ptr<CommandBuffer> &commandBuffer) {
 
-    auto vcb = std::static_pointer_cast<VulkanCommandBuffer>(commandBuffer);
+    //submit command buffer
+    {
+        auto vcb = std::static_pointer_cast<VulkanCommandBuffer>(commandBuffer);
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-    VkSubmitInfo submitInfo = {};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[m_currentFrame]};
+        VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = waitSemaphores;
+        submitInfo.pWaitDstStageMask = waitStages;
 
-    VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[m_currentFrame]};
-    VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-    submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = waitSemaphores;
-    submitInfo.pWaitDstStageMask = waitStages;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &vcb->native_command_buffer();
 
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &vcb->native_command_buffer();
+        VkSemaphore signalSemaphores[] = {m_renderFinishedSemaphores[m_currentFrame]};
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = signalSemaphores;
 
-    VkSemaphore signalSemaphores[] = {m_renderFinishedSemaphores[m_currentFrame]};
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = signalSemaphores;
+        VK_CALL
+        vkResetFences(m_device, 1, &m_inFlightFences[m_currentFrame]);
 
-    VK_CALL vkResetFences(m_device, 1, &m_inFlightFences[m_currentFrame]);
+        VkResult result = vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]);
 
-    VkResult result = vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]);
+        if (result != VK_SUCCESS) {
+            throw std::runtime_error("failed to submit command buffer!");
+        }
+    }
 
-    if (result != VK_SUCCESS){
-        throw std::runtime_error("failed to submit command buffer!");
+    //present
+    {
+        VkPresentInfoKHR presentInfo = {};
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+        VkSemaphore waitSemaphores[] = {m_renderFinishedSemaphores[m_currentFrame]};
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores = waitSemaphores;
+
+        VkSwapchainKHR swapChains[] = {m_present.swapchain};
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = swapChains;
+        presentInfo.pImageIndices = &m_present.imageIndex;
+
+        VK_CALL
+        VkResult result = vkQueuePresentKHR(m_presentQueue, &presentInfo);
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_windowResized) {
+            m_windowResized = false;
+            recreate_swapchain();
+        } else if (result != VK_SUCCESS) {
+            throw std::runtime_error("failed to present swapchain image!");
+        }
+
+        m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
 }
 
-void VulkanContext::present_frame() {
-
-    VkPresentInfoKHR presentInfo = {};
-    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-    VkSemaphore waitSemaphores[] = {m_renderFinishedSemaphores[m_currentFrame]};
-    presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = waitSemaphores;
-
-    VkSwapchainKHR swapChains[] = {m_present.swapchain};
-    presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = swapChains;
-    presentInfo.pImageIndices = &m_present.imageIndex;
-
-    VK_CALL
-    VkResult result = vkQueuePresentKHR(m_presentQueue, &presentInfo);
-
-
-    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_windowResized) {
-        m_windowResized = false;
-        recreate_swapchain();
-    } else if (result != VK_SUCCESS) {
-        throw std::runtime_error("failed to present swapchain image!");
-    }
-
-    m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
-}
-
-void VulkanContext::destroy_texture_2d(const Reference<Texture> &texture) {
+void VulkanContext::destroy_texture_2d(const std::shared_ptr<Texture> &texture) {
     m_textures.erase(std::find(m_textures.begin(), m_textures.end(), std::static_pointer_cast<VulkanTexture>(texture)));
 }
 
-Reference<RenderPass> VulkanContext::main_render_pass() {
+std::shared_ptr<RenderPass> VulkanContext::main_render_pass() {
     return m_present.renderPass;
 }
 
-Reference<Framebuffer> VulkanContext::main_frambuffer() {
+std::shared_ptr<Framebuffer> VulkanContext::main_frambuffer() {
     return m_present.framebuffer;
 }
 
@@ -1194,4 +1119,4 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance,
 }
 
 
-EG_END
+}

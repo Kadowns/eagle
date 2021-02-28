@@ -5,7 +5,7 @@
 #include <eagle/renderer/vulkan/VulkanRenderPass.h>
 #include <eagle/renderer/vulkan/VulkanConverter.h>
 
-EG_BEGIN
+namespace eagle {
 
 VulkanRenderPass::VulkanRenderPass(const VulkanRenderPassCreateInfo &createInfo,
                                    const VkAttachmentDescription &colorAttachment,
@@ -114,4 +114,4 @@ void VulkanRenderPass::cleanup() {
     EG_CORE_TRACE("VulkanRenderPass cleaned!");
 }
 
-EG_END
+}

@@ -4,4 +4,4 @@
 
 #include "Application.h"
 
-Eagle::Application* Eagle::Application::s_instance = nullptr;
+eagle::Application* eagle::Application::s_instance = nullptr;

@@ -6,11 +6,11 @@
 #include <eagle/platform/desktop/WindowGLFW.h>
 #include <GLFW/glfw3.h>
 
-Eagle::VulkanContextGLFW::VulkanContextGLFW(Eagle::WindowGLFW *windowGlfw) {
+eagle::VulkanContextGLFW::VulkanContextGLFW(eagle::WindowGLFW *windowGlfw) {
     m_window = windowGlfw;
 }
 
-void Eagle::VulkanContextGLFW::create_surface() {
+void eagle::VulkanContextGLFW::create_surface() {
     EG_CORE_TRACE("Creating window surface!");
     VK_CALL_ASSERT(glfwCreateWindowSurface(m_instance, (GLFWwindow *) m_window->native_window(), nullptr, &m_surface)) {
         throw std::runtime_error("failed to create window surface!");
@@ -18,7 +18,7 @@ void Eagle::VulkanContextGLFW::create_surface() {
     EG_CORE_TRACE("Window surface created!");
 }
 
-std::vector<const char*> Eagle::VulkanContextGLFW::get_platform_extensions() {
+std::vector<const char*> eagle::VulkanContextGLFW::get_platform_extensions() {
     EG_CORE_TRACE("Getting required extensions!");
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtensions;
@@ -27,7 +27,7 @@ std::vector<const char*> Eagle::VulkanContextGLFW::get_platform_extensions() {
 }
 
 
-void Eagle::VulkanContextGLFW::init(EventBus* eventBus) {
+void eagle::VulkanContextGLFW::init(EventBus* eventBus) {
     EG_CORE_TRACE("Initializing vulkan context!");
 
     m_eventBus = eventBus;

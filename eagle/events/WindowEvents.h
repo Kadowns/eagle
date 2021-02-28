@@ -5,7 +5,7 @@
 #ifndef EAGLE_WINDOWEVENTS_H
 #define EAGLE_WINDOWEVENTS_H
 
-EG_BEGIN
+namespace eagle {
 
 struct OnWindowResized {
     uint32_t width, height;
@@ -27,6 +27,6 @@ struct OnWindowMove {
 
 };
 
-EG_END
+}
 
 #endif //EAGLE_WINDOWEVENTS_H

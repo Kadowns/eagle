@@ -14,7 +14,7 @@
 #include <eagle/renderer/RenderingCore.h>
 #include "VulkanCore.h"
 
-EG_BEGIN
+namespace eagle {
 
 const TBuiltInResource DefaultTBuiltInResource = {
         /* .MaxLights = */ 32,
@@ -139,7 +139,7 @@ private:
 
 };
 
-EG_END
+}
 
 
 #endif //EAGLE_VULKANSHADERCOMPILER_H

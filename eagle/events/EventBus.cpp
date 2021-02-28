@@ -4,8 +4,8 @@
 
 #include <eagle/events/EventBus.h>
 
-EG_BEGIN
+namespace eagle {
 
 size_t EventHelper::s_eventStreamIndexCounter = 0;
 
-EG_END
+}

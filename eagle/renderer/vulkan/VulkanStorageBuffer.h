@@ -10,7 +10,7 @@
 #include "VulkanBuffer.h"
 #include "VulkanCleaner.h"
 
-EG_BEGIN
+namespace eagle {
 
 struct VulkanStorageBufferCreateInfo{
     VkDevice device;
@@ -36,17 +36,17 @@ public:
     void recreate(uint32_t bufferCount);
     void create_storage_buffer();
 
-    inline std::vector<Reference<VulkanBuffer>>& get_buffers() { return m_buffers; }
+    inline std::vector<std::shared_ptr<VulkanBuffer>>& get_buffers() { return m_buffers; }
 private:
     VulkanStorageBufferCreateInfo m_createInfo;
 
-    std::vector<Reference<VulkanBuffer>> m_buffers;
+    std::vector<std::shared_ptr<VulkanBuffer>> m_buffers;
     std::set<int> m_dirtyBuffers;
     bool m_cleared = true;
     bool m_dirtyBytes = false;
 
 };
 
-EG_END
+}
 
 #endif //EAGLE_VULKANSTORAGEBUFFER_H

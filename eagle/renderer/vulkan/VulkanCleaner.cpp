@@ -5,7 +5,7 @@
 #include <eagle/renderer/vulkan/VulkanCleaner.h>
 #include <algorithm>
 
-EG_BEGIN
+namespace eagle {
 
 std::vector<VulkanCleanable*> VulkanCleaner::m_dirtyObjects;
 
@@ -34,4 +34,4 @@ void VulkanCleaner::clear() {
 }
 
 
-EG_END
+}

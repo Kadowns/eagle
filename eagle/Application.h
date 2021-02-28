@@ -8,7 +8,7 @@
 #include <eagle/CoreGlobalDefinitions.h>
 #include <eagle/events/EventBus.h>
 
-EG_BEGIN
+namespace eagle {
 
 class Window;
 class Time;
@@ -28,6 +28,6 @@ protected:
     static Application* s_instance;
 };
 
-EG_END
+}
 
 #endif //EAGLE_APPLICATION_H

@@ -4,7 +4,7 @@
 
 #include <eagle/Random.h>
 
-EG_BEGIN
+namespace eagle {
 
 Random Random::s_instance(0);
 
@@ -40,4 +40,4 @@ float Random::get_random_value() {
 }
 
 
-EG_END
+}

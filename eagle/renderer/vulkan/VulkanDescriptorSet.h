@@ -8,7 +8,7 @@
 #include "VulkanTexture.h"
 #include "VulkanCleaner.h"
 
-EG_BEGIN
+namespace eagle {
 
 struct VulkanDescriptorSetCreateInfo {
     VkDevice device;
@@ -18,11 +18,11 @@ struct VulkanDescriptorSetCreateInfo {
 
 class VulkanDescriptorSet : public DescriptorSet, public VulkanCleanable {
 public:
-    VulkanDescriptorSet(const Reference<VulkanDescriptorSetLayout> &descriptorSetLayout,
-                        const std::vector<Reference<DescriptorItem>> &descriptorItems,
+    VulkanDescriptorSet(const std::shared_ptr<VulkanDescriptorSetLayout> &descriptorSetLayout,
+                        const std::vector<std::shared_ptr<DescriptorItem>> &descriptorItems,
                         const VulkanDescriptorSetCreateInfo& createInfo);
 
-    VulkanDescriptorSet(const Reference<VulkanDescriptorSetLayout>& descriptorSetLayout, const VulkanDescriptorSetCreateInfo& createInfo);
+    VulkanDescriptorSet(const std::shared_ptr<VulkanDescriptorSetLayout>& descriptorSetLayout, const VulkanDescriptorSetCreateInfo& createInfo);
     ~VulkanDescriptorSet();
 
     void cleanup();
@@ -30,7 +30,7 @@ public:
 
     void create_descriptor_sets();
 
-    virtual void update(const std::vector<Reference<DescriptorItem>> &descriptorItems) override;
+    virtual void update(const std::vector<std::shared_ptr<DescriptorItem>> &descriptorItems) override;
     inline std::vector<VkDescriptorSet>& get_descriptors() {return m_descriptorSets;}
 
     virtual bool is_dirty() const override;
@@ -42,14 +42,14 @@ private:
     VkDescriptorPool m_descriptorPool;
     std::vector<VkDescriptorSet> m_descriptorSets;
     std::set<int> m_dirtyDescriptors;
-    Handle<VulkanDescriptorSetLayout> m_descriptorSetLayout;
-    std::vector<Reference<DescriptorItem>> m_descriptorItems;
+    std::weak_ptr<VulkanDescriptorSetLayout> m_descriptorSetLayout;
+    std::vector<std::shared_ptr<DescriptorItem>> m_descriptorItems;
     VulkanDescriptorSetCreateInfo m_info;
 
     bool m_cleared = true;
 
 };
 
-EG_END
+}
 
 #endif //EAGLE_VULKANDESCRIPTORSET_H

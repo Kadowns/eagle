@@ -10,7 +10,7 @@
 #include "eagle/events/InputEvents.h"
 #include "eagle/events/KeyCodes.h"
 
-EG_BEGIN
+namespace eagle {
 
 class Input {
 private:
@@ -51,7 +51,7 @@ protected:
 
 private:
 
-    static Scope<Input> s_instance;
+    static std::unique_ptr<Input> s_instance;
 
     std::set<int> m_downKeys, m_pressedKeys, m_releasedKeys;
     std::set<int> m_downMouseButtons, m_pressedMouseButtons, m_releasedMouseButtons;
@@ -63,6 +63,6 @@ private:
 };
 
 
-EG_END
+}
 
 #endif //EAGLE_INPUT_H

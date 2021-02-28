@@ -7,7 +7,7 @@
 #include <eagle/renderer/vulkan/VulkanShaderUtils.h>
 #include <eagle/renderer/vulkan/VulkanConverter.h>
 
-EG_BEGIN
+namespace eagle {
 
 VulkanComputeShader::VulkanComputeShader(const std::string &path, const VulkanComputeShaderCreateInfo &createInfo)
         : m_createInfo(createInfo) {
@@ -178,16 +178,16 @@ void VulkanComputeShader::recreate(uint32_t bufferCount) {
 }
 
 void
-VulkanComputeShader::update_descriptor_items(const std::vector<Reference<DescriptorItem>> &descriptorItems) {
+VulkanComputeShader::update_descriptor_items(const std::vector<std::shared_ptr<DescriptorItem>> &descriptorItems) {
     m_descriptorSet->update(descriptorItems);
 }
 
 void
-VulkanComputeShader::set_image(const std::string &name, const Reference<Image> &image) {
+VulkanComputeShader::set_image(const std::string &name, const std::shared_ptr<Image> &image) {
 
 }
 
 
 
 
-EG_END
+}

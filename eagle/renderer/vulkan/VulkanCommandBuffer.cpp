@@ -14,7 +14,7 @@
 #include <eagle/renderer/vulkan/VulkanRenderPass.h>
 #include <eagle/renderer/vulkan/VulkanFramebuffer.h>
 
-EG_BEGIN
+namespace eagle {
 
 VulkanCommandBuffer::VulkanCommandBuffer(VkDevice &device, VkCommandPool &commandPool, uint32_t &imageIndexRef) :
     m_device(device), m_commandPool(commandPool), m_imageIndexRef(imageIndexRef){
@@ -52,8 +52,8 @@ bool VulkanCommandBuffer::is_finished() {
     return m_finished;
 }
 
-void VulkanCommandBuffer::begin_render_pass(const Reference<RenderPass> &renderPass,
-                                            const Reference<Framebuffer> &framebuffer) {
+void VulkanCommandBuffer::begin_render_pass(const std::shared_ptr<RenderPass> &renderPass,
+                                            const std::shared_ptr<Framebuffer> &framebuffer) {
     auto vrp = std::static_pointer_cast<VulkanRenderPass>(renderPass);
     auto vf = std::static_pointer_cast<VulkanFramebuffer>(framebuffer);
 
@@ -74,36 +74,36 @@ void VulkanCommandBuffer::end_render_pass() {
     VK_CALL vkCmdEndRenderPass(m_commandBuffer);
 }
 
-void VulkanCommandBuffer::bind_shader(const Reference<Shader> &shader) {
+void VulkanCommandBuffer::bind_shader(const std::shared_ptr<Shader> &shader) {
     m_boundShader = std::static_pointer_cast<VulkanShader>(shader);
     VK_CALL vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundShader->get_pipeline());
 }
 
-void VulkanCommandBuffer::bind_compute_shader(const Reference<ComputeShader> &shader) {
-    Reference<VulkanComputeShader> vcs = std::static_pointer_cast<VulkanComputeShader>(shader);
+void VulkanCommandBuffer::bind_compute_shader(const std::shared_ptr<ComputeShader> &shader) {
+    std::shared_ptr<VulkanComputeShader> vcs = std::static_pointer_cast<VulkanComputeShader>(shader);
     VK_CALL vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vcs->get_pipeline());
 }
 
-void VulkanCommandBuffer::bind_vertex_buffer(const Reference<VertexBuffer> &vertexBuffer) {
-    Reference<VulkanVertexBuffer> vvb = std::static_pointer_cast<VulkanVertexBuffer>(vertexBuffer);
+void VulkanCommandBuffer::bind_vertex_buffer(const std::shared_ptr<VertexBuffer> &vertexBuffer) {
+    std::shared_ptr<VulkanVertexBuffer> vvb = std::static_pointer_cast<VulkanVertexBuffer>(vertexBuffer);
     VkDeviceSize offsets[] = {0};
     VK_CALL vkCmdBindVertexBuffers(m_commandBuffer, 0, 1, &vvb->get_buffer(m_imageIndexRef).native_buffer(), offsets);
 }
 
-void VulkanCommandBuffer::bind_index_buffer(const Reference<IndexBuffer> &indexBuffer) {
-    Reference<VulkanIndexBuffer> vib = std::static_pointer_cast<VulkanIndexBuffer>(indexBuffer);
+void VulkanCommandBuffer::bind_index_buffer(const std::shared_ptr<IndexBuffer> &indexBuffer) {
+    std::shared_ptr<VulkanIndexBuffer> vib = std::static_pointer_cast<VulkanIndexBuffer>(indexBuffer);
     VK_CALL vkCmdBindIndexBuffer(m_commandBuffer, vib->get_buffer(m_imageIndexRef).native_buffer(), 0, vib->get_native_index_type());
 }
 
-void VulkanCommandBuffer::bind_descriptor_sets(const Reference <DescriptorSet> &descriptorSet, uint32_t setIndex) {
-    Reference<VulkanDescriptorSet> vds = std::static_pointer_cast<VulkanDescriptorSet>(descriptorSet);
+void VulkanCommandBuffer::bind_descriptor_sets(const std::shared_ptr<DescriptorSet> &descriptorSet, uint32_t setIndex) {
+    std::shared_ptr<VulkanDescriptorSet> vds = std::static_pointer_cast<VulkanDescriptorSet>(descriptorSet);
 
     VK_CALL vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundShader->get_layout(), setIndex, 1, &vds->get_descriptors()[m_imageIndexRef], 0, nullptr);
 }
 
-void VulkanCommandBuffer::bind_descriptor_sets(const Reference<ComputeShader> &shader, const Reference<DescriptorSet> &descriptorSet, uint32_t setIndex) {
-    Reference<VulkanComputeShader> vcs = std::static_pointer_cast<VulkanComputeShader>(shader);
-    Reference<VulkanDescriptorSet> vds = std::static_pointer_cast<VulkanDescriptorSet>(descriptorSet);
+void VulkanCommandBuffer::bind_descriptor_sets(const std::shared_ptr<ComputeShader> &shader, const std::shared_ptr<DescriptorSet> &descriptorSet, uint32_t setIndex) {
+    std::shared_ptr<VulkanComputeShader> vcs = std::static_pointer_cast<VulkanComputeShader>(shader);
+    std::shared_ptr<VulkanDescriptorSet> vds = std::static_pointer_cast<VulkanDescriptorSet>(descriptorSet);
 
     VK_CALL vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vcs->get_layout(), setIndex, 1, &vds->get_descriptors()[m_imageIndexRef], 0, nullptr);
 }
@@ -138,7 +138,7 @@ void VulkanCommandBuffer::set_scissor(uint32_t w, uint32_t h, uint32_t x, uint32
     VK_CALL vkCmdSetScissor(m_commandBuffer, 0, 1, &scissor);
 }
 
-void VulkanCommandBuffer::pipeline_barrier(const Reference<Image> &image, const std::vector<PipelineStage> &srcPipelineStages,
+void VulkanCommandBuffer::pipeline_barrier(const std::shared_ptr<Image> &image, const std::vector<PipelineStage> &srcPipelineStages,
                                            const std::vector<PipelineStage> &dstPipelineStages) {
     VkImageMemoryBarrier imageMemoryBarrier = {};
     imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -166,4 +166,4 @@ void VulkanCommandBuffer::dispatch(uint32_t groupCountX, uint32_t groupCountY, u
     VK_CALL vkCmdDispatch(m_commandBuffer, groupCountX, groupCountY, groupCountZ);
 }
 
-EG_END
+}

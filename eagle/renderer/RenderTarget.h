@@ -8,7 +8,7 @@
 #include "eagle/CoreGlobalDefinitions.h"
 #include "Image.h"
 
-EG_BEGIN
+namespace eagle {
 
 
 enum class RenderTargetAttachment {
@@ -19,9 +19,9 @@ class RenderTarget {
 public:
     virtual ~RenderTarget() = default;
 
-    virtual Handle <Image> get_image() = 0;
+    virtual std::weak_ptr<Image> get_image() = 0;
 };
 
-EG_END
+}
 
 #endif //EAGLE_RENDERTARGET_H

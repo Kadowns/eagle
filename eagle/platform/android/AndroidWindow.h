@@ -9,7 +9,7 @@
 
 struct android_app;
 
-EG_BEGIN
+namespace eagle {
 
 class VulkanContextAndroid;
 
@@ -46,11 +46,11 @@ public:
 
 protected:
     android_app* m_androidApp;
-    Reference<VulkanContextAndroid> m_renderingContext;
+    std::shared_ptr<VulkanContextAndroid> m_renderingContext;
     bool m_surfaceReady;
 
 };
 
-EG_END
+}
 
 #endif //EAGLE_ANDROID_WINDOWANDROID_H

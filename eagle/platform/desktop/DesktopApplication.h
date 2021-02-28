@@ -10,7 +10,7 @@
 #include "eagle/Log.h"
 #include "eagle/events/EventBus.h"
 
-EG_BEGIN
+namespace eagle {
 
 class WindowGLFW;
 class RenderingContext;
@@ -29,13 +29,13 @@ public:
     ApplicationDelegate& delegate() override { return *m_delegate; }
 
 protected:
-    Reference<ApplicationDelegate> m_delegate;
-    Reference<WindowGLFW> m_window;
+    std::shared_ptr<ApplicationDelegate> m_delegate;
+    std::shared_ptr<WindowGLFW> m_window;
     EventBus m_eventBus;
 
     bool m_quit = false;
 };
 
-EG_END
+}
 
 #endif //EAGLE_DESKTOPAPPLICATION_H

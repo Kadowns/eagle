@@ -7,7 +7,7 @@
 
 #include "VulkanCore.h"
 
-EG_BEGIN
+namespace eagle {
 
 class VulkanCleaner;
 
@@ -29,6 +29,6 @@ private:
     static std::vector<VulkanCleanable*> m_dirtyObjects;
 };
 
-EG_END
+}
 
 #endif //EAGLE_VULKANCLEANER_H
