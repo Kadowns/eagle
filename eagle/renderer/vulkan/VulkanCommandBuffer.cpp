@@ -1,5 +1,3 @@
-#include <utility>
-
 //
 // Created by Novak on 27/09/2019.
 //
@@ -36,10 +34,48 @@ void VulkanCommandBuffer::begin() {
     m_finished = false;
 }
 
-void VulkanCommandBuffer::finish() {
+void VulkanCommandBuffer::begin(const std::shared_ptr<RenderPass> &renderPass,
+                                const std::shared_ptr<Framebuffer> &framebuffer) {
+
+    auto vrp = std::static_pointer_cast<VulkanRenderPass>(renderPass);
+    auto vfb = std::static_pointer_cast<VulkanFramebuffer>(framebuffer);
+
+    VkCommandBufferInheritanceInfo inheritanceInfo = {};
+    inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+    inheritanceInfo.occlusionQueryEnable = VK_FALSE;
+    inheritanceInfo.renderPass = vrp->native_render_pass();
+    inheritanceInfo.framebuffer = vfb->native_framebuffers()[*m_vkCreateInfo.currentImageIndex];
+
+    VkCommandBufferBeginInfo beginInfo = {};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT | VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+    beginInfo.pInheritanceInfo = &inheritanceInfo;
+
+
+    VK_CALL vkBeginCommandBuffer(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], &beginInfo);
+    m_finished = false;
+}
+
+
+void VulkanCommandBuffer::end() {
     VK_CALL vkEndCommandBuffer(m_commandBuffers[*m_vkCreateInfo.currentImageIndex]);
     m_finished = true;
     m_boundShader.reset();
+}
+
+void VulkanCommandBuffer::execute_commands(const std::vector<std::shared_ptr<CommandBuffer>> &commandBuffers) {
+
+    std::vector<VkCommandBuffer> vkCommandBuffers;
+    vkCommandBuffers.reserve(commandBuffers.size());
+    for (auto& commandBuffer : commandBuffers){
+        vkCommandBuffers.emplace_back(((VulkanCommandBuffer*)(commandBuffer.get()))->native_command_buffer());
+    }
+
+    VK_CALL vkCmdExecuteCommands(
+            m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
+            vkCommandBuffers.size(),
+            vkCommandBuffers.data()
+            );
 }
 
 bool VulkanCommandBuffer::is_finished() {
@@ -61,7 +97,7 @@ void VulkanCommandBuffer::begin_render_pass(const std::shared_ptr<RenderPass> &r
     renderPassInfo.clearValueCount = clearValues.size();
     renderPassInfo.pClearValues = clearValues.data();
 
-    VK_CALL vkCmdBeginRenderPass(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    VK_CALL vkCmdBeginRenderPass(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 }
 
 void VulkanCommandBuffer::end_render_pass() {
@@ -202,7 +238,7 @@ void VulkanCommandBuffer::recreate(uint32_t imageCount) {
     VkCommandBufferAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool = m_vkCreateInfo.commandPool;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.level = VulkanConverter::to_vk(m_createInfo.level);
     allocInfo.commandBufferCount = imageCount;
 
     m_commandBuffers.resize(imageCount);

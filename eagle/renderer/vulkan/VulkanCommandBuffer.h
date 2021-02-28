@@ -27,7 +27,9 @@ public:
 
 
     void begin() override;
-    void finish() override;
+    void begin(const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Framebuffer>& framebuffer) override;
+    void end() override;
+    void execute_commands(const std::vector<std::shared_ptr<CommandBuffer>>& commandBuffers) override;
     bool is_finished() override;
     void begin_render_pass(const std::shared_ptr<RenderPass> &renderPass, const std::shared_ptr<Framebuffer>& framebuffer) override;
     void end_render_pass() override;

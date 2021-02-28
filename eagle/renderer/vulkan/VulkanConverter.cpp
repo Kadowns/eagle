@@ -889,4 +889,23 @@ VkPipelineStageFlagBits VulkanConverter::to_vk(PipelineStage stage) {
     return result;
 }
 
+VkCommandBufferLevel VulkanConverter::to_vk(CommandBufferLevel level) {
+    VkCommandBufferLevel result;
+    switch(level){
+        case CommandBufferLevel::PRIMARY: result = VK_COMMAND_BUFFER_LEVEL_PRIMARY; break;
+        case CommandBufferLevel::SECONDARY: result = VK_COMMAND_BUFFER_LEVEL_SECONDARY; break;
+    }
+    return result;
+}
+
+CommandBufferLevel VulkanConverter::to_eg(VkCommandBufferLevel level) {
+    CommandBufferLevel result;
+    switch(level){
+        case VK_COMMAND_BUFFER_LEVEL_PRIMARY: result = CommandBufferLevel::PRIMARY; break;
+        case VK_COMMAND_BUFFER_LEVEL_SECONDARY: result = CommandBufferLevel::SECONDARY; break;
+        default: throw std::runtime_error("Invalid VkCommandBufferLevel on conversion");
+    }
+    return result;
+}
+
 }

@@ -6,6 +6,7 @@
 #define EAGLE_VULKANCONVERTER_H
 
 #include <eagle/renderer/RenderPass.h>
+#include <eagle/renderer/CommandBuffer.h>
 #include "VulkanCore.h"
 
 namespace eagle {
@@ -40,6 +41,8 @@ public:
     static VkMemoryPropertyFlagBits to_vk(MemoryProperty property);
     static PipelineStage to_eg(VkPipelineStageFlagBits stage);
     static VkPipelineStageFlagBits to_vk(PipelineStage stage);
+    static VkCommandBufferLevel to_vk(CommandBufferLevel level);
+    static CommandBufferLevel to_eg(VkCommandBufferLevel level);
 
     template<typename EG, typename VK>
     static std::vector<EG> eg_vector_from_vk_flags(VK flags){

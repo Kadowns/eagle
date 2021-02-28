@@ -55,9 +55,10 @@ void TriangleApp::init() {
 
     eagle::CommandBufferCreateInfo commandBufferCreateInfo = {};
     commandBufferCreateInfo.level = eagle::CommandBufferLevel::PRIMARY;
+    m_primaryCommandBuffer = m_renderingContext->create_command_buffer(commandBufferCreateInfo);
 
-    m_commandBuffer = m_renderingContext->create_command_buffer(commandBufferCreateInfo);
-
+    commandBufferCreateInfo.level = eagle::CommandBufferLevel::SECONDARY;
+    m_secondaryCommandBuffer = m_renderingContext->create_command_buffer(commandBufferCreateInfo);
 }
 
 void TriangleApp::step() {
@@ -66,17 +67,25 @@ void TriangleApp::step() {
         return;
     }
 
-    auto commandBuffer = m_commandBuffer.lock();
+    auto primaryCommandBuffer = m_primaryCommandBuffer.lock();
 
-    commandBuffer->begin();
-    commandBuffer->begin_render_pass(m_renderingContext->main_render_pass(), m_renderingContext->main_frambuffer());
-    commandBuffer->bind_shader(m_shader.lock());
-    commandBuffer->bind_vertex_buffer(m_vertexBuffer.lock());
-    commandBuffer->bind_index_buffer(m_indexBuffer.lock());
-    commandBuffer->draw_indexed(6, 0, 0);
-    commandBuffer->end_render_pass();
-    commandBuffer->finish();
-    m_renderingContext->present_frame(commandBuffer);
+    primaryCommandBuffer->begin();
+    primaryCommandBuffer->begin_render_pass(m_renderingContext->main_render_pass(), m_renderingContext->main_frambuffer());
+
+    {
+        auto secondaryCommandBuffer = m_secondaryCommandBuffer.lock();
+        secondaryCommandBuffer->begin(m_renderingContext->main_render_pass(), m_renderingContext->main_frambuffer());
+        secondaryCommandBuffer->bind_shader(m_shader.lock());
+        secondaryCommandBuffer->bind_vertex_buffer(m_vertexBuffer.lock());
+        secondaryCommandBuffer->bind_index_buffer(m_indexBuffer.lock());
+        secondaryCommandBuffer->draw_indexed(6, 0, 0);
+        secondaryCommandBuffer->end();
+        primaryCommandBuffer->execute_commands({secondaryCommandBuffer});
+    }
+
+    primaryCommandBuffer->end_render_pass();
+    primaryCommandBuffer->end();
+    m_renderingContext->present_frame(primaryCommandBuffer);
 }
 
 void TriangleApp::destroy() {

@@ -36,7 +36,11 @@ public:
 
     virtual void begin() = 0;
 
-    virtual void finish() = 0;
+    virtual void begin(const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Framebuffer>& framebuffer) = 0;
+
+    virtual void end() = 0;
+
+    virtual void execute_commands(const std::vector<std::shared_ptr<CommandBuffer>>& commandBuffers) = 0;
 
     virtual bool is_finished() = 0;
 
