@@ -16,7 +16,7 @@ VulkanStorageBuffer::VulkanStorageBuffer(VulkanStorageBufferCreateInfo createInf
     }else{
         EG_CORE_DEBUG_F("Setting bytes to 0, no data set: data size: {0} | bytes size: {1}", size, m_bytes.size());
         memset(m_bytes.data(), 0, size);
-        if (m_usage == UpdateType::CONSTANT){
+        if (m_usage == UpdateType::BAKED){
             EG_CORE_WARNING("Storage buffer created with CONSTANT usage flag with no data!");
         }
     }
@@ -29,7 +29,7 @@ VulkanStorageBuffer::~VulkanStorageBuffer() {
 }
 
 void VulkanStorageBuffer::set_data(void *data, size_t size, size_t offset) {
-    assert(m_usage == UpdateType::HOST);
+    assert(m_usage == UpdateType::DYNAMIC);
     assert(size + offset <= m_bytes.size());
     memcpy(m_bytes.data() + offset, data, size);
     m_dirtyBytes = true;
@@ -55,7 +55,7 @@ void VulkanStorageBuffer::create_storage_buffer() {
     m_buffers.resize(m_createInfo.bufferCount);
 
     switch(m_usage) {
-        case UpdateType::HOST: {
+        case UpdateType::DYNAMIC: {
 
             VulkanBufferCreateInfo createBufferInfo = {};
             createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
@@ -69,7 +69,7 @@ void VulkanStorageBuffer::create_storage_buffer() {
             }
         }
             break;
-        case UpdateType::CONSTANT: {
+        case UpdateType::BAKED: {
             VulkanBufferCreateInfo createBufferInfo = {};
             createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
             createBufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;

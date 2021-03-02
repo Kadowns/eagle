@@ -19,9 +19,8 @@ enum class DescriptorType {
 };
 
 enum class UpdateType {
-    CONSTANT = 0,
-    HOST = 1,
-    DEVICE = 2,
+    BAKED = 0,
+    DYNAMIC = 1,
 };
 
 enum TextureUsage {

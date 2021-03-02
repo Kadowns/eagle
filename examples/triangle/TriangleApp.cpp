@@ -43,7 +43,7 @@ void TriangleApp::init() {
     };
 
 
-    m_vertexBuffer = m_renderingContext->create_vertex_buffer(vertices.data(), vertices.size() * sizeof(Vertex), vertexLayout, eagle::UpdateType::CONSTANT);
+    m_vertexBuffer = m_renderingContext->create_vertex_buffer(vertices.data(), vertices.size() * sizeof(Vertex), vertexLayout, eagle::UpdateType::BAKED);
 
 
     std::vector<uint16_t> indices = {
@@ -51,14 +51,23 @@ void TriangleApp::init() {
             0, 1, 3
     };
 
-    m_indexBuffer = m_renderingContext->create_index_buffer(indices.data(), indices.size() * sizeof(uint16_t), eagle::IndexBufferType::UINT_16, eagle::UpdateType::CONSTANT);
+    m_indexBuffer = m_renderingContext->create_index_buffer(indices.data(), indices.size() * sizeof(uint16_t), eagle::IndexBufferType::UINT_16, eagle::UpdateType::BAKED);
 
     eagle::CommandBufferCreateInfo commandBufferCreateInfo = {};
     commandBufferCreateInfo.level = eagle::CommandBufferLevel::PRIMARY;
     m_primaryCommandBuffer = m_renderingContext->create_command_buffer(commandBufferCreateInfo);
 
     commandBufferCreateInfo.level = eagle::CommandBufferLevel::SECONDARY;
+    commandBufferCreateInfo.updateType = eagle::UpdateType::BAKED;
     m_secondaryCommandBuffer = m_renderingContext->create_command_buffer(commandBufferCreateInfo);
+
+    auto secondaryCommandBuffer = m_secondaryCommandBuffer.lock();
+    secondaryCommandBuffer->begin(m_renderingContext->main_render_pass(), m_renderingContext->main_frambuffer());
+    secondaryCommandBuffer->bind_shader(m_shader.lock());
+    secondaryCommandBuffer->bind_vertex_buffer(m_vertexBuffer.lock());
+    secondaryCommandBuffer->bind_index_buffer(m_indexBuffer.lock());
+    secondaryCommandBuffer->draw_indexed(6, 0, 0);
+    secondaryCommandBuffer->end();
 }
 
 void TriangleApp::step() {
@@ -71,18 +80,7 @@ void TriangleApp::step() {
 
     primaryCommandBuffer->begin();
     primaryCommandBuffer->begin_render_pass(m_renderingContext->main_render_pass(), m_renderingContext->main_frambuffer());
-
-    {
-        auto secondaryCommandBuffer = m_secondaryCommandBuffer.lock();
-        secondaryCommandBuffer->begin(m_renderingContext->main_render_pass(), m_renderingContext->main_frambuffer());
-        secondaryCommandBuffer->bind_shader(m_shader.lock());
-        secondaryCommandBuffer->bind_vertex_buffer(m_vertexBuffer.lock());
-        secondaryCommandBuffer->bind_index_buffer(m_indexBuffer.lock());
-        secondaryCommandBuffer->draw_indexed(6, 0, 0);
-        secondaryCommandBuffer->end();
-        primaryCommandBuffer->execute_commands({secondaryCommandBuffer});
-    }
-
+    primaryCommandBuffer->execute_commands({m_secondaryCommandBuffer.lock()});
     primaryCommandBuffer->end_render_pass();
     primaryCommandBuffer->end();
     m_renderingContext->present_frame(primaryCommandBuffer);

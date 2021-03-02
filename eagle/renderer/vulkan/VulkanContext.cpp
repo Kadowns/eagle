@@ -863,7 +863,7 @@ VulkanContext::create_vertex_buffer(void *vertices, uint32_t size, const VertexL
     createInfo.physicalDevice = m_physicalDevice;
     createInfo.commandPool = m_graphicsCommandPool;
     createInfo.graphicsQueue = m_graphicsQueue;
-    createInfo.bufferCount = usage == UpdateType::HOST ? m_present.imageCount : 1;
+    createInfo.bufferCount = usage == UpdateType::DYNAMIC ? m_present.imageCount : 1;
     m_vertexBuffers.emplace_back(std::make_shared<VulkanVertexBuffer>(m_device, createInfo, usage));
     return m_vertexBuffers.back();
 }
@@ -876,7 +876,7 @@ VulkanContext::create_index_buffer(void *indexData, size_t indexCount, IndexBuff
     createInfo.graphicsQueue = m_graphicsQueue;
     createInfo.physicalDevice = m_physicalDevice;
     createInfo.commandPool = m_graphicsCommandPool;
-    createInfo.bufferCount = usage == UpdateType::HOST ? m_present.imageCount : 1;
+    createInfo.bufferCount = usage == UpdateType::DYNAMIC ? m_present.imageCount : 1;
     m_indexBuffers.emplace_back(std::make_shared<VulkanIndexBuffer>(m_device, createInfo, indexData, indexCount, indexType, usage));
     return m_indexBuffers.back();
 }
@@ -1025,7 +1025,7 @@ void VulkanContext::present_frame(const std::shared_ptr<CommandBuffer> &commandB
         submitInfo.pWaitDstStageMask = waitStages;
 
         submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &vcb->native_command_buffer();
+        submitInfo.pCommandBuffers = &vcb->native_command_buffers()[m_present.imageIndex];
 
         VkSemaphore signalSemaphores[] = {m_renderFinishedSemaphores[m_currentFrame]};
         submitInfo.signalSemaphoreCount = 1;

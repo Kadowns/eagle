@@ -19,12 +19,14 @@
 namespace eagle {
 
 enum class CommandBufferLevel {
+    MASTER,
     PRIMARY,
     SECONDARY
 };
 
 struct CommandBufferCreateInfo {
-    CommandBufferLevel level;
+    CommandBufferLevel level = CommandBufferLevel::MASTER;
+    UpdateType updateType = UpdateType::DYNAMIC;
 };
 
 class CommandBuffer {
@@ -41,8 +43,6 @@ public:
     virtual void end() = 0;
 
     virtual void execute_commands(const std::vector<std::shared_ptr<CommandBuffer>>& commandBuffers) = 0;
-
-    virtual bool is_finished() = 0;
 
     virtual void
     bind_shader(const std::shared_ptr<Shader> &shader) = 0;

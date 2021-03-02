@@ -30,7 +30,7 @@ public:
     void begin(const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Framebuffer>& framebuffer) override;
     void end() override;
     void execute_commands(const std::vector<std::shared_ptr<CommandBuffer>>& commandBuffers) override;
-    bool is_finished() override;
+
     void begin_render_pass(const std::shared_ptr<RenderPass> &renderPass, const std::shared_ptr<Framebuffer>& framebuffer) override;
     void end_render_pass() override;
     void bind_shader(const std::shared_ptr<Shader> &shader) override;
@@ -50,7 +50,7 @@ public:
     void cleanup();
     void recreate(uint32_t imageCount);
 
-    inline VkCommandBuffer& native_command_buffer() { return m_commandBuffers[*m_vkCreateInfo.currentImageIndex]; }
+    inline const std::vector<VkCommandBuffer>& native_command_buffers() { return m_commandBuffers; }
 
 private:
     VulkanCommandBufferCreateInfo m_vkCreateInfo;

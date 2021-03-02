@@ -35,7 +35,7 @@ public:
 
     virtual void upload(void* data, uint32_t size) override;
     inline VulkanBuffer& get_buffer(uint32_t bufferIndex) {
-        if (m_usage == UpdateType::CONSTANT){
+        if (m_usage == UpdateType::BAKED){
             return *(m_buffers[0]);
         }
         return *(m_buffers[bufferIndex]);
