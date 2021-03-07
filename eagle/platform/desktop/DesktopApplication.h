@@ -8,11 +8,11 @@
 #include "eagle/CoreGlobalDefinitions.h"
 #include "eagle/Application.h"
 #include "eagle/Log.h"
-#include "eagle/events/EventBus.h"
+#include "eagle/events/Event.h"
 
 namespace eagle {
 
-class WindowGLFW;
+class DesktopWindowGLFW;
 class RenderingContext;
 
 class DesktopApplication : public Application {
@@ -30,7 +30,7 @@ public:
 
 protected:
     std::shared_ptr<ApplicationDelegate> m_delegate;
-    std::shared_ptr<WindowGLFW> m_window;
+    std::shared_ptr<DesktopWindowGLFW> m_window;
     EventBus m_eventBus;
 
     bool m_quit = false;

@@ -8,7 +8,7 @@
 #include "eagle/Log.h"
 #include "eagle/Window.h"
 #include "eagle/ApplicationDelegate.h"
-#include "eagle/platform/desktop/WindowGLFW.h"
+#include "eagle/platform/desktop/DesktopWindowGLFW.h"
 #include "DesktopFileSystem.h"
 
 namespace eagle {
@@ -16,7 +16,7 @@ namespace eagle {
 DesktopApplication::DesktopApplication(uint32_t width, uint32_t height, ApplicationDelegate* delegate) {
     s_instance = this;
     m_delegate = std::shared_ptr<ApplicationDelegate>(delegate);
-    m_window = std::make_shared<WindowGLFW>(width, height);
+    m_window = std::make_shared<DesktopWindowGLFW>(width, height);
     DesktopFileSystem::init();
 }
 

@@ -16,10 +16,10 @@ namespace eagle {
 
 class VulkanContextGLFW;
 
-class WindowGLFW : public Window {
+class DesktopWindowGLFW : public Window {
 public:
 
-    WindowGLFW(uint32_t width, uint32_t height);
+    DesktopWindowGLFW(uint32_t width, uint32_t height);
 
     void init(EventBus* eventBus);
     void destroy();

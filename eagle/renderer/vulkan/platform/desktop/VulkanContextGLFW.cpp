@@ -3,10 +3,10 @@
 //
 
 #include <eagle/renderer/vulkan/platform/desktop/VulkanContextGLFW.h>
-#include <eagle/platform/desktop/WindowGLFW.h>
+#include <eagle/platform/desktop/DesktopWindowGLFW.h>
 #include <GLFW/glfw3.h>
 
-eagle::VulkanContextGLFW::VulkanContextGLFW(eagle::WindowGLFW *windowGlfw) {
+eagle::VulkanContextGLFW::VulkanContextGLFW(eagle::DesktopWindowGLFW *windowGlfw) {
     m_window = windowGlfw;
 }
 
@@ -27,16 +27,8 @@ std::vector<const char*> eagle::VulkanContextGLFW::get_platform_extensions() {
 }
 
 
-void eagle::VulkanContextGLFW::init(EventBus* eventBus) {
+void eagle::VulkanContextGLFW::init() {
     EG_CORE_TRACE("Initializing vulkan context!");
-
-    m_eventBus = eventBus;
-
-    m_listener.attach(eventBus);
-    m_listener.subscribe<OnWindowResized>([this](const OnWindowResized& ev){
-       m_windowResized = true;
-       return false;
-    });
 
     create_instance();
     create_debug_callback();

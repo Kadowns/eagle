@@ -29,7 +29,7 @@ set(EAGLE_SOURCE
         eagle/Random.cpp
         eagle/Time.cpp
         eagle/FileSystem.cpp
-        eagle/events/EventBus.cpp
+        eagle/events/Event.cpp
 
         eagle/renderer/VertexLayout.cpp
         eagle/renderer/vulkan/VulkanContext.cpp
@@ -73,7 +73,7 @@ if (WIN32)
     find_package(Vulkan REQUIRED)
 
     list(APPEND EAGLE_SOURCE
-            eagle/platform/desktop/WindowGLFW.cpp
+            eagle/platform/desktop/DesktopWindowGLFW.cpp
             eagle/platform/desktop/DesktopApplication.cpp
             eagle/platform/desktop/DesktopFileSystem.cpp
             eagle/renderer/vulkan/platform/desktop/VulkanContextGLFW.cpp

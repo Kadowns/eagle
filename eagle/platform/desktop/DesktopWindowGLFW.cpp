@@ -2,7 +2,7 @@
 // Created by Novak on 12/05/2019.
 //
 
-#include "WindowGLFW.h"
+#include "DesktopWindowGLFW.h"
 #include "eagle/Log.h"
 #include "eagle/events/WindowEvents.h"
 #include "eagle/events/InputEvents.h"
@@ -14,10 +14,10 @@
 
 namespace eagle {
 
-WindowGLFW::WindowGLFW(uint32_t width, uint32_t height) : m_windowData(width, height) {
+DesktopWindowGLFW::DesktopWindowGLFW(uint32_t width, uint32_t height) : m_windowData(width, height) {
 }
 
-void WindowGLFW::init(EventBus* eventBus) {
+void DesktopWindowGLFW::init(EventBus* eventBus) {
 
     EG_CORE_TRACE("Initializing glfw window!");
 
@@ -118,12 +118,12 @@ void WindowGLFW::init(EventBus* eventBus) {
     m_mouseCursors[Cursor::VERT_RESIZE] = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
 
     m_renderingContext = std::make_shared<VulkanContextGLFW>(this);
-    m_renderingContext->init(eventBus);
+    m_renderingContext->init();
 
     EG_CORE_TRACE("Window initialized!");
 }
 
-void WindowGLFW::destroy() {
+void DesktopWindowGLFW::destroy() {
 
     m_renderingContext->destroy();
 
@@ -135,58 +135,58 @@ void WindowGLFW::destroy() {
     glfwTerminate();
 }
 
-void* WindowGLFW::native_window() {
+void* DesktopWindowGLFW::native_window() {
     return m_window;
 }
 
-void WindowGLFW::pool_events() {
+void DesktopWindowGLFW::pool_events() {
     glfwPollEvents();
 }
 
-bool WindowGLFW::is_minimized() {
+bool DesktopWindowGLFW::is_minimized() {
     int width, height;
     glfwGetWindowSize(m_window, &width, &height);
     return width == 0 || height == 0;
 }
 
-void WindowGLFW::wait_native_events() {
+void DesktopWindowGLFW::wait_native_events() {
     glfwWaitEvents();
 }
 
-void WindowGLFW::set_cursor_shape(Cursor cursorType) {
+void DesktopWindowGLFW::set_cursor_shape(Cursor cursorType) {
     auto cursor = m_mouseCursors.find(cursorType);
     glfwSetCursor(m_window, cursor != m_mouseCursors.end() ? cursor->second : m_mouseCursors[Cursor::ARROW]);
 }
 
-void WindowGLFW::set_cursor_visible(bool visible) {
+void DesktopWindowGLFW::set_cursor_visible(bool visible) {
     glfwSetInputMode(m_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
 }
 
-RenderingContext* WindowGLFW::rendering_context() {
+RenderingContext* DesktopWindowGLFW::rendering_context() {
     return m_renderingContext.get();
 }
 
-uint32_t WindowGLFW::width() {
+uint32_t DesktopWindowGLFW::width() {
     return m_windowData.width;
 }
 
-uint32_t WindowGLFW::height() {
+uint32_t DesktopWindowGLFW::height() {
     return m_windowData.height;
 }
 
-uint32_t WindowGLFW::framebuffer_width() {
+uint32_t DesktopWindowGLFW::framebuffer_width() {
     return m_windowData.framebufferWidth;
 }
 
-uint32_t WindowGLFW::framebuffer_height() {
+uint32_t DesktopWindowGLFW::framebuffer_height() {
     return m_windowData.framebufferHeight;
 }
 
-float WindowGLFW::framebuffer_width_scale() {
+float DesktopWindowGLFW::framebuffer_width_scale() {
     return static_cast<float>(m_windowData.framebufferWidth) / m_windowData.width;
 }
 
-float WindowGLFW::framebuffer_height_scale() {
+float DesktopWindowGLFW::framebuffer_height_scale() {
     return static_cast<float>(m_windowData.framebufferHeight) / m_windowData.height;
 }
 

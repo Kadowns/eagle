@@ -9,12 +9,12 @@
 
 namespace eagle {
 
-class WindowGLFW;
+class DesktopWindowGLFW;
 
 class VulkanContextGLFW : public VulkanContext {
 public:
-    VulkanContextGLFW(WindowGLFW* windowGlfw);
-    void init(EventBus* eventBus);
+    VulkanContextGLFW(DesktopWindowGLFW* windowGlfw);
+    void init();
 
 protected:
     std::vector<const char*> get_platform_extensions() override;
