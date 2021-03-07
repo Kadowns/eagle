@@ -17,9 +17,14 @@ public:
     void step() override;
 
     void destroy() override;
+
+private:
+
+    void bake_command_buffers();
+
 private:
     eagle::RenderingContext* m_renderingContext;
-    eagle::EventListener<TriangleApp> m_listener;
+    eagle::EventListener<TriangleApp*> m_listener;
     std::weak_ptr<eagle::Shader> m_shader;
     std::weak_ptr<eagle::VertexBuffer> m_vertexBuffer;
     std::weak_ptr<eagle::IndexBuffer> m_indexBuffer;

@@ -8,16 +8,14 @@
 
 namespace eagle {
 
-VertexLayout::VertexLayout() : m_elementCount(0) {
+VertexLayout::VertexLayout() = default;
 
+VertexLayout::VertexLayout(std::vector<eagle::Format> components) :
+    m_components(std::move(components)){
 }
 
-VertexLayout::VertexLayout(size_t elementCount, std::vector<eagle::Format> components) :
-    m_components(std::move(components)), m_elementCount(elementCount) {
-}
-
-VertexLayout::VertexLayout(size_t elementCount, std::initializer_list<Format> components) :
-        VertexLayout(elementCount, std::vector<Format>(components)) {
+VertexLayout::VertexLayout(std::initializer_list<Format> components) :
+        VertexLayout(std::vector<Format>(components)) {
 }
 
 size_t VertexLayout::get_stride() {
@@ -39,12 +37,6 @@ std::vector<Format> &VertexLayout::get_components() {
 Format VertexLayout::get_component(uint32_t index) {
     return m_components[index];
 }
-
-size_t VertexLayout::get_element_count() {
-    return m_elementCount;
-}
-
-
 
 VertexLayout::~VertexLayout() = default;
 

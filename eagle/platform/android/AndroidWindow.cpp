@@ -6,16 +6,16 @@
 #include <android_native_app_glue.h>
 #include <eagle/renderer/vulkan/platform/android/VulkanContextAndroid.h>
 
-Eagle::AndroidWindow::AndroidWindow(android_app *androidApp) :
+eagle::AndroidWindow::AndroidWindow(android_app *androidApp) :
     m_androidApp(androidApp) {
     m_renderingContext = std::make_shared<VulkanContextAndroid>(this);
 }
 
-Eagle::AndroidWindow::~AndroidWindow() {
+eagle::AndroidWindow::~AndroidWindow() {
 
 }
 
-void Eagle::AndroidWindow::init() {
+void eagle::AndroidWindow::init() {
     if (m_surfaceReady){
         return;
     }
@@ -28,7 +28,7 @@ void Eagle::AndroidWindow::init() {
     m_surfaceReady = true;
 }
 
-void Eagle::AndroidWindow::destroy() {
+void eagle::AndroidWindow::destroy() {
     if (!m_surfaceReady){
         return;
     }
@@ -36,7 +36,7 @@ void Eagle::AndroidWindow::destroy() {
     m_surfaceReady = false;
 }
 
-void Eagle::AndroidWindow::pool_events() {
+void eagle::AndroidWindow::pool_events() {
     int events;
     android_poll_source *pSource;
     if (ALooper_pollAll(0, nullptr, &events, (void **) &pSource) >= 0) {
@@ -46,55 +46,55 @@ void Eagle::AndroidWindow::pool_events() {
     }
 }
 
-Eagle::RenderingContext *Eagle::AndroidWindow::rendering_context() {
+eagle::RenderingContext *eagle::AndroidWindow::rendering_context() {
     return m_renderingContext.get();
 }
 
-void *Eagle::AndroidWindow::native_window() {
+void *eagle::AndroidWindow::native_window() {
     return m_androidApp->window;
 }
 
-bool Eagle::AndroidWindow::is_minimized() {
+bool eagle::AndroidWindow::is_minimized() {
     return false;
 }
 
-void Eagle::AndroidWindow::wait_native_events() {
+void eagle::AndroidWindow::wait_native_events() {
 
 }
 
-void Eagle::AndroidWindow::set_cursor_shape(Eagle::Cursor cursorType) {
+void eagle::AndroidWindow::set_cursor_shape(eagle::Cursor cursorType) {
 
 }
 
-void Eagle::AndroidWindow::set_cursor_visible(bool visible) {
+void eagle::AndroidWindow::set_cursor_visible(bool visible) {
 
 }
 
-bool Eagle::AndroidWindow::is_surface_ready() {
+bool eagle::AndroidWindow::is_surface_ready() {
     return m_surfaceReady;
 }
 
-uint32_t Eagle::AndroidWindow::width() {
+uint32_t eagle::AndroidWindow::width() {
     return ANativeWindow_getWidth(m_androidApp->window);
 }
 
-uint32_t Eagle::AndroidWindow::height() {
+uint32_t eagle::AndroidWindow::height() {
     return ANativeWindow_getHeight(m_androidApp->window);
 }
 
-uint32_t Eagle::AndroidWindow::framebuffer_width() {
+uint32_t eagle::AndroidWindow::framebuffer_width() {
     return width();
 }
 
-uint32_t Eagle::AndroidWindow::framebuffer_height() {
+uint32_t eagle::AndroidWindow::framebuffer_height() {
     return height();
 }
 
-float Eagle::AndroidWindow::framebuffer_width_scale() {
+float eagle::AndroidWindow::framebuffer_width_scale() {
     return 1;
 }
 
-float Eagle::AndroidWindow::framebuffer_height_scale() {
+float eagle::AndroidWindow::framebuffer_height_scale() {
     return 1;
 }
 

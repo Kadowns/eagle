@@ -6,7 +6,7 @@
 #define EAGLE_RENDERINGCONTEXT_H
 
 #include "eagle/CoreGlobalDefinitions.h"
-#include "eagle/events/EventBus.h"
+#include "eagle/events/Event.h"
 #include "RenderingCore.h"
 #include "Shader.h"
 #include "VertexBuffer.h"
@@ -81,10 +81,8 @@ public:
     virtual void
     destroy_texture_2d(const std::shared_ptr<Texture>& texture) = 0;
 
-};
-
-struct OnRenderingContextRecreated {
-    RenderingContext* context;
+public:
+    ImmediateEvent<RenderingContext*> context_recreated;
 };
 
 }

@@ -63,16 +63,16 @@ public:
 
     VulkanContext();
 
-    virtual ~VulkanContext();
+    ~VulkanContext() override;
 
     //inherited via RenderingContext
     virtual void destroy();
 
-    virtual bool prepare_frame() override;
-    virtual void present_frame(const std::shared_ptr<CommandBuffer> &commandBuffer) override;
+    bool prepare_frame() override;
+    void present_frame(const std::shared_ptr<CommandBuffer> &commandBuffer) override;
 
-    virtual std::shared_ptr<RenderPass> main_render_pass() override;
-    virtual std::shared_ptr<Framebuffer> main_frambuffer() override;
+    std::shared_ptr<RenderPass> main_render_pass() override;
+    std::shared_ptr<Framebuffer> main_frambuffer() override;
     //------
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
@@ -231,9 +231,6 @@ protected:
     std::vector<std::shared_ptr<VulkanCommandBuffer>> m_commandBuffers;
 
     uint32_t m_currentFrame = 0;
-
-    EventListener<VulkanContext> m_listener;
-    EventBus* m_eventBus;
 
     const std::vector<const char *> validationLayers = {
             "VK_LAYER_KHRONOS_validation"

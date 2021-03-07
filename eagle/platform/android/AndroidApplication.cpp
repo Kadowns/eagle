@@ -8,7 +8,7 @@
 #include "AndroidFileSystem.h"
 #include <eagle/ApplicationDelegate.h>
 
-void Eagle::AndroidApplication::handle_app_cmd(android_app *pApp, int32_t cmd) {
+void eagle::AndroidApplication::handle_app_cmd(android_app *pApp, int32_t cmd) {
     auto self = (AndroidApplication*)pApp->userData;
     switch (cmd) {
         case APP_CMD_INPUT_CHANGED:
@@ -51,13 +51,13 @@ void Eagle::AndroidApplication::handle_app_cmd(android_app *pApp, int32_t cmd) {
     }
 }
 
-void Eagle::AndroidApplication::handle_input(android_app *app, AInputEvent *event) {
+void eagle::AndroidApplication::handle_input(android_app *app, AInputEvent *event) {
     int32_t type = AInputEvent_getType(event);
 
 }
 
 
-Eagle::AndroidApplication::AndroidApplication(android_app *androidApp, ApplicationDelegate *delegate) {
+eagle::AndroidApplication::AndroidApplication(android_app *androidApp, ApplicationDelegate *delegate) {
     s_instance = this;
     androidApp->onAppCmd = handle_app_cmd;
     androidApp->userData = this;
@@ -67,7 +67,7 @@ Eagle::AndroidApplication::AndroidApplication(android_app *androidApp, Applicati
     AndroidFileSystem::init(androidApp->activity->assetManager);
 }
 
-void Eagle::AndroidApplication::run() {
+void eagle::AndroidApplication::run() {
 
     bool initializedDelegate = false;
     while (!m_quit){
@@ -83,10 +83,11 @@ void Eagle::AndroidApplication::run() {
         m_delegate->step();
     }
     m_delegate->destroy();
+    m_window->destroy();
 }
 
-Eagle::Window& Eagle::AndroidApplication::window() {
-    return *m_window.get();
+eagle::Window& eagle::AndroidApplication::window() {
+    return *(m_window.get());
 }
 
 

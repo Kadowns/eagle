@@ -16,13 +16,12 @@ class VertexLayout {
 
 public:
     VertexLayout();
-    VertexLayout(size_t elementCount, std::initializer_list<Format> components);
-    VertexLayout(size_t elementCount, std::vector<eagle::Format> components);
+    VertexLayout(std::initializer_list<Format> components);
+    VertexLayout(std::vector<eagle::Format> components);
     ~VertexLayout();
 
     size_t get_stride();
     size_t get_component_count();
-    size_t get_element_count();
     std::vector<Format>& get_components();
     Format get_component(uint32_t index);
 
@@ -32,7 +31,6 @@ public:
 
 private:
     std::vector<Format> m_components;
-    size_t m_elementCount;
 };
 
 

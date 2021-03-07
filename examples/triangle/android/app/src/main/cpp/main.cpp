@@ -15,7 +15,7 @@
 extern "C" {
 void android_main(struct android_app *pApp) {
     try {
-        Eagle::AndroidApplication application(pApp, new TriangleApp());
+        eagle::AndroidApplication application(pApp, new TriangleApp());
         application.run();
     }
     catch (std::exception& e){

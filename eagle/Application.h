@@ -6,7 +6,7 @@
 #define EAGLE_APPLICATION_H
 
 #include <eagle/CoreGlobalDefinitions.h>
-#include <eagle/events/EventBus.h>
+#include <eagle/events/Event.h>
 
 namespace eagle {
 

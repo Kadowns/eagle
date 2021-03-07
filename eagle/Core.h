@@ -12,7 +12,7 @@
 #include <eagle/Random.h>
 #include <eagle/Time.h>
 #include <eagle/ApplicationDelegate.h>
-#include <eagle/events/ImmediateEvent.h>
+#include <eagle/events/Event.h>
 #include <eagle/events/InputEvents.h>
 #include <eagle/events/WindowEvents.h>
 #include <eagle/events/KeyCodes.h>

@@ -7,7 +7,7 @@
 #define EAGLE_LAYER_H
 
 #include "CoreGlobalDefinitions.h"
-#include "eagle/events/EventBus.h"
+#include "eagle/events/Event.h"
 
 namespace eagle {
 

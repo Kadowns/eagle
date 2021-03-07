@@ -15,7 +15,7 @@
 
 namespace eagle {
 
-bool VulkanContext::enableValidationLayers = true;
+bool VulkanContext::enableValidationLayers = false;
 
 VulkanContext::VulkanContext() {
 
@@ -31,8 +31,6 @@ void VulkanContext::destroy() {
 
     VK_CALL
     vkDeviceWaitIdle(m_device);
-
-    m_listener.detach();
 
     m_vertexBuffers.clear();
     m_indexBuffers.clear();
@@ -759,8 +757,6 @@ void VulkanContext::recreate_swapchain() {
     create_framebuffers();
     recreate_objects();
 
-    m_eventBus->emit(OnRenderingContextRecreated{this});
-
     EG_CORE_TRACE("Swapchain recreated!");
 }
 
@@ -788,6 +784,8 @@ void VulkanContext::recreate_objects() {
     for (auto& commandBuffer : m_commandBuffers){
         commandBuffer->recreate(m_present.imageCount);
     }
+
+    context_recreated(this);
 }
 
 void VulkanContext::clear_objects() {
@@ -1097,9 +1095,9 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
                                       const VkAllocationCallbacks *pAllocator,
                                       VkDebugUtilsMessengerEXT *pCallback) {
 
-    auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-    if (func != nullptr) {
-        return func(instance, pCreateInfo, pAllocator, pCallback);
+    auto vkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
+    if (vkCreateDebugUtilsMessengerEXT != nullptr) {
+        return vkCreateDebugUtilsMessengerEXT(instance, pCreateInfo, pAllocator, pCallback);
     } else {
         return VK_ERROR_EXTENSION_NOT_PRESENT;
     }

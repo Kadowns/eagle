@@ -50,7 +50,7 @@ private:
 
 #define EG_STRINGNIZE(s) #s
 
-#define EG_FILENAME FILE_BASENAME
+#define EG_FILENAME EG_STRINGNIZE(FILE_BASENAME)
 
 #define EG_CORE_TRACE_F(message, ...)    eagle::Log::core_log(EG_FILENAME, __FUNCTION__, __LINE__, eagle::Log::TRACE, message, __VA_ARGS__)
 #define EG_CORE_INFO_F(message, ...)     eagle::Log::core_log(EG_FILENAME, __FUNCTION__, __LINE__, eagle::Log::INFO, message, __VA_ARGS__)

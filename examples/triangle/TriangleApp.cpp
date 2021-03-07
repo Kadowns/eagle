@@ -20,8 +20,12 @@ void TriangleApp::init() {
         eagle::Application::instance().quit();
         return false;
     });
+    m_listener.subscribe(m_renderingContext->context_recreated, [this](eagle::RenderingContext* context){
+        bake_command_buffers();
+        return false;
+    });
 
-    eagle::VertexLayout vertexLayout(5, {eagle::Format::R32G32_SFLOAT, eagle::Format::R32G32B32_SFLOAT});
+    eagle::VertexLayout vertexLayout({eagle::Format::R32G32_SFLOAT, eagle::Format::R32G32B32_SFLOAT});
 
     eagle::ShaderCreateInfo pipelineInfo = {m_renderingContext->main_render_pass(), {
             {eagle::ShaderStage::VERTEX, "color.vert.spv"},
@@ -61,13 +65,7 @@ void TriangleApp::init() {
     commandBufferCreateInfo.updateType = eagle::UpdateType::BAKED;
     m_secondaryCommandBuffer = m_renderingContext->create_command_buffer(commandBufferCreateInfo);
 
-    auto secondaryCommandBuffer = m_secondaryCommandBuffer.lock();
-    secondaryCommandBuffer->begin(m_renderingContext->main_render_pass(), m_renderingContext->main_frambuffer());
-    secondaryCommandBuffer->bind_shader(m_shader.lock());
-    secondaryCommandBuffer->bind_vertex_buffer(m_vertexBuffer.lock());
-    secondaryCommandBuffer->bind_index_buffer(m_indexBuffer.lock());
-    secondaryCommandBuffer->draw_indexed(6, 0, 0);
-    secondaryCommandBuffer->end();
+    bake_command_buffers();
 }
 
 void TriangleApp::step() {
@@ -87,7 +85,17 @@ void TriangleApp::step() {
 }
 
 void TriangleApp::destroy() {
-    EG_INFO("Triangle deattached!");
-    m_listener.detach();
+    EG_INFO("Triangle destroyed!");
+    m_listener.destroy();
+}
+
+void TriangleApp::bake_command_buffers() {
+    auto secondaryCommandBuffer = m_secondaryCommandBuffer.lock();
+    secondaryCommandBuffer->begin(m_renderingContext->main_render_pass(), m_renderingContext->main_frambuffer());
+    secondaryCommandBuffer->bind_shader(m_shader.lock());
+    secondaryCommandBuffer->bind_vertex_buffer(m_vertexBuffer.lock());
+    secondaryCommandBuffer->bind_index_buffer(m_indexBuffer.lock());
+    secondaryCommandBuffer->draw_indexed(6, 0, 0);
+    secondaryCommandBuffer->end();
 }
 
