@@ -118,14 +118,13 @@ public:
         if (eventStreamIndex >= m_eventStreams.size()){
             return;
         }
-//        std::lock_guard lock(m_eventStreamMutex);
         m_eventStreams[eventStreamIndex].emit(ev);
     }
 
     template<typename TEvent>
     void subscribe(std::function<typename TEventStream::ReturnType(const TEvent&)>&& callback, size_t listenerId, uint32_t priority){
         size_t eventStreamIndex = EventHelper::event_index<TEvent>();
-//        std::lock_guard lock(m_eventStreamMutex);
+
         if (eventStreamIndex >= m_eventStreams.size()){
             m_eventStreams.resize(eventStreamIndex + 1);
         }
@@ -140,39 +139,90 @@ public:
         if (eventStreamIndex >= m_eventStreams.size()){
             return;
         }
-//        std::lock_guard lock(m_eventStreamMutex);
         m_eventStreams[eventStreamIndex].unsubscribe(listenerId);
     }
 
     void unsubscribe_all(size_t listenerId){
-//        std::lock_guard lock(m_eventStreamMutex);
         for (auto& stream : m_eventStreams){
             stream.unsubscribe(listenerId);
         }
     }
 
-private:
-
-    template<typename TReceiver, typename TBus>
-    friend class GenericEventListener;
-
-    size_t next_listener_id(){
-        return ++m_listenerIdCounter;
-    }
 
 private:
 
     std::vector<TEventStream> m_eventStreams;
-    size_t m_listenerIdCounter = 0;
     std::mutex m_eventStreamMutex;
 };
 
-template<typename TReceiver, typename TBus>
-class GenericEventListener {
+
+class BaseImmediateEvent {
+public:
+    virtual ~BaseImmediateEvent() = default;
+    virtual void unsubscribe(size_t listenerId) = 0;
+};
+
+template<typename ...Args>
+class ImmediateEvent : public BaseImmediateEvent{
+public:
+    using Callback =  std::function<void(Args&&...)>;
 public:
 
+    void operator()(Args&&... args){
+        emit(std::forward<Args>(args)...);
+    }
+
+    void emit(Args&&... args) {
+        assert(!m_emitting && "Attempted to emit a event that was already being emitted.");
+        m_emitting = true;
+        for (auto &callback : m_callbacks) {
+            callback(std::forward<Args>(args)...);
+        }
+        m_emitting = false;
+    }
+
+    void subscribe(Callback &&callback, size_t listenerId) {
+        assert(!m_emitting && "Attempted to subscribe on a event that is currently emitting");
+        assert(std::find_if(m_listeners.begin(), m_listeners.end(), [listenerId](size_t listener) {
+            return listener == listenerId;
+        }) == m_listeners.end() && "Tried to subscribe to an event with a listener that was already subscribed.");
+
+        m_listeners.emplace_back(listenerId);
+        m_callbacks.emplace_back(std::move(callback));
+    }
+
+    void unsubscribe(size_t listenerId) override {
+        assert(!m_emitting);
+        auto it = std::find_if(m_listeners.begin(), m_listeners.end(), [listenerId](size_t listener) {
+            return listener == listenerId;
+        });
+
+        assert(it != m_listeners.end() && "Attempted to unsubscribe from");
+
+        auto callbackIt = std::next(m_callbacks.begin(), std::distance(m_listeners.begin(), it));
+        m_listeners.erase(it);
+        m_callbacks.erase(callbackIt);
+    }
+
+protected:
+    std::vector<Callback> m_callbacks;
+    std::vector<size_t> m_listeners;
+    bool m_emitting = false;
+};
+
+class BaseEventListener {
+protected:
+    static size_t s_globalIdCounter;
+};
+
+template<typename TReceiver, typename TBus>
+class GenericEventListener : private BaseEventListener {
+public:
+
+    GenericEventListener() : m_id(s_globalIdCounter++){}
+
     virtual ~GenericEventListener() {
-        detach();
+        destroy();
     }
 
     void attach(TBus* bus){
@@ -180,7 +230,6 @@ public:
             detach();
         }
         m_bus = bus;
-        m_id = bus->next_listener_id();
     }
 
     void detach(){
@@ -188,6 +237,15 @@ public:
             m_bus->unsubscribe_all(m_id);
         }
         m_bus = nullptr;
+    }
+
+    void destroy(){
+        detach();
+
+        for (auto& event : m_subscribedImmediateEvents){
+            event->unsubscribe(m_id);
+        }
+        m_subscribedImmediateEvents.clear();
     }
 
     template<typename TEvent>
@@ -207,7 +265,21 @@ public:
         m_bus->template unsubscribe<TEvent>(m_id);
     }
 
+    template<typename TEvent>
+    void subscribe(TEvent& event, typename TEvent::Callback&& callback){
+        event.subscribe(std::move(callback), m_id);
+        m_subscribedImmediateEvents.emplace_back(&event);
+    }
+
+    template<typename TEvent>
+    void unsubscribe(TEvent& event){
+        event.unsubscribe(m_id);
+        auto it = std::find(m_subscribedImmediateEvents.begin(), m_subscribedImmediateEvents.end(), &event);
+        m_subscribedImmediateEvents.erase(it);
+    }
+
 private:
+    std::vector<BaseImmediateEvent*> m_subscribedImmediateEvents;
     TBus* m_bus = nullptr;
     size_t m_id = 0;
 };
