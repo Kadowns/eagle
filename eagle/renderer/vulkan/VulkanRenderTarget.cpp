@@ -22,7 +22,7 @@ void VulkanCustomRenderTarget::cleanup() {
     if (m_cleared)
         return;
 
-    EG_CORE_TRACE("Clearing render target!");
+    EG_TRACE("eagle","Clearing render target!");
 
     auto destroy_attachment = [&](std::shared_ptr<VulkanImageAttachment>& attachment){
         vkDestroyImageView(m_info.device, attachment->view, nullptr);
@@ -39,12 +39,12 @@ void VulkanCustomRenderTarget::cleanup() {
 
     VK_CALL vkDestroySampler(m_info.device, sampler->sampler, nullptr);
 
-    EG_CORE_TRACE("Render target cleared!");
+    EG_TRACE("eagle","Render target cleared!");
     m_cleared = true;
 }
 
 void VulkanCustomRenderTarget::create_resources() {
-    EG_CORE_TRACE("Creating custom render target resources!");
+    EG_TRACE("eagle","Creating custom render target resources!");
 
 
     auto attachment = std::static_pointer_cast<VulkanImageAttachment>(m_image->get_attachment().lock());
@@ -67,7 +67,7 @@ void VulkanCustomRenderTarget::create_resources() {
 
     m_depthAttachment = std::make_shared<VulkanImageAttachment>();
     create_image_resources(m_depthAttachment, m_info.depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, depthAspect);
-    EG_CORE_TRACE("Custom render target resources created!");
+    EG_TRACE("eagle","Custom render target resources created!");
 }
 
 void VulkanCustomRenderTarget::create_framebuffer() {

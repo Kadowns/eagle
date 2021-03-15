@@ -58,7 +58,7 @@ std::vector<uint32_t> VulkanShaderCompiler::compile_glsl(const std::string &file
     std::string preprocessedGLSL;
 
     if (!shader.preprocess(&resources, DefaultVersion, ENoProfile, false, false, messages, &preprocessedGLSL, includer)) {
-        EG_CORE_FATAL_F("GLSL Preprocessing Failed for: {0}\n Log: {1}\n DebugLog: {2}", filename, shader.getInfoLog(), shader.getInfoDebugLog());
+        EG_FATAL("eagle","GLSL Preprocessing Failed for: {0}\n Log: {1}\n DebugLog: {2}", filename, shader.getInfoLog(), shader.getInfoDebugLog());
     }
 
     //updates shader strings with preprocessed glsl file
@@ -67,7 +67,7 @@ std::vector<uint32_t> VulkanShaderCompiler::compile_glsl(const std::string &file
 
     //parses the shader
     if (!shader.parse(&resources, 100, false, messages)) {
-        EG_CORE_FATAL_F("GLSL Parsing Failed for: {0}\n Log: {1}\n DebugLog: {2}", filename, shader.getInfoLog(), shader.getInfoDebugLog());
+        EG_FATAL("eagle","GLSL Parsing Failed for: {0}\n Log: {1}\n DebugLog: {2}", filename, shader.getInfoLog(), shader.getInfoDebugLog());
     }
 
     glslang::TProgram program;
@@ -75,7 +75,7 @@ std::vector<uint32_t> VulkanShaderCompiler::compile_glsl(const std::string &file
 
     //links program with shader
     if(!program.link(messages)) {
-        EG_CORE_FATAL_F("GLSL Linking Failed for: {0}\n Log: {1}\n DebugLog: {2}", filename, shader.getInfoLog(), shader.getInfoDebugLog());
+        EG_FATAL("eagle","GLSL Linking Failed for: {0}\n Log: {1}\n DebugLog: {2}", filename, shader.getInfoLog(), shader.getInfoDebugLog());
     }
 
     //converts glslang program to spirv format
@@ -84,7 +84,7 @@ std::vector<uint32_t> VulkanShaderCompiler::compile_glsl(const std::string &file
     glslang::SpvOptions spvOptions;
     glslang::GlslangToSpv(*program.getIntermediate(shaderStage), spirv, &logger, &spvOptions);
     if (!logger.getAllMessages().empty()){
-        EG_CORE_FATAL_F("Failed to convert glsl code to spirv code! Log: {0}", logger.getAllMessages());
+        EG_FATAL("eagle","Failed to convert glsl code to spirv code! Log: {0}", logger.getAllMessages());
     }
     return spirv;
 }

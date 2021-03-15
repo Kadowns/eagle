@@ -10,26 +10,26 @@ VulkanFramebuffer::VulkanFramebuffer(const FramebufferCreateInfo &createInfo,
                                      const VulkanFramebufferCreateInfo &nativeFramebufferCreateInfo) :
     Framebuffer(createInfo),
     m_nativeCreateInfo(nativeFramebufferCreateInfo) {
-    EG_CORE_TRACE("Constructing a vulkan frame buffer!");
+    EG_TRACE("eagle","Constructing a vulkan frame buffer!");
     m_nativeImageAttachments.reserve(createInfo.attachments.size());
     for (auto& attachment : createInfo.attachments){
         m_nativeImageAttachments.emplace_back(std::static_pointer_cast<VulkanImage>(attachment));
     }
     create_framebuffer();
-    EG_CORE_TRACE("Vulkan frame buffer constructed!");
+    EG_TRACE("eagle","Vulkan frame buffer constructed!");
 }
 
 VulkanFramebuffer::~VulkanFramebuffer() {
-    EG_CORE_TRACE("Destroying a vulkan frame buffer!");
+    EG_TRACE("eagle","Destroying a vulkan frame buffer!");
     for (auto& framebuffer : m_framebuffers) {
         VK_CALL vkDestroyFramebuffer(m_nativeCreateInfo.device, framebuffer, nullptr);
     }
-    EG_CORE_TRACE("Vulkan frame buffer destroyed!");
+    EG_TRACE("eagle","Vulkan frame buffer destroyed!");
 }
 
 
 void VulkanFramebuffer::create_framebuffer() {
-    EG_CORE_TRACE("Creating a vulkan frame buffer!");
+    EG_TRACE("eagle","Creating a vulkan frame buffer!");
 
     VkFramebufferCreateInfo framebufferCreateInfo = {};
     framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -50,7 +50,7 @@ void VulkanFramebuffer::create_framebuffer() {
 
         VK_CALL vkCreateFramebuffer(m_nativeCreateInfo.device, &framebufferCreateInfo, nullptr, &m_framebuffers[i]);
     }
-    EG_CORE_TRACE("Vulkan frame buffer created!");
+    EG_TRACE("eagle","Vulkan frame buffer created!");
 }
 
 }

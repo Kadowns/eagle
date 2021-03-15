@@ -14,6 +14,7 @@ public:
     static inline FileSystem* instance() { return s_instance; }
     virtual std::vector<uint8_t> read_bytes(const std::string& path) = 0;
     virtual std::string read_text(const std::string& path) = 0;
+
 protected:
     static FileSystem* s_instance;
 

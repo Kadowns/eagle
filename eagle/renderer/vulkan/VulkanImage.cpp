@@ -12,9 +12,9 @@ namespace eagle {
 VulkanImage::VulkanImage(const ImageCreateInfo &imageCreateInfo, const VulkanImageCreateInfo &nativeCreateInfo) :
     Image(imageCreateInfo),
     m_nativeCreateInfo(nativeCreateInfo) {
-    EG_CORE_TRACE("Creating a vulkan image!");
+    EG_TRACE("eagle","Creating a vulkan image!");
     create();
-    EG_CORE_TRACE("Vulkan image created!");
+    EG_TRACE("eagle","Vulkan image created!");
 }
 
 VulkanImage::VulkanImage(const ImageCreateInfo &imageCreateInfo, const VulkanImageCreateInfo& nativeCreateInfo, std::vector<VkImage> images) :
@@ -22,7 +22,7 @@ VulkanImage::VulkanImage(const ImageCreateInfo &imageCreateInfo, const VulkanIma
         m_nativeCreateInfo(nativeCreateInfo),
         m_images(std::move(images)),
         m_createdFromExternalImage(true){
-    EG_CORE_TRACE("Creating a vulkan image from a swapchain image!");
+    EG_TRACE("eagle","Creating a vulkan image from a swapchain image!");
 
     m_descriptorType = DescriptorType::SAMPLED_IMAGE;
 
@@ -46,24 +46,24 @@ VulkanImage::VulkanImage(const ImageCreateInfo &imageCreateInfo, const VulkanIma
         );
     }
 
-    EG_CORE_TRACE("Vulkan image created from a swapchain image!");
+    EG_TRACE("eagle","Vulkan image created from a swapchain image!");
 }
 
 VulkanImage::~VulkanImage() {
-    EG_CORE_TRACE("Destroying a vulkan image!");
+    EG_TRACE("eagle","Destroying a vulkan image!");
     clear();
-    EG_CORE_TRACE("Vulkan image destroyed!");
+    EG_TRACE("eagle","Vulkan image destroyed!");
 }
 
 void VulkanImage::on_resize() {
-    EG_CORE_TRACE("Resizing a vulkan image!");
+    EG_TRACE("eagle","Resizing a vulkan image!");
     clear();
     create();
-    EG_CORE_TRACE("Vulkan image resized!");
+    EG_TRACE("eagle","Vulkan image resized!");
 }
 
 void VulkanImage::create() {
-    EG_CORE_TRACE("Creating a vulkan image!");
+    EG_TRACE("eagle","Creating a vulkan image!");
     VkImageCreateInfo imageInfo = {};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -142,11 +142,11 @@ void VulkanImage::create() {
                 subresourceRange
         );
     }
-    EG_CORE_TRACE("Vulkan image created!");
+    EG_TRACE("eagle","Vulkan image created!");
 }
 
 void VulkanImage::copy_buffer_data_to_image(VkImageSubresourceRange subresourceRange, uint32_t index) {
-    EG_CORE_TRACE("Copying buffer to image!");
+    EG_TRACE("eagle","Copying buffer to image!");
     std::shared_ptr<VulkanBuffer> stagingBuffer;
 
     VulkanBufferCreateInfo bufferInfo = {};
@@ -224,11 +224,11 @@ void VulkanImage::copy_buffer_data_to_image(VkImageSubresourceRange subresourceR
     );
 
     stagingBuffer->destroy();
-    EG_CORE_TRACE("Buffer copied to image!");
+    EG_TRACE("eagle","Buffer copied to image!");
 }
 
 void VulkanImage::clear() {
-    EG_CORE_TRACE("Clearing a vulkan image!");
+    EG_TRACE("eagle","Clearing a vulkan image!");
     for (auto& view : m_views){
         if (view){
             VK_CALL vkDestroyImageView(m_nativeCreateInfo.device, view, nullptr);
@@ -251,7 +251,7 @@ void VulkanImage::clear() {
     m_views.clear();
     m_memories.clear();
     m_images.clear();
-    EG_CORE_TRACE("Vulkan image cleared!");
+    EG_TRACE("eagle","Vulkan image cleared!");
 }
 
 DescriptorType VulkanImage::type() const {

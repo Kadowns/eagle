@@ -189,6 +189,7 @@ void VulkanCommandBuffer::bind_compute_shader(const std::shared_ptr<ComputeShade
             VK_CALL vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_COMPUTE, vcs->get_pipeline());
         }
     }
+
 }
 
 void VulkanCommandBuffer::bind_vertex_buffer(const std::shared_ptr<VertexBuffer> &vertexBuffer) {

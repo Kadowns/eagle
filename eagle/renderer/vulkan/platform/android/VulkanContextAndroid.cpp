@@ -35,7 +35,7 @@ void eagle::VulkanContextAndroid::recreate_surface() {
 
     recreate_objects();
 
-    EG_CORE_TRACE("Swapchain recreated!");
+    EG_TRACE("eagle","Swapchain recreated!");
 }
 
 void eagle::VulkanContextAndroid::destroy_surface() {
@@ -51,7 +51,7 @@ void eagle::VulkanContextAndroid::destroy_surface() {
 }
 
 void eagle::VulkanContextAndroid::init() {
-    EG_CORE_TRACE("Initializing vulkan context!");
+    EG_TRACE("eagle","Initializing vulkan context!");
     if (m_initialized){
         return;
     }

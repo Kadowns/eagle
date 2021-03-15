@@ -44,7 +44,7 @@ private:
 
 }
 
-#define VK_CALL eagle::VkDebugInfo::set_call(EG_FILENAME, __FUNCTION__, __LINE__);
+#define VK_CALL eagle::VkDebugInfo::set_call(__FILE__, SPDLOG_FUNCTION, __LINE__);
 
 #define VK_CALL_ASSERT(result) VK_CALL if (result != VK_SUCCESS)
 

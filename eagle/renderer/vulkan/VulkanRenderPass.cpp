@@ -27,7 +27,7 @@ VulkanRenderPass::VulkanRenderPass(const VulkanRenderPassCreateInfo &createInfo,
                                    const RenderAttachmentDescription &depthAttachment) :
     RenderPass(colorAttachments, depthAttachment),
     m_createInfo(createInfo) {
-    EG_CORE_TRACE("Creating a VulkanRenderPass!");
+    EG_TRACE("eagle","Creating a VulkanRenderPass!");
 
     m_vkColorAttachments = std::move(VulkanConverter::to_vk_vector<VkAttachmentDescription>(colorAttachments));
     m_vkDepthAttachment = VulkanConverter::to_vk(depthAttachment);
@@ -41,11 +41,11 @@ VulkanRenderPass::VulkanRenderPass(const VulkanRenderPassCreateInfo &createInfo,
     m_clearValues.emplace_back(depthClearValues);
 
     create_native_render_pass();
-    EG_CORE_TRACE("VulkanRenderPass created!");
+    EG_TRACE("eagle","VulkanRenderPass created!");
 }
 
 void VulkanRenderPass::create_native_render_pass() {
-    EG_CORE_TRACE("Creating a native render pass!");
+    EG_TRACE("eagle","Creating a native render pass!");
 
     std::vector<VkAttachmentReference> colorAttachmentRefs;
     colorAttachmentRefs.reserve(m_vkColorAttachments.size());
@@ -99,19 +99,19 @@ void VulkanRenderPass::create_native_render_pass() {
         throw std::runtime_error("failed to create render pass!");
     }
 
-    EG_CORE_TRACE("Native render pass created!");
+    EG_TRACE("eagle","Native render pass created!");
 }
 
 VulkanRenderPass::~VulkanRenderPass() {
-    EG_CORE_TRACE("Destroying a VulkanRenderPass!");
+    EG_TRACE("eagle","Destroying a VulkanRenderPass!");
     cleanup();
-    EG_CORE_TRACE("VulkanRenderPass destroyed!");
+    EG_TRACE("eagle","VulkanRenderPass destroyed!");
 }
 
 void VulkanRenderPass::cleanup() {
-    EG_CORE_TRACE("Cleaning up a VulkanRenderPass!");
+    EG_TRACE("eagle","Cleaning up a VulkanRenderPass!");
     VK_CALL vkDestroyRenderPass(m_createInfo.device, m_vkRenderPass, nullptr);
-    EG_CORE_TRACE("VulkanRenderPass cleaned!");
+    EG_TRACE("eagle","VulkanRenderPass cleaned!");
 }
 
 }

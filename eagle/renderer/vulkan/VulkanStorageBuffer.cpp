@@ -11,13 +11,13 @@ VulkanStorageBuffer::VulkanStorageBuffer(VulkanStorageBufferCreateInfo createInf
     m_createInfo(createInfo),
     StorageBuffer(size, usage) {
     if (data != nullptr){
-        EG_CORE_DEBUG_F("Copying data to bytes array: data size: {0} | bytes size: {1}", size, m_bytes.size());
+        EG_DEBUG("eagle", "Copying data to bytes array: data size: {0} | bytes size: {1}", size, m_bytes.size());
         memcpy(m_bytes.data(), data, size);
     }else{
-        EG_CORE_DEBUG_F("Setting bytes to 0, no data set: data size: {0} | bytes size: {1}", size, m_bytes.size());
+        EG_DEBUG("eagle", "Setting bytes to 0, no data set: data size: {0} | bytes size: {1}", size, m_bytes.size());
         memset(m_bytes.data(), 0, size);
         if (m_usage == UpdateType::BAKED){
-            EG_CORE_WARNING("Storage buffer created with CONSTANT usage flag with no data!");
+            EG_WARNING("eagle", "Storage buffer created with CONSTANT usage flag with no data!");
         }
     }
 
@@ -49,7 +49,7 @@ void VulkanStorageBuffer::push() {
 }
 
 void VulkanStorageBuffer::create_storage_buffer() {
-    EG_CORE_TRACE("Creating vulkan storage buffer impl");
+    EG_TRACE("eagle","Creating vulkan storage buffer impl");
     if (!m_cleared) return;
 
     m_buffers.resize(m_createInfo.bufferCount);
@@ -104,7 +104,7 @@ void VulkanStorageBuffer::create_storage_buffer() {
         }
     }
     m_cleared = false;
-    EG_CORE_TRACE("Vulkan storage buffer created");
+    EG_TRACE("eagle","Vulkan storage buffer created");
 }
 
 bool VulkanStorageBuffer::is_dirty() const {

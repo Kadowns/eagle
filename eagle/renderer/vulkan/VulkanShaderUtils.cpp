@@ -178,7 +178,7 @@ VulkanShaderUtils::enumerate_output_variables(const std::vector<uint32_t> &code,
 
 VkShaderModule VulkanShaderUtils::create_shader_module(VkDevice device, const std::vector<uint32_t> &code) {
 
-    EG_CORE_TRACE("Creating shader module!");
+    EG_TRACE("eagle","Creating shader module!");
 
     VkShaderModuleCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

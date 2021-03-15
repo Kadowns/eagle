@@ -19,7 +19,7 @@ DesktopWindowGLFW::DesktopWindowGLFW(uint32_t width, uint32_t height) : m_window
 
 void DesktopWindowGLFW::init(EventBus* eventBus) {
 
-    EG_CORE_TRACE("Initializing glfw window!");
+    EG_TRACE("eagle","Initializing glfw window!");
 
     if (!glfwInit()){
         throw std::runtime_error("Failed to initialize glfw!");
@@ -46,7 +46,7 @@ void DesktopWindowGLFW::init(EventBus* eventBus) {
     glfwMakeContextCurrent(m_window);
     glfwShowWindow(m_window);
 
-    EG_CORE_TRACE("Setting up GLFW callbacks!");
+    EG_TRACE("eagle","Setting up GLFW callbacks!");
 
     glfwSetWindowUserPointer(m_window, &m_windowData);
 
@@ -120,7 +120,7 @@ void DesktopWindowGLFW::init(EventBus* eventBus) {
     m_renderingContext = std::make_shared<VulkanContextGLFW>(this);
     m_renderingContext->init();
 
-    EG_CORE_TRACE("Window initialized!");
+    EG_TRACE("eagle","Window initialized!");
 }
 
 void DesktopWindowGLFW::destroy() {

@@ -6,6 +6,7 @@
 #define EAGLE_APPLICATION_H
 
 #include <eagle/CoreGlobalDefinitions.h>
+#include <eagle/Log.h>
 #include <eagle/events/Event.h>
 
 namespace eagle {
@@ -16,6 +17,7 @@ class ApplicationDelegate;
 
 class Application {
 public:
+    Application() { EG_CREATE_LOGGER("eagle"); }
     virtual ~Application() = default;
     virtual void quit() = 0;
     virtual Window& window() = 0;

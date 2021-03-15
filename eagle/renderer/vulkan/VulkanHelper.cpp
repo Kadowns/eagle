@@ -176,7 +176,7 @@ VulkanHelper::transition_image_layout(VkDevice device, VkCommandPool commandPool
             break;
         default:
             // Other source layouts aren't handled (yet)
-            EG_CORE_WARNING("Old image layout not handled!");
+            EG_WARNING("eagle", "Old image layout not handled!");
             break;
     }
 
@@ -217,7 +217,7 @@ VulkanHelper::transition_image_layout(VkDevice device, VkCommandPool commandPool
             break;
         default:
             // Other source layouts aren't handled (yet)
-            EG_CORE_WARNING("New image layout not handled!");
+            EG_WARNING("eagle", "New image layout not handled!");
             break;
     }
 

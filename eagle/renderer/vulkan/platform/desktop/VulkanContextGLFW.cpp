@@ -11,15 +11,15 @@ eagle::VulkanContextGLFW::VulkanContextGLFW(eagle::DesktopWindowGLFW *windowGlfw
 }
 
 void eagle::VulkanContextGLFW::create_surface() {
-    EG_CORE_TRACE("Creating window surface!");
+    EG_TRACE("eagle","Creating window surface!");
     VK_CALL_ASSERT(glfwCreateWindowSurface(m_instance, (GLFWwindow *) m_window->native_window(), nullptr, &m_surface)) {
         throw std::runtime_error("failed to create window surface!");
     }
-    EG_CORE_TRACE("Window surface created!");
+    EG_TRACE("eagle","Window surface created!");
 }
 
 std::vector<const char*> eagle::VulkanContextGLFW::get_platform_extensions() {
-    EG_CORE_TRACE("Getting required extensions!");
+    EG_TRACE("eagle","Getting required extensions!");
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtensions;
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -28,7 +28,7 @@ std::vector<const char*> eagle::VulkanContextGLFW::get_platform_extensions() {
 
 
 void eagle::VulkanContextGLFW::init() {
-    EG_CORE_TRACE("Initializing vulkan context!");
+    EG_TRACE("eagle","Initializing vulkan context!");
 
     create_instance();
     create_debug_callback();
@@ -42,5 +42,5 @@ void eagle::VulkanContextGLFW::init() {
     create_render_pass();
     create_framebuffers();
 
-    EG_CORE_TRACE("Vulkan ready!");
+    EG_TRACE("eagle","Vulkan ready!");
 }

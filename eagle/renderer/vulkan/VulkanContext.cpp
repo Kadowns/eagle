@@ -18,19 +18,16 @@ namespace eagle {
 bool VulkanContext::enableValidationLayers = false;
 
 VulkanContext::VulkanContext() {
-
+    EG_CREATE_LOGGER("vulkan");
 }
 
 VulkanContext::~VulkanContext() = default;
 
-
-
 void VulkanContext::destroy() {
 
-    EG_CORE_TRACE("Terminating vulkan!");
+    EG_TRACE("eagle", "Terminating vulkan!");
 
-    VK_CALL
-    vkDeviceWaitIdle(m_device);
+    VK_CALL vkDeviceWaitIdle(m_device);
 
     m_vertexBuffers.clear();
     m_indexBuffers.clear();
@@ -76,13 +73,13 @@ void VulkanContext::destroy() {
     VK_CALL
     vkDestroyInstance(m_instance, nullptr);
 
-    EG_CORE_TRACE("Vulkan terminated!");
+    EG_TRACE("eagle","Vulkan terminated!");
 }
 
 
 void VulkanContext::create_instance() {
 
-    EG_CORE_TRACE("Creating vulkan instance!");
+    EG_TRACE("eagle","Creating vulkan instance!");
 
     if (enableValidationLayers && !validation_layers_supported()) {
         throw std::runtime_error("validation layers requested, but not available!");
@@ -130,12 +127,12 @@ void VulkanContext::create_instance() {
         throw std::runtime_error("failed to create instance!");
     }
 
-    EG_CORE_TRACE("Vulkan instance created!");
+    EG_TRACE("eagle","Vulkan instance created!");
 }
 
 void VulkanContext::create_debug_callback() {
 
-    EG_CORE_TRACE("Setting up debug callback!");
+    EG_TRACE("eagle","Setting up debug callback!");
 
     if (!enableValidationLayers) return;
 
@@ -153,18 +150,18 @@ void VulkanContext::create_debug_callback() {
     VK_CALL_ASSERT(CreateDebugUtilsMessengerEXT(m_instance, &createInfo, nullptr, &m_debugMessenger)) {
         throw std::runtime_error("failed to setup debug callback!");
     }
-    EG_CORE_TRACE("Debug callback ready!");
+    EG_TRACE("eagle","Debug callback ready!");
 }
 
 void VulkanContext::bind_physical_device() {
 
-    EG_CORE_TRACE("Selecting physical device!");
+    EG_TRACE("eagle","Selecting physical device!");
 
     //verifica quantas placas de video suportam a vulkan no pc
     uint32_t deviceCount = 0;
     VK_CALL
     vkEnumeratePhysicalDevices(m_instance, &deviceCount, nullptr);
-    EG_CORE_INFO_F("Number of supporting devices: {0}", deviceCount);
+    EG_INFO("eagle","Number of supporting devices: {0}", deviceCount);
 
     //se n�o houver nenhuma placa de video que suporta, para o programa
     if (deviceCount == 0) {
@@ -199,12 +196,12 @@ void VulkanContext::bind_physical_device() {
     m_physicalDevice = devices[0];
 
 
-    EG_CORE_TRACE("Physical device selected!");
+    EG_TRACE("eagle","Physical device selected!");
 }
 
 int VulkanContext::evaluate_device(VkPhysicalDevice device) {
 
-    EG_CORE_TRACE("Evaluating device!");
+    EG_TRACE("eagle","Evaluating device!");
     VkPhysicalDeviceProperties physicalDeviceProperties = {};
 
     VK_CALL
@@ -258,14 +255,14 @@ int VulkanContext::evaluate_device(VkPhysicalDevice device) {
     score += physicalDeviceProperties.limits.maxImageDimension2D;
 
 
-    EG_CORE_TRACE_F("Device suitable! score:{0}", score);
+    EG_TRACE("eagle","Device suitable! score:{0}", score);
 
     return score;
 }
 
 
 bool VulkanContext::validation_layers_supported() {
-    EG_CORE_TRACE("Checking validation layer support!");
+    EG_TRACE("eagle","Checking validation layer support!");
     uint32_t layerCount;
     VK_CALL
     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -297,29 +294,32 @@ VkBool32 VulkanContext::debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT me
 
     VkDebugInfo::VkCall info = VkDebugInfo::m_callInfo;//*((VkDebugInfo::VkCall *) pUserData);
 
+#define VK_LOG(level, message) spdlog::get("eagle")->log(spdlog::source_loc{info.fileName.c_str(), info.line, info.funcName.c_str()}, level, message);
+
     switch (messageSeverity) {
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-            Log::core_log(info.fileName.c_str(), info.funcName.c_str(), info.line, Log::TRACE, pCallbackData->pMessage);
+            VK_LOG(spdlog::level::trace, pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-            Log::core_log(info.fileName.c_str(), info.funcName.c_str(), info.line, Log::INFO, pCallbackData->pMessage);
+            VK_LOG(spdlog::level::info, pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-            Log::core_log(info.fileName.c_str(), info.funcName.c_str(), info.line, Log::WARN, pCallbackData->pMessage);
+            VK_LOG(spdlog::level::warn, pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-            Log::core_log(info.fileName.c_str(), info.funcName.c_str(), info.line, Log::ERR, pCallbackData->pMessage);
+            VK_LOG(spdlog::level::err, pCallbackData->pMessage);
             break;
-        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_FLAG_BITS_MAX_ENUM_EXT:
-            Log::core_log(info.fileName.c_str(), info.funcName.c_str(), info.line, Log::CRITICAL,
-                          pCallbackData->pMessage);
+        default:
+            VK_LOG(spdlog::level::critical, pCallbackData->pMessage);
             break;
     }
+
+#undef VK_LOG
     return VK_FALSE;
 }
 
 VulkanContext::QueueFamilyIndices VulkanContext::find_family_indices(VkPhysicalDevice device) {
-    EG_CORE_TRACE("Finding queue family indices!");
+    EG_TRACE("eagle","Finding queue family indices!");
     QueueFamilyIndices indices;
 
     uint32_t queueFamilyCount = 0;
@@ -353,7 +353,7 @@ VulkanContext::QueueFamilyIndices VulkanContext::find_family_indices(VkPhysicalD
     }
 
     if (!indices.computeFamily.has_value()){
-        EG_WARNING("No dedicated compute queue found! Searching for any suitable queue family");
+        EG_WARNING("eagle", "No dedicated compute queue found! Searching for any suitable queue family");
         i = 0;
         for (const auto &queueFamily : queueFamilies) {
             if (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT){
@@ -369,7 +369,7 @@ VulkanContext::QueueFamilyIndices VulkanContext::find_family_indices(VkPhysicalD
 
 bool VulkanContext::check_device_extension_support(VkPhysicalDevice device) {
 
-    EG_CORE_TRACE("Checking device extensions!");
+    EG_TRACE("eagle","Checking device extensions!");
 
     uint32_t extensionCount;
     VK_CALL
@@ -395,7 +395,7 @@ bool VulkanContext::check_device_extension_support(VkPhysicalDevice device) {
 
 VulkanContext::SwapChainSupportDetails VulkanContext::query_swapchain_support(VkPhysicalDevice device) {
 
-    EG_CORE_TRACE("Querying swapchain support!");
+    EG_TRACE("eagle","Querying swapchain support!");
     SwapChainSupportDetails details;
 
     VK_CALL
@@ -429,7 +429,7 @@ VulkanContext::SwapChainSupportDetails VulkanContext::query_swapchain_support(Vk
 }
 
 void VulkanContext::create_logical_device() {
-    EG_CORE_TRACE("Creating logical device!");
+    EG_TRACE("eagle","Creating logical device!");
     QueueFamilyIndices indices = find_family_indices(m_physicalDevice);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -474,31 +474,31 @@ void VulkanContext::create_logical_device() {
     VK_CALL vkGetDeviceQueue(m_device, indices.presentFamily.value(), 0, &m_presentQueue);
     VK_CALL vkGetDeviceQueue(m_device, indices.computeFamily.value(), 0, &m_computeQueue);
 
-    EG_CORE_TRACE("Logical device created!");
+    EG_TRACE("eagle","Logical device created!");
 }
 
 VkSurfaceFormatKHR VulkanContext::choose_swap_surface_format(const std::vector<VkSurfaceFormatKHR> &formats) {
 
     if (formats.size() == 1 && formats[0].format == VK_FORMAT_UNDEFINED) {
-        EG_CORE_INFO("Swapchain surface format: VK_FORMAT_UNDEFINED");
+        EG_INFO("eagle","Swapchain surface format: VK_FORMAT_UNDEFINED");
         return {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
     }
 
     for (const auto &availableFormat : formats) {
         if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM &&
             availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-            EG_CORE_INFO("Swapchain surface format: VK_FORMAT_B8G8R8A8_UNORM");
+            EG_INFO("eagle","Swapchain surface format: VK_FORMAT_B8G8R8A8_UNORM");
             return availableFormat;
         }
     }
 
-    EG_CORE_INFO_F("Swapchain surface format: {0}", formats[0].format);
+    EG_INFO("eagle","Swapchain surface format: {0}", formats[0].format);
     return formats[0];
 }
 
 void VulkanContext::create_swapchain() {
 
-    EG_CORE_TRACE("Creating swapchain!");
+    EG_TRACE("eagle","Creating swapchain!");
     //Verifica o suporte de swapChains
     SwapChainSupportDetails swapChainSupport = query_swapchain_support(m_physicalDevice);
 
@@ -568,20 +568,20 @@ VkPresentModeKHR VulkanContext::choose_swap_present_mode(const std::vector<VkPre
     VkPresentModeKHR bestMode = VK_PRESENT_MODE_FIFO_KHR;
     for (const auto &availablePresentMode : presentModes) {
         if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-            EG_CORE_INFO("Swapchain present mode: VK_PRESENT_MODE_MAILBOX_KHR");
+            EG_INFO("eagle","Swapchain present mode: VK_PRESENT_MODE_MAILBOX_KHR");
             return availablePresentMode;
         } else if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
-            EG_CORE_INFO("Swapchain present mode: VK_PRESENT_MODE_IMMEDIATE_KHR");
+            EG_INFO("eagle","Swapchain present mode: VK_PRESENT_MODE_IMMEDIATE_KHR");
             bestMode = availablePresentMode;
         }
     }
-    EG_CORE_INFO("Swapchain present mode: VK_PRESENT_MODE_FIFO_KHR");
+    EG_INFO("eagle","Swapchain present mode: VK_PRESENT_MODE_FIFO_KHR");
     return bestMode;
 }
 
 VkExtent2D VulkanContext::choose_swap_extent(const VkSurfaceCapabilitiesKHR &capabilities) {
     if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
-        EG_CORE_INFO_F("Swap extent: width:{0} height:{1}", capabilities.currentExtent.width,
+        EG_INFO("eagle","Swap extent: width:{0} height:{1}", capabilities.currentExtent.width,
                        capabilities.currentExtent.height);
         return capabilities.currentExtent;
     } else {
@@ -591,14 +591,14 @@ VkExtent2D VulkanContext::choose_swap_extent(const VkSurfaceCapabilitiesKHR &cap
         actualExtent.height = std::clamp<uint32_t>(m_window->height(), capabilities.minImageExtent.height,
                                                    capabilities.maxImageExtent.height);
 
-        EG_CORE_INFO_F("Swap extent: width:{0} height:{1}", actualExtent.width, actualExtent.height);
+        EG_INFO("eagle","Swap extent: width:{0} height:{1}", actualExtent.width, actualExtent.height);
         return actualExtent;
     }
 }
 
 void VulkanContext::create_render_pass() {
 
-    EG_CORE_TRACE("Creating a present render pass!");
+    EG_TRACE("eagle","Creating a present render pass!");
 
     VkAttachmentDescription colorAttachment = {};
     colorAttachment.format = m_present.swapchainFormat;
@@ -626,14 +626,14 @@ void VulkanContext::create_render_pass() {
 
     m_present.renderPass = std::make_shared<VulkanRenderPass>(createInfo, colorAttachment, depthAttachment);
 
-    EG_CORE_TRACE("Present render pass created!");
+    EG_TRACE("eagle","Present render pass created!");
 }
 
 void VulkanContext::create_framebuffers() {
-    EG_CORE_TRACE("Creating present framebuffers!");
+    EG_TRACE("eagle","Creating present framebuffers!");
 
     VK_CALL vkGetSwapchainImagesKHR(m_device, m_present.swapchain, &m_present.imageCount, nullptr);
-    EG_CORE_INFO_F("Number of swapchain images: {0}", m_present.imageCount);
+    EG_INFO("eagle","Number of swapchain images: {0}", m_present.imageCount);
 
     std::vector<VkImage> swapchainImages(m_present.imageCount);
 
@@ -666,7 +666,7 @@ void VulkanContext::create_framebuffers() {
     imageCreateInfo.arrayLayers = 1;
     if (imageCreateInfo.format == Format::D32_SFLOAT_S8_UINT || imageCreateInfo.format == Format::D24_UNORM_S8_UINT) {
         imageCreateInfo.aspects.emplace_back(ImageAspect::STENCIL);
-        EG_CORE_INFO("Depth format allows stencil aspect");
+        EG_INFO("eagle","Depth format allows stencil aspect");
     }
 
     std::shared_ptr<VulkanImage> depthImage = std::make_shared<VulkanImage>(imageCreateInfo, nativeImageCreateInfo);
@@ -683,13 +683,13 @@ void VulkanContext::create_framebuffers() {
 
     m_present.framebuffer = std::make_shared<VulkanFramebuffer>(framebufferCreateInfo, nativeFramebufferCreateInfo);
 
-    EG_CORE_TRACE("Framebuffers created!");
+    EG_TRACE("eagle","Framebuffers created!");
 }
 
 
 void VulkanContext::create_command_pool() {
 
-    EG_CORE_TRACE("Creating command pool!");
+    EG_TRACE("eagle","Creating command pool!");
 
     QueueFamilyIndices queueFamilyIndices = find_family_indices(m_physicalDevice);
 
@@ -708,12 +708,12 @@ void VulkanContext::create_command_pool() {
         throw std::runtime_error("failed to create compute command pool!");
     }
 
-    EG_CORE_TRACE("Command pool created!");
+    EG_TRACE("eagle","Command pool created!");
 }
 
 void VulkanContext::create_sync_objects() {
 
-    EG_CORE_TRACE("Creating sync objects!");
+    EG_TRACE("eagle","Creating sync objects!");
 
     m_imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     m_renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -736,12 +736,12 @@ void VulkanContext::create_sync_objects() {
         }
     }
 
-    EG_CORE_TRACE("Sync objects created!");
+    EG_TRACE("eagle","Sync objects created!");
 }
 
 
 void VulkanContext::recreate_swapchain() {
-    EG_CORE_TRACE("Recreating swapchain!");
+    EG_TRACE("eagle","Recreating swapchain!");
 
     VK_CALL
     vkDeviceWaitIdle(m_device);
@@ -757,7 +757,7 @@ void VulkanContext::recreate_swapchain() {
     create_framebuffers();
     recreate_objects();
 
-    EG_CORE_TRACE("Swapchain recreated!");
+    EG_TRACE("eagle","Swapchain recreated!");
 }
 
 void VulkanContext::recreate_objects() {
@@ -818,19 +818,19 @@ void VulkanContext::clear_objects() {
 
 
 void VulkanContext::cleanup_swapchain() {
-    EG_CORE_TRACE("Clearing swapchain!");
+    EG_TRACE("eagle","Clearing swapchain!");
 
     clear_objects();
 
     m_present.framebuffer.reset();
 
     VK_CALL vkDestroySwapchainKHR(m_device, m_present.swapchain, nullptr);
-    EG_CORE_TRACE("Swapchain cleared!");
+    EG_TRACE("eagle","Swapchain cleared!");
 }
 
 std::weak_ptr<Shader>
 VulkanContext::create_shader(const ShaderCreateInfo &createInfo) {
-    EG_CORE_TRACE("Creating a vulkan shader!");
+    EG_TRACE("eagle","Creating a vulkan shader!");
 
     VulkanShaderCreateInfo nativeCreateInfo = {};
     nativeCreateInfo.device = m_device;
@@ -854,7 +854,7 @@ VulkanContext::create_compute_shader(const std::string &path) {
 std::weak_ptr<VertexBuffer>
 VulkanContext::create_vertex_buffer(void *vertices, uint32_t size, const VertexLayout &vertexLayout,
                                     UpdateType usage) {
-    EG_CORE_TRACE("Creating a vulkan vertex buffer!");
+    EG_TRACE("eagle","Creating a vulkan vertex buffer!");
     VulkanVertexBufferCreateInfo createInfo(vertexLayout);
     createInfo.data = vertices;
     createInfo.size = size;
@@ -869,7 +869,7 @@ VulkanContext::create_vertex_buffer(void *vertices, uint32_t size, const VertexL
 std::weak_ptr<IndexBuffer>
 VulkanContext::create_index_buffer(void *indexData, size_t indexCount, IndexBufferType indexType,
                                    UpdateType usage) {
-    EG_CORE_TRACE("Creating a vulkan index buffer!");
+    EG_TRACE("eagle","Creating a vulkan index buffer!");
     VulkanIndexBufferCreateInfo createInfo = {};
     createInfo.graphicsQueue = m_graphicsQueue;
     createInfo.physicalDevice = m_physicalDevice;
@@ -881,7 +881,7 @@ VulkanContext::create_index_buffer(void *indexData, size_t indexCount, IndexBuff
 
 std::weak_ptr<UniformBuffer>
 VulkanContext::create_uniform_buffer(size_t size, void *data) {
-    EG_CORE_TRACE("Creating a vulkan uniform buffer!");
+    EG_TRACE("eagle","Creating a vulkan uniform buffer!");
     VulkanUniformBufferCreateInfo createInfo = {};
     createInfo.device = m_device;
     createInfo.physicalDevice = m_physicalDevice;
@@ -892,7 +892,7 @@ VulkanContext::create_uniform_buffer(size_t size, void *data) {
 
 std::weak_ptr<StorageBuffer>
 VulkanContext::create_storage_buffer(size_t size, void *data, UpdateType usage) {
-    EG_CORE_TRACE("Creating a vulkan storage buffer!");
+    EG_TRACE("eagle","Creating a vulkan storage buffer!");
     VulkanStorageBufferCreateInfo createInfo = {};
     createInfo.device = m_device;
     createInfo.physicalDevice = m_physicalDevice;
@@ -914,7 +914,7 @@ VulkanContext::create_descriptor_set_layout(const std::vector<DescriptorBindingD
 std::weak_ptr<DescriptorSet>
 VulkanContext::create_descriptor_set(const std::shared_ptr<DescriptorSetLayout>& descriptorLayout,
                                      const std::vector<std::shared_ptr<DescriptorItem>> &descriptorItems) {
-    EG_CORE_TRACE("Creating a vulkan descriptor set!");
+    EG_TRACE("eagle","Creating a vulkan descriptor set!");
     VulkanDescriptorSetCreateInfo createInfo = {};
     createInfo.device = m_device;
     createInfo.bufferCount = m_present.imageCount;
@@ -931,7 +931,7 @@ VulkanContext::create_descriptor_set(const std::shared_ptr<DescriptorSetLayout>&
 std::weak_ptr<Texture>
 VulkanContext::create_texture(const TextureCreateInfo &createInfo) {
 
-    EG_CORE_TRACE("Creating a vulkan texture!");
+    EG_TRACE("eagle","Creating a vulkan texture!");
     VulkanTextureCreateInfo vulkanTextureCreateInfo = {};
     vulkanTextureCreateInfo.device = m_device;
     vulkanTextureCreateInfo.physicalDevice = m_physicalDevice;
@@ -945,7 +945,7 @@ VulkanContext::create_texture(const TextureCreateInfo &createInfo) {
 
 std::weak_ptr<Image>
 VulkanContext::create_image(const ImageCreateInfo &createInfo) {
-    EG_CORE_TRACE("Creating a vulkan image!");
+    EG_TRACE("eagle","Creating a vulkan image!");
     VulkanImageCreateInfo vulkanImageCreateInfo = {};
     vulkanImageCreateInfo.device = m_device;
     vulkanImageCreateInfo.physicalDevice = m_physicalDevice;

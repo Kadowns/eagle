@@ -483,7 +483,7 @@ static uint32_t format_size(Format format){
         case Format::B10G11R11_UFLOAT_PACK32: result = 4; break;
         case Format::E5B9G9R9_UFLOAT_PACK32: result = 4; break;
         default:
-        EG_CORE_WARNING("Unknown format size! default to 0");
+        EG_WARNING("eagle", "Unknown format size! default to 0");
         break;
     }
     return result;

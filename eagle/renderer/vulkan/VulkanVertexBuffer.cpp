@@ -112,7 +112,7 @@ VulkanVertexBuffer::flush(uint32_t bufferIndex) {
 void VulkanVertexBuffer::upload(void *data, uint32_t size) {
 
     if (m_usage == UpdateType::BAKED) {
-        EG_CORE_ERROR("Trying to flush data to a vertex buffer created with CONSTANT flag! To be able to flush data, be sure to create the buffer with DYNAMIC flag!");
+        EG_ERROR("eagle", "Trying to flush data to a vertex buffer created with CONSTANT flag! To be able to flush data, be sure to create the buffer with DYNAMIC flag!");
         return;
     }
 

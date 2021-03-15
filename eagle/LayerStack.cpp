@@ -10,7 +10,7 @@
 namespace eagle {
 
 void LayerStack::emplace_back(std::shared_ptr<Layer> layer) {
-    EG_CORE_TRACE("Emplacing back a new layer!");
+    EG_TRACE("eagle", "Emplacing back a new layer!");
     m_layers.emplace_back(layer);
 
     if (!m_initialized)
@@ -20,7 +20,7 @@ void LayerStack::emplace_back(std::shared_ptr<Layer> layer) {
 }
 
 void LayerStack::pop_layer(std::shared_ptr<Layer> layer) {
-    EG_CORE_TRACE("Popping a layer!");
+    EG_TRACE("eagle", "Popping a layer!");
     auto it = std::find(m_layers.begin(), m_layers.end(), layer);
     if (it != m_layers.end()){
         m_layers.erase(it);
@@ -29,9 +29,9 @@ void LayerStack::pop_layer(std::shared_ptr<Layer> layer) {
             return;
 
         layer->handle_detach();
-        EG_CORE_TRACE("Layer popped!");
+        EG_TRACE("eagle", "Layer popped!");
     } else {
-        EG_CORE_TRACE("Layer not found!");
+        EG_TRACE("eagle", "Layer not found!");
     }
 }
 
@@ -40,7 +40,7 @@ LayerStack::LayerStack(const std::vector<std::shared_ptr<Layer>>& layers) {
 }
 
 void LayerStack::emplace_front(std::shared_ptr<Layer> layer) {
-    EG_CORE_TRACE("Emplacing front a new layer!");
+    EG_TRACE("eagle", "Emplacing front a new layer!");
     m_layers.emplace(m_layers.begin(), layer);
 
     if (!m_initialized)
@@ -59,7 +59,7 @@ void LayerStack::init() {
 
     if (m_initialized) return;
 
-    EG_CORE_TRACE("Initializing layer stack!");
+    EG_TRACE("eagle", "Initializing layer stack!");
 
     m_initialized = true;
     for (auto& layer : m_layers){
@@ -70,7 +70,7 @@ void LayerStack::init() {
 void LayerStack::deinit() {
     if (!m_initialized) return;
 
-    EG_CORE_TRACE("Deinitializing layer stack!");
+    EG_TRACE("eagle", "Deinitializing layer stack!");
 
     for (auto& layer : m_layers){
         layer->handle_detach();

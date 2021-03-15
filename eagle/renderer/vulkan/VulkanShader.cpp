@@ -108,7 +108,7 @@ void VulkanShader::create_pipeline_layout() {
 }
 
 void VulkanShader::create_pipeline() {
-    EG_CORE_TRACE("Creating shader pipeline!");
+    EG_TRACE("eagle","Creating shader pipeline!");
 
     VkShaderModule vertShaderModule = VulkanShaderUtils::create_shader_module(m_nativeCreateInfo.device, m_shaderCodes.at(VK_SHADER_STAGE_VERTEX_BIT));
     VkShaderModule fragShaderModule = VulkanShaderUtils::create_shader_module(m_nativeCreateInfo.device, m_shaderCodes.at(VK_SHADER_STAGE_FRAGMENT_BIT));
@@ -279,7 +279,7 @@ void VulkanShader::create_pipeline() {
 
     m_cleared = false;
 
-    EG_CORE_TRACE("Shader pipeline created!");
+    EG_TRACE("eagle","Shader pipeline created!");
 }
 
 void VulkanShader::cleanup_pipeline(){

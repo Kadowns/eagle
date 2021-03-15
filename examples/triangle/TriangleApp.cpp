@@ -8,11 +8,13 @@
 #include <eagle/Window.h>
 
 TriangleApp::TriangleApp() {
-
+    EG_CREATE_LOGGER("triangle");
+    spdlog::set_pattern("");
+    spdlog::set_level(spdlog::level::trace);
 }
 
 void TriangleApp::init() {
-    EG_INFO("Triangle attached!");
+    EG_INFO("triangle", "Triangle attached!");
     m_renderingContext = eagle::Application::instance().window().rendering_context();
 
     m_listener.attach(&eagle::Application::instance().event_bus());
@@ -25,25 +27,27 @@ void TriangleApp::init() {
         return false;
     });
 
-    eagle::VertexLayout vertexLayout({eagle::Format::R32G32_SFLOAT, eagle::Format::R32G32B32_SFLOAT});
+
+    eagle::VertexLayout vertexLayout({eagle::Format::R32G32_SFLOAT, eagle::Format::R32G32B32A32_SFLOAT});
 
     eagle::ShaderCreateInfo pipelineInfo = {m_renderingContext->main_render_pass(), {
             {eagle::ShaderStage::VERTEX, "color.vert.spv"},
             {eagle::ShaderStage::FRAGMENT, "color.frag.spv"}
     }};
+    pipelineInfo.blendEnable = true;
     pipelineInfo.vertexLayout = vertexLayout;
     m_shader = m_renderingContext->create_shader(pipelineInfo);
 
     struct Vertex {
         float position[2];
-        float color[3];
+        float color[4];
     };
 
     std::vector<Vertex> vertices = {
-            Vertex{{-0.5f, 0.5f}, {1.0f, 1.0f, 0.0f}},
-            Vertex{{0.5f,  -0.5f}, {0.0f, 1.0f, 1.0f}},
-            Vertex{{-0.7f, -0.5f}, {1.0f, 0.0f, 1.0f}},
-            Vertex{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}}
+            Vertex{{-0.5f, 0.5f}, {1.0f, 1.0f, 0.0f, 1.0f}},
+            Vertex{{0.5f,  -0.5f}, {0.0f, 1.0f, 1.0f, 1.0f}},
+            Vertex{{-0.7f, -0.5f}, {1.0f, 0.0f, 1.0f, 1.0f}},
+            Vertex{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f, 0.0f}}
     };
 
 
@@ -70,7 +74,7 @@ void TriangleApp::init() {
 
 void TriangleApp::step() {
     if (!m_renderingContext->prepare_frame()){
-        EG_WARNING("Failed to prepare frame, skipping");
+        EG_WARNING("triangle", "Failed to prepare frame, skipping");
         return;
     }
 
@@ -85,7 +89,7 @@ void TriangleApp::step() {
 }
 
 void TriangleApp::destroy() {
-    EG_INFO("Triangle destroyed!");
+    EG_INFO("triangle", "Triangle destroyed!");
     m_listener.destroy();
 }
 
