@@ -168,7 +168,7 @@ public:
     using Callback =  std::function<void(Args&&...)>;
 public:
 
-    void operator()(Args&&... args){
+    inline void operator()(Args&&... args){
         emit(std::forward<Args>(args)...);
     }
 
@@ -197,7 +197,7 @@ public:
             return listener == listenerId;
         });
 
-        assert(it != m_listeners.end() && "Attempted to unsubscribe from");
+        assert(it != m_listeners.end() && "Attempted to unsubscribe from an event with a listener that is not subscribed.");
 
         auto callbackIt = std::next(m_callbacks.begin(), std::distance(m_listeners.begin(), it));
         m_listeners.erase(it);
