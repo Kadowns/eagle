@@ -14,7 +14,7 @@ int main(){
     try {
         application.run();
     } catch(const std::exception& e) {
-        EG_FATAL("eagle", "An exception occurred: {0}", e.what());
+        EG_CRITICAL("eagle", "An exception occurred: {0}", e.what());
         return 1;
     }
 
