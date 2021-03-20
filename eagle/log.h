@@ -15,6 +15,6 @@
 #define EG_DEBUG(name, ...)         EG_LOG(name, spdlog::level::debug, __VA_ARGS__)
 #define EG_WARNING(name, ...)       EG_LOG(name, spdlog::level::warn, __VA_ARGS__)
 #define EG_ERROR(name, ...)         EG_LOG(name, spdlog::level::err, __VA_ARGS__)
-#define EG_FATAL(name, ...)         EG_LOG(name, spdlog::level::critical, __VA_ARGS__)
+#define EG_CRITICAL(name, ...)         EG_LOG(name, spdlog::level::critical, __VA_ARGS__)
 
 #endif //EAGLE_LOG_H
