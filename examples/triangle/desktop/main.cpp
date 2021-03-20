@@ -2,14 +2,14 @@
 // Created by Ricardo on 11/28/2020.
 //
 
-#include <TriangleApp.h>
+#include <triangle_application.h>
 
-#include <eagle/platform/desktop/DesktopApplication.h>
+#include <eagle/platform/desktop/desktop_application.h>
 
 int main(){
 
 
-    eagle::DesktopApplication application(1280, 720, new TriangleApp());
+    eagle::DesktopApplication application(1280, 720, new TriangleApplication());
 
     try {
         application.run();

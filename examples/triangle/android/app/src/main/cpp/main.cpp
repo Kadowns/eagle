@@ -7,7 +7,7 @@
 #include <iostream>
 #include <android/log.h>
 
-#include <eagle/platform/android/AndroidApplication.h>
+#include <eagle/platform/android/android_application.h>
 #include <TriangleApp.h>
 
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "threaded_app", __VA_ARGS__))

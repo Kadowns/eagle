@@ -1,7 +1,7 @@
 add_subdirectory(../../ ${CMAKE_BINARY_DIR}/eagle)
 
 set(TRIANGLE_SOURCE
-        TriangleApp.cpp
+        triangle_application.cpp
         )
 
 add_library(${EG_APP_LIB_NAME} STATIC ${TRIANGLE_SOURCE})

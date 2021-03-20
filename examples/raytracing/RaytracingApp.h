@@ -5,7 +5,7 @@
 #ifndef EAGLE_RAYTRACINGAPP_H
 #define EAGLE_RAYTRACINGAPP_H
 
-#include <eagle/Eagle.h>
+#include <eagle/eagle.h>
 
 class RaytracingApp : public Eagle::DesktopApplication {
 public:

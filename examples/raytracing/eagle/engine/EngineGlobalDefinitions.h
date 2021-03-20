@@ -5,7 +5,7 @@
 #ifndef EAGLE_ENGINEGLOBALDEFINITIONS_H
 #define EAGLE_ENGINEGLOBALDEFINITIONS_H
 
-#include <eagle/Core.h>
+#include <eagle/core.h>
 
 #include <entityx/entityx.h>
 
