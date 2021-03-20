@@ -7,7 +7,7 @@
 #include <eagle/application.h>
 #include <eagle/window.h>
 
-TriangleApplication::TriangleApplication() {
+TriangleApplication::TriangleApplication() : m_stackAllocator(1024 * 1024 * 10) {
     EG_LOG_CREATE("triangle");
     EG_LOG_PATTERN("[%T.%e] [%n] [%^%l%$] [%s:%#::%!()] %v");
     EG_LOG_LEVEL(spdlog::level::trace);
@@ -45,23 +45,26 @@ void TriangleApplication::init() {
         float color[4];
     };
 
-    std::vector<Vertex> vertices = {
-            Vertex{{-0.5f, 0.5f}, {1.0f, 1.0f, 0.0f, 1.0f}},
-            Vertex{{0.5f,  -0.5f}, {0.0f, 1.0f, 1.0f, 1.0f}},
-            Vertex{{-0.7f, -0.5f}, {1.0f, 0.0f, 1.0f, 1.0f}},
-            Vertex{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f, 0.0f}}
-    };
+    auto stackScope = m_stackAllocator.scope();
 
+    auto vertices = stackScope.construct<Vertex>(4);
+    vertices[0] = {{-0.5f, 0.5f}, {1.0f, 1.0f, 0.0f, 1.0f}};
+    vertices[1] = {{0.5f,  -0.5f}, {0.0f, 1.0f, 1.0f, 1.0f}};
+    vertices[2] = {{-0.7f, -0.5f}, {1.0f, 0.0f, 1.0f, 1.0f}};
+    vertices[3] = {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f, 0.0f}};
 
-    m_vertexBuffer = m_renderingContext->create_vertex_buffer(vertices.data(), vertices.size() * sizeof(Vertex), vertexLayout, eagle::UpdateType::BAKED);
+    m_vertexBuffer = m_renderingContext->create_vertex_buffer(vertices, 4 * sizeof(Vertex), vertexLayout, eagle::UpdateType::BAKED);
 
+    auto indices = stackScope.construct<uint16_t>(6);
+    indices[0] = 0;
+    indices[1] = 2;
+    indices[2] = 1;
 
-    std::vector<uint16_t> indices = {
-            0, 2, 1,
-            0, 1, 3
-    };
+    indices[3] = 0;
+    indices[4] = 1;
+    indices[5] = 3;
 
-    m_indexBuffer = m_renderingContext->create_index_buffer(indices.data(), indices.size() * sizeof(uint16_t), eagle::IndexBufferType::UINT_16, eagle::UpdateType::BAKED);
+    m_indexBuffer = m_renderingContext->create_index_buffer(indices, 6 * sizeof(uint16_t), eagle::IndexBufferType::UINT_16, eagle::UpdateType::BAKED);
 
     eagle::CommandBufferCreateInfo commandBufferCreateInfo = {};
     commandBufferCreateInfo.level = eagle::CommandBufferLevel::PRIMARY;

@@ -23,7 +23,8 @@ private:
     void bake_command_buffers();
 
 private:
-    eagle::RenderingContext* m_renderingContext;
+    eagle::TypedStackAllocator m_stackAllocator;
+    eagle::RenderingContext* m_renderingContext = nullptr;
     eagle::EventListener<TriangleApplication*> m_listener;
     std::weak_ptr<eagle::Shader> m_shader;
     std::weak_ptr<eagle::VertexBuffer> m_vertexBuffer;
