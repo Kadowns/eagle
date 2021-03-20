@@ -2,11 +2,11 @@
 // Created by Novak on 05/04/2020.
 //
 
-#include <eagle/time.h>
+#include <eagle/timer.h>
 
 namespace eagle {
 
-void Time::update() {
+void Timer::update() {
     if (!m_started){
         return;
     }
@@ -16,13 +16,13 @@ void Time::update() {
     m_lastUpdate = now;
 }
 
-void Time::start() {
+void Timer::start() {
     m_start = m_lastUpdate = std::chrono::high_resolution_clock::now();
     m_time = m_deltaTime = 0;
     m_started = true;
 }
 
-void Time::stop() {
+void Timer::stop() {
     m_started = false;
 }
 

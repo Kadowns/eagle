@@ -4,7 +4,7 @@
 
 
 #include "desktop_application.h"
-#include "eagle/time.h"
+#include "eagle/timer.h"
 #include "eagle/log.h"
 #include "eagle/window.h"
 #include "eagle/application_delegate.h"

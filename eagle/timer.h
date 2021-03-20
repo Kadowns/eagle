@@ -10,7 +10,7 @@
 
 namespace eagle {
 
-class Time {
+class Timer {
 public:
 
     void start();

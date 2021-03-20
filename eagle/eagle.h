@@ -10,7 +10,7 @@
 #include <eagle/input_layer.h>
 #include <eagle/input.h>
 #include <eagle/random.h>
-#include <eagle/time.h>
+#include <eagle/timer.h>
 #include <eagle/application_delegate.h>
 #include <eagle/events/event.h>
 #include <eagle/events/input_events.h>

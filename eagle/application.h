@@ -12,7 +12,7 @@
 namespace eagle {
 
 class Window;
-class Time;
+class Timer;
 class ApplicationDelegate;
 
 class Application {

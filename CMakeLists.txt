@@ -26,7 +26,7 @@ set(EAGLE_SOURCE
         eagle/input.cpp
         eagle/input_layer.cpp
         eagle/random.cpp
-        eagle/time.cpp
+        eagle/timer.cpp
         eagle/file_system.cpp
         eagle/events/event.cpp
 
