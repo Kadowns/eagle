@@ -21,5 +21,6 @@
 #include <eagle/renderer/rendering_context.h>
 
 #include <eagle/memory/stack_allocator.h>
+#include <eagle/memory/pool_allocator.h>
 
 #endif //EAGLE_EAGLE_H

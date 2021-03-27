@@ -7,10 +7,10 @@
 #include <eagle/application.h>
 #include <eagle/window.h>
 
-TriangleApplication::TriangleApplication() : m_stackAllocator(1024 * 1024 * 10) {
+TriangleApplication::TriangleApplication() : m_stackAllocator(1024 * 1024 * 10), m_poolAllocator(10) {
     EG_LOG_CREATE("triangle");
     EG_LOG_PATTERN("[%T.%e] [%n] [%^%l%$] [%s:%#::%!()] %v");
-    EG_LOG_LEVEL(spdlog::level::trace);
+    EG_LOG_LEVEL(spdlog::level::info);
 }
 
 void TriangleApplication::init() {
@@ -23,12 +23,25 @@ void TriangleApplication::init() {
         return false;
     });
 
-
     m_listener.subscribe(m_renderingContext->context_recreated, [this](eagle::RenderingContext* context){
         bake_command_buffers();
         return false;
     });
 
+    auto transform1 = m_poolAllocator.construct();
+    auto transform2 = m_poolAllocator.construct(25.0f);
+    auto transform3 = m_poolAllocator.construct();
+    auto transform4 = m_poolAllocator.construct();
+
+    transform3->position[0] = 3506.235f;
+
+    EG_INFO("triangle", "pool size: {0}, pool capacity: {1}", m_poolAllocator.size(), m_poolAllocator.capacity());
+    m_poolAllocator.destroy(transform3);
+    EG_INFO("triangle", "pool size: {0}, pool capacity: {1}", m_poolAllocator.size(), m_poolAllocator.capacity());
+
+    auto transform5 = m_poolAllocator.construct();
+
+    auto transform6 = std::move(transform5);
 
     eagle::VertexLayout vertexLayout({eagle::Format::R32G32_SFLOAT, eagle::Format::R32G32B32A32_SFLOAT});
 
@@ -95,6 +108,7 @@ void TriangleApplication::step() {
 
 void TriangleApplication::destroy() {
     EG_INFO("triangle", "Triangle destroyed!");
+    EG_INFO("triangle", "pool size: {0}, pool capacity: {1}", m_poolAllocator.size(), m_poolAllocator.capacity());
     m_listener.destroy();
 }
 
