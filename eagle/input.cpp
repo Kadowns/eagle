@@ -107,10 +107,10 @@ bool Input::receive(const OnMouseScrolled &e) {
 
 void Input::init(EventBus *eventBus) {
     m_listener.attach(eventBus);
-    m_listener.subscribe<OnKey>(this);
-    m_listener.subscribe<OnMouseMove>(this);
-    m_listener.subscribe<OnMouseButton>(this);
-    m_listener.subscribe<OnMouseScrolled>(this);
+    m_listener.receive<OnKey>(this);
+    m_listener.receive<OnMouseMove>(this);
+    m_listener.receive<OnMouseButton>(this);
+    m_listener.receive<OnMouseScrolled>(this);
 }
 
 void Input::deinit() {

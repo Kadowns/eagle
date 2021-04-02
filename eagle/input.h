@@ -43,7 +43,7 @@ public:
 
 protected:
 
-    friend class GenericEventListener<Input, EventBus>;
+    friend class GenericEventListener<EventBus>;
     bool receive(const OnKey &e);
     bool receive(const OnMouseMove &e);
     bool receive(const OnMouseButton &e);
@@ -57,7 +57,7 @@ private:
     std::set<int> m_downMouseButtons, m_pressedMouseButtons, m_releasedMouseButtons;
 
     Position m_mousePosition, m_mouseDelta, m_scrollDelta;
-    EventListener<Input> m_listener;
+    EventListener m_listener;
     bool m_firstMouseMove = true;
 
 };

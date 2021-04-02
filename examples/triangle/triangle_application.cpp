@@ -23,6 +23,8 @@ void TriangleApplication::init() {
         return false;
     });
 
+    m_listener.receive<eagle::OnMouseMove>(this);
+
     m_listener.subscribe(m_renderingContext->context_recreated, [this](eagle::RenderingContext* context){
         bake_command_buffers();
         return false;
@@ -120,5 +122,10 @@ void TriangleApplication::bake_command_buffers() {
     secondaryCommandBuffer->bind_index_buffer(m_indexBuffer.lock());
     secondaryCommandBuffer->draw_indexed(6, 0, 0);
     secondaryCommandBuffer->end();
+}
+
+bool TriangleApplication::receive(const eagle::OnMouseMove& ev) {
+    EG_INFO("triangle", "Mouse on position {0}, {1}", ev.x, ev.y);
+    return false;
 }
 

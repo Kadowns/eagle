@@ -215,7 +215,7 @@ protected:
     static size_t s_globalIdCounter;
 };
 
-template<typename TReceiver, typename TBus>
+template<typename TBus>
 class GenericEventListener : private BaseEventListener {
 public:
 
@@ -248,8 +248,8 @@ public:
         m_subscribedImmediateEvents.clear();
     }
 
-    template<typename TEvent>
-    void subscribe(TReceiver* receiver, uint32_t priority = 0x7FFFFFFF){
+    template<typename TEvent, typename TReceiver>
+    void receive(TReceiver* receiver, uint32_t priority = 0x7FFFFFFF){
         m_bus->template subscribe<TEvent>([receiver](const TEvent& ev) {
             return receiver->receive(ev);
         }, m_id, priority);
@@ -286,8 +286,7 @@ private:
 
 using EventBus = GenericEventBus<ConsumableEventStream>;
 
-template<typename TReceiver>
-using EventListener = GenericEventListener<TReceiver, EventBus>;
+using EventListener = GenericEventListener<EventBus>;
 
 }
 

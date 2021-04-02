@@ -30,6 +30,8 @@ public:
 
     void destroy() override;
 
+    bool receive(const eagle::OnMouseMove& ev);
+
 private:
 
     void bake_command_buffers();
@@ -38,7 +40,7 @@ private:
     eagle::TypedStackAllocator m_stackAllocator;
     eagle::PoolAllocator<Transform> m_poolAllocator;
     eagle::RenderingContext* m_renderingContext = nullptr;
-    eagle::EventListener<TriangleApplication> m_listener;
+    eagle::EventListener m_listener;
     std::weak_ptr<eagle::Shader> m_shader;
     std::weak_ptr<eagle::VertexBuffer> m_vertexBuffer;
     std::weak_ptr<eagle::IndexBuffer> m_indexBuffer;
