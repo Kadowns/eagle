@@ -1,18 +1,18 @@
 [submodule "external/glslang"]
 	path = external/glslang
-	url = git@github.com:Kadowns/glslang.git
+	url = https://github.com/Kadowns/glslang.git
 [submodule "external/glfw"]
 	path = external/glfw
-	url = git@github.com:glfw/glfw.git
+	url = https://github.com/glfw/glfw.git
 [submodule "external/spdlog"]
 	path = external/spdlog
-	url = git@github.com:gabime/spdlog.git
+	url = https://github.com/gabime/spdlog.git
 [submodule "examples/external/entityx"]
 	path = examples/external/entityx
-	url = git@github.com:alecthomas/entityx.git
+	url = https://github.com/alecthomas/entityx.git
 [submodule "examples/external/glm"]
 	path = examples/external/glm
-	url = git@github.com:g-truc/glm.git
+	url = https://github.com/g-truc/glm.git
 [submodule "examples/external/imgui"]
 	path = examples/external/imgui
-	url = git@github.com:Kadowns/imgui.git
+	url = https://github.com/Kadowns/imgui.git
