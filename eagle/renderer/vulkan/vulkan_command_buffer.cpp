@@ -31,14 +31,7 @@ void VulkanCommandBuffer::begin() {
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
-    if (m_createInfo.updateType == UpdateType::DYNAMIC){
-        VK_CALL vkBeginCommandBuffer(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], &beginInfo);
-    }
-    else {
-        for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
-            VK_CALL vkBeginCommandBuffer(m_commandBuffers[i], &beginInfo);
-        }
-    }
+    VK_CALL vkBeginCommandBuffer(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], &beginInfo);
 
     m_finished = false;
 }
@@ -61,29 +54,15 @@ void VulkanCommandBuffer::begin(const std::shared_ptr<RenderPass> &renderPass,
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT | VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
     beginInfo.pInheritanceInfo = &inheritanceInfo;
 
-    if (m_createInfo.updateType == UpdateType::DYNAMIC){
-        inheritanceInfo.framebuffer = vfb->native_framebuffers()[*m_vkCreateInfo.currentImageIndex];
-        VK_CALL vkBeginCommandBuffer(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], &beginInfo);
-    }
-    else {
-        for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
-            inheritanceInfo.framebuffer = vfb->native_framebuffers()[i];
-            VK_CALL vkBeginCommandBuffer(m_commandBuffers[i], &beginInfo);
-        }
-    }
+    inheritanceInfo.framebuffer = vfb->native_framebuffers()[*m_vkCreateInfo.currentImageIndex];
+    VK_CALL vkBeginCommandBuffer(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], &beginInfo);
     m_finished = false;
 }
 
 
 void VulkanCommandBuffer::end() {
-    if (m_createInfo.updateType == UpdateType::DYNAMIC){
-        VK_CALL vkEndCommandBuffer(m_commandBuffers[*m_vkCreateInfo.currentImageIndex]);
-    }
-    else {
-        for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
-            VK_CALL vkEndCommandBuffer(m_commandBuffers[i]);
-        }
-    }
+    VK_CALL vkEndCommandBuffer(m_commandBuffers[*m_vkCreateInfo.currentImageIndex]);
+
     m_finished = true;
     m_boundShader.reset();
 }
@@ -94,31 +73,14 @@ void VulkanCommandBuffer::execute_commands(const std::vector<std::shared_ptr<Com
     vkCommandBuffers.reserve(commandBuffers.size());
 
 
-    if (m_createInfo.updateType == UpdateType::DYNAMIC){
-        for (auto& commandBuffer : commandBuffers){
-            vkCommandBuffers.emplace_back(((VulkanCommandBuffer*)(commandBuffer.get()))->native_command_buffers()[*m_vkCreateInfo.currentImageIndex]);
-        }
-
-        VK_CALL vkCmdExecuteCommands(
-                m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
-                vkCommandBuffers.size(),
-                vkCommandBuffers.data()
-        );
+    for (auto& commandBuffer : commandBuffers){
+        vkCommandBuffers.emplace_back(((VulkanCommandBuffer*)(commandBuffer.get()))->native_command_buffers()[*m_vkCreateInfo.currentImageIndex]);
     }
-    else {
-        for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
-            for (auto& commandBuffer : commandBuffers){
-                vkCommandBuffers.emplace_back(((VulkanCommandBuffer*)(commandBuffer.get()))->native_command_buffers()[i]);
-            }
 
-            VK_CALL vkCmdExecuteCommands(
-                    m_commandBuffers[i],
-                    vkCommandBuffers.size(),
-                    vkCommandBuffers.data()
-            );
-            vkCommandBuffers.clear();
-        }
-    }
+    VK_CALL vkCmdExecuteCommands(
+            m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
+            vkCommandBuffers.size(),
+            vkCommandBuffers.data());
 }
 
 void VulkanCommandBuffer::begin_render_pass(const std::shared_ptr<RenderPass> &renderPass,
@@ -141,218 +103,96 @@ void VulkanCommandBuffer::begin_render_pass(const std::shared_ptr<RenderPass> &r
             ? VK_SUBPASS_CONTENTS_INLINE
             : VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS;
 
-    if (m_createInfo.updateType == UpdateType::DYNAMIC){
-        VK_CALL vkCmdBeginRenderPass(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], &renderPassInfo, contents);
-    }
-    else {
-        for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
-            VK_CALL vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, contents);
-        }
-    }
+    VK_CALL vkCmdBeginRenderPass(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], &renderPassInfo, contents);
 
 }
 
 void VulkanCommandBuffer::end_render_pass() {
     assert(m_createInfo.level == CommandBufferLevel::PRIMARY || m_createInfo.level == CommandBufferLevel::MASTER);
 
-    if (m_createInfo.updateType == UpdateType::DYNAMIC){
-        VK_CALL vkCmdEndRenderPass(m_commandBuffers[*m_vkCreateInfo.currentImageIndex]);
-    }
-    else {
-        for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
-            VK_CALL vkCmdEndRenderPass(m_commandBuffers[i]);
-        }
-    }
+    VK_CALL vkCmdEndRenderPass(m_commandBuffers[*m_vkCreateInfo.currentImageIndex]);
 }
 
 void VulkanCommandBuffer::bind_shader(const std::shared_ptr<Shader> &shader) {
     m_boundShader = std::static_pointer_cast<VulkanShader>(shader);
 
-    if (m_createInfo.updateType == UpdateType::DYNAMIC){
-        VK_CALL vkCmdBindPipeline(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundShader->get_pipeline());
-    }
-    else {
-        for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
-            VK_CALL vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundShader->get_pipeline());
-        }
-    }
+    VK_CALL vkCmdBindPipeline(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundShader->get_pipeline());
 }
 
 void VulkanCommandBuffer::bind_compute_shader(const std::shared_ptr<ComputeShader> &shader) {
     std::shared_ptr<VulkanComputeShader> vcs = std::static_pointer_cast<VulkanComputeShader>(shader);
 
-    if (m_createInfo.updateType == UpdateType::DYNAMIC){
-        VK_CALL vkCmdBindPipeline(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], VK_PIPELINE_BIND_POINT_COMPUTE, vcs->get_pipeline());
-    }
-    else {
-        for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
-            VK_CALL vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_COMPUTE, vcs->get_pipeline());
-        }
-    }
-
+    VK_CALL vkCmdBindPipeline(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], VK_PIPELINE_BIND_POINT_COMPUTE, vcs->get_pipeline());
 }
 
 void VulkanCommandBuffer::bind_vertex_buffer(const std::shared_ptr<VertexBuffer> &vertexBuffer) {
     std::shared_ptr<VulkanVertexBuffer> vvb = std::static_pointer_cast<VulkanVertexBuffer>(vertexBuffer);
     VkDeviceSize offsets[] = {0};
 
-    if (m_createInfo.updateType == UpdateType::DYNAMIC){
-        VK_CALL vkCmdBindVertexBuffers(
-                m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
-                0,
-                1,
-                &vvb->native_buffer(*m_vkCreateInfo.currentImageIndex).native_buffer(),
-                offsets
-        );
-    }
-    else {
-        for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
-            VK_CALL vkCmdBindVertexBuffers(
-                    m_commandBuffers[i],
-                    0,
-                    1,
-                    &vvb->native_buffer(i).native_buffer(),
-                    offsets
-            );
-        }
-    }
-
+    VK_CALL vkCmdBindVertexBuffers(
+            m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
+            0,
+            1,
+            &vvb->native_buffer(*m_vkCreateInfo.currentImageIndex).native_buffer(),
+            offsets);
 }
 
 void VulkanCommandBuffer::bind_index_buffer(const std::shared_ptr<IndexBuffer> &indexBuffer) {
     std::shared_ptr<VulkanIndexBuffer> vib = std::static_pointer_cast<VulkanIndexBuffer>(indexBuffer);
 
-    if (m_createInfo.updateType == UpdateType::DYNAMIC){
-        VK_CALL vkCmdBindIndexBuffer(
-                m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
-                vib->native_buffer(*m_vkCreateInfo.currentImageIndex).native_buffer(),
-                0,
-                vib->native_index_type()
-        );
-    }
-    else {
-        for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
-            VK_CALL vkCmdBindIndexBuffer(
-                    m_commandBuffers[i],
-                    vib->native_buffer(i).native_buffer(),
-                    0,
-                    vib->native_index_type()
-            );
-        }
-    }
+    VK_CALL vkCmdBindIndexBuffer(
+            m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
+            vib->native_buffer(*m_vkCreateInfo.currentImageIndex).native_buffer(),
+            0,
+            vib->native_index_type());
 }
 
 void VulkanCommandBuffer::bind_descriptor_sets(const std::shared_ptr<DescriptorSet> &descriptorSet, uint32_t setIndex) {
     std::shared_ptr<VulkanDescriptorSet> vds = std::static_pointer_cast<VulkanDescriptorSet>(descriptorSet);
 
-    if (m_createInfo.updateType == UpdateType::DYNAMIC){
-        VK_CALL vkCmdBindDescriptorSets(
-                m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
-                VK_PIPELINE_BIND_POINT_GRAPHICS,
-                m_boundShader->get_layout(),
-                setIndex,
-                1,
-                &vds->get_descriptors()[*m_vkCreateInfo.currentImageIndex],
-                0,
-                nullptr
-        );
-    }
-    else {
-        for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
-            VK_CALL vkCmdBindDescriptorSets(
-                    m_commandBuffers[i],
-                    VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    m_boundShader->get_layout(),
-                    setIndex,
-                    1,
-                    &vds->get_descriptors()[i],
-                    0,
-                    nullptr
-            );
-        }
-    }
+    VK_CALL vkCmdBindDescriptorSets(
+            m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            m_boundShader->get_layout(),
+            setIndex,
+            1,
+            &vds->get_descriptors()[*m_vkCreateInfo.currentImageIndex],
+            0,
+            nullptr);
 }
 
 void VulkanCommandBuffer::bind_descriptor_sets(const std::shared_ptr<ComputeShader> &shader, const std::shared_ptr<DescriptorSet> &descriptorSet, uint32_t setIndex) {
     std::shared_ptr<VulkanComputeShader> vcs = std::static_pointer_cast<VulkanComputeShader>(shader);
     std::shared_ptr<VulkanDescriptorSet> vds = std::static_pointer_cast<VulkanDescriptorSet>(descriptorSet);
 
-    if (m_createInfo.updateType == UpdateType::DYNAMIC){
-        VK_CALL vkCmdBindDescriptorSets(
-                m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
-                VK_PIPELINE_BIND_POINT_COMPUTE,
-                vcs->get_layout(),
-                setIndex,
-                1,
-                &vds->get_descriptors()[*m_vkCreateInfo.currentImageIndex],
-                0,
-                nullptr
-        );
-    }
-    else {
-        for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
-            VK_CALL vkCmdBindDescriptorSets(
-                    m_commandBuffers[i],
-                    VK_PIPELINE_BIND_POINT_COMPUTE,
-                    vcs->get_layout(),
-                    setIndex,
-                    1,
-                    &vds->get_descriptors()[i],
-                    0,
-                    nullptr
-            );
-        }
-    }
+    VK_CALL vkCmdBindDescriptorSets(
+            m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
+            VK_PIPELINE_BIND_POINT_COMPUTE,
+            vcs->get_layout(),
+            setIndex,
+            1,
+            &vds->get_descriptors()[*m_vkCreateInfo.currentImageIndex],
+            0,
+            nullptr);
 }
 
 void VulkanCommandBuffer::push_constants(ShaderStage stage, uint32_t offset, size_t size, void *data) {
 
-    if (m_createInfo.updateType == UpdateType::DYNAMIC){
-        VK_CALL vkCmdPushConstants(
-                m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
-                m_boundShader->get_layout(),
-                VulkanConverter::to_vk(stage),
-                offset,
-                size,
-                data
-                );
-    }
-    else {
-        for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
-            VK_CALL vkCmdPushConstants(
-                    m_commandBuffers[i],
-                    m_boundShader->get_layout(),
-                    VulkanConverter::to_vk(stage),
-                    offset,
-                    size,
-                    data
-            );
-        }
-    }
+    VK_CALL vkCmdPushConstants(
+            m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
+            m_boundShader->get_layout(),
+            VulkanConverter::to_vk(stage),
+            offset,
+            size,
+            data);
 }
 
 void VulkanCommandBuffer::draw(uint32_t vertexCount) {
-
-    if (m_createInfo.updateType == UpdateType::DYNAMIC){
-        VK_CALL vkCmdDraw(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], vertexCount, 1, 0, 0);
-    }
-    else {
-        for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
-            VK_CALL vkCmdDraw(m_commandBuffers[i], vertexCount, 1, 0, 0);
-        }
-    }
+    VK_CALL vkCmdDraw(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], vertexCount, 1, 0, 0);
 }
 
 void VulkanCommandBuffer::draw_indexed(uint32_t indicesCount, uint32_t indexOffset, uint32_t vertexOffset) {
-
-    if (m_createInfo.updateType == UpdateType::DYNAMIC){
-        VK_CALL vkCmdDrawIndexed(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], indicesCount, 1, indexOffset, vertexOffset, 0);
-    }
-    else {
-        for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
-            VK_CALL vkCmdDrawIndexed(m_commandBuffers[i], indicesCount, 1, indexOffset, vertexOffset, 0);
-        }
-    }
+    VK_CALL vkCmdDrawIndexed(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], indicesCount, 1, indexOffset, vertexOffset, 0);
 }
 
 void VulkanCommandBuffer::set_viewport(float w, float h, float x, float y, float minDepth, float maxDepth) {
@@ -364,14 +204,7 @@ void VulkanCommandBuffer::set_viewport(float w, float h, float x, float y, float
     viewport.minDepth = minDepth;
     viewport.maxDepth = maxDepth;
 
-    if (m_createInfo.updateType == UpdateType::DYNAMIC){
-        VK_CALL vkCmdSetViewport(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], 0, 1, &viewport);
-    }
-    else {
-        for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
-            VK_CALL vkCmdSetViewport(m_commandBuffers[i], 0, 1, &viewport);
-        }
-    }
+    VK_CALL vkCmdSetViewport(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], 0, 1, &viewport);
 }
 
 void VulkanCommandBuffer::set_scissor(uint32_t w, uint32_t h, uint32_t x, uint32_t y) {
@@ -379,14 +212,7 @@ void VulkanCommandBuffer::set_scissor(uint32_t w, uint32_t h, uint32_t x, uint32
     scissor.extent = {w, h};
     scissor.offset = {static_cast<int32_t>(x), static_cast<int32_t>(y)};
 
-    if (m_createInfo.updateType == UpdateType::DYNAMIC){
-        VK_CALL vkCmdSetScissor(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], 0, 1, &scissor);
-    }
-    else {
-        for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
-            VK_CALL vkCmdSetScissor(m_commandBuffers[i], 0, 1, &scissor);
-        }
-    }
+    VK_CALL vkCmdSetScissor(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], 0, 1, &scissor);
 }
 
 void VulkanCommandBuffer::pipeline_barrier(const std::shared_ptr<Image> &image, const std::vector<PipelineStage> &srcPipelineStages,
@@ -404,43 +230,19 @@ void VulkanCommandBuffer::pipeline_barrier(const std::shared_ptr<Image> &image, 
 
     auto vkImage = std::static_pointer_cast<VulkanImage>(image);
 
-    if (m_createInfo.updateType == UpdateType::DYNAMIC){
-        imageMemoryBarrier.image = vkImage->native_images()[*m_vkCreateInfo.currentImageIndex];
-        VK_CALL vkCmdPipelineBarrier(
-                m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
-                VulkanConverter::to_vk_flags<VkPipelineStageFlags>(srcPipelineStages),
-                VulkanConverter::to_vk_flags<VkPipelineStageFlags>(dstPipelineStages),
-                0,
-                0, nullptr,
-                0, nullptr,
-                1, &imageMemoryBarrier);
-    }
-    else {
-        auto& nativeImages = vkImage->native_images();
-        for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
-            imageMemoryBarrier.image = nativeImages[i];
-            VK_CALL vkCmdPipelineBarrier(
-                    m_commandBuffers[i],
-                    VulkanConverter::to_vk_flags<VkPipelineStageFlags>(srcPipelineStages),
-                    VulkanConverter::to_vk_flags<VkPipelineStageFlags>(dstPipelineStages),
-                    0,
-                    0, nullptr,
-                    0, nullptr,
-                    1, &imageMemoryBarrier);
-        }
-    }
+    imageMemoryBarrier.image = vkImage->native_images()[*m_vkCreateInfo.currentImageIndex];
+    VK_CALL vkCmdPipelineBarrier(
+            m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
+            VulkanConverter::to_vk_flags<VkPipelineStageFlags>(srcPipelineStages),
+            VulkanConverter::to_vk_flags<VkPipelineStageFlags>(dstPipelineStages),
+            0,
+            0, nullptr,
+            0, nullptr,
+            1, &imageMemoryBarrier);
 }
 
 void VulkanCommandBuffer::dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
-
-    if (m_createInfo.updateType == UpdateType::DYNAMIC){
-        VK_CALL vkCmdDispatch(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], groupCountX, groupCountY, groupCountZ);
-    }
-    else {
-        for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
-            VK_CALL vkCmdDispatch(m_commandBuffers[i], groupCountX, groupCountY, groupCountZ);
-        }
-    }
+    VK_CALL vkCmdDispatch(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], groupCountX, groupCountY, groupCountZ);
 }
 
 void VulkanCommandBuffer::cleanup() {

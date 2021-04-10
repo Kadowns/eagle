@@ -26,7 +26,6 @@ enum class CommandBufferLevel {
 
 struct CommandBufferCreateInfo {
     CommandBufferLevel level = CommandBufferLevel::MASTER;
-    UpdateType updateType = UpdateType::DYNAMIC;
 };
 
 class CommandBuffer {
