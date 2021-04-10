@@ -13,6 +13,9 @@ VulkanVertexBuffer::VulkanVertexBuffer(const VertexBufferCreateInfo& createInfo,
         VertexBuffer(createInfo),
         m_vulkanCreateInfo(vulkanCreateInfo),
         m_buffers(vulkanCreateInfo.bufferCount){
+    if (createInfo.size == 0){
+        return;
+    }
 
     reserve(createInfo.size);
     copy_from(createInfo.data, createInfo.size);

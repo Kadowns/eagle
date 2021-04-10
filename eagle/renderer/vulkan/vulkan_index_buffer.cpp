@@ -13,6 +13,9 @@ VulkanIndexBuffer::VulkanIndexBuffer(const IndexBufferCreateInfo& createInfo,
         IndexBuffer(createInfo),
         m_vulkanCreateInfo(vulkanCreateInfo),
         m_buffers(vulkanCreateInfo.bufferCount) {
+    if (createInfo.size == 0){
+        return;
+    }
     reserve(createInfo.size);
     copy_from(createInfo.data, createInfo.size);
     for (int i = 0; i < m_buffers.size(); i++){
