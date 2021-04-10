@@ -13,7 +13,7 @@ void DesktopFileSystem::init() {
 }
 
 std::vector<uint8_t> eagle::DesktopFileSystem::read_bytes(const std::string &path) {
-    std::ifstream is("./data/" + path, std::ios::binary | std::ios::in | std::ios::ate);
+    std::ifstream is(path, std::ios::binary | std::ios::in | std::ios::ate);
 
     if (!is.is_open()) {
         throw std::runtime_error("failed to open file: " + path);
@@ -26,7 +26,7 @@ std::vector<uint8_t> eagle::DesktopFileSystem::read_bytes(const std::string &pat
 }
 
 std::string DesktopFileSystem::read_text(const std::string &path) {
-    std::ifstream file("./data/" + path);
+    std::ifstream file(path);
     if (!file.is_open()) {
         throw std::runtime_error("failed to open file: " + path);
     }
