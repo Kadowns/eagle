@@ -62,20 +62,18 @@ void TriangleApplication::init() {
 
     auto stackScope = m_stackAllocator.scope();
 
-
-
     auto vertices = stackScope.construct<Vertex>(4);
     vertices[0] = {{-0.5f, 0.5f}, {1.0f, 1.0f, 0.0f, 1.0f}};
     vertices[1] = {{0.5f,  -0.5f}, {0.0f, 1.0f, 1.0f, 1.0f}};
     vertices[2] = {{-0.7f, -0.5f}, {1.0f, 0.0f, 1.0f, 1.0f}};
     vertices[3] = {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f, 0.0f}};
 
-    m_vertexBuffer = m_renderingContext->create_vertex_buffer({eagle::UpdateType::BAKED});
+    eagle::VertexBufferCreateInfo vbCreateInfo = {};
+    vbCreateInfo.updateType = eagle::UpdateType::BAKED;
+    vbCreateInfo.size = 4 * sizeof(Vertex);
+    vbCreateInfo.data = vertices;
 
-    auto vb = m_vertexBuffer.lock();
-    vb->reserve(4 * sizeof(Vertex));
-    vb->copy_from(vertices, 4 * sizeof(Vertex));
-    vb->upload();
+    m_vertexBuffer = m_renderingContext->create_vertex_buffer(vbCreateInfo);
 
     auto indices = stackScope.construct<uint16_t>(6);
     indices[0] = 0;

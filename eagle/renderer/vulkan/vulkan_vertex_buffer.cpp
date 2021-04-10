@@ -13,6 +13,12 @@ VulkanVertexBuffer::VulkanVertexBuffer(const VertexBufferCreateInfo& createInfo,
         VertexBuffer(createInfo),
         m_vulkanCreateInfo(vulkanCreateInfo),
         m_buffers(vulkanCreateInfo.bufferCount){
+
+    reserve(createInfo.size);
+    copy_from(createInfo.data, createInfo.size);
+    for (int i = 0; i < m_buffers.size(); i++){
+        flush(i);
+    }
 }
 
 VulkanVertexBuffer::~VulkanVertexBuffer() {

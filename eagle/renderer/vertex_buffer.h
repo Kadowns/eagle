@@ -12,11 +12,13 @@ namespace eagle {
 
 struct VertexBufferCreateInfo {
     UpdateType updateType;
+    uint32_t size = 0;
+    void* data = nullptr;
 };
 
 class VertexBuffer : public GraphicsBuffer {
 public:
-    VertexBuffer(const VertexBufferCreateInfo& createInfo) : m_createInfo(createInfo) {}
+    explicit VertexBuffer(const VertexBufferCreateInfo& createInfo) : m_createInfo(createInfo) {}
     ~VertexBuffer() override = default;
 protected:
     VertexBufferCreateInfo m_createInfo;
