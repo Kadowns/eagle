@@ -53,35 +53,29 @@ void VulkanUniformBuffer::create_uniform_buffer() {
 
 void VulkanUniformBuffer::cleanup() {
     if (m_cleared) return;
-    for (size_t i = 0; i < m_buffers.size(); i++) {
-        m_buffers[i]->unmap();
-        m_buffers[i]->destroy();
+    for (auto& buffer : m_buffers) {
+        buffer->unmap();
+        buffer->destroy();
     }
     m_dirtyBuffers.clear();
     m_cleared = true;
 }
 
-void VulkanUniformBuffer::push() {
-    if (!m_dirtyBytes){
-        return;
-    }
-
+void VulkanUniformBuffer::upload() {
     m_dirtyBuffers.clear();
     for (int i = 0; i < m_buffers.size(); i++){
         m_dirtyBuffers.insert(i);
     }
     VulkanCleaner::push(this);
-    m_dirtyBytes = false;
 }
 
 bool VulkanUniformBuffer::is_dirty() const {
     return !m_dirtyBuffers.empty();
 }
 
-void VulkanUniformBuffer::set_data(void *data, size_t size, size_t offset) {
+void VulkanUniformBuffer::copy_from(void *data, size_t size, size_t offset) {
     assert(size + offset <= m_bytes.size());
     memcpy(m_bytes.data() + offset, data, size);
-    m_dirtyBytes = true;
 }
 
 DescriptorType VulkanUniformBuffer::type() const {

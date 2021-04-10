@@ -24,8 +24,8 @@ class VulkanStorageBuffer : public StorageBuffer, public VulkanCleanable {
 public:
     explicit VulkanStorageBuffer(VulkanStorageBufferCreateInfo createInfo, size_t size, void* data, UpdateType usage);
     virtual ~VulkanStorageBuffer();
-    virtual void set_data(void *data, size_t size, size_t offset) override;
-    virtual void push() override;
+    virtual void copy_from(void *data, size_t size, size_t offset) override;
+    virtual void upload() override;
 
     DescriptorType type() const override;
 

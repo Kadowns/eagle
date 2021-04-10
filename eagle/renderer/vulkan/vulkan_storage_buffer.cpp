@@ -28,14 +28,14 @@ VulkanStorageBuffer::~VulkanStorageBuffer() {
     cleanup();
 }
 
-void VulkanStorageBuffer::set_data(void *data, size_t size, size_t offset) {
+void VulkanStorageBuffer::copy_from(void *data, size_t size, size_t offset) {
     assert(m_usage == UpdateType::DYNAMIC);
     assert(size + offset <= m_bytes.size());
     memcpy(m_bytes.data() + offset, data, size);
     m_dirtyBytes = true;
 }
 
-void VulkanStorageBuffer::push() {
+void VulkanStorageBuffer::upload() {
     if (!m_dirtyBytes){
         return;
     }

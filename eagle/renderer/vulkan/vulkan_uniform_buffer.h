@@ -23,7 +23,7 @@ class VulkanUniformBuffer : public UniformBuffer, public VulkanCleanable {
 public:
 
     explicit VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createInfo, size_t size, void *data);
-    virtual ~VulkanUniformBuffer();
+    ~VulkanUniformBuffer() override;
 
     inline std::vector<std::shared_ptr<VulkanBuffer>>& get_buffers() { return m_buffers; }
     void create_uniform_buffer();
@@ -32,10 +32,14 @@ public:
 
     void cleanup();
     void recreate(uint32_t bufferCount);
-    virtual void flush(uint32_t bufferIndex) override;
-    virtual void set_data(void *data, size_t size, size_t offset) override;
-    virtual void push() override;
-    virtual bool is_dirty() const override;
+
+    //uniform buffer
+    void copy_from(void *data, size_t size, size_t offset) override;
+    void upload() override;
+
+    //vulkan cleanable
+    void flush(uint32_t bufferIndex) override;
+    bool is_dirty() const override;
 
 private:
 
@@ -43,8 +47,6 @@ private:
     std::vector<std::shared_ptr<VulkanBuffer>> m_buffers;
     std::set<int> m_dirtyBuffers;
     bool m_cleared = true;
-    bool m_dirtyBytes = false;
-
 };
 
 }
