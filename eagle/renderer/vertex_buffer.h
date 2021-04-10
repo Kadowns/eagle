@@ -5,22 +5,21 @@
 #ifndef EAGLE_VERTEXBUFFER_H
 #define EAGLE_VERTEXBUFFER_H
 
-#include <vector>
-#include "eagle/core_global_definitions.h"
-#include "renderer_global_definitions.h"
+#include <eagle/renderer/renderer_global_definitions.h>
+#include <eagle/renderer/graphics_buffer.h>
 
 namespace eagle {
 
+struct VertexBufferCreateInfo {
+    UpdateType updateType;
+};
 
-class VertexBuffer {
+class VertexBuffer : public GraphicsBuffer {
 public:
-    VertexBuffer() = default;
-    virtual ~VertexBuffer() = default;
-
-    virtual uint32_t get_vertices_count() = 0;
-    virtual uint32_t get_stride() = 0;
-    virtual void upload(void* data, uint32_t size) = 0;
-
+    VertexBuffer(const VertexBufferCreateInfo& createInfo) : m_createInfo(createInfo) {}
+    ~VertexBuffer() override = default;
+protected:
+    VertexBufferCreateInfo m_createInfo;
 };
 
 }

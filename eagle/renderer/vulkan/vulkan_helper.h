@@ -7,6 +7,7 @@
 
 #include <vector>
 #include "vulkan_global_definitions.h"
+#include "vulkan_buffer.h"
 
 namespace eagle {
 
@@ -45,6 +46,22 @@ public:
 
     static VkFormat find_supported_format(VkPhysicalDevice physicalDevice, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
     static VkFormat find_depth_format(VkPhysicalDevice physicalDevice);
+
+    static void create_baked_buffer(VkPhysicalDevice physicalDevice, VkDevice device,
+                                    VkQueue queue, VkCommandPool commandPool,
+                                    std::shared_ptr<VulkanBuffer>& buffer, VkBufferUsageFlagBits bufferUsage,
+                                    VkDeviceSize size, void* data = nullptr);
+
+    static void create_dynamic_buffer(VkPhysicalDevice physicalDevice, VkDevice device,
+                                    std::shared_ptr<VulkanBuffer>& buffer, VkBufferUsageFlagBits bufferUsage,
+                                    VkDeviceSize size, void* data = nullptr);
+
+    static void upload_baked_buffer(VkPhysicalDevice physicalDevice, VkDevice device,
+                                    VkQueue queue, VkCommandPool commandPool,
+                                    std::shared_ptr<VulkanBuffer>& buffer,
+                                    VkDeviceSize size, void* data);
+
+    static void upload_dynamic_buffer(std::shared_ptr<VulkanBuffer>& buffer, VkDeviceSize size, void* data);
 
 };
 

@@ -15,11 +15,7 @@
 namespace eagle {
 
 struct VulkanVertexBufferCreateInfo {
-    VulkanVertexBufferCreateInfo(const VertexLayout& layout):vertexLayout(layout) {}
-
-    void* data;
-    uint32_t size;
-    VertexLayout vertexLayout;
+    VkDevice device;
     uint32_t bufferCount;
     VkPhysicalDevice physicalDevice;
     VkCommandPool commandPool;
@@ -30,38 +26,25 @@ class VulkanVertexBuffer : public VertexBuffer, public VulkanCleanable {
 
 public:
 
-    VulkanVertexBuffer(VkDevice device, VulkanVertexBufferCreateInfo &createInfo, UpdateType usageFlags);
-    virtual ~VulkanVertexBuffer();
+    VulkanVertexBuffer(const VertexBufferCreateInfo& createInfo, const VulkanVertexBufferCreateInfo &vulkanCreateInfo);
+    ~VulkanVertexBuffer() override;
 
+    //vulkan cleanable
+    bool is_dirty() const override;
+    void flush(uint32_t bufferIndex) override;
 
-    virtual uint32_t get_vertices_count() override;
-    virtual uint32_t get_stride() override;
+    //vertex buffer
+    void upload() override;
 
-    virtual bool is_dirty() const override;
-    virtual void flush(uint32_t bufferIndex) override;
-    virtual void upload(void* data, uint32_t size) override;
-
-    inline VulkanBuffer& get_buffer(uint32_t bufferIndex) {
-        if (m_usage == UpdateType::BAKED){
-            return *(m_buffers[0]);
-        }
+    inline VulkanBuffer& native_buffer(uint32_t bufferIndex) {
         return *(m_buffers[bufferIndex]);
     }
 
 private:
-    VkDevice m_device;
-    VkPhysicalDevice m_physicalDevice;
-    VertexLayout m_layout;
-    uint32_t m_size;
-    UpdateType m_usage;
-    char* m_data =  nullptr;
+    VulkanVertexBufferCreateInfo m_vulkanCreateInfo;
 
     std::vector<std::shared_ptr<VulkanBuffer>> m_buffers;
     std::set<int> m_dirtyBuffers;
-
-
-    bool m_resizing = false, m_initialized = false;
-
 };
 
 }

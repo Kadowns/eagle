@@ -201,7 +201,7 @@ void VulkanCommandBuffer::bind_vertex_buffer(const std::shared_ptr<VertexBuffer>
                 m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
                 0,
                 1,
-                &vvb->get_buffer(*m_vkCreateInfo.currentImageIndex).native_buffer(),
+                &vvb->native_buffer(*m_vkCreateInfo.currentImageIndex).native_buffer(),
                 offsets
         );
     }
@@ -211,7 +211,7 @@ void VulkanCommandBuffer::bind_vertex_buffer(const std::shared_ptr<VertexBuffer>
                     m_commandBuffers[i],
                     0,
                     1,
-                    &vvb->get_buffer(i).native_buffer(),
+                    &vvb->native_buffer(i).native_buffer(),
                     offsets
             );
         }

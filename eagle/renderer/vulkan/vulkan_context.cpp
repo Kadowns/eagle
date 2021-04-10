@@ -852,17 +852,15 @@ VulkanContext::create_compute_shader(const std::string &path) {
 }
 
 std::weak_ptr<VertexBuffer>
-VulkanContext::create_vertex_buffer(void *vertices, uint32_t size, const VertexLayout &vertexLayout,
-                                    UpdateType usage) {
+VulkanContext::create_vertex_buffer(const VertexBufferCreateInfo& createInfo) {
     EG_TRACE("eagle","Creating a vulkan vertex buffer!");
-    VulkanVertexBufferCreateInfo createInfo(vertexLayout);
-    createInfo.data = vertices;
-    createInfo.size = size;
-    createInfo.physicalDevice = m_physicalDevice;
-    createInfo.commandPool = m_graphicsCommandPool;
-    createInfo.graphicsQueue = m_graphicsQueue;
-    createInfo.bufferCount = usage == UpdateType::DYNAMIC ? m_present.imageCount : 1;
-    m_vertexBuffers.emplace_back(std::make_shared<VulkanVertexBuffer>(m_device, createInfo, usage));
+    VulkanVertexBufferCreateInfo vulkanCreateInfo = {};
+    vulkanCreateInfo.physicalDevice = m_physicalDevice;
+    vulkanCreateInfo.device = m_device;
+    vulkanCreateInfo.commandPool = m_graphicsCommandPool;
+    vulkanCreateInfo.graphicsQueue = m_graphicsQueue;
+    vulkanCreateInfo.bufferCount = m_present.imageCount;
+    m_vertexBuffers.emplace_back(std::make_shared<VulkanVertexBuffer>(createInfo, vulkanCreateInfo));
     return m_vertexBuffers.back();
 }
 

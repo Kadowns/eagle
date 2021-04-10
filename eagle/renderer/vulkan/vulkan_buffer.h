@@ -49,6 +49,9 @@ public:
             VkDeviceSize size,
             VkDeviceSize offset
     );
+
+    VkDeviceSize size() const { return m_size; }
+
 private:
 
     VkDevice m_device = VK_NULL_HANDLE;

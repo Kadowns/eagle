@@ -31,6 +31,7 @@ set(EAGLE_SOURCE
         eagle/events/event.cpp
 
         eagle/renderer/vertex_layout.cpp
+        eagle/renderer/graphics_buffer.cpp
         eagle/renderer/vulkan/vulkan_context.cpp
         eagle/renderer/vulkan/vulkan_helper.cpp
         eagle/renderer/vulkan/vulkan_global_definitions.cpp

@@ -142,8 +142,7 @@ public:
     create_shader(const ShaderCreateInfo &pipelineInfo) override;
 
     std::weak_ptr<VertexBuffer>
-    create_vertex_buffer(void *vertices, uint32_t size, const VertexLayout &vertexLayout,
-                         UpdateType usage) override;
+    create_vertex_buffer(const VertexBufferCreateInfo& usage) override;
 
     std::weak_ptr<IndexBuffer>
     create_index_buffer(void *indexData, size_t indexCount, IndexBufferType indexType,

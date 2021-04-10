@@ -42,8 +42,7 @@ public:
     create_shader(const ShaderCreateInfo &shaderCreateInfo) = 0;
 
     virtual std::weak_ptr<VertexBuffer>
-    create_vertex_buffer(void *vertices, uint32_t size, const VertexLayout &vertexLayout,
-                         UpdateType usageFlags) = 0;
+    create_vertex_buffer(const VertexBufferCreateInfo& createInfo) = 0;
 
     virtual std::weak_ptr<IndexBuffer>
     create_index_buffer(void *indexData, size_t indexCount, IndexBufferType indexType, UpdateType usage) = 0;

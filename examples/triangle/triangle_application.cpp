@@ -30,20 +30,20 @@ void TriangleApplication::init() {
         return false;
     });
 
-    auto transform1 = m_poolAllocator.construct();
-    auto transform2 = m_poolAllocator.construct(25.0f);
-    auto transform3 = m_poolAllocator.construct();
-    auto transform4 = m_poolAllocator.construct();
-
-    transform3->position[0] = 3506.235f;
-
-    EG_INFO("triangle", "pool size: {0}, pool capacity: {1}", m_poolAllocator.size(), m_poolAllocator.capacity());
-    m_poolAllocator.destroy(transform3);
-    EG_INFO("triangle", "pool size: {0}, pool capacity: {1}", m_poolAllocator.size(), m_poolAllocator.capacity());
-
-    auto transform5 = m_poolAllocator.construct();
-
-    auto transform6 = std::move(transform5);
+//    auto transform1 = m_poolAllocator.construct();
+//    auto transform2 = m_poolAllocator.construct(25.0f);
+//    auto transform3 = m_poolAllocator.construct();
+//    auto transform4 = m_poolAllocator.construct();
+//
+//    transform3->position[0] = 3506.235f;
+//
+//    EG_INFO("triangle", "pool size: {0}, pool capacity: {1}", m_poolAllocator.size(), m_poolAllocator.capacity());
+//    m_poolAllocator.destroy(transform3);
+//    EG_INFO("triangle", "pool size: {0}, pool capacity: {1}", m_poolAllocator.size(), m_poolAllocator.capacity());
+//
+//    auto transform5 = m_poolAllocator.construct();
+//
+//    auto transform6 = std::move(transform5);
 
     eagle::VertexLayout vertexLayout({eagle::Format::R32G32_SFLOAT, eagle::Format::R32G32B32A32_SFLOAT});
 
@@ -62,13 +62,20 @@ void TriangleApplication::init() {
 
     auto stackScope = m_stackAllocator.scope();
 
+
+
     auto vertices = stackScope.construct<Vertex>(4);
     vertices[0] = {{-0.5f, 0.5f}, {1.0f, 1.0f, 0.0f, 1.0f}};
     vertices[1] = {{0.5f,  -0.5f}, {0.0f, 1.0f, 1.0f, 1.0f}};
     vertices[2] = {{-0.7f, -0.5f}, {1.0f, 0.0f, 1.0f, 1.0f}};
     vertices[3] = {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f, 0.0f}};
 
-    m_vertexBuffer = m_renderingContext->create_vertex_buffer(vertices, 4 * sizeof(Vertex), vertexLayout, eagle::UpdateType::BAKED);
+    m_vertexBuffer = m_renderingContext->create_vertex_buffer({eagle::UpdateType::BAKED});
+
+    auto vb = m_vertexBuffer.lock();
+    vb->reserve(4 * sizeof(Vertex));
+    vb->copy_from(vertices, 4 * sizeof(Vertex));
+    vb->upload();
 
     auto indices = stackScope.construct<uint16_t>(6);
     indices[0] = 0;
@@ -86,10 +93,8 @@ void TriangleApplication::init() {
     m_primaryCommandBuffer = m_renderingContext->create_command_buffer(commandBufferCreateInfo);
 
     commandBufferCreateInfo.level = eagle::CommandBufferLevel::SECONDARY;
-    commandBufferCreateInfo.updateType = eagle::UpdateType::BAKED;
     m_secondaryCommandBuffer = m_renderingContext->create_command_buffer(commandBufferCreateInfo);
 
-    bake_command_buffers();
 }
 
 void TriangleApplication::step() {
@@ -97,6 +102,8 @@ void TriangleApplication::step() {
         EG_WARNING("triangle", "Failed to prepare frame, skipping");
         return;
     }
+
+    bake_command_buffers();
 
     auto primaryCommandBuffer = m_primaryCommandBuffer.lock();
 
