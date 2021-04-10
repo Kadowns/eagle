@@ -84,7 +84,7 @@ void TriangleApplication::init() {
     indices[4] = 1;
     indices[5] = 3;
 
-    m_indexBuffer = m_renderingContext->create_index_buffer(indices, 6 * sizeof(uint16_t), eagle::IndexBufferType::UINT_16, eagle::UpdateType::BAKED);
+    m_indexBuffer = m_renderingContext->create_index_buffer({eagle::UpdateType::BAKED, eagle::IndexBufferType::UINT_16, 6 * sizeof(uint16_t), indices});
 
     eagle::CommandBufferCreateInfo commandBufferCreateInfo = {};
     commandBufferCreateInfo.level = eagle::CommandBufferLevel::PRIMARY;

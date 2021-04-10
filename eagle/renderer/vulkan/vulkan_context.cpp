@@ -865,15 +865,15 @@ VulkanContext::create_vertex_buffer(const VertexBufferCreateInfo& createInfo) {
 }
 
 std::weak_ptr<IndexBuffer>
-VulkanContext::create_index_buffer(void *indexData, size_t indexCount, IndexBufferType indexType,
-                                   UpdateType usage) {
+VulkanContext::create_index_buffer(const IndexBufferCreateInfo& createInfo) {
     EG_TRACE("eagle","Creating a vulkan index buffer!");
-    VulkanIndexBufferCreateInfo createInfo = {};
-    createInfo.graphicsQueue = m_graphicsQueue;
-    createInfo.physicalDevice = m_physicalDevice;
-    createInfo.commandPool = m_graphicsCommandPool;
-    createInfo.bufferCount = usage == UpdateType::DYNAMIC ? m_present.imageCount : 1;
-    m_indexBuffers.emplace_back(std::make_shared<VulkanIndexBuffer>(m_device, createInfo, indexData, indexCount, indexType, usage));
+    VulkanIndexBufferCreateInfo vulkanCreateInfo = {};
+    vulkanCreateInfo.device = m_device;
+    vulkanCreateInfo.graphicsQueue = m_graphicsQueue;
+    vulkanCreateInfo.physicalDevice = m_physicalDevice;
+    vulkanCreateInfo.commandPool = m_graphicsCommandPool;
+    vulkanCreateInfo.bufferCount = m_present.imageCount;
+    m_indexBuffers.emplace_back(std::make_shared<VulkanIndexBuffer>(createInfo, vulkanCreateInfo));
     return m_indexBuffers.back();
 }
 

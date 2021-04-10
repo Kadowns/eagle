@@ -14,6 +14,7 @@
 namespace eagle {
 
 struct VulkanIndexBufferCreateInfo {
+    VkDevice device;
     VkPhysicalDevice physicalDevice;
     VkCommandPool commandPool;
     VkQueue graphicsQueue;
@@ -24,40 +25,30 @@ class VulkanIndexBuffer : public IndexBuffer, public VulkanCleanable {
 
 public:
 
-    VulkanIndexBuffer(VkDevice device, VulkanIndexBufferCreateInfo &createInfo, void *indexData, size_t size,
-                      IndexBufferType indexType, UpdateType usage);
-    virtual ~VulkanIndexBuffer();
-    virtual void * data() override;
-    virtual size_t size() override;
+    VulkanIndexBuffer(const IndexBufferCreateInfo& createInfo, VulkanIndexBufferCreateInfo &vulkanCreateInfo);
+    ~VulkanIndexBuffer() override;
 
-    virtual bool is_dirty() const override;
-    virtual void flush(uint32_t bufferIndex) override;
+    bool is_dirty() const override;
+    void flush(uint32_t bufferIndex) override;
 
-    virtual void upload(void* data, uint32_t size) override;
-    inline VulkanBuffer& get_buffer(uint32_t bufferIndex) {
-        if (m_usage == UpdateType::BAKED){
-            return *(m_buffers[0]);
-        }
+    void upload() override;
+    inline VulkanBuffer& native_buffer(uint32_t bufferIndex) {
         return *(m_buffers[bufferIndex]);
     }
 
-    inline VkIndexType get_native_index_type(){
-        switch(m_indexType) {
+    inline VkIndexType native_index_type(){
+        switch(m_createInfo.indexType) {
             case IndexBufferType::UINT_16: return VK_INDEX_TYPE_UINT16;
             case IndexBufferType::UINT_32: return VK_INDEX_TYPE_UINT32;
         }
     }
 
 private:
-    VkDevice m_device;
-    VkPhysicalDevice m_physicalDevice;
+    VulkanIndexBufferCreateInfo m_vulkanCreateInfo;
+
     std::vector<std::shared_ptr<VulkanBuffer>> m_buffers;
     std::set<int> m_dirtyBuffers;
-    char* m_data = nullptr;
-    size_t m_size;
-    IndexBufferType m_indexType;
-    UpdateType m_usage;
-    bool m_resizing = false, m_initialized = false;
+
 };
 
 }

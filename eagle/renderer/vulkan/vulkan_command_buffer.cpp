@@ -225,18 +225,18 @@ void VulkanCommandBuffer::bind_index_buffer(const std::shared_ptr<IndexBuffer> &
     if (m_createInfo.updateType == UpdateType::DYNAMIC){
         VK_CALL vkCmdBindIndexBuffer(
                 m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
-                vib->get_buffer(*m_vkCreateInfo.currentImageIndex).native_buffer(),
+                vib->native_buffer(*m_vkCreateInfo.currentImageIndex).native_buffer(),
                 0,
-                vib->get_native_index_type()
+                vib->native_index_type()
         );
     }
     else {
         for (int i  = 0; i < m_vkCreateInfo.imageCount; i++){
             VK_CALL vkCmdBindIndexBuffer(
                     m_commandBuffers[i],
-                    vib->get_buffer(i).native_buffer(),
+                    vib->native_buffer(i).native_buffer(),
                     0,
-                    vib->get_native_index_type()
+                    vib->native_index_type()
             );
         }
     }

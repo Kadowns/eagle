@@ -45,7 +45,7 @@ public:
     create_vertex_buffer(const VertexBufferCreateInfo& createInfo) = 0;
 
     virtual std::weak_ptr<IndexBuffer>
-    create_index_buffer(void *indexData, size_t indexCount, IndexBufferType indexType, UpdateType usage) = 0;
+    create_index_buffer(const IndexBufferCreateInfo& createInfo) = 0;
 
     virtual std::weak_ptr<UniformBuffer>
     create_uniform_buffer(size_t size, void *data) = 0;

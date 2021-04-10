@@ -5,9 +5,8 @@
 #ifndef EAGLE_INDEXBUFFER_H
 #define EAGLE_INDEXBUFFER_H
 
-#include <vector>
-#include "eagle/core_global_definitions.h"
-#include "renderer_global_definitions.h"
+#include <eagle/renderer/graphics_buffer.h>
+#include <eagle/renderer/renderer_global_definitions.h>
 
 namespace eagle {
 
@@ -16,13 +15,21 @@ enum class IndexBufferType{
     UINT_32 = 4
 };
 
-class IndexBuffer {
+struct IndexBufferCreateInfo {
+    UpdateType updateType;
+    IndexBufferType indexType;
+    uint32_t size;
+    void* data;
+};
+
+class IndexBuffer : public GraphicsBuffer {
 public:
-    IndexBuffer() = default;
-    virtual ~IndexBuffer() = default;
-    virtual void * data() = 0;
-    virtual size_t size() = 0;
-    virtual void upload(void* data, uint32_t size) = 0;
+    explicit IndexBuffer(const IndexBufferCreateInfo& createInfo) : m_createInfo(createInfo) {}
+    ~IndexBuffer() override = default;
+
+    inline IndexBufferType index_type() const { return m_createInfo.indexType; }
+protected:
+    IndexBufferCreateInfo m_createInfo;
 };
 
 }
