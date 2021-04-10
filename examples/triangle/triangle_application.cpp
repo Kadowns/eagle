@@ -48,8 +48,8 @@ void TriangleApplication::init() {
     eagle::VertexLayout vertexLayout({eagle::Format::R32G32_SFLOAT, eagle::Format::R32G32B32A32_SFLOAT});
 
     eagle::ShaderCreateInfo pipelineInfo = {m_renderingContext->main_render_pass(), {
-            {eagle::ShaderStage::VERTEX, "color.vert.spv"},
-            {eagle::ShaderStage::FRAGMENT, "color.frag.spv"}
+            {eagle::ShaderStage::VERTEX, "data/color.vert.spv"},
+            {eagle::ShaderStage::FRAGMENT, "data/color.frag.spv"}
     }};
     pipelineInfo.blendEnable = true;
     pipelineInfo.vertexLayout = vertexLayout;
