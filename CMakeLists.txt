@@ -17,7 +17,6 @@ if(MSVC)
     add_definitions(-D_ENABLE_EXTENDED_ALIGNED_STORAGE)
 endif(MSVC)
 
-add_subdirectory(${EG_EXTERNAL_PATH}/glslang ${CMAKE_BINARY_DIR}/glslang)
 add_subdirectory(${EG_EXTERNAL_PATH}/spdlog ${CMAKE_BINARY_DIR}/spdlog)
 
 set(EAGLE_SOURCE
@@ -36,7 +35,6 @@ set(EAGLE_SOURCE
         eagle/renderer/vulkan/vulkan_helper.cpp
         eagle/renderer/vulkan/vulkan_global_definitions.cpp
         eagle/renderer/vulkan/vulkan_shader.cpp
-        eagle/renderer/vulkan/vulkan_shader_compiler.cpp
         eagle/renderer/vulkan/vulkan_buffer.cpp
         eagle/renderer/vulkan/vulkan_vertex_buffer.cpp
         eagle/renderer/vulkan/vulkan_index_buffer.cpp
@@ -115,8 +113,6 @@ else()
     message(ERROR "Unsuported platform!")
 endif()
 
-
-
 set(EAGLE_ALL ${EAGLE_SOURCE})
 
 add_library(eagle STATIC "${EAGLE_ALL}")
@@ -139,6 +135,4 @@ include(cmake/Eagle.cmake)
 
 define_file_basename_for_sources(eagle)
 
-target_link_libraries(eagle PUBLIC spdlog glslang OSDependent OGLCompiler HLSL SPIRV ${EAGLE_PLATFORM_LIBS})
-
-#add_subdirectory(examples)
+target_link_libraries(eagle PUBLIC spdlog ${EAGLE_PLATFORM_LIBS})

@@ -1,9 +1,7 @@
 #include <eagle/renderer/vulkan/vulkan_shader.h>
-#include <eagle/renderer/vulkan/vulkan_shader_compiler.h>
 #include <eagle/renderer/vulkan/vulkan_helper.h>
 #include <eagle/renderer/vulkan/vulkan_converter.h>
 #include <eagle/renderer/vulkan/vulkan_shader_utils.h>
-#include <eagle/log.h>
 #include <eagle/renderer/vulkan/vulkan_render_pass.h>
 #include <eagle/file_system.h>
 
@@ -22,16 +20,11 @@ VulkanShader::VulkanShader(const ShaderCreateInfo &createInfo, const VulkanShade
         if (stage == ShaderStage::COMPUTE){
             throw std::runtime_error("Compute shaders are not allowed on a graphics shader!");
         }
-        //TODO - Create a better way to load different file formats
-        if (path.find(".spv") != std::string::npos){
-            std::vector<uint8_t> byteCode = std::move(FileSystem::instance()->read_bytes(path));
-            std::vector<uint32_t> intCode(byteCode.size() / sizeof(uint32_t));
-            std::memcpy(intCode.data(), byteCode.data(), byteCode.size());
-            m_shaderCodes.emplace(VulkanConverter::to_vk(stage), std::move(intCode));
-        }
-        else {
-            m_shaderCodes.emplace(VulkanConverter::to_vk(stage), VulkanShaderCompiler::compile_glsl(path, stage));
-        }
+
+        std::vector<uint8_t> byteCode = std::move(FileSystem::instance()->read_bytes(path));
+        std::vector<uint32_t> intCode(byteCode.size() / sizeof(uint32_t));
+        std::memcpy(intCode.data(), byteCode.data(), byteCode.size());
+        m_shaderCodes.emplace(VulkanConverter::to_vk(stage), std::move(intCode));
     }
 
     create_pipeline_layout();

@@ -3,16 +3,18 @@
 //
 
 #include <eagle/renderer/vulkan/vulkan_compute_shader.h>
-#include <eagle/renderer/vulkan/vulkan_shader_compiler.h>
 #include <eagle/renderer/vulkan/vulkan_shader_utils.h>
 #include <eagle/renderer/vulkan/vulkan_converter.h>
+#include <eagle/file_system.h>
 
 namespace eagle {
 
 VulkanComputeShader::VulkanComputeShader(const std::string &path, const VulkanComputeShaderCreateInfo &createInfo)
         : m_createInfo(createInfo) {
 
-    m_code = VulkanShaderCompiler::compile_glsl(path, ShaderStage::COMPUTE);
+    std::vector<uint8_t> byteCode = std::move(FileSystem::instance()->read_bytes(path));
+    m_code.resize(byteCode.size() / sizeof(uint32_t));
+    std::memcpy(m_code.data(), byteCode.data(), byteCode.size());
 
     create_pipeline_layout();
     create_pipeline();
