@@ -165,6 +165,7 @@ void VulkanShaderUtils::add_bindings_from_shader_stage(const std::vector<uint32_
             pushConstantsRanges.emplace_back(pushConstantRange);
         }
     }
+    spvReflectDestroyShaderModule(&shaderReflection);
 }
 
 void
@@ -174,6 +175,7 @@ VulkanShaderUtils::enumerate_output_variables(const std::vector<uint32_t> &code,
     SPV_REFLECT_ASSERT(spvReflectCreateShaderModule(code.size() * sizeof(uint32_t), code.data(), &shaderReflection));
 
     SPV_REFLECT_ASSERT(spvReflectEnumerateOutputVariables(&shaderReflection, &outputVariableCount, nullptr));
+    spvReflectDestroyShaderModule(&shaderReflection);
 }
 
 VkShaderModule VulkanShaderUtils::create_shader_module(VkDevice device, const std::vector<uint32_t> &code) {
@@ -192,6 +194,5 @@ VkShaderModule VulkanShaderUtils::create_shader_module(VkDevice device, const st
 
     return shaderModule;
 }
-
 
 }

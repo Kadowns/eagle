@@ -7,6 +7,7 @@
 
 #include "vulkan_global_definitions.h"
 #include <eagle/renderer/descriptor_set_layout.h>
+#include <eagle/renderer/vertex_layout.h>
 
 namespace eagle {
 
