@@ -43,6 +43,8 @@ public:
     static VkPipelineStageFlagBits to_vk(PipelineStage stage);
     static VkCommandBufferLevel to_vk(CommandBufferLevel level);
     static CommandBufferLevel to_eg(VkCommandBufferLevel level);
+    static VkVertexInputRate to_vk(VertexInputRate rate);
+    static VertexInputRate to_eg(VkVertexInputRate rate);
 
     template<typename EG, typename VK>
     static std::vector<EG> eg_vector_from_vk_flags(VK flags){
