@@ -91,6 +91,11 @@ enum class PrimitiveTopology {
     PATCH_LIST = 10,
 };
 
+enum class VertexInputRate {
+    VERTEX = 0,
+    INSTANCE = 1
+};
+
 enum class Format{
     UNDEFINED = 0,
     R4G4_UNORM_PACK8 = 1,

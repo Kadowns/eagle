@@ -892,6 +892,7 @@ VkPipelineStageFlagBits VulkanConverter::to_vk(PipelineStage stage) {
 VkCommandBufferLevel VulkanConverter::to_vk(CommandBufferLevel level) {
     VkCommandBufferLevel result;
     switch(level){
+        case CommandBufferLevel::MASTER: result = VK_COMMAND_BUFFER_LEVEL_PRIMARY; break;
         case CommandBufferLevel::PRIMARY: result = VK_COMMAND_BUFFER_LEVEL_PRIMARY; break;
         case CommandBufferLevel::SECONDARY: result = VK_COMMAND_BUFFER_LEVEL_SECONDARY; break;
     }
@@ -904,6 +905,25 @@ CommandBufferLevel VulkanConverter::to_eg(VkCommandBufferLevel level) {
         case VK_COMMAND_BUFFER_LEVEL_PRIMARY: result = CommandBufferLevel::PRIMARY; break;
         case VK_COMMAND_BUFFER_LEVEL_SECONDARY: result = CommandBufferLevel::SECONDARY; break;
         default: throw std::runtime_error("Invalid VkCommandBufferLevel on conversion");
+    }
+    return result;
+}
+
+VkVertexInputRate VulkanConverter::to_vk(VertexInputRate rate) {
+    VkVertexInputRate result;
+    switch (rate){
+        case VertexInputRate::VERTEX: result = VK_VERTEX_INPUT_RATE_VERTEX; break;
+        case VertexInputRate::INSTANCE: result = VK_VERTEX_INPUT_RATE_INSTANCE; break;
+    }
+    return result;
+}
+
+VertexInputRate VulkanConverter::to_eg(VkVertexInputRate rate) {
+    VertexInputRate result;
+    switch (rate){
+        case VK_VERTEX_INPUT_RATE_VERTEX: result = VertexInputRate::VERTEX; break;
+        case VK_VERTEX_INPUT_RATE_INSTANCE: result = VertexInputRate::INSTANCE; break;
+        default: throw std::runtime_error("Invalid VkVertexInputRate on conversion");
     }
     return result;
 }
