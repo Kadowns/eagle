@@ -34,15 +34,13 @@ struct ShaderCreateInfo {
 class Shader {
 
 public:
-    Shader() = default;
+    explicit Shader(const ShaderCreateInfo& createInfo) : m_createInfo(createInfo) {}
     virtual ~Shader() = default;
-
-    virtual void create_pipeline() = 0;
-    virtual void cleanup_pipeline() = 0;
 
     virtual const std::vector<std::weak_ptr<DescriptorSetLayout>> get_descriptor_set_layouts() = 0;
     virtual const std::weak_ptr<DescriptorSetLayout> get_descriptor_set_layout(uint32_t index) = 0;
-
+protected:
+    ShaderCreateInfo m_createInfo;
 
 };
 

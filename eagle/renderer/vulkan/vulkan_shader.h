@@ -19,12 +19,11 @@ public:
 
     ~VulkanShader();
 
-    virtual void create_pipeline() override;
+    void create_pipeline();
+    void cleanup_pipeline();
 
-    virtual void cleanup_pipeline() override;
-
-    virtual const std::vector<std::weak_ptr<DescriptorSetLayout>> get_descriptor_set_layouts() override;
-    virtual const std::weak_ptr<DescriptorSetLayout> get_descriptor_set_layout(uint32_t index) override;
+    const std::vector<std::weak_ptr<DescriptorSetLayout>> get_descriptor_set_layouts() override;
+    const std::weak_ptr<DescriptorSetLayout> get_descriptor_set_layout(uint32_t index) override;
 
     VkPipeline &get_pipeline();
 
@@ -36,13 +35,11 @@ private:
 
 private:
 
-    ShaderCreateInfo m_createInfo;
     VulkanShaderCreateInfo m_nativeCreateInfo;
-    VertexLayout m_vertexLayout;
     VkPipelineLayout m_pipelineLayout;
     VkPipeline m_graphicsPipeline;
-    VkVertexInputBindingDescription m_inputBinding;
     uint32_t m_outputAttachmentCount = 0;
+    std::vector<VkVertexInputBindingDescription> m_inputBindings;
     std::vector<std::shared_ptr<VulkanDescriptorSetLayout>> m_descriptorSetLayouts;
     std::vector<VkVertexInputAttributeDescription> m_inputAttributes;
     std::unordered_map<VkShaderStageFlags, std::vector<uint32_t>> m_shaderCodes;

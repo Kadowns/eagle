@@ -8,11 +8,9 @@
 namespace eagle {
 
 VulkanShader::VulkanShader(const ShaderCreateInfo &createInfo, const VulkanShaderCreateInfo &nativeCreateInfo) :
-        m_createInfo(createInfo),
-        m_vertexLayout(createInfo.vertexLayout),
-        m_cleared(true),
-        m_nativeCreateInfo(nativeCreateInfo){
-
+        Shader(createInfo),
+        m_nativeCreateInfo(nativeCreateInfo),
+        m_cleared(true) {
 
     for(auto& kv : createInfo.shaderStages){
         ShaderStage stage = kv.first;
@@ -42,21 +40,26 @@ void VulkanShader::create_pipeline_layout() {
 
 
     //vertex input-----------------------------
-    m_inputAttributes.clear();
-    m_inputAttributes.resize(m_vertexLayout.get_component_count());
+    m_inputAttributes.resize(m_createInfo.vertexLayout.attribute_count());
+    m_inputBindings.resize(m_createInfo.vertexLayout.binding_count());
     uint32_t offset = 0;
-    for (uint32_t i = 0; i < m_inputAttributes.size(); i++){
-        m_inputAttributes[i].format = VulkanConverter::to_vk(m_vertexLayout[i]);
-        m_inputAttributes[i].binding = 0;
-        m_inputAttributes[i].location = i;
-        m_inputAttributes[i].offset = offset;
-        offset += format_size(m_vertexLayout[i]);
+    uint32_t attributeIndex = 0;
+    uint32_t bindingIndex = 0;
+    for (auto& binding : m_createInfo.vertexLayout){
+        for (auto& attribute : binding.attributes){
+            m_inputAttributes[attributeIndex].format = VulkanConverter::to_vk(attribute);
+            m_inputAttributes[attributeIndex].binding = bindingIndex;
+            m_inputAttributes[attributeIndex].location = attributeIndex;
+            m_inputAttributes[attributeIndex].offset = offset;
+            offset += format_size(attribute);
+            attributeIndex++;
+        }
+
+        m_inputBindings[bindingIndex].binding = bindingIndex;
+        m_inputBindings[bindingIndex].stride = binding.stride();
+        m_inputBindings[bindingIndex].inputRate = VulkanConverter::to_vk(binding.inputRate);
+        bindingIndex++;
     }
-
-    m_inputBinding.binding = 0;
-    m_inputBinding.stride = offset;
-    m_inputBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
 
     //map for each descriptor set with respective descriptor bindings
     std::map<uint32_t, std::map<uint32_t, DescriptorBindingDescription>> descriptorSetMap;
@@ -129,8 +132,8 @@ void VulkanShader::create_pipeline() {
         vertexInputInfo.pVertexAttributeDescriptions = nullptr;
     }
     else {
-        vertexInputInfo.vertexBindingDescriptionCount = 1;
-        vertexInputInfo.pVertexBindingDescriptions = &m_inputBinding;
+        vertexInputInfo.vertexBindingDescriptionCount = m_inputBindings.size();
+        vertexInputInfo.pVertexBindingDescriptions = m_inputBindings.data();
         vertexInputInfo.vertexAttributeDescriptionCount = m_inputAttributes.size();
         vertexInputInfo.pVertexAttributeDescriptions = m_inputAttributes.data();
     }

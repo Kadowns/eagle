@@ -8,37 +8,34 @@
 
 namespace eagle {
 
-VertexLayout::VertexLayout() = default;
-
-VertexLayout::VertexLayout(std::vector<eagle::Format> components) :
-    m_components(std::move(components)){
-}
-
-VertexLayout::VertexLayout(std::initializer_list<Format> components) :
-        VertexLayout(std::vector<Format>(components)) {
-}
-
-size_t VertexLayout::get_stride() {
+size_t VertexInputBindingDescription::stride() const {
     size_t stride = 0;
-    for (auto& component : m_components){
-        stride += format_size(component);
+    for (auto& attribute : attributes){
+        stride += format_size(attribute);
     }
     return stride;
 }
 
-size_t VertexLayout::get_component_count() {
-    return m_components.size();
-}
-
-std::vector<Format> &VertexLayout::get_components() {
-    return m_components;
-}
-
-Format VertexLayout::get_component(uint32_t index) {
-    return m_components[index];
-}
-
+VertexLayout::VertexLayout() = default;
 VertexLayout::~VertexLayout() = default;
 
+size_t VertexLayout::stride() const {
+    size_t stride = 0;
+    for (auto& binding : m_bindings){
+        stride += binding.stride();
+    }
+    return stride;
+}
+
+void VertexLayout::add(uint32_t binding, Format attribute) {
+    if (m_bindings.size() <= binding){
+        m_bindings.resize(binding + 1);
+    }
+    m_bindings[binding].attributes.emplace_back(attribute);
+}
+
+void VertexLayout::add(const VertexInputBindingDescription& binding) {
+    m_bindings.emplace_back(binding);
+}
 
 }
