@@ -349,10 +349,6 @@ void VulkanHelper::create_dynamic_buffer(VkPhysicalDevice physicalDevice, VkDevi
 void VulkanHelper::upload_baked_buffer(VkPhysicalDevice physicalDevice, VkDevice device, VkQueue queue,
                                        VkCommandPool commandPool, std::shared_ptr<VulkanBuffer>& buffer,
                                        VkDeviceSize size, void* data) {
-    if (buffer){
-        buffer->unmap();
-        buffer->destroy();
-    }
 
     VulkanBufferCreateInfo createBufferInfo = {};
     createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
