@@ -15,7 +15,7 @@
 
 namespace eagle {
 
-bool VulkanContext::enableValidationLayers = false;
+bool VulkanContext::enableValidationLayers = true;
 
 VulkanContext::VulkanContext() {
     EG_LOG_CREATE("vulkan");
