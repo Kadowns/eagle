@@ -8,10 +8,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(EG_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 set(EG_EXTERNAL_PATH ${EG_ROOT_PATH}/external)
 
-
-option(BUILD_EG_ENGINE "Build eagle engine library" OFF)
-option(BUILD_EG_EDITOR "Build eagle editor executable (requires engine)" OFF)
-
 add_definitions(-DPROJECT_ROOT="${EG_ROOT_PATH}/data")
 if(MSVC)
     add_definitions(-D_ENABLE_EXTENDED_ALIGNED_STORAGE)
@@ -52,8 +48,6 @@ set(EAGLE_SOURCE
         eagle/renderer/vulkan/vulkan_framebuffer.cpp
         eagle/renderer/vulkan/vulkan_render_pass.cpp
         eagle/renderer/vulkan/vulkan_image.cpp
-
-#        eagle/core/source/renderer/vulkan/platform/android/VulkanContextAndroid.cpp
         )
 
 
@@ -63,6 +57,8 @@ if (WIN32)
     message(STATUS "Eagle -- Including win32 sources")
 
 #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR -DVK_NO_PROTOTYPES")
+
+    set(EG_PLATFORM EG_PLATFORM_WIN32)
 
     set(GLFW_STANDALONE OFF)
     set(GLFW_INSTALL OFF)
@@ -83,6 +79,8 @@ elseif(ANDROID)
     message(STATUS " Eagle - Including android sources")
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_ANDROID_KHR -DVK_NO_PROTOTYPES")
+
+    set(EG_PLATFORM EG_PLATFORM_ANDROID)
 
 
     add_library(native_app_glue STATIC
@@ -123,6 +121,8 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+
+target_compile_definitions(eagle PUBLIC ${EG_PLATFORM})
 
 set_target_properties(
         eagle
