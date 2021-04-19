@@ -15,7 +15,7 @@ target_link_libraries(${EG_APP_EXE_NAME} PRIVATE ${EG_APP_LIB_NAME})
 add_custom_target(
         copy_data_folder
         COMMENT "Copying data folder"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../data/ ${CMAKE_CURRENT_BINARY_DIR}/data/
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../data/ ${CMAKE_CURRENT_BINARY_DIR}/
 )
 
 add_dependencies(copy_data_folder ${EG_APP_LIB_NAME})
