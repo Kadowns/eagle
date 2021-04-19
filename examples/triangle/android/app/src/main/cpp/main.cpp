@@ -8,14 +8,14 @@
 #include <android/log.h>
 
 #include <eagle/platform/android/android_application.h>
-#include <TriangleApp.h>
+#include <triangle_application.h>
 
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "threaded_app", __VA_ARGS__))
 
 extern "C" {
 void android_main(struct android_app *pApp) {
     try {
-        eagle::AndroidApplication application(pApp, new TriangleApp());
+        eagle::AndroidApplication application(pApp, new TriangleApplication());
         application.run();
     }
     catch (std::exception& e){
