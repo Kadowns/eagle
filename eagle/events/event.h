@@ -148,11 +148,13 @@ public:
         }
     }
 
+    size_t next_listener_id() { return m_listenerCount++; }
 
 private:
 
     std::vector<TEventStream> m_eventStreams;
     std::mutex m_eventStreamMutex;
+    size_t m_listenerCount = 0;
 };
 
 
@@ -219,7 +221,7 @@ template<typename TBus>
 class GenericEventListener : private BaseEventListener {
 public:
 
-    GenericEventListener() : m_id(s_globalIdCounter++){}
+    GenericEventListener() {}
 
     virtual ~GenericEventListener() {
         destroy();
@@ -230,6 +232,7 @@ public:
             detach();
         }
         m_bus = bus;
+        m_id = bus->next_listener_id();
     }
 
     void detach(){
