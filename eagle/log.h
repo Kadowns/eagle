@@ -4,6 +4,10 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+//from minwindef.h
+#undef far
+#undef near
+
 #define EG_LOG_CREATE(name) (spdlog::create<spdlog::sinks::stdout_color_sink_mt>(name))
 #define EG_LOG_PATTERN(pattern) (spdlog::set_pattern(pattern))
 #define EG_LOG_LEVEL(level) (spdlog::set_level(level))
