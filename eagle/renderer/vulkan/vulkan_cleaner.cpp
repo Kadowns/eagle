@@ -8,6 +8,7 @@
 namespace eagle {
 
 std::vector<VulkanCleanable*> VulkanCleaner::m_dirtyObjects;
+std::mutex VulkanCleaner::m_mutex;
 
 void VulkanCleaner::flush(uint32_t index){
 
@@ -23,6 +24,7 @@ void VulkanCleaner::flush(uint32_t index){
 }
 
 void VulkanCleaner::push(VulkanCleanable* object){
+    std::lock_guard<std::mutex> lock(m_mutex);
     auto it = std::find(m_dirtyObjects.begin(), m_dirtyObjects.end(), object);
     if (it == m_dirtyObjects.end()){
         m_dirtyObjects.emplace_back(object);
