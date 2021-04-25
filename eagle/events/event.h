@@ -30,17 +30,25 @@ private:
         uint32_t priority;
         CallbackType callback;
     };
+
+    struct CopiableMutex : std::mutex {
+        CopiableMutex() = default;
+        CopiableMutex(CopiableMutex const&) noexcept : std::mutex() {}
+        bool operator==(CopiableMutex const&other) noexcept { return this==&other; }
+    };
 public:
 
     void emit(void* ev) {
+        std::lock_guard<CopiableMutex> lock(m_mutex);
         assert(!m_emitting && "Tried to emmit a event that was already being emitted.");
         m_emitting = true;
-        for (auto &listeners : m_listeners) {
+        for (auto& listeners : m_listeners) {
             if (listeners.callback(ev)) {
                 break;
             }
         }
         m_emitting = false;
+
 
         //removes listeners that should be removed
         if (!m_listenersToUnsubscribe.empty()) {
@@ -62,6 +70,7 @@ public:
     }
 
     void subscribe(CallbackType &&callback, size_t listenerId, uint32_t priority) {
+        std::lock_guard<CopiableMutex> lock(m_mutex);
         assert(std::find_if(m_listeners.begin(), m_listeners.end(), [listenerId](const Listener& listener) {
             return listener.id == listenerId;
         }) == m_listeners.end() && "Tried to subscribe to an event with a listener that was already subscribed.");
@@ -76,6 +85,7 @@ public:
     }
 
     void unsubscribe(size_t listenerId) {
+        std::lock_guard<CopiableMutex> lock(m_mutex);
         auto it = std::find_if(m_listeners.begin(), m_listeners.end(), [listenerId](const Listener& listener) {
             return listener.id == listenerId;
         });
@@ -102,6 +112,7 @@ protected:
     std::vector<Listener> m_listeners;
     std::vector<Listener> m_listenersToSubscribe;
     std::set<size_t> m_listenersToUnsubscribe;
+    CopiableMutex m_mutex;
     bool m_emitting = false;
 };
 
@@ -153,7 +164,6 @@ public:
 private:
 
     std::vector<TEventStream> m_eventStreams;
-    std::mutex m_eventStreamMutex;
     size_t m_listenerCount = 0;
 };
 
