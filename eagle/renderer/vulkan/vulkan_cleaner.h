@@ -27,6 +27,7 @@ public:
     static void clear();
 private:
     static std::vector<VulkanCleanable*> m_dirtyObjects;
+    static std::mutex m_mutex;
 };
 
 }
