@@ -125,13 +125,13 @@ void VulkanCommandBuffer::bind_compute_shader(const std::shared_ptr<ComputeShade
     VK_CALL vkCmdBindPipeline(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], VK_PIPELINE_BIND_POINT_COMPUTE, vcs->get_pipeline());
 }
 
-void VulkanCommandBuffer::bind_vertex_buffer(const std::shared_ptr<VertexBuffer> &vertexBuffer) {
+void VulkanCommandBuffer::bind_vertex_buffer(const std::shared_ptr<VertexBuffer>& vertexBuffer, uint32_t binding) {
     std::shared_ptr<VulkanVertexBuffer> vvb = std::static_pointer_cast<VulkanVertexBuffer>(vertexBuffer);
     VkDeviceSize offsets[] = {0};
 
     VK_CALL vkCmdBindVertexBuffers(
             m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
-            0,
+            binding,
             1,
             &vvb->native_buffer(*m_vkCreateInfo.currentImageIndex).native_buffer(),
             offsets);
@@ -191,8 +191,9 @@ void VulkanCommandBuffer::draw(uint32_t vertexCount) {
     VK_CALL vkCmdDraw(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], vertexCount, 1, 0, 0);
 }
 
-void VulkanCommandBuffer::draw_indexed(uint32_t indicesCount, uint32_t indexOffset, uint32_t vertexOffset) {
-    VK_CALL vkCmdDrawIndexed(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], indicesCount, 1, indexOffset, vertexOffset, 0);
+void VulkanCommandBuffer::draw_indexed(uint32_t indicesCount, uint32_t instanceCount, uint32_t indexOffset,
+                                       uint32_t vertexOffset, uint32_t instanceOffset) {
+    VK_CALL vkCmdDrawIndexed(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], indicesCount, instanceCount, indexOffset, vertexOffset, instanceOffset);
 }
 
 void VulkanCommandBuffer::set_viewport(float w, float h, float x, float y, float minDepth, float maxDepth) {

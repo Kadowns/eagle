@@ -53,7 +53,7 @@ public:
     draw(uint32_t vertexCount) = 0;
 
     virtual void
-    bind_vertex_buffer(const std::shared_ptr<VertexBuffer> &vertexBuffer) = 0;
+    bind_vertex_buffer(const std::shared_ptr<VertexBuffer>& vertexBuffer, uint32_t binding) = 0;
 
     virtual void
     bind_index_buffer(const std::shared_ptr<IndexBuffer> &indexBuffer) = 0;
@@ -62,7 +62,8 @@ public:
     push_constants(ShaderStage stage, uint32_t offset, size_t size, void *data) = 0;
 
     virtual void
-    draw_indexed(uint32_t indicesCount, uint32_t indexOffset, uint32_t vertexOffset) = 0;
+    draw_indexed(uint32_t indicesCount, uint32_t instanceCount, uint32_t indexOffset,
+                 uint32_t vertexOffset, uint32_t instanceOffset) = 0;
 
     virtual void
     bind_descriptor_sets(const std::shared_ptr<DescriptorSet> &descriptorSet, uint32_t setIndex) = 0;
