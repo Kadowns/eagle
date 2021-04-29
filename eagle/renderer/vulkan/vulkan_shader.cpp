@@ -42,10 +42,11 @@ void VulkanShader::create_pipeline_layout() {
     //vertex input-----------------------------
     m_inputAttributes.resize(m_createInfo.vertexLayout.attribute_count());
     m_inputBindings.resize(m_createInfo.vertexLayout.binding_count());
-    uint32_t offset = 0;
+
     uint32_t attributeIndex = 0;
     uint32_t bindingIndex = 0;
     for (auto& binding : m_createInfo.vertexLayout){
+        uint32_t offset = 0;
         for (auto& attribute : binding.attributes){
             m_inputAttributes[attributeIndex].format = VulkanConverter::to_vk(attribute);
             m_inputAttributes[attributeIndex].binding = bindingIndex;
@@ -54,6 +55,7 @@ void VulkanShader::create_pipeline_layout() {
             offset += format_size(attribute);
             attributeIndex++;
         }
+
 
         m_inputBindings[bindingIndex].binding = bindingIndex;
         m_inputBindings[bindingIndex].stride = binding.stride();
