@@ -44,11 +44,11 @@ public:
         return m_bindings;
     }
 
-    inline VertexInputBindingDescription binding(uint32_t index){
+    inline VertexInputBindingDescription& binding(uint32_t index){
         return m_bindings[index];
     }
 
-    inline VertexInputBindingDescription operator[](uint32_t index){
+    inline VertexInputBindingDescription& operator[](uint32_t index){
         return binding(index);
     }
 
