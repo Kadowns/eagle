@@ -13,11 +13,11 @@ void InputLayer::handle_attach() {
 }
 
 void InputLayer::handle_detach() {
-    Input::instance().deinit();
+
 }
 
 void InputLayer::handle_update() {
-    Input::instance().refresh();
+
 }
 
 }

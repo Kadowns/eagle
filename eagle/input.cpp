@@ -6,12 +6,6 @@
 
 namespace eagle {
 
-std::unique_ptr<Input> Input::s_instance;
-
-Input& Input::instance() {
-    return s_instance ? *s_instance : *(s_instance = std::make_unique<Input>());
-}
-
 bool Input::key_pressed(int key) {
     return m_pressedKeys.find(key) != m_pressedKeys.end();
 }
@@ -113,7 +107,7 @@ void Input::init(EventBus *eventBus) {
     m_listener.receive<OnMouseScrolled>(this);
 }
 
-void Input::deinit() {
+void Input::destroy() {
     m_listener.detach();
 }
 

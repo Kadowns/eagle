@@ -19,10 +19,8 @@ private:
 public:
     ~Input() = default;
 
-    static Input& instance();
-
     void init(EventBus* eventBus);
-    void deinit();
+    void destroy();
 
     void refresh();
 
@@ -50,8 +48,6 @@ protected:
     bool receive(const OnMouseScrolled &e);
 
 private:
-
-    static std::unique_ptr<Input> s_instance;
 
     std::set<int> m_downKeys, m_pressedKeys, m_releasedKeys;
     std::set<int> m_downMouseButtons, m_pressedMouseButtons, m_releasedMouseButtons;
