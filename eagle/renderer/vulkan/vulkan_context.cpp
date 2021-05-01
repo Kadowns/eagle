@@ -993,6 +993,11 @@ std::weak_ptr<CommandBuffer> VulkanContext::create_command_buffer(const CommandB
     return m_commandBuffers.back();
 }
 
+void VulkanContext::submit_command_buffer(const std::shared_ptr<CommandBuffer>& commandBuffer) {
+    auto vcb = std::static_pointer_cast<VulkanCommandBuffer>(commandBuffer);
+    m_present.commandBuffers.emplace_back(vcb->native_command_buffers()[m_present.imageIndex]);
+}
+
 bool VulkanContext::prepare_frame() {
     VK_CALL vkWaitForFences(m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
 
@@ -1013,11 +1018,10 @@ bool VulkanContext::prepare_frame() {
     return true;
 }
 
-void VulkanContext::present_frame(const std::shared_ptr<CommandBuffer> &commandBuffer) {
+void VulkanContext::present_frame() {
 
     //submit command buffer
     {
-        auto vcb = std::static_pointer_cast<VulkanCommandBuffer>(commandBuffer);
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -1027,8 +1031,8 @@ void VulkanContext::present_frame(const std::shared_ptr<CommandBuffer> &commandB
         submitInfo.pWaitSemaphores = waitSemaphores;
         submitInfo.pWaitDstStageMask = waitStages;
 
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &vcb->native_command_buffers()[m_present.imageIndex];
+        submitInfo.commandBufferCount = m_present.commandBuffers.size();
+        submitInfo.pCommandBuffers = m_present.commandBuffers.data();
 
         VkSemaphore signalSemaphores[] = {m_renderFinishedSemaphores[m_currentFrame]};
         submitInfo.signalSemaphoreCount = 1;
@@ -1042,6 +1046,7 @@ void VulkanContext::present_frame(const std::shared_ptr<CommandBuffer> &commandB
         if (result != VK_SUCCESS) {
             throw std::runtime_error("failed to submit command buffer!");
         }
+        m_present.commandBuffers.clear();
     }
 
     //present
@@ -1092,8 +1097,6 @@ std::vector<const char*> VulkanContext::get_extensions() {
     }
     return extensions;
 }
-
-
 
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
                                       const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,

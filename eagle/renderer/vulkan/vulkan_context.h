@@ -67,7 +67,8 @@ public:
     virtual void destroy();
 
     bool prepare_frame() override;
-    void present_frame(const std::shared_ptr<CommandBuffer> &commandBuffer) override;
+    void submit_command_buffer(const std::shared_ptr<CommandBuffer>& commandBuffer) override;
+    void present_frame() override;
 
     std::shared_ptr<RenderPass> main_render_pass() override;
     std::shared_ptr<Framebuffer> main_frambuffer() override;
@@ -200,6 +201,7 @@ protected:
         VkSwapchainKHR swapchain;
         std::shared_ptr<VulkanRenderPass> renderPass;
         std::shared_ptr<VulkanFramebuffer> framebuffer;
+        std::vector<VkCommandBuffer> commandBuffers;
     } m_present;
 
     VkCommandPool m_graphicsCommandPool, m_computeCommandPool;

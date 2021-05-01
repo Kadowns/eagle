@@ -33,7 +33,8 @@ public:
     virtual ~RenderingContext() = default;
 
     virtual bool prepare_frame() = 0;
-    virtual void present_frame(const std::shared_ptr<CommandBuffer> &commandBuffer) = 0;
+    virtual void submit_command_buffer(const std::shared_ptr<CommandBuffer>& commandBuffer) = 0;
+    virtual void present_frame() = 0;
 
     virtual std::shared_ptr<RenderPass> main_render_pass() = 0;
     virtual std::shared_ptr<Framebuffer> main_frambuffer() = 0;
