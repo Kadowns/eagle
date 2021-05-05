@@ -38,8 +38,8 @@ public:
     void push_constants(ShaderStage stage, uint32_t offset, size_t size, void *data) override;
     void bind_descriptor_sets(const std::shared_ptr<DescriptorSet> &descriptorSet, uint32_t setIndex) override;
     void draw(uint32_t vertexCount) override;
-    void draw_indexed(uint32_t indicesCount, uint32_t instanceCount, uint32_t indexOffset,
-                      uint32_t vertexOffset, uint32_t instanceOffset) override;
+    void draw_indexed(uint32_t indicesCount, uint32_t instanceCount, uint32_t firstIndex,
+                      uint32_t vertexOffset, uint32_t firstInstance) override;
     void set_viewport(float w, float h, float x, float y, float minDepth, float maxDepth) override;
     void set_scissor(uint32_t w, uint32_t h, uint32_t x, uint32_t y) override;
     void pipeline_barrier(const std::shared_ptr<Image> &image, const std::vector<PipelineStage> &srcPipelineStages, const std::vector<PipelineStage> &dstPipelineStages) override;
