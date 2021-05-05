@@ -14,7 +14,13 @@ public:
     GraphicsBuffer() = default;
     virtual ~GraphicsBuffer();
 
-    inline void insert(void* data, uint32_t size) { copy_from(data, size, m_size); }
+    inline void insert(void* data, uint32_t size) {
+        if (size + m_size > m_capacity){
+            uint32_t diff = m_size + size - m_capacity;
+            reserve(m_capacity + diff);
+        }
+        copy_from(data, size, m_size);
+    }
 
     void copy_from(void* data, uint32_t size, uint32_t offset = 0);
     void reserve(uint32_t size);
