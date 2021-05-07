@@ -155,8 +155,8 @@ public:
     create_descriptor_set_layout(const std::vector<DescriptorBindingDescription> &bindings) override;
 
     std::weak_ptr<DescriptorSet>
-    create_descriptor_set(const std::shared_ptr<DescriptorSetLayout> &descriptorLayout,
-                          const std::vector<std::shared_ptr<DescriptorItem>> &descriptorItems) override;
+    create_descriptor_set(const std::weak_ptr<DescriptorSetLayout> &descriptorLayout,
+                          const std::vector<std::weak_ptr<DescriptorItem>> &descriptorItems) override;
 
     std::weak_ptr<Texture>
     create_texture(const TextureCreateInfo &createInfo) override;

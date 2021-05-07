@@ -917,15 +917,15 @@ VulkanContext::create_descriptor_set_layout(const std::vector<DescriptorBindingD
 
 
 std::weak_ptr<DescriptorSet>
-VulkanContext::create_descriptor_set(const std::shared_ptr<DescriptorSetLayout>& descriptorLayout,
-                                     const std::vector<std::shared_ptr<DescriptorItem>> &descriptorItems) {
+VulkanContext::create_descriptor_set(const std::weak_ptr<DescriptorSetLayout>& descriptorLayout,
+                                     const std::vector<std::weak_ptr<DescriptorItem>> &descriptorItems) {
     EG_TRACE("eagle","Creating a vulkan descriptor set!");
     VulkanDescriptorSetCreateInfo createInfo = {};
     createInfo.device = m_device;
     createInfo.bufferCount = m_present.imageCount;
 
     m_descriptorSets.emplace_back(std::make_shared<VulkanDescriptorSet>(
-            std::static_pointer_cast<VulkanDescriptorSetLayout>(descriptorLayout),
+            std::static_pointer_cast<VulkanDescriptorSetLayout>(descriptorLayout.lock()),
             descriptorItems,
             createInfo
             )

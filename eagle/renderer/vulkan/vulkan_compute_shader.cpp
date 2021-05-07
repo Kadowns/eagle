@@ -181,7 +181,7 @@ void VulkanComputeShader::recreate(uint32_t bufferCount) {
 
 void
 VulkanComputeShader::update_descriptor_items(const std::vector<std::shared_ptr<DescriptorItem>> &descriptorItems) {
-    m_descriptorSet->update(descriptorItems);
+//    m_descriptorSet->update(descriptorItems);
 }
 
 void
