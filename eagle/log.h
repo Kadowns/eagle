@@ -2,13 +2,22 @@
 #define EAGLE_LOG_H
 
 #include <spdlog/spdlog.h>
+
+
+#ifdef EG_PLATFORM_ANDROID
+#include <spdlog/sinks/android_sink.h>
+#define EG_SINK_TYPE spdlog::sinks::android_sink_mt
+#else
 #include <spdlog/sinks/stdout_color_sinks.h>
+#define EG_SINK_TYPE spdlog::sinks::stdout_color_sink_mt
 
 //from minwindef.h
 #undef far
 #undef near
 
-#define EG_LOG_CREATE(name) (spdlog::create<spdlog::sinks::stdout_color_sink_mt>(name))
+#endif
+
+#define EG_LOG_CREATE(name) (spdlog::create<EG_SINK_TYPE>(name))
 #define EG_LOG_PATTERN(pattern) (spdlog::set_pattern(pattern))
 #define EG_LOG_LEVEL(level) (spdlog::set_level(level))
 
