@@ -928,4 +928,27 @@ VertexInputRate VulkanConverter::to_eg(VkVertexInputRate rate) {
     return result;
 }
 
+VkCullModeFlags VulkanConverter::to_vk(CullMode mode) {
+    VkCullModeFlags result;
+    switch (mode){
+        case CullMode::NONE: result = VK_CULL_MODE_NONE; break;
+        case CullMode::FRONT_BIT: result = VK_CULL_MODE_FRONT_BIT; break;
+        case CullMode::BACK_BIT: result = VK_CULL_MODE_BACK_BIT; break;
+        case CullMode::FRONT_AND_BACK: result = VK_CULL_MODE_FRONT_AND_BACK; break;
+    }
+    return result;
+}
+
+CullMode VulkanConverter::to_eg(VkCullModeFlagBits mode) {
+    CullMode result;
+    switch (mode){
+        case VK_CULL_MODE_NONE: result = CullMode::NONE; break;
+        case VK_CULL_MODE_FRONT_BIT: result = CullMode::FRONT_BIT; break;
+        case VK_CULL_MODE_BACK_BIT: result = CullMode::BACK_BIT; break;
+        case VK_CULL_MODE_FRONT_AND_BACK: result = CullMode::FRONT_AND_BACK; break;
+        default: throw std::runtime_error("Invalid VkCullModeFlagBits on conversion");
+    }
+    return result;
+}
+
 }
