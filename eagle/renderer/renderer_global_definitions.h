@@ -76,7 +76,6 @@ enum class Filter {
     NEAREST = 2
 };
 
-
 enum class PrimitiveTopology {
     POINT_LIST = 0,
     LINE_LIST = 1,
@@ -89,6 +88,13 @@ enum class PrimitiveTopology {
     TRIANGLE_LIST_WITH_ADJACENCY = 8,
     TRIANGLE_STRIP_WITH_ADJACENCY = 9,
     PATCH_LIST = 10,
+};
+
+enum class CullMode {
+    NONE = 0,
+    FRONT_BIT = 1,
+    BACK_BIT = 2,
+    FRONT_AND_BACK = 3,
 };
 
 enum class VertexInputRate {
