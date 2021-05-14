@@ -25,6 +25,7 @@ struct ShaderCreateInfo {
     bool dynamicStates = false;
     VertexLayout vertexLayout;
     PrimitiveTopology primitiveTopology = PrimitiveTopology::TRIANGLE_LIST;
+    CullMode cullMode = CullMode::BACK_BIT;
     struct{
         float x = 0, y = 0;
         float widthPercent = 1, heightPercent = 1;
