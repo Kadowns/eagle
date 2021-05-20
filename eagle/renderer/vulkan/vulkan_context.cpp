@@ -45,6 +45,7 @@ void VulkanContext::destroy() {
     m_uniformBuffers.clear();
     m_textures.clear();
     m_shaders.clear();
+    m_commandBuffers.clear();
     m_computeShaders.clear();
     m_present.renderPass.reset();
     m_renderPasses.clear();
@@ -299,9 +300,9 @@ VkBool32 VulkanContext::debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT me
                                        VkDebugUtilsMessageTypeFlagsEXT messageType,
                                        const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData) {
 
-    VkDebugInfo::VkCall info = VkDebugInfo::m_callInfo;//*((VkDebugInfo::VkCall *) pUserData);
+    VkDebugInfo::VkCall& info = VkDebugInfo::m_callInfo;//*((VkDebugInfo::VkCall *) pUserData);
 
-#define VK_LOG(level, message) spdlog::get("eagle")->log(spdlog::source_loc{info.fileName.c_str(), info.line, info.funcName.c_str()}, level, message);
+#define VK_LOG(level, message) spdlog::get("eagle")->log(spdlog::source_loc{info.fileName, info.line, info.funcName}, level, message);
 
     switch (messageSeverity) {
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
@@ -984,8 +985,10 @@ std::weak_ptr<Framebuffer> VulkanContext::create_framebuffer(const FramebufferCr
 
 std::weak_ptr<CommandBuffer> VulkanContext::create_command_buffer(const CommandBufferCreateInfo& createInfo) {
 
+    QueueFamilyIndices queueFamilyIndices = find_family_indices(m_physicalDevice);
+
     VulkanCommandBufferCreateInfo vkCreateInfo = {};
-    vkCreateInfo.commandPool = m_graphicsCommandPool;
+    vkCreateInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
     vkCreateInfo.device = m_device;
     vkCreateInfo.imageCount = m_present.imageCount;
     vkCreateInfo.currentImageIndex = &m_present.imageIndex;

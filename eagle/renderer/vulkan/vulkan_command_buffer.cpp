@@ -18,11 +18,22 @@ VulkanCommandBuffer::VulkanCommandBuffer(const CommandBufferCreateInfo &createIn
                                          const VulkanCommandBufferCreateInfo &vkCreateInfo) :
                                          CommandBuffer(createInfo),
                                          m_vkCreateInfo(vkCreateInfo) {
+    VkCommandPoolCreateInfo poolInfo = {};
+    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    poolInfo.queueFamilyIndex = vkCreateInfo.queueFamilyIndex;
+    poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+    VK_CALL_ASSERT(vkCreateCommandPool(vkCreateInfo.device, &poolInfo, nullptr, &m_commandPool)) {
+        throw std::runtime_error("failed to create graphics command pool!");
+    }
+
    recreate(m_vkCreateInfo.imageCount);
 }
 
 VulkanCommandBuffer::~VulkanCommandBuffer() {
     cleanup();
+
+    VK_CALL vkDestroyCommandPool(m_vkCreateInfo.device, m_commandPool, nullptr);
 }
 
 void VulkanCommandBuffer::begin() {
@@ -250,7 +261,7 @@ void VulkanCommandBuffer::cleanup() {
     if (m_cleared){
         return;
     }
-    VK_CALL vkFreeCommandBuffers(m_vkCreateInfo.device, m_vkCreateInfo.commandPool, m_vkCreateInfo.imageCount, m_commandBuffers.data());
+    VK_CALL vkFreeCommandBuffers(m_vkCreateInfo.device, m_commandPool, m_vkCreateInfo.imageCount, m_commandBuffers.data());
     m_cleared = true;
 }
 
@@ -258,7 +269,7 @@ void VulkanCommandBuffer::recreate(uint32_t imageCount) {
     m_vkCreateInfo.imageCount = imageCount;
     VkCommandBufferAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = m_vkCreateInfo.commandPool;
+    allocInfo.commandPool = m_commandPool;
     allocInfo.level = VulkanConverter::to_vk(m_createInfo.level);
     allocInfo.commandBufferCount = imageCount;
 

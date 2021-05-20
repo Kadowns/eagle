@@ -14,7 +14,7 @@ namespace eagle {
 
 struct VulkanCommandBufferCreateInfo {
     VkDevice device;
-    VkCommandPool commandPool;
+    uint32_t queueFamilyIndex;
     uint32_t imageCount;
     uint32_t* currentImageIndex = nullptr;
 };
@@ -54,6 +54,7 @@ public:
 
 private:
     VulkanCommandBufferCreateInfo m_vkCreateInfo;
+    VkCommandPool m_commandPool;
     std::vector<VkCommandBuffer> m_commandBuffers;
     std::shared_ptr<VulkanShader> m_boundShader;
     bool m_finished = false;
