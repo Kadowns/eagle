@@ -213,7 +213,7 @@ void VulkanShader::create_pipeline() {
     if (m_createInfo.depthTesting){
         depthStencil.depthTestEnable = VK_TRUE;
         depthStencil.depthWriteEnable = VK_TRUE;
-        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
     }
     else{
         depthStencil.depthTestEnable = VK_FALSE;
