@@ -536,6 +536,16 @@ enum class ImageTiling {
     DRM_FORMAT_MODIFIER_EXT = 1000158000
 };
 
+enum class ImageType {
+    D1 = 0,//unsupported
+    D2 = 1,
+    D3 = 2,//unsupported
+    CUBE = 3,
+    D1_ARRAY = 4,//unsupported
+    D2_ARRAY = 5,//unsupported
+    CUBE_ARRAY = 6,//unsupported
+};
+
 enum class ImageUsage {
     TRANSFER_SRC = 0x00000001,
     TRANSFER_DST = 0x00000002,

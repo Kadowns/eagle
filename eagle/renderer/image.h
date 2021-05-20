@@ -16,7 +16,8 @@ struct ImageCreateInfo {
     Format format = Format::UNDEFINED;
     ImageTiling tiling = ImageTiling::OPTIMAL;
     ImageLayout layout = ImageLayout::UNDEFINED;
-    std::vector<uint8_t> bufferData;
+    ImageType type = ImageType::D2;
+    std::vector<uint8_t> buffer;
     std::vector<ImageUsage> usages;
     std::vector<MemoryProperty> memoryProperties = {MemoryProperty::DEVICE_LOCAL};
     std::vector<ImageAspect> aspects;
@@ -40,7 +41,7 @@ public:
     inline const std::vector<ImageUsage>& usages() const { return m_createInfo.usages; }
     inline const std::vector<MemoryProperty>& memory_properties() const { return m_createInfo.memoryProperties; }
     inline const std::vector<ImageAspect>& aspects() const { return m_createInfo.aspects; }
-    inline const std::vector<uint8_t>& data() const { return m_createInfo.bufferData; }
+    inline const std::vector<uint8_t>& data() const { return m_createInfo.buffer; }
     inline void resize(uint32_t width, uint32_t height) {
         m_createInfo.width = width;
         m_createInfo.height = height;

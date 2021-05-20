@@ -78,7 +78,15 @@ void VulkanImage::create() {
     imageInfo.usage = VulkanConverter::to_vk_flags<VkImageUsageFlags>(m_createInfo.usages);
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    imageInfo.flags = 0;
+    if (m_createInfo.type == ImageType::CUBE){
+        imageInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+    }
+
+
+    if (imageInfo.flags & VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT){
+        assert(m_createInfo.width == m_createInfo.height && "Image width and height must be equal when creating a cube map");
+        assert(m_createInfo.arrayLayers >= 6 && "Image array layers must be equal or greater than 6 when creating a cube map");
+    }
 
     m_images.resize(m_nativeCreateInfo.imageCount);
     for (int i = 0; i < m_nativeCreateInfo.imageCount; i++) {
@@ -111,7 +119,7 @@ void VulkanImage::create() {
     }
 
     VkImageSubresourceRange subresourceRange = {};
-    subresourceRange.layerCount = 1;
+    subresourceRange.layerCount = m_createInfo.arrayLayers;
     subresourceRange.baseArrayLayer = 0;
     subresourceRange.baseMipLevel = 0;
     subresourceRange.levelCount = 1;
@@ -119,7 +127,7 @@ void VulkanImage::create() {
 
     m_views.resize(m_memories.size());
     for (int i = 0; i < m_views.size(); i++) {
-        if (!m_createInfo.bufferData.empty()) {
+        if (!m_createInfo.buffer.empty()) {
             copy_buffer_data_to_image(subresourceRange, i);
         } else {
             VK_CALL VulkanHelper::transition_image_layout(
@@ -133,12 +141,17 @@ void VulkanImage::create() {
             );
         }
 
+        VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
+        if (m_createInfo.type == ImageType::CUBE){
+            viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+        }
+
         VK_CALL VulkanHelper::create_image_view(
                 m_nativeCreateInfo.device,
                 m_images[i],
                 m_views[i],
                 VulkanConverter::to_vk(m_createInfo.format),
-                VK_IMAGE_VIEW_TYPE_2D,
+                viewType,
                 subresourceRange
         );
     }
@@ -158,8 +171,8 @@ void VulkanImage::copy_buffer_data_to_image(VkImageSubresourceRange subresourceR
             m_nativeCreateInfo.device,
             stagingBuffer,
             bufferInfo,
-            m_createInfo.bufferData.size(),
-            m_createInfo.bufferData.data()
+            m_createInfo.buffer.size(),
+            m_createInfo.buffer.data()
     );
 
 
@@ -178,30 +191,39 @@ void VulkanImage::copy_buffer_data_to_image(VkImageSubresourceRange subresourceR
     VkCommandBuffer commandBuffer = VulkanHelper::begin_single_time_commands(m_nativeCreateInfo.device,
                                                                              m_nativeCreateInfo.commandPool);
 
-    VkBufferImageCopy region = {};
-    region.bufferOffset = 0;
-    region.bufferRowLength = 0;
-    region.bufferImageHeight = 0;
+    VkDeviceSize faceSize = m_createInfo.width * m_createInfo.height * format_size(m_createInfo.format);
+    VkDeviceSize bufferOffset = 0;
+    std::vector<VkBufferImageCopy> copyRegions = {};
+    copyRegions.reserve(m_createInfo.arrayLayers);
+    for (uint32_t layerIndex = 0; layerIndex < m_createInfo.arrayLayers; layerIndex++){
+        VkBufferImageCopy region = {};
+        region.bufferOffset = bufferOffset;
+        region.bufferRowLength = 0;
+        region.bufferImageHeight = 0;
 
-    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    region.imageSubresource.mipLevel = 0;
-    region.imageSubresource.baseArrayLayer = 0;
-    region.imageSubresource.layerCount = 1;
+        region.imageSubresource.aspectMask = subresourceRange.aspectMask;
+        region.imageSubresource.mipLevel = 0;
+        region.imageSubresource.baseArrayLayer = layerIndex;
+        region.imageSubresource.layerCount = 1;
 
-    region.imageOffset = {0, 0, 0};
-    region.imageExtent = {
-            (uint32_t)m_createInfo.width,
-            (uint32_t)m_createInfo.height,
-            1
-    };
+        region.imageOffset = {0, 0, 0};
+        region.imageExtent = {
+                (uint32_t)m_createInfo.width,
+                (uint32_t)m_createInfo.height,
+                1
+        };
+        bufferOffset += faceSize;
+        copyRegions.emplace_back(region);
+    }
+
 
     VK_CALL vkCmdCopyBufferToImage(
             commandBuffer,
             stagingBuffer->native_buffer(),
             m_images[index],
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            1,
-            &region
+            copyRegions.size(),
+            copyRegions.data()
     );
 
     VK_CALL VulkanHelper::end_single_time_commnds(
