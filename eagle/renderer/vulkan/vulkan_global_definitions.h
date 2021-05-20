@@ -20,9 +20,9 @@ class VkDebugInfo {
 public:
 
     struct VkCall {
-        std::string fileName;
-        std::string funcName;
-        int line;
+        std::atomic<const char*> fileName;
+        std::atomic<const char*> funcName;
+        std::atomic<int> line;
     };
 
     inline static void set_call(const char* fileName, const char* funcName, int line) {
