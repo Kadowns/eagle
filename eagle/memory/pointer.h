@@ -10,14 +10,9 @@
 
 namespace eagle {
 
-enum class PointerType {
-    STRONG,
-    WEAK
-};
-
 template<typename T>
 class BasePointer {
-protected:
+public:
     //defined in base class so weak and strong pointers will use a SharedObject of the exact same type
     struct SharedObject {
         T* data = nullptr;
@@ -26,65 +21,111 @@ protected:
     };
 };
 
-template<typename T, PointerType TYPE = PointerType::STRONG>
-class Pointer : BasePointer<T> {
+template<typename T>
+class WeakPointer;
+
+template<typename T>
+class StrongPointer : BasePointer<T> {
 private:
     typedef typename BasePointer<T>::SharedObject SharedObject;
 public:
 
-    Pointer() = default;
+    StrongPointer() = default;
 
-    Pointer(T* ptr) {
-        static_assert(TYPE == PointerType::STRONG, "Only strong pointers can be constructed with a raw pointer");
+    StrongPointer(T* ptr) {
         m_sharedObject = new SharedObject();
         m_sharedObject->data = ptr;
         increase_strong_reference();
     }
 
-    ~Pointer(){
-        if (m_sharedObject){
-            decrease_reference();
-        }
+    ~StrongPointer(){
+        reset();
     }
 
-    Pointer(Pointer<T, PointerType::STRONG>& other){
+    StrongPointer(const StrongPointer<T>& other){
         m_sharedObject = other.m_sharedObject;
         if (m_sharedObject){
-            increase_reference();
+            increase_strong_reference();
         }
     }
 
-    Pointer(Pointer<T, PointerType::WEAK>& other){
-        m_sharedObject = other.m_sharedObject;
-        if (m_sharedObject){
-            increase_reference();
-        }
-    }
-
-    Pointer(Pointer&& other){
+    StrongPointer(StrongPointer<T>&& other){
         m_sharedObject = other.m_sharedObject;
         other.m_sharedObject = nullptr;
     }
 
-    Pointer& operator=(const Pointer& rhs){
+    template<typename T2>
+    StrongPointer(StrongPointer<T2>&& other){
+        m_sharedObject = (SharedObject*)other.m_sharedObject;
+        other.m_sharedObject = nullptr;
+    }
+
+    template<typename T2>
+    StrongPointer(const StrongPointer<T2>& other){
+        m_sharedObject = (SharedObject*)other.m_sharedObject;
+        if (m_sharedObject){
+            increase_strong_reference();
+        }
+    }
+
+    explicit StrongPointer(const WeakPointer<T>& other);
+
+    T* get() {
+        T* result = nullptr;
+        if (m_sharedObject){
+            result = m_sharedObject->data;
+        }
+        return result;
+    }
+
+    T* get() const {
+        T* result = nullptr;
+        if (m_sharedObject){
+            result = m_sharedObject->data;
+        }
+        return result;
+    }
+
+    template<typename T2>
+    StrongPointer<T2> cast() const {
+        return construct_from_shared_object((typename BasePointer<T2>::SharedObject*)m_sharedObject);
+    }
+
+    void reset(){
+        if (m_sharedObject){
+            decrease_strong_reference();
+        }
+        m_sharedObject = nullptr;
+    }
+
+    void reset_all(T* data = nullptr) {
+        if (!m_sharedObject) {
+            m_sharedObject = new SharedObject();
+            increase_strong_reference();
+        }
+        delete m_sharedObject->data;
+        m_sharedObject->data = data;
+    }
+
+    StrongPointer& operator=(const StrongPointer& rhs){
         if (this == &rhs) return *this;
 
         if (m_sharedObject){
-            decrease_reference();
+            decrease_strong_reference();
         }
 
         m_sharedObject = rhs.m_sharedObject;
         if (m_sharedObject){
-            increase_reference();
+            increase_strong_reference();
         }
         return *this;
     }
 
-    Pointer& operator=(Pointer&& rhs) noexcept {
+    StrongPointer& operator=(StrongPointer&& rhs) noexcept {
         if (this == &rhs) return *this;
 
         if (m_sharedObject){
-            decrease_reference();
+            decrease_strong_reference();
         }
 
         m_sharedObject = rhs.m_sharedObject;
@@ -102,52 +143,37 @@ public:
         return *m_sharedObject->data;
     }
 
-    inline T& operator->() {
-        return this->operator*();
+    inline T* operator->() {
+        return &this->operator*();
     }
 
-    inline T& operator->() const {
-        return this->operator*();
+    inline T* operator->() const {
+        return &this->operator*();
     }
 
     inline operator bool() const {
         return m_sharedObject != nullptr && m_sharedObject->data != nullptr;
     }
 
-    inline bool operator==(const Pointer<T>& rhs) const {
+    inline bool operator==(const StrongPointer<T>& rhs) const {
         return m_sharedObject == rhs.m_sharedObject;
     }
 
-    inline bool operator!=(const Pointer<T>& rhs) const {
+    inline bool operator!=(const StrongPointer<T>& rhs) const {
         return !this->operator==(rhs);
     }
 
 private:
 
-    inline void increase_reference(){
-        if constexpr (TYPE == PointerType::STRONG){
+    StrongPointer(typename BasePointer<T>::SharedObject* sharedObject){
+        m_sharedObject = sharedObject;
+        if (m_sharedObject){
             increase_strong_reference();
-        }
-        else {
-            increase_weak_reference();
         }
     }
 
     inline void increase_strong_reference(){
         m_sharedObject->strongReferences++;
-    }
-
-    inline void increase_weak_reference(){
-        m_sharedObject->weakReferences++;
-    }
-
-    inline void decrease_reference(){
-        if constexpr (TYPE == PointerType::STRONG){
-            decrease_strong_reference();
-        }
-        else {
-            decrease_weak_reference();
-        }
     }
 
     inline void decrease_strong_reference(){
@@ -162,6 +188,152 @@ private:
         }
     }
 
+private:
+    template<typename T2>
+    friend class StrongPointer;
+
+    template<typename T2>
+    friend class WeakPointer;
+
+    SharedObject* m_sharedObject = nullptr;
+};
+
+template<typename T>
+class WeakPointer : BasePointer<T> {
+private:
+    typedef typename BasePointer<T>::SharedObject SharedObject;
+
+public:
+
+    constexpr WeakPointer() = default;
+
+    template<typename T2>
+    WeakPointer(const StrongPointer<T2>& other){
+        m_sharedObject = (SharedObject*)other.m_sharedObject;
+        if (m_sharedObject){
+            increase_weak_reference();
+        }
+    }
+
+    WeakPointer(const WeakPointer<T>& other){
+        m_sharedObject = other.m_sharedObject;
+        if (m_sharedObject){
+            increase_weak_reference();
+        }
+    }
+
+    template<typename T2>
+    WeakPointer(const WeakPointer<T2>& other){
+        m_sharedObject = (SharedObject*)other.m_sharedObject;
+        if (m_sharedObject){
+            increase_weak_reference();
+        }
+    }
+
+    WeakPointer(WeakPointer<T>&& other) noexcept {
+        m_sharedObject = other.m_sharedObject;
+        other.m_sharedObject = nullptr;
+    }
+
+    template<typename T2>
+    WeakPointer(WeakPointer<T2>&& other) noexcept {
+        m_sharedObject = (SharedObject*)other.m_sharedObject;
+        other.m_sharedObject = nullptr;
+    }
+
+    T* get() {
+        T* result = nullptr;
+        if (m_sharedObject){
+            result = m_sharedObject->data;
+        }
+        return result;
+    }
+
+    T* get() const {
+        T* result = nullptr;
+        if (m_sharedObject){
+            result = m_sharedObject->data;
+        }
+        return result;
+    }
+
+    void reset(){
+        if (m_sharedObject){
+            decrease_weak_reference();
+        }
+        m_sharedObject = nullptr;
+    }
+
+    template<typename T2>
+    WeakPointer<T2> cast() const {
+        return WeakPointer<T2>((typename BasePointer<T2>::SharedObject*)m_sharedObject);
+    }
+
+    WeakPointer& operator=(const WeakPointer& rhs){
+        if (this == &rhs) return *this;
+
+        if (m_sharedObject){
+            decrease_weak_reference();
+        }
+
+        m_sharedObject = rhs.m_sharedObject;
+        if (m_sharedObject){
+            increase_weak_reference();
+        }
+        return *this;
+    }
+
+    WeakPointer& operator=(WeakPointer&& rhs) noexcept {
+        if (this == &rhs) return *this;
+
+        if (m_sharedObject){
+            decrease_weak_reference();
+        }
+
+        m_sharedObject = rhs.m_sharedObject;
+        rhs.m_sharedObject = nullptr;
+        return *this;
+    }
+
+    inline T& operator*() {
+        assert(m_sharedObject != nullptr && m_sharedObject->data != nullptr && "dereferencing a null Pointer");
+        return *m_sharedObject->data;
+    }
+
+    inline T& operator*() const {
+        assert(m_sharedObject != nullptr && m_sharedObject->data != nullptr && "dereferencing a null Pointer");
+        return *m_sharedObject->data;
+    }
+
+    inline T* operator->() {
+        return &this->operator*();
+    }
+
+    inline T* operator->() const {
+        return &this->operator*();
+    }
+
+    inline operator bool() const {
+        return m_sharedObject != nullptr && m_sharedObject->data != nullptr;
+    }
+
+    inline bool operator==(const WeakPointer& rhs) const {
+        return m_sharedObject == rhs.m_sharedObject;
+    }
+
+    inline bool operator!=(const WeakPointer& rhs) const {
+        return !this->operator==(rhs);
+    }
+
+private:
+
+    WeakPointer(typename BasePointer<T>::SharedObject* sharedObject){
+        m_sharedObject = sharedObject;
+        if (m_sharedObject){
+            increase_weak_reference();
+        }
+    }
+
     inline void decrease_weak_reference(){
         assert(m_sharedObject->weakReferences > 0 && "Attempted to double destroy a pointer?");
         m_sharedObject->weakReferences--;
@@ -170,11 +342,33 @@ private:
             m_sharedObject = nullptr;
         }
     }
+
+    inline void increase_weak_reference(){
+        m_sharedObject->weakReferences++;
+    }
+
 private:
-    friend class Pointer<T, PointerType::STRONG>;
-    friend class Pointer<T, PointerType::WEAK>;
+    template<typename T2>
+    friend class StrongPointer;
+
+    template<typename T2>
+    friend class WeakPointer;
+
     SharedObject* m_sharedObject = nullptr;
 };
+
+template<typename T>
+StrongPointer<T>::StrongPointer(const WeakPointer<T>& other) {
+    m_sharedObject = other.m_sharedObject;
+    if (m_sharedObject){
+        increase_strong_reference();
+    }
+}
+
+template<typename T, typename ...Args>
+StrongPointer<T> make_strong(Args&&... args){
+    return StrongPointer<T>(new T(std::forward<Args>(args)...));
+}
 
 }
 
