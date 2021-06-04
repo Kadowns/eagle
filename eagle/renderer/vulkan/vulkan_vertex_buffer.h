@@ -43,7 +43,7 @@ public:
 private:
     VulkanVertexBufferCreateInfo m_vulkanCreateInfo;
 
-    std::vector<std::shared_ptr<VulkanBuffer>> m_buffers;
+    std::vector<StrongPointer<VulkanBuffer>> m_buffers;
     std::set<int> m_dirtyBuffers;
 };
 

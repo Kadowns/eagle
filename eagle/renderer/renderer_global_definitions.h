@@ -6,6 +6,7 @@
 #define EAGLE_RENDERINGCORE_H
 
 #include "eagle/log.h"
+#include "eagle/memory/pointer.h"
 #include "eagle/core_global_definitions.h"
 
 namespace eagle {

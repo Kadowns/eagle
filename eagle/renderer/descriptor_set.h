@@ -14,16 +14,16 @@ namespace eagle {
 
 class DescriptorSet {
 public:
-    DescriptorSet() = default;
-    DescriptorSet(const std::vector<std::weak_ptr<DescriptorItem>>& descriptors) : m_descriptors(descriptors) {}
+    DescriptorSet(size_t descriptorCount) : m_descriptors(descriptorCount) {}
+    DescriptorSet(const std::vector<WeakPointer<DescriptorItem>>& descriptors) : m_descriptors(descriptors) {}
     virtual ~DescriptorSet() = default;
     virtual void update() = 0;
 
     inline size_t size() const { return m_descriptors.size(); }
-    inline const std::vector<std::weak_ptr<DescriptorItem>>& descriptors() const { return m_descriptors; }
-    inline std::weak_ptr<DescriptorItem>& operator[](size_t binding) { return m_descriptors[binding]; }
+    inline const std::vector<WeakPointer<DescriptorItem>>& descriptors() const { return m_descriptors; }
+    inline WeakPointer<DescriptorItem>& operator[](size_t binding) { return m_descriptors[binding]; }
 protected:
-    std::vector<std::weak_ptr<DescriptorItem>> m_descriptors;
+    std::vector<WeakPointer<DescriptorItem>> m_descriptors;
 };
 
 }

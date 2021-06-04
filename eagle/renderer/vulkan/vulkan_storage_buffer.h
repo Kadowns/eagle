@@ -36,11 +36,11 @@ public:
     void recreate(uint32_t bufferCount);
     void create_storage_buffer();
 
-    inline std::vector<std::shared_ptr<VulkanBuffer>>& get_buffers() { return m_buffers; }
+    inline std::vector<StrongPointer<VulkanBuffer>>& get_buffers() { return m_buffers; }
 private:
     VulkanStorageBufferCreateInfo m_createInfo;
 
-    std::vector<std::shared_ptr<VulkanBuffer>> m_buffers;
+    std::vector<StrongPointer<VulkanBuffer>> m_buffers;
     std::set<int> m_dirtyBuffers;
     bool m_cleared = true;
     bool m_dirtyBytes = false;

@@ -13,6 +13,9 @@ VulkanImage::VulkanImage(const ImageCreateInfo &imageCreateInfo, const VulkanIma
     Image(imageCreateInfo),
     m_nativeCreateInfo(nativeCreateInfo) {
     EG_TRACE("eagle","Creating a vulkan image!");
+    if (!imageCreateInfo.useMultiBuffering){
+        m_nativeCreateInfo.imageCount = 1;
+    }
     create();
     EG_TRACE("eagle","Vulkan image created!");
 }
@@ -160,7 +163,7 @@ void VulkanImage::create() {
 
 void VulkanImage::copy_buffer_data_to_image(VkImageSubresourceRange subresourceRange, uint32_t index) {
     EG_TRACE("eagle","Copying buffer to image!");
-    std::shared_ptr<VulkanBuffer> stagingBuffer;
+    StrongPointer<VulkanBuffer> stagingBuffer;
 
     VulkanBufferCreateInfo bufferInfo = {};
     bufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;

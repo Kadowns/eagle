@@ -19,7 +19,7 @@ class RenderTarget {
 public:
     virtual ~RenderTarget() = default;
 
-    virtual std::weak_ptr<Image> get_image() = 0;
+    virtual WeakPointer<Image> get_image() = 0;
 };
 
 }

@@ -49,19 +49,19 @@ public:
 
     static void create_baked_buffer(VkPhysicalDevice physicalDevice, VkDevice device,
                                     VkQueue queue, VkCommandPool commandPool,
-                                    std::shared_ptr<VulkanBuffer>& buffer, VkBufferUsageFlagBits bufferUsage,
+                                    StrongPointer<VulkanBuffer>& buffer, VkBufferUsageFlagBits bufferUsage,
                                     VkDeviceSize size, void* data = nullptr);
 
     static void create_dynamic_buffer(VkPhysicalDevice physicalDevice, VkDevice device,
-                                    std::shared_ptr<VulkanBuffer>& buffer, VkBufferUsageFlagBits bufferUsage,
+                                    StrongPointer<VulkanBuffer>& buffer, VkBufferUsageFlagBits bufferUsage,
                                     VkDeviceSize size, void* data = nullptr);
 
     static void upload_baked_buffer(VkPhysicalDevice physicalDevice, VkDevice device,
                                     VkQueue queue, VkCommandPool commandPool,
-                                    std::shared_ptr<VulkanBuffer>& buffer,
+                                    StrongPointer<VulkanBuffer>& buffer,
                                     VkDeviceSize size, void* data);
 
-    static void upload_dynamic_buffer(std::shared_ptr<VulkanBuffer>& buffer, VkDeviceSize size, void* data);
+    static void upload_dynamic_buffer(StrongPointer<VulkanBuffer>& buffer, VkDeviceSize size, void* data);
 
 };
 

@@ -25,7 +25,7 @@ public:
     explicit VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createInfo, size_t size, void *data);
     ~VulkanUniformBuffer() override;
 
-    inline std::vector<std::shared_ptr<VulkanBuffer>>& get_buffers() { return m_buffers; }
+    inline std::vector<StrongPointer<VulkanBuffer>>& get_buffers() { return m_buffers; }
     void create_uniform_buffer();
 
     DescriptorType type() const override;
@@ -44,7 +44,7 @@ public:
 private:
 
     VulkanUniformBufferCreateInfo m_info;
-    std::vector<std::shared_ptr<VulkanBuffer>> m_buffers;
+    std::vector<StrongPointer<VulkanBuffer>> m_buffers;
     std::set<int> m_dirtyBuffers;
     bool m_cleared = true;
 };

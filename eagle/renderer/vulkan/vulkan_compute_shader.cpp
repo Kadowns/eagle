@@ -44,12 +44,13 @@ void VulkanComputeShader::create_pipeline_layout() {
         throw std::runtime_error("More than one descriptor set on compute shader!");
     }
 
-
     for (auto &binding : descriptorSetMap[0]) {
         m_bindingDescriptions.emplace_back(binding.second);
     }
 
-    m_descriptorLayout = std::make_shared<VulkanDescriptorSetLayout>(m_createInfo.device, m_bindingDescriptions);
+
+    m_descriptorLayout = make_strong<VulkanDescriptorSetLayout>(m_createInfo.device, m_bindingDescriptions);
+
 
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
     pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -98,7 +99,7 @@ void VulkanComputeShader::create_descriptor_sets() {
     VulkanDescriptorSetCreateInfo descriptorSetCreateInfo = {};
     descriptorSetCreateInfo.device = m_createInfo.device;
     descriptorSetCreateInfo.bufferCount = m_createInfo.bufferCount;
-    m_descriptorSet = std::make_shared<VulkanDescriptorSet>(m_descriptorLayout, descriptorSetCreateInfo);
+    m_descriptorSet = make_strong<VulkanDescriptorSet>(m_descriptorLayout, descriptorSetCreateInfo);
     EG_TRACE("eagle","END");
 }
 
@@ -145,7 +146,7 @@ void VulkanComputeShader::dispatch(uint32_t groupCountX, uint32_t groupCountY, u
 
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
     VK_CALL vkBeginCommandBuffer(m_commandBuffer, &beginInfo);
 
@@ -168,6 +169,7 @@ void VulkanComputeShader::dispatch(uint32_t groupCountX, uint32_t groupCountY, u
     VK_CALL_ASSERT(vkQueueSubmit(m_createInfo.computeQueue, 1, &computeSubmitInfo, m_fence)){
         throw std::runtime_error("Failed to submit compute command buffer!");
     }
+
 }
 
 void VulkanComputeShader::clear_descriptor_set() {
@@ -179,17 +181,17 @@ void VulkanComputeShader::recreate(uint32_t bufferCount) {
     create_descriptor_sets();
 }
 
-void
-VulkanComputeShader::update_descriptor_items(const std::vector<std::shared_ptr<DescriptorItem>> &descriptorItems) {
-//    m_descriptorSet->update(descriptorItems);
+void VulkanComputeShader::update_image(uint32_t binding, const WeakPointer<Image>& image) {
+    m_descriptorSet->operator[](binding) = image;
 }
 
-void
-VulkanComputeShader::set_image(const std::string &name, const std::shared_ptr<Image> &image) {
-
+void VulkanComputeShader::join() {
+    VK_CALL vkQueueWaitIdle(m_createInfo.computeQueue);
 }
 
-
+void VulkanComputeShader::update_descriptors() {
+    m_descriptorSet->flush_all();
+}
 
 
 }

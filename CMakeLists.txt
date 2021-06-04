@@ -17,7 +17,6 @@ add_subdirectory(${EG_EXTERNAL_PATH}/spdlog ${CMAKE_BINARY_DIR}/spdlog)
 
 set(EAGLE_SOURCE
         eagle/application.cpp
-        eagle/layer_stack.cpp
         eagle/input.cpp
         eagle/input_layer.cpp
         eagle/random.cpp

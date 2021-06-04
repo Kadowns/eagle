@@ -85,7 +85,7 @@ void VulkanShader::create_pipeline_layout() {
             descriptions.emplace_back(binding.second);
         }
 
-        m_descriptorSetLayouts.emplace_back(std::make_shared<VulkanDescriptorSetLayout>(m_nativeCreateInfo.device, descriptions));
+        m_descriptorSetLayouts.emplace_back(make_strong<VulkanDescriptorSetLayout>(m_nativeCreateInfo.device, descriptions));
     }
 
     std::vector<VkDescriptorSetLayout> layouts(m_descriptorSetLayouts.size());
@@ -263,7 +263,7 @@ void VulkanShader::create_pipeline() {
         pipelineInfo.pDynamicState = &dynamicState;
     }
     pipelineInfo.layout = m_pipelineLayout;
-    pipelineInfo.renderPass = std::static_pointer_cast<VulkanRenderPass>(m_createInfo.renderPass)->native_render_pass();
+    pipelineInfo.renderPass = m_createInfo.renderPass.cast<VulkanRenderPass>()->native_render_pass();
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
@@ -293,15 +293,15 @@ VkPipelineLayout& VulkanShader::get_layout() {
     return m_pipelineLayout;
 }
 
-const std::vector<std::weak_ptr<DescriptorSetLayout>> VulkanShader::get_descriptor_set_layouts() {
-    std::vector<std::weak_ptr<DescriptorSetLayout>> sets(m_descriptorSetLayouts.size());
+const std::vector<WeakPointer<DescriptorSetLayout>> VulkanShader::get_descriptor_set_layouts() {
+    std::vector<WeakPointer<DescriptorSetLayout>> sets(m_descriptorSetLayouts.size());
     for (size_t i = 0; i < sets.size(); i++){
         sets[i] = m_descriptorSetLayouts[i];
     }
     return sets;
 }
 
-const std::weak_ptr<DescriptorSetLayout> VulkanShader::get_descriptor_set_layout(uint32_t index) {
+const WeakPointer<DescriptorSetLayout> VulkanShader::get_descriptor_set_layout(uint32_t index) {
     return m_descriptorSetLayouts[index];
 }
 

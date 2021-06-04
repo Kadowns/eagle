@@ -30,13 +30,13 @@ public:
     virtual ~VulkanImage();
     virtual DescriptorType type() const override;
 
-    inline std::vector<VkImage>& native_images() { return m_images; }
-    inline std::vector<VkDeviceMemory>& native_memories() { return m_memories; }
-    inline std::vector<VkImageView>& native_image_views() { return m_views; }
+    inline VkImage& native_image(size_t index) { return m_images[index % m_nativeCreateInfo.imageCount]; }
+    inline VkDeviceMemory& native_memory(size_t index) { return m_memories[index % m_nativeCreateInfo.imageCount]; }
+    inline VkImageView& native_image_view(size_t index) { return m_views[index % m_nativeCreateInfo.imageCount]; }
 
-    inline const std::vector<VkImage>& native_images() const  { return m_images; }
-    inline const std::vector<VkDeviceMemory>& native_memories() const  { return m_memories; }
-    inline const std::vector<VkImageView>& native_image_views() const  { return m_views; }
+    inline const VkImage& native_image(size_t index) const { return m_images[index % m_nativeCreateInfo.imageCount]; }
+    inline const VkDeviceMemory& native_memory(size_t index) const { return m_memories[index % m_nativeCreateInfo.imageCount]; }
+    inline const VkImageView& native_image_view(size_t index) const { return m_views[index % m_nativeCreateInfo.imageCount]; }
 
 protected:
     virtual void on_resize() override;

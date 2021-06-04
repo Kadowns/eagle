@@ -24,17 +24,19 @@ class VulkanComputeShader : public ComputeShader {
 public:
     VulkanComputeShader(const std::string &path, const VulkanComputeShaderCreateInfo &createInfo);
 
-    virtual ~VulkanComputeShader();
+    ~VulkanComputeShader();
 
-    virtual void create_pipeline() override;
+    void create_pipeline() override;
 
-    virtual void cleanup_pipeline() override;
+    void cleanup_pipeline() override;
 
-    virtual void dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
+    void dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
-    virtual void update_descriptor_items(const std::vector<std::shared_ptr<DescriptorItem>> &descriptorItems) override;
+    void update_image(uint32_t binding, const WeakPointer<Image>& image) override;
 
-    virtual void set_image(const std::string &name, const std::shared_ptr<Image> &image) override;
+    void update_descriptors() override;
+
+    void join() override;
 
     void clear_descriptor_set();
     void recreate(uint32_t bufferCount);
@@ -57,8 +59,8 @@ private:
     VkPipelineLayout m_pipelineLayout;
     VkPipeline m_computePipeline;
     std::vector<DescriptorBindingDescription> m_bindingDescriptions;
-    std::shared_ptr<VulkanDescriptorSetLayout> m_descriptorLayout;
-    std::shared_ptr<VulkanDescriptorSet> m_descriptorSet;
+    StrongPointer<VulkanDescriptorSetLayout> m_descriptorLayout;
+    StrongPointer<VulkanDescriptorSet> m_descriptorSet;
     VkCommandBuffer m_commandBuffer;
     VkFence m_fence;
 

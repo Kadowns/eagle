@@ -15,8 +15,8 @@ namespace eagle {
 
 DesktopApplication::DesktopApplication(uint32_t width, uint32_t height, ApplicationDelegate* delegate) {
     s_instance = this;
-    m_delegate = std::shared_ptr<ApplicationDelegate>(delegate);
-    m_window = std::make_shared<DesktopWindowGLFW>(width, height);
+    m_delegate = StrongPointer<ApplicationDelegate>(delegate);
+    m_window = make_strong<DesktopWindowGLFW>(width, height);
     DesktopFileSystem::init();
 }
 

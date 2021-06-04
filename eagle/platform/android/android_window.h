@@ -46,7 +46,7 @@ public:
 
 protected:
     android_app* m_androidApp;
-    std::shared_ptr<VulkanContextAndroid> m_renderingContext;
+    StrongPointer<VulkanContextAndroid> m_renderingContext;
     bool m_surfaceReady;
 
 };

@@ -17,11 +17,11 @@ struct VulkanDescriptorSetCreateInfo {
 
 class VulkanDescriptorSet : public DescriptorSet, public VulkanCleanable {
 public:
-    VulkanDescriptorSet(const std::weak_ptr<VulkanDescriptorSetLayout> &descriptorSetLayout,
-                        const std::vector<std::weak_ptr<DescriptorItem>> &descriptorItems,
+    VulkanDescriptorSet(const WeakPointer<VulkanDescriptorSetLayout> &descriptorSetLayout,
+                        const std::vector<WeakPointer<DescriptorItem>> &descriptorItems,
                         const VulkanDescriptorSetCreateInfo& createInfo);
 
-    VulkanDescriptorSet(const std::weak_ptr<VulkanDescriptorSetLayout>& descriptorSetLayout, const VulkanDescriptorSetCreateInfo& createInfo);
+    VulkanDescriptorSet(const WeakPointer<VulkanDescriptorSetLayout>& descriptorSetLayout, const VulkanDescriptorSetCreateInfo& createInfo);
     ~VulkanDescriptorSet();
 
     void cleanup();
@@ -32,16 +32,17 @@ public:
     void update() override;
     inline std::vector<VkDescriptorSet>& get_descriptors() {return m_descriptorSets;}
 
-    virtual bool is_dirty() const override;
+    bool is_dirty() const override;
 
-    virtual void flush(uint32_t index) override;
+    void flush(uint32_t index) override;
+    void flush_all();
 
 private:
 
     VkDescriptorPool m_descriptorPool;
     std::vector<VkDescriptorSet> m_descriptorSets;
     std::set<int> m_dirtyDescriptors;
-    std::weak_ptr<VulkanDescriptorSetLayout> m_descriptorSetLayout;
+    WeakPointer<VulkanDescriptorSetLayout> m_descriptorSetLayout;
     VulkanDescriptorSetCreateInfo m_info;
     bool m_cleared = true;
 

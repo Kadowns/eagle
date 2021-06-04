@@ -13,7 +13,7 @@ VulkanFramebuffer::VulkanFramebuffer(const FramebufferCreateInfo &createInfo,
     EG_TRACE("eagle","Constructing a vulkan frame buffer!");
     m_nativeImageAttachments.reserve(createInfo.attachments.size());
     for (auto& attachment : createInfo.attachments){
-        m_nativeImageAttachments.emplace_back(std::static_pointer_cast<VulkanImage>(attachment));
+        m_nativeImageAttachments.emplace_back(attachment.cast<VulkanImage>());
     }
     create_framebuffer();
     EG_TRACE("eagle","Vulkan frame buffer constructed!");
@@ -33,7 +33,7 @@ void VulkanFramebuffer::create_framebuffer() {
 
     VkFramebufferCreateInfo framebufferCreateInfo = {};
     framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    framebufferCreateInfo.renderPass = std::static_pointer_cast<VulkanRenderPass>(m_createInfo.renderPass)->native_render_pass();
+    framebufferCreateInfo.renderPass = m_createInfo.renderPass.cast<VulkanRenderPass>()->native_render_pass();
     framebufferCreateInfo.width = m_createInfo.width;
     framebufferCreateInfo.height = m_createInfo.height;
     framebufferCreateInfo.layers = 1;
@@ -43,7 +43,7 @@ void VulkanFramebuffer::create_framebuffer() {
         std::vector<VkImageView> attachments;
         attachments.reserve(m_nativeImageAttachments.size());
         for (auto &image : m_nativeImageAttachments) {
-            attachments.emplace_back(image->native_image_views()[i]);
+            attachments.emplace_back(image->native_image_view(i));
         }
         framebufferCreateInfo.attachmentCount = attachments.size();
         framebufferCreateInfo.pAttachments = attachments.data();

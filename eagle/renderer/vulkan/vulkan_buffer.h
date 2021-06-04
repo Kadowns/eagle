@@ -36,7 +36,7 @@ public:
 
 
     static VkResult
-    create_buffer(VkPhysicalDevice physicalDevice, VkDevice device, std::shared_ptr<VulkanBuffer> &buffer,
+    create_buffer(VkPhysicalDevice physicalDevice, VkDevice device, StrongPointer<VulkanBuffer> &buffer,
                   const VulkanBufferCreateInfo &info, VkDeviceSize size, void *data = nullptr);
 
     static void

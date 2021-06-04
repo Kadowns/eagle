@@ -5,19 +5,17 @@
 
 namespace eagle {
 
-VulkanDescriptorSet::VulkanDescriptorSet(const std::weak_ptr<VulkanDescriptorSetLayout> &descriptorSetLayout,
-                                         const std::vector<std::weak_ptr<DescriptorItem>> &descriptorItems,
+VulkanDescriptorSet::VulkanDescriptorSet(const WeakPointer<VulkanDescriptorSetLayout> &descriptorSetLayout,
+                                         const std::vector<WeakPointer<DescriptorItem>> &descriptorItems,
                                          const VulkanDescriptorSetCreateInfo& createInfo) :
         DescriptorSet(descriptorItems), m_descriptorSetLayout(descriptorSetLayout), m_info(createInfo){
     create_descriptor_sets();
-    for (uint32_t i = 0; i < m_descriptorSets.size(); i++){
-        flush(i);
-    }
+    flush_all();
 }
 
-VulkanDescriptorSet::VulkanDescriptorSet(const std::weak_ptr<VulkanDescriptorSetLayout> &descriptorSetLayout,
+VulkanDescriptorSet::VulkanDescriptorSet(const WeakPointer<VulkanDescriptorSetLayout> &descriptorSetLayout,
                                          const VulkanDescriptorSetCreateInfo &createInfo) :
-    m_descriptorSetLayout(descriptorSetLayout), m_info(createInfo){
+    DescriptorSet(descriptorSetLayout->bindings().size()), m_descriptorSetLayout(descriptorSetLayout), m_info(createInfo){
     create_descriptor_sets();
 }
 
@@ -28,7 +26,7 @@ VulkanDescriptorSet::~VulkanDescriptorSet() {
 void VulkanDescriptorSet::create_descriptor_sets() {
 
     if (!m_cleared) return;
-    auto layoutBindings = m_descriptorSetLayout.lock()->get_native_bindings();
+    auto layoutBindings = m_descriptorSetLayout->get_native_bindings();
 
     std::vector<VkDescriptorPoolSize> poolSizes = {};
     poolSizes.resize(layoutBindings.size());
@@ -47,7 +45,7 @@ void VulkanDescriptorSet::create_descriptor_sets() {
         throw std::runtime_error("failed to create descriptor pool!");
     }
 
-    std::vector<VkDescriptorSetLayout> layouts(m_info.bufferCount, m_descriptorSetLayout.lock()->get_native_layout());
+    std::vector<VkDescriptorSetLayout> layouts(m_info.bufferCount, m_descriptorSetLayout->get_native_layout());
     VkDescriptorSetAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfo.descriptorPool = m_descriptorPool;
@@ -67,17 +65,17 @@ bool VulkanDescriptorSet::is_dirty() const {
 
 void VulkanDescriptorSet::flush(uint32_t index) {
 
-    std::vector<VkDescriptorSetLayoutBinding> descriptorBindings = m_descriptorSetLayout.lock()->get_native_bindings();
+    std::vector<VkDescriptorSetLayoutBinding> descriptorBindings = m_descriptorSetLayout->get_native_bindings();
     std::vector<VkDescriptorBufferInfo> bufferInfos;
     std::vector<VkDescriptorImageInfo> imageInfos;
 
     //foreach descriptor item in descriptor set
     for (uint32_t j = 0; j < m_descriptors.size(); j++){
-        auto descriptor = m_descriptors[j].lock();
+        auto descriptor = m_descriptors[j];
         switch (descriptor->type()){
 
             case DescriptorType::UNIFORM_BUFFER:{
-                auto buffer = std::static_pointer_cast<VulkanUniformBuffer>(descriptor);
+                auto buffer = descriptor.cast<VulkanUniformBuffer>();
                 VkDescriptorBufferInfo bufferInfo = {};
                 bufferInfo.buffer = buffer->get_buffers()[index]->native_buffer();
                 bufferInfo.offset = 0;
@@ -86,7 +84,7 @@ void VulkanDescriptorSet::flush(uint32_t index) {
                 break;
             }
             case DescriptorType::STORAGE_BUFFER:{
-                auto buffer = std::static_pointer_cast<VulkanStorageBuffer>(descriptor);
+                auto buffer = descriptor.cast<VulkanStorageBuffer>();
                 VkDescriptorBufferInfo bufferInfo = {};
                 bufferInfo.buffer = buffer->get_buffers()[index]->native_buffer();
                 bufferInfo.offset = 0;
@@ -95,27 +93,27 @@ void VulkanDescriptorSet::flush(uint32_t index) {
                 break;
             }
             case DescriptorType::SAMPLED_IMAGE:{
-                auto image = std::static_pointer_cast<VulkanImage>(descriptor);
+                auto image = descriptor.cast<VulkanImage>();
                 VkDescriptorImageInfo imageInfo = {};
                 imageInfo.imageLayout = VulkanConverter::to_vk(image->layout());
-                imageInfo.imageView = image->native_image_views()[index];
+                imageInfo.imageView = image->native_image_view(index);
                 imageInfos.push_back(imageInfo);
                 break;
             }
             case DescriptorType::STORAGE_IMAGE:{
-                auto image = std::static_pointer_cast<VulkanImage>(descriptor);
+                auto image = descriptor.cast<VulkanImage>();
                 VkDescriptorImageInfo imageInfo = {};
                 imageInfo.imageLayout = VulkanConverter::to_vk(image->layout());
-                imageInfo.imageView = image->native_image_views()[index];
+                imageInfo.imageView = image->native_image_view(index);
                 imageInfos.push_back(imageInfo);
                 break;
             }
             case DescriptorType::COMBINED_IMAGE_SAMPLER:{
 
-                auto texture = std::static_pointer_cast<VulkanTexture>(descriptor);
+                auto texture = descriptor.cast<VulkanTexture>();
                 VkDescriptorImageInfo imageInfo = {};
                 imageInfo.imageLayout = VulkanConverter::to_vk(texture->native_image()->layout());
-                imageInfo.imageView = texture->native_image()->native_image_views()[index];
+                imageInfo.imageView = texture->native_image()->native_image_view(index);
                 imageInfo.sampler = texture->sampler();
                 imageInfos.push_back(imageInfo);
                 break;
@@ -177,6 +175,12 @@ void VulkanDescriptorSet::update() {
         m_dirtyDescriptors.insert(i);
     }
     VulkanCleaner::push(this);
+}
+
+void VulkanDescriptorSet::flush_all() {
+    for (uint32_t i = 0; i < m_descriptorSets.size(); i++){
+        flush(i);
+    }
 }
 
 }

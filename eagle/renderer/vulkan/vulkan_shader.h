@@ -2,6 +2,7 @@
 #define EAGLE_VULKANSHADER_H
 
 #include "eagle/renderer/shader.h"
+#include "eagle/memory/pointer.h"
 #include "vulkan_global_definitions.h"
 #include "vulkan_descriptor_set_layout.h"
 
@@ -22,8 +23,8 @@ public:
     void create_pipeline();
     void cleanup_pipeline();
 
-    const std::vector<std::weak_ptr<DescriptorSetLayout>> get_descriptor_set_layouts() override;
-    const std::weak_ptr<DescriptorSetLayout> get_descriptor_set_layout(uint32_t index) override;
+    const std::vector<WeakPointer<DescriptorSetLayout>> get_descriptor_set_layouts() override;
+    const WeakPointer<DescriptorSetLayout> get_descriptor_set_layout(uint32_t index) override;
 
     VkPipeline &get_pipeline();
 
@@ -40,7 +41,7 @@ private:
     VkPipeline m_graphicsPipeline;
     uint32_t m_outputAttachmentCount = 0;
     std::vector<VkVertexInputBindingDescription> m_inputBindings;
-    std::vector<std::shared_ptr<VulkanDescriptorSetLayout>> m_descriptorSetLayouts;
+    std::vector<StrongPointer<VulkanDescriptorSetLayout>> m_descriptorSetLayouts;
     std::vector<VkVertexInputAttributeDescription> m_inputAttributes;
     std::unordered_map<VkShaderStageFlags, std::vector<uint32_t>> m_shaderCodes;
 

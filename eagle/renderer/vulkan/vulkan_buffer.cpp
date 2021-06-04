@@ -54,10 +54,10 @@ VulkanBuffer::copy_to(void *data, VkDeviceSize size) {
 }
 
 VkResult
-VulkanBuffer::create_buffer(VkPhysicalDevice physicalDevice, VkDevice device, std::shared_ptr<VulkanBuffer> &buffer,
+VulkanBuffer::create_buffer(VkPhysicalDevice physicalDevice, VkDevice device, StrongPointer<VulkanBuffer> &buffer,
                             const VulkanBufferCreateInfo &info, VkDeviceSize size, void *data) {
     EG_TRACE("eagle","Creating vulkan buffer");
-    buffer = std::make_shared<VulkanBuffer>(device, info);
+    buffer = make_strong<VulkanBuffer>(device, info);
     VkResult result;
     VkBufferCreateInfo bufferInfo = {};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

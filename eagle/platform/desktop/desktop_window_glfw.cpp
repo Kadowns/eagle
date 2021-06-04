@@ -117,7 +117,7 @@ void DesktopWindowGLFW::init(EventBus* eventBus) {
     m_mouseCursors[Cursor::HORI_RESIZE] = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
     m_mouseCursors[Cursor::VERT_RESIZE] = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
 
-    m_renderingContext = std::make_shared<VulkanContextGLFW>(this);
+    m_renderingContext = make_strong<VulkanContextGLFW>(this);
     m_renderingContext->init();
 
     EG_TRACE("eagle","Window initialized!");

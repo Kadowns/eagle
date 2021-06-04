@@ -21,7 +21,7 @@ VulkanTexture::VulkanTexture(const TextureCreateInfo &textureCreateInfo,
     nativeImageCreateInfo.graphicsQueue = nativeCreateInfo.graphicsQueue;
     nativeImageCreateInfo.imageCount = nativeCreateInfo.imageCount;
 
-    m_image = std::make_shared<VulkanImage>(textureCreateInfo.imageCreateInfo, nativeImageCreateInfo);
+    m_image = make_strong<VulkanImage>(textureCreateInfo.imageCreateInfo, nativeImageCreateInfo);
     create();
     EG_TRACE("eagle","Vulkan texture constructed!");
 }

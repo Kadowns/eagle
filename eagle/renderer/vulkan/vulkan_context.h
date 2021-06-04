@@ -67,11 +67,11 @@ public:
     virtual void destroy();
 
     bool prepare_frame() override;
-    void submit_command_buffer(const std::shared_ptr<CommandBuffer>& commandBuffer) override;
+    void submit_command_buffer(const WeakPointer<CommandBuffer>& commandBuffer) override;
     void present_frame() override;
 
-    std::shared_ptr<RenderPass> main_render_pass() override;
-    std::shared_ptr<Framebuffer> main_frambuffer() override;
+    WeakPointer<RenderPass> main_render_pass() override;
+    WeakPointer<Framebuffer> main_frambuffer() override;
     //------
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
@@ -139,47 +139,47 @@ protected:
 
 public:
     //inherited via RenderingContext
-    std::weak_ptr<Shader>
+    WeakPointer<Shader>
     create_shader(const ShaderCreateInfo &pipelineInfo) override;
 
-    std::weak_ptr<VertexBuffer>
+    WeakPointer<VertexBuffer>
     create_vertex_buffer(const VertexBufferCreateInfo& usage) override;
 
-    std::weak_ptr<IndexBuffer>
+    WeakPointer<IndexBuffer>
     create_index_buffer(const IndexBufferCreateInfo& createInfo) override;
 
-    std::weak_ptr<UniformBuffer>
+    WeakPointer<UniformBuffer>
     create_uniform_buffer(size_t size, void *data) override;
 
-    std::weak_ptr<DescriptorSetLayout>
+    WeakPointer<DescriptorSetLayout>
     create_descriptor_set_layout(const std::vector<DescriptorBindingDescription> &bindings) override;
 
-    std::weak_ptr<DescriptorSet>
-    create_descriptor_set(const std::weak_ptr<DescriptorSetLayout> &descriptorLayout,
-                          const std::vector<std::weak_ptr<DescriptorItem>> &descriptorItems) override;
+    WeakPointer<DescriptorSet>
+    create_descriptor_set(const WeakPointer<DescriptorSetLayout> &descriptorLayout,
+                          const std::vector<WeakPointer<DescriptorItem>> &descriptorItems) override;
 
-    std::weak_ptr<Texture>
+    WeakPointer<Texture>
     create_texture(const TextureCreateInfo &createInfo) override;
 
-    std::weak_ptr<RenderPass>
+    WeakPointer<RenderPass>
     create_render_pass(const std::vector<RenderAttachmentDescription>& colorAttachments, const RenderAttachmentDescription& depthAttachment) override;
 
-    std::weak_ptr<Framebuffer>
+    WeakPointer<Framebuffer>
     create_framebuffer(const FramebufferCreateInfo& createInfo) override;
 
-    std::weak_ptr<Image>
+    WeakPointer<Image>
     create_image(const ImageCreateInfo& createInfo) override;
 
-    std::weak_ptr<StorageBuffer>
+    WeakPointer<StorageBuffer>
     create_storage_buffer(size_t size, void *data, UpdateType usage) override;
 
-    std::weak_ptr<ComputeShader>
+    WeakPointer<ComputeShader>
     create_compute_shader(const std::string& path) override;
 
-    std::weak_ptr<CommandBuffer>
+    WeakPointer<CommandBuffer>
     create_command_buffer(const CommandBufferCreateInfo& createInfo) override;
 
-    void destroy_texture_2d(const std::shared_ptr<Texture> &texture) override;
+    void destroy_texture_2d(const WeakPointer<Texture> &texture) override;
 
 protected:
 
@@ -199,8 +199,8 @@ protected:
         VkFormat swapchainFormat;
         VkExtent2D extent2D;
         VkSwapchainKHR swapchain;
-        std::shared_ptr<VulkanRenderPass> renderPass;
-        std::shared_ptr<VulkanFramebuffer> framebuffer;
+        StrongPointer<VulkanRenderPass> renderPass;
+        StrongPointer<VulkanFramebuffer> framebuffer;
         std::vector<VkCommandBuffer> commandBuffers;
     } m_present;
 
@@ -214,19 +214,19 @@ protected:
     //compute
     VkQueue m_computeQueue;
 
-    std::vector<std::shared_ptr<VulkanVertexBuffer>> m_vertexBuffers;
-    std::vector<std::shared_ptr<VulkanIndexBuffer>> m_indexBuffers;
-    std::vector<std::shared_ptr<VulkanUniformBuffer>> m_uniformBuffers;
-    std::vector<std::shared_ptr<VulkanStorageBuffer>> m_storageBuffers;
-    std::vector<std::shared_ptr<VulkanDescriptorSet>> m_descriptorSets;
-    std::vector<std::shared_ptr<VulkanDescriptorSetLayout>> m_descriptorSetsLayouts;
-    std::vector<std::shared_ptr<VulkanShader>> m_shaders;
-    std::vector<std::shared_ptr<VulkanComputeShader>> m_computeShaders;
-    std::vector<std::shared_ptr<VulkanTexture>> m_textures;
-    std::vector<std::shared_ptr<VulkanImage>> m_images;
-    std::vector<std::shared_ptr<VulkanRenderPass>> m_renderPasses;
-    std::vector<std::shared_ptr<VulkanFramebuffer>> m_framebuffers;
-    std::vector<std::shared_ptr<VulkanCommandBuffer>> m_commandBuffers;
+    std::vector<StrongPointer<VulkanVertexBuffer>> m_vertexBuffers;
+    std::vector<StrongPointer<VulkanIndexBuffer>> m_indexBuffers;
+    std::vector<StrongPointer<VulkanUniformBuffer>> m_uniformBuffers;
+    std::vector<StrongPointer<VulkanStorageBuffer>> m_storageBuffers;
+    std::vector<StrongPointer<VulkanDescriptorSet>> m_descriptorSets;
+    std::vector<StrongPointer<VulkanDescriptorSetLayout>> m_descriptorSetsLayouts;
+    std::vector<StrongPointer<VulkanShader>> m_shaders;
+    std::vector<StrongPointer<VulkanComputeShader>> m_computeShaders;
+    std::vector<StrongPointer<VulkanTexture>> m_textures;
+    std::vector<StrongPointer<VulkanImage>> m_images;
+    std::vector<StrongPointer<VulkanRenderPass>> m_renderPasses;
+    std::vector<StrongPointer<VulkanFramebuffer>> m_framebuffers;
+    std::vector<StrongPointer<VulkanCommandBuffer>> m_commandBuffers;
 
     uint32_t m_currentFrame = 0;
 

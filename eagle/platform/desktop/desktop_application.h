@@ -9,6 +9,7 @@
 #include "eagle/application.h"
 #include "eagle/log.h"
 #include "eagle/events/event.h"
+#include "eagle/memory/pointer.h"
 
 namespace eagle {
 
@@ -29,8 +30,8 @@ public:
     ApplicationDelegate& delegate() override { return *m_delegate; }
 
 protected:
-    std::shared_ptr<ApplicationDelegate> m_delegate;
-    std::shared_ptr<DesktopWindowGLFW> m_window;
+    StrongPointer<ApplicationDelegate> m_delegate;
+    StrongPointer<DesktopWindowGLFW> m_window;
     EventBus m_eventBus;
 
     bool m_quit = false;

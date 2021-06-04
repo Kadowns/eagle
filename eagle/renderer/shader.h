@@ -14,11 +14,11 @@ namespace eagle {
 
 
 struct ShaderCreateInfo {
-    ShaderCreateInfo(const std::shared_ptr<RenderPass>& renderPass,
+    ShaderCreateInfo(const WeakPointer<RenderPass>& renderPass,
                      const std::unordered_map<ShaderStage, std::string>& shaderStages) :
                      renderPass(renderPass),
                      shaderStages(shaderStages){}
-    std::shared_ptr<RenderPass> renderPass;
+    WeakPointer<RenderPass> renderPass;
     std::unordered_map<ShaderStage, std::string> shaderStages;
     bool blendEnable = false;
     bool depthTesting = false;
@@ -38,8 +38,8 @@ public:
     explicit Shader(const ShaderCreateInfo& createInfo) : m_createInfo(createInfo) {}
     virtual ~Shader() = default;
 
-    virtual const std::vector<std::weak_ptr<DescriptorSetLayout>> get_descriptor_set_layouts() = 0;
-    virtual const std::weak_ptr<DescriptorSetLayout> get_descriptor_set_layout(uint32_t index) = 0;
+    virtual const std::vector<WeakPointer<DescriptorSetLayout>> get_descriptor_set_layouts() = 0;
+    virtual const WeakPointer<DescriptorSetLayout> get_descriptor_set_layout(uint32_t index) = 0;
 protected:
     ShaderCreateInfo m_createInfo;
 

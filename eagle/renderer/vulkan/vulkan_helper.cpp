@@ -281,7 +281,7 @@ VkFormat VulkanHelper::find_depth_format(VkPhysicalDevice physicalDevice) {
 }
 
 void VulkanHelper::create_baked_buffer(VkPhysicalDevice physicalDevice, VkDevice device, VkQueue queue, VkCommandPool commandPool,
-                                       std::shared_ptr<VulkanBuffer>& buffer, VkBufferUsageFlagBits bufferUsage,
+                                       StrongPointer<VulkanBuffer>& buffer, VkBufferUsageFlagBits bufferUsage,
                                        VkDeviceSize size, void* data) {
     if (buffer){
         buffer->unmap();
@@ -292,7 +292,7 @@ void VulkanHelper::create_baked_buffer(VkPhysicalDevice physicalDevice, VkDevice
     createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
     createBufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
-    std::shared_ptr<VulkanBuffer> stagingBuffer;
+    StrongPointer<VulkanBuffer> stagingBuffer;
     VK_CALL
     VulkanBuffer::create_buffer(physicalDevice,
                                 device,
@@ -327,7 +327,7 @@ void VulkanHelper::create_baked_buffer(VkPhysicalDevice physicalDevice, VkDevice
 }
 
 void VulkanHelper::create_dynamic_buffer(VkPhysicalDevice physicalDevice, VkDevice device,
-                                         std::shared_ptr<VulkanBuffer>& buffer, VkBufferUsageFlagBits bufferUsage,
+                                         StrongPointer<VulkanBuffer>& buffer, VkBufferUsageFlagBits bufferUsage,
                                          VkDeviceSize size, void* data) {
     if (buffer){
         buffer->unmap();
@@ -347,14 +347,14 @@ void VulkanHelper::create_dynamic_buffer(VkPhysicalDevice physicalDevice, VkDevi
 }
 
 void VulkanHelper::upload_baked_buffer(VkPhysicalDevice physicalDevice, VkDevice device, VkQueue queue,
-                                       VkCommandPool commandPool, std::shared_ptr<VulkanBuffer>& buffer,
+                                       VkCommandPool commandPool, StrongPointer<VulkanBuffer>& buffer,
                                        VkDeviceSize size, void* data) {
 
     VulkanBufferCreateInfo createBufferInfo = {};
     createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
     createBufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
-    std::shared_ptr<VulkanBuffer> stagingBuffer;
+    StrongPointer<VulkanBuffer> stagingBuffer;
     VK_CALL
     VulkanBuffer::create_buffer(physicalDevice,
                                 device,
@@ -377,7 +377,7 @@ void VulkanHelper::upload_baked_buffer(VkPhysicalDevice physicalDevice, VkDevice
     stagingBuffer->destroy();
 }
 
-void VulkanHelper::upload_dynamic_buffer(std::shared_ptr<VulkanBuffer>& buffer, VkDeviceSize size, void* data) {
+void VulkanHelper::upload_dynamic_buffer(StrongPointer<VulkanBuffer>& buffer, VkDeviceSize size, void* data) {
     buffer->copy_to(data, size);
     buffer->flush();
 }

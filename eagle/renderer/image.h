@@ -21,6 +21,7 @@ struct ImageCreateInfo {
     std::vector<ImageUsage> usages;
     std::vector<MemoryProperty> memoryProperties = {MemoryProperty::DEVICE_LOCAL};
     std::vector<ImageAspect> aspects;
+    bool useMultiBuffering = false;
 };
 
 class Image : public DescriptorItem {

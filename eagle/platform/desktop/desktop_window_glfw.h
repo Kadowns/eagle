@@ -8,6 +8,7 @@
 
 #include <eagle/core_global_definitions.h>
 #include <eagle/window.h>
+#include <eagle/memory/pointer.h>
 
 struct GLFWwindow;
 struct GLFWcursor;
@@ -56,7 +57,7 @@ private:
 
     GLFWwindow* m_window;
     std::map<Cursor, GLFWcursor*> m_mouseCursors;
-    std::shared_ptr<VulkanContextGLFW> m_renderingContext;
+    StrongPointer<VulkanContextGLFW> m_renderingContext;
 };
 
 }
