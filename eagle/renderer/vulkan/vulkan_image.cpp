@@ -124,8 +124,8 @@ void VulkanImage::create() {
     VkImageSubresourceRange subresourceRange = {};
     subresourceRange.layerCount = m_createInfo.arrayLayers;
     subresourceRange.baseArrayLayer = 0;
+    subresourceRange.levelCount = m_createInfo.mipLevels;
     subresourceRange.baseMipLevel = 0;
-    subresourceRange.levelCount = 1;
     subresourceRange.aspectMask = VulkanConverter::to_vk_flags<VkImageAspectFlags>(m_createInfo.aspects);
 
     m_views.resize(m_memories.size());
