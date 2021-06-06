@@ -27,8 +27,9 @@ public:
 
     //Used for swapchain images
     VulkanImage(const ImageCreateInfo& imageCreateInfo, const VulkanImageCreateInfo& nativeCreateInfo, std::vector<VkImage> images);
-    virtual ~VulkanImage();
-    virtual DescriptorType type() const override;
+    ~VulkanImage();
+    DescriptorType type() const override;
+    void generate_mipmaps() override;
 
     inline VkImage& native_image(size_t index) { return m_images[index % m_nativeCreateInfo.imageCount]; }
     inline VkDeviceMemory& native_memory(size_t index) { return m_memories[index % m_nativeCreateInfo.imageCount]; }
@@ -39,7 +40,7 @@ public:
     inline const VkImageView& native_image_view(size_t index) const { return m_views[index % m_nativeCreateInfo.imageCount]; }
 
 protected:
-    virtual void on_resize() override;
+    void on_resize() override;
 
     void copy_buffer_data_to_image(VkImageSubresourceRange subresourceRange, uint32_t index);
 

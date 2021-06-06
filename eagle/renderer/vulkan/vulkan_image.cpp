@@ -252,6 +252,118 @@ void VulkanImage::copy_buffer_data_to_image(VkImageSubresourceRange subresourceR
     EG_TRACE("eagle","Buffer copied to image!");
 }
 
+void VulkanImage::generate_mipmaps() {
+
+    for (auto image : m_images){
+
+        //First, transition the entire image layout to VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+        {
+            VkImageSubresourceRange subresourceRange = {};
+            subresourceRange.layerCount = m_createInfo.arrayLayers;
+            subresourceRange.baseArrayLayer = 0;
+            subresourceRange.baseMipLevel = 0;
+            subresourceRange.levelCount = m_createInfo.mipLevels;
+            subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+
+            VulkanHelper::transition_image_layout(
+                    m_nativeCreateInfo.device,
+                    m_nativeCreateInfo.commandPool,
+                    m_nativeCreateInfo.graphicsQueue,
+                    image,
+                    VK_IMAGE_LAYOUT_UNDEFINED,
+                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                    subresourceRange
+            );
+        }
+
+        VkCommandBuffer commandBuffer = VulkanHelper::begin_single_time_commands(m_nativeCreateInfo.device,
+                                                                                 m_nativeCreateInfo.commandPool);
+
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.image = image;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = m_createInfo.arrayLayers;
+        barrier.subresourceRange.levelCount = 1;
+
+        int32_t mipWidth = m_createInfo.width;
+        int32_t mipHeight = m_createInfo.height;
+
+        for (uint32_t i = 1; i < m_createInfo.mipLevels; i++) {
+            barrier.subresourceRange.baseMipLevel = i - 1;
+            barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+            vkCmdPipelineBarrier(commandBuffer,
+                                 VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
+                                 0, nullptr,
+                                 0, nullptr,
+                                 1, &barrier);
+
+            VkImageBlit blit{};
+            blit.srcOffsets[0] = { 0, 0, 0 };
+            blit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
+            blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            blit.srcSubresource.mipLevel = i - 1;
+            blit.srcSubresource.baseArrayLayer = 0;
+            blit.srcSubresource.layerCount = m_createInfo.arrayLayers;
+            blit.dstOffsets[0] = { 0, 0, 0 };
+            blit.dstOffsets[1] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
+            blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            blit.dstSubresource.mipLevel = i;
+            blit.dstSubresource.baseArrayLayer = 0;
+            blit.dstSubresource.layerCount =  m_createInfo.arrayLayers;
+
+            vkCmdBlitImage(commandBuffer,
+                           image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                           image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                           1, &blit,
+                           VK_FILTER_LINEAR);
+
+            barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            barrier.newLayout = VulkanConverter::to_vk(m_createInfo.layout);
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+            //TODO: maybe allow different pipeline stages?
+            vkCmdPipelineBarrier(commandBuffer,
+                                 VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
+                                 0, nullptr,
+                                 0, nullptr,
+                                 1, &barrier);
+
+            if (mipWidth > 1) mipWidth /= 2;
+            if (mipHeight > 1) mipHeight /= 2;
+        }
+
+        // Wait for last mip level blit
+        barrier.subresourceRange.baseMipLevel = m_createInfo.mipLevels - 1;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.newLayout = VulkanConverter::to_vk(m_createInfo.layout);
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        vkCmdPipelineBarrier(commandBuffer,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
+                             0, nullptr,
+                             0, nullptr,
+                             1, &barrier);
+
+
+        VK_CALL VulkanHelper::end_single_time_commnds(
+                m_nativeCreateInfo.device,
+                m_nativeCreateInfo.commandPool,
+                commandBuffer,
+                m_nativeCreateInfo.graphicsQueue
+        );
+    }
+}
+
 void VulkanImage::clear() {
     EG_TRACE("eagle","Clearing a vulkan image!");
     for (auto& view : m_views){

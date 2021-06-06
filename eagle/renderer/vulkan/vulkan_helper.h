@@ -23,7 +23,8 @@ public:
     find_memory_type(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
     static void
-    create_image_sampler(VkDevice device, VkSampler &sampler, VkSamplerAddressMode wrapMode, VkFilter filter);
+    create_image_sampler(VkDevice device, VkSampler& sampler, VkSamplerAddressMode wrapMode, VkFilter filter,
+                         uint32_t mipLevels);
 
     static VkCommandBuffer
     begin_single_time_commands(VkDevice device, VkCommandPool commandPool);

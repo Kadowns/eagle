@@ -234,8 +234,8 @@ VulkanHelper::transition_image_layout(VkDevice device, VkCommandPool commandPool
 }
 
 void
-VulkanHelper::create_image_sampler(VkDevice device, VkSampler &sampler, VkSamplerAddressMode wrapMode,
-                                   VkFilter filter) {
+VulkanHelper::create_image_sampler(VkDevice device, VkSampler& sampler, VkSamplerAddressMode wrapMode, VkFilter filter,
+                                   uint32_t mipLevels) {
     VkSamplerCreateInfo samplerInfo = {};
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     samplerInfo.magFilter = filter;
@@ -252,7 +252,7 @@ VulkanHelper::create_image_sampler(VkDevice device, VkSampler &sampler, VkSample
     samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
     samplerInfo.mipLodBias = 0.0f;
     samplerInfo.minLod = 0.0f;
-    samplerInfo.maxLod = 1;
+    samplerInfo.maxLod = static_cast<float>(mipLevels);
 
     if (vkCreateSampler(device, &samplerInfo, nullptr, &sampler) != VK_SUCCESS) {
         throw std::runtime_error("failed to create texture sampler!");

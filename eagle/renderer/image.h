@@ -31,6 +31,7 @@ public:
         m_createInfo(createInfo) {}
 
     virtual ~Image() = default;
+    virtual void generate_mipmaps() = 0;
 
     inline uint32_t width() const { return m_createInfo.width; }
     inline uint32_t height() const { return m_createInfo.height; }

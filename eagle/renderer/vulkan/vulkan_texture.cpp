@@ -34,12 +34,12 @@ VulkanTexture::~VulkanTexture() {
 
 void VulkanTexture::create() {
     EG_TRACE("eagle","Creating a vulkan texture!");
-    VK_CALL VulkanHelper::create_image_sampler(
+    VK_CALL
+    VulkanHelper::create_image_sampler(
             m_nativeCreateInfo.device,
             m_sampler,
             VK_SAMPLER_ADDRESS_MODE_REPEAT,
-            VulkanConverter::to_vk(m_createInfo.filter)
-    );
+            VulkanConverter::to_vk(m_createInfo.filter), m_createInfo.imageCreateInfo.mipLevels);
     EG_TRACE("eagle","Vulkan texture created!");
 }
 
