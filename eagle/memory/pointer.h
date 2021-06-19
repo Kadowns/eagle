@@ -269,7 +269,7 @@ public:
         return WeakPointer<T2>((typename BasePointer<T2>::SharedObject*)m_sharedObject);
     }
 
-    WeakPointer& operator=(const WeakPointer& rhs){
+    WeakPointer<T>& operator=(const WeakPointer<T>& rhs){
         if (this == &rhs) return *this;
 
         if (m_sharedObject){
@@ -283,7 +283,7 @@ public:
         return *this;
     }
 
-    WeakPointer& operator=(WeakPointer&& rhs) noexcept {
+    WeakPointer<T>& operator=(WeakPointer<T>&& rhs) noexcept {
         if (this == &rhs) return *this;
 
         if (m_sharedObject){
