@@ -93,18 +93,18 @@ void VulkanDescriptorSet::flush(uint32_t index) {
                 break;
             }
             case DescriptorType::SAMPLED_IMAGE:{
-                auto image = descriptor.cast<VulkanImage>();
+                auto view = descriptor.cast<VulkanImageView>();
                 VkDescriptorImageInfo imageInfo = {};
-                imageInfo.imageLayout = VulkanConverter::to_vk(image->layout());
-                imageInfo.imageView = image->native_image_view(index);
+                imageInfo.imageLayout = VulkanConverter::to_vk(view->image().layout());
+                imageInfo.imageView = view->native_image_view(index);
                 imageInfos.push_back(imageInfo);
                 break;
             }
             case DescriptorType::STORAGE_IMAGE:{
-                auto image = descriptor.cast<VulkanImage>();
+                auto view = descriptor.cast<VulkanImageView>();
                 VkDescriptorImageInfo imageInfo = {};
-                imageInfo.imageLayout = VulkanConverter::to_vk(image->layout());
-                imageInfo.imageView = image->native_image_view(index);
+                imageInfo.imageLayout = VulkanConverter::to_vk(view->image().layout());
+                imageInfo.imageView = view->native_image_view(index);
                 imageInfos.push_back(imageInfo);
                 break;
             }
@@ -113,7 +113,7 @@ void VulkanDescriptorSet::flush(uint32_t index) {
                 auto texture = descriptor.cast<VulkanTexture>();
                 VkDescriptorImageInfo imageInfo = {};
                 imageInfo.imageLayout = VulkanConverter::to_vk(texture->native_image()->layout());
-                imageInfo.imageView = texture->native_image()->native_image_view(index);
+                imageInfo.imageView = texture->native_image()->native_view()->native_image_view(index);
                 imageInfo.sampler = texture->sampler();
                 imageInfos.push_back(imageInfo);
                 break;

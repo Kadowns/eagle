@@ -27,26 +27,25 @@ VulkanImage::VulkanImage(const ImageCreateInfo &imageCreateInfo, const VulkanIma
         m_createdFromExternalImage(true){
     EG_TRACE("eagle","Creating a vulkan image from a swapchain image!");
 
-    m_descriptorType = DescriptorType::SAMPLED_IMAGE;
-
     VkImageSubresourceRange subresourceRange = {};
     subresourceRange.layerCount = 1;
     subresourceRange.baseArrayLayer = 0;
-    subresourceRange.baseMipLevel = 0;
     subresourceRange.levelCount = 1;
+    subresourceRange.baseMipLevel = 0;
     subresourceRange.aspectMask = VulkanConverter::to_vk_flags<VkImageAspectFlags>(m_createInfo.aspects);
 
+    VulkanImageViewCreateInfo viewCreateInfo = {};
+    viewCreateInfo.image = this;
+    viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    viewCreateInfo.descriptorType = DescriptorType::SAMPLED_IMAGE;
+    viewCreateInfo.imageCount = m_images.size();
+    viewCreateInfo.subresourceRange = subresourceRange;
+    viewCreateInfo.device = m_nativeCreateInfo.device;
+    viewCreateInfo.format = VulkanConverter::to_vk(m_createInfo.format);
+
     m_views.resize(m_images.size());
-    for (int i = 0; i < m_views.size(); i++) {
-        VK_CALL
-        VulkanHelper::create_image_view(
-                m_nativeCreateInfo.device,
-                m_images[i],
-                m_views[i],
-                VulkanConverter::to_vk(m_createInfo.format),
-                VK_IMAGE_VIEW_TYPE_2D,
-                subresourceRange
-        );
+    for (auto& view : m_views) {
+        view.reset_all(new VulkanImageView(viewCreateInfo));
     }
 
     EG_TRACE("eagle","Vulkan image created from a swapchain image!");
@@ -85,7 +84,6 @@ void VulkanImage::create() {
         imageInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
     }
 
-
     if (imageInfo.flags & VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT){
         assert(m_createInfo.width == m_createInfo.height && "Image width and height must be equal when creating a cube map");
         assert(m_createInfo.arrayLayers >= 6 && "Image array layers must be equal or greater than 6 when creating a cube map");
@@ -97,9 +95,6 @@ void VulkanImage::create() {
             throw std::runtime_error("failed to create image!");
         }
     }
-
-    m_descriptorType = imageInfo.usage & VK_IMAGE_USAGE_STORAGE_BIT ? DescriptorType::STORAGE_IMAGE : DescriptorType::SAMPLED_IMAGE;
-
 
     VkMemoryRequirements memRequirements;
     VK_CALL vkGetImageMemoryRequirements(m_nativeCreateInfo.device, m_images[0], &memRequirements);
@@ -128,12 +123,12 @@ void VulkanImage::create() {
     subresourceRange.baseMipLevel = 0;
     subresourceRange.aspectMask = VulkanConverter::to_vk_flags<VkImageAspectFlags>(m_createInfo.aspects);
 
-    m_views.resize(m_memories.size());
-    for (int i = 0; i < m_views.size(); i++) {
+    for (int i = 0; i < m_nativeCreateInfo.imageCount; i++) {
         if (!m_createInfo.buffer.empty()) {
             copy_buffer_data_to_image(subresourceRange, i);
         } else {
-            VK_CALL VulkanHelper::transition_image_layout(
+            VK_CALL
+            VulkanHelper::transition_image_layout(
                     m_nativeCreateInfo.device,
                     m_nativeCreateInfo.commandPool,
                     m_nativeCreateInfo.graphicsQueue,
@@ -143,20 +138,21 @@ void VulkanImage::create() {
                     subresourceRange
             );
         }
+    }
 
-        VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
-        if (m_createInfo.type == ImageType::CUBE){
-            viewType = VK_IMAGE_VIEW_TYPE_CUBE;
-        }
+    VulkanImageViewCreateInfo viewCreateInfo = {};
+    viewCreateInfo.image = this;
+    viewCreateInfo.viewType = m_createInfo.type == ImageType::CUBE ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
+    viewCreateInfo.descriptorType = imageInfo.usage & VK_IMAGE_USAGE_STORAGE_BIT ? DescriptorType::STORAGE_IMAGE : DescriptorType::SAMPLED_IMAGE;
+    viewCreateInfo.imageCount = m_images.size();
+    viewCreateInfo.subresourceRange = subresourceRange;
+    viewCreateInfo.device = m_nativeCreateInfo.device;
+    viewCreateInfo.format = VulkanConverter::to_vk(m_createInfo.format);
 
-        VK_CALL VulkanHelper::create_image_view(
-                m_nativeCreateInfo.device,
-                m_images[i],
-                m_views[i],
-                VulkanConverter::to_vk(m_createInfo.format),
-                viewType,
-                subresourceRange
-        );
+    m_views.resize(m_createInfo.mipLevels);
+    for (uint32_t i = 0; i < m_views.size(); i++) {
+        viewCreateInfo.subresourceRange.baseMipLevel = i;
+        m_views[i].reset_all(new VulkanImageView(viewCreateInfo));
     }
     EG_TRACE("eagle","Vulkan image created!");
 }
@@ -366,10 +362,9 @@ void VulkanImage::generate_mipmaps() {
 
 void VulkanImage::clear() {
     EG_TRACE("eagle","Clearing a vulkan image!");
+
     for (auto& view : m_views){
-        if (view){
-            VK_CALL vkDestroyImageView(m_nativeCreateInfo.device, view, nullptr);
-        }
+        view.reset_all();
     }
 
     if (!m_createdFromExternalImage) {
@@ -385,14 +380,50 @@ void VulkanImage::clear() {
             }
         }
     }
-    m_views.clear();
     m_memories.clear();
     m_images.clear();
     EG_TRACE("eagle","Vulkan image cleared!");
 }
 
-DescriptorType VulkanImage::type() const {
-    return m_descriptorType;
+WeakPointer<ImageView> VulkanImage::view(uint32_t mipLevel) {
+    return m_views[mipLevel];
+}
+
+VulkanImageView::VulkanImageView(const VulkanImageViewCreateInfo& createInfo) : m_createInfo(createInfo) {
+
+    m_views.resize(createInfo.imageCount);
+
+    for (uint32_t i = 0; i < m_views.size(); i++){
+        VK_CALL VulkanHelper::create_image_view(
+                createInfo.device,
+                createInfo.image->native_image(i),
+                m_views[i],
+                createInfo.format,
+                createInfo.viewType,
+                createInfo.subresourceRange
+        );
+    }
+}
+
+DescriptorType VulkanImageView::type() const {
+    return m_createInfo.descriptorType;
+}
+
+
+uint32_t VulkanImageView::mip_level() const {
+    return m_createInfo.subresourceRange.baseMipLevel;
+}
+
+Image& VulkanImageView::image() const {
+    return *m_createInfo.image;
+}
+
+VulkanImageView::~VulkanImageView() {
+    for (auto& view : m_views){
+        if (view){
+            VK_CALL vkDestroyImageView(m_createInfo.device, view, nullptr);
+        }
+    }
 }
 
 }
