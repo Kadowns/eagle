@@ -608,31 +608,33 @@ void VulkanContext::create_render_pass() {
 
     EG_TRACE("eagle","Creating a present render pass!");
 
-    VkAttachmentDescription colorAttachment = {};
-    colorAttachment.format = m_present.swapchainFormat;
-    colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    RenderAttachmentDescription colorAttachment = {};
+    colorAttachment.format = VulkanConverter::to_eg(m_present.swapchainFormat);
+    colorAttachment.loadOp = AttachmentLoadOperator::CLEAR;
+    colorAttachment.storeOp = AttachmentStoreOperator::STORE;
+    colorAttachment.stencilLoadOp = AttachmentLoadOperator::DONT_CARE;
+    colorAttachment.stencilStoreOp = AttachmentStoreOperator::DONT_CARE;
+    colorAttachment.initialLayout = ImageLayout::UNDEFINED;
+    colorAttachment.finalLayout = ImageLayout::PRESENT_SRC_KHR;
 
-    VkAttachmentDescription depthAttachment = {};
-    depthAttachment.format = VulkanHelper::find_depth_format(m_physicalDevice);
-    depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    RenderAttachmentDescription depthAttachment = {};
+    depthAttachment.format = VulkanConverter::to_eg(VulkanHelper::find_depth_format(m_physicalDevice));
+    depthAttachment.loadOp = AttachmentLoadOperator::CLEAR;
+    depthAttachment.storeOp = AttachmentStoreOperator::DONT_CARE;
+    depthAttachment.stencilLoadOp = AttachmentLoadOperator::DONT_CARE;
+    depthAttachment.stencilStoreOp = AttachmentStoreOperator::DONT_CARE;
+    depthAttachment.initialLayout = ImageLayout::UNDEFINED;
+    depthAttachment.finalLayout = ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+    RenderPassCreateInfo renderPassCreateInfo = {};
+    renderPassCreateInfo.colorAttachments = {colorAttachment};
+    renderPassCreateInfo.depthAttachment = depthAttachment;
 
 
-    VulkanRenderPassCreateInfo createInfo = {};
-    createInfo.device = m_device;
+    VulkanRenderPassCreateInfo vulkanCreateInfo = {};
+    vulkanCreateInfo.device = m_device;
 
-    m_present.renderPass = make_strong<VulkanRenderPass>(createInfo, colorAttachment, depthAttachment);
+    m_present.renderPass = make_strong<VulkanRenderPass>(std::move(renderPassCreateInfo), vulkanCreateInfo);
 
     EG_TRACE("eagle","Present render pass created!");
 }
@@ -963,13 +965,11 @@ VulkanContext::create_image(const ImageCreateInfo &createInfo) {
     return m_images.back();
 }
 
+WeakPointer <RenderPass> VulkanContext::create_render_pass(RenderPassCreateInfo createInfo) {
+    VulkanRenderPassCreateInfo vulkanCreateInfo = {};
+    vulkanCreateInfo.device = m_device;
 
-WeakPointer<RenderPass> VulkanContext::create_render_pass(const std::vector<RenderAttachmentDescription> &colorAttachments,
-                                                     const RenderAttachmentDescription &depthAttachment) {
-    VulkanRenderPassCreateInfo createInfo = {};
-    createInfo.device = m_device;
-
-    m_renderPasses.emplace_back(make_strong<VulkanRenderPass>(createInfo, colorAttachments, depthAttachment));
+    m_renderPasses.emplace_back(make_strong<VulkanRenderPass>(createInfo, vulkanCreateInfo));
     return m_renderPasses.back();
 }
 

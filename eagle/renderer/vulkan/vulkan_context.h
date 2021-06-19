@@ -161,8 +161,8 @@ public:
     WeakPointer<Texture>
     create_texture(const TextureCreateInfo &createInfo) override;
 
-    WeakPointer<RenderPass>
-    create_render_pass(const std::vector<RenderAttachmentDescription>& colorAttachments, const RenderAttachmentDescription& depthAttachment) override;
+    WeakPointer <RenderPass>
+    create_render_pass(RenderPassCreateInfo createInfo) override;
 
     WeakPointer<Framebuffer>
     create_framebuffer(const FramebufferCreateInfo& createInfo) override;

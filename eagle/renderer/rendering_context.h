@@ -68,8 +68,8 @@ public:
     virtual eagle::WeakPointer<Texture>
     create_texture(const TextureCreateInfo &createInfo) = 0;
 
-    virtual eagle::WeakPointer<RenderPass>
-    create_render_pass(const std::vector<RenderAttachmentDescription>& colorAttachments, const RenderAttachmentDescription& depthAttachment) = 0;
+    virtual WeakPointer <RenderPass>
+    create_render_pass(RenderPassCreateInfo createInfo) = 0;
 
     virtual eagle::WeakPointer<Framebuffer>
     create_framebuffer(const FramebufferCreateInfo& createInfo) = 0;

@@ -21,23 +21,24 @@ struct RenderAttachmentDescription {
     ImageLayout finalLayout;
 };
 
+struct RenderPassCreateInfo {
+    std::vector<RenderAttachmentDescription> colorAttachments;
+    RenderAttachmentDescription depthAttachment;
+};
+
 class RenderPass {
 public:
 
-    RenderPass(const std::vector<RenderAttachmentDescription> &colorAttachments, const RenderAttachmentDescription& depthAttachment) :
-        m_colorAttachments(colorAttachments),
-        m_depthAttachment(depthAttachment) {}
-    RenderPass(const RenderAttachmentDescription& colorAttachment, const RenderAttachmentDescription& depthAttachment) :
-        RenderPass(std::vector<RenderAttachmentDescription>{colorAttachment}, depthAttachment) {}
+    RenderPass(RenderPassCreateInfo  renderPassCreateInfo) :
+            m_createInfo(std::move(renderPassCreateInfo)) {}
 
     virtual ~RenderPass() = default;
 
-    inline const std::vector<RenderAttachmentDescription>& color_attachments() const { return m_colorAttachments; }
-    inline const RenderAttachmentDescription& depth_attachment() const { return m_depthAttachment; }
+    inline const std::vector<RenderAttachmentDescription>& color_attachments() const { return m_createInfo.colorAttachments; }
+    inline const RenderAttachmentDescription& depth_attachment() const { return m_createInfo.depthAttachment; }
 
 protected:
-    const std::vector<RenderAttachmentDescription> m_colorAttachments;
-    const RenderAttachmentDescription m_depthAttachment;
+    RenderPassCreateInfo m_createInfo;
 };
 
 }

@@ -17,18 +17,7 @@ struct VulkanRenderPassCreateInfo {
 
 class VulkanRenderPass : public RenderPass {
 public:
-    VulkanRenderPass(const VulkanRenderPassCreateInfo& createInfo,
-                     const VkAttachmentDescription& colorAttachment,
-                     const VkAttachmentDescription& depthAttachment);
-
-
-    VulkanRenderPass(const VulkanRenderPassCreateInfo& createInfo,
-                     const std::vector<RenderAttachmentDescription>& colorAttachments,
-                     const RenderAttachmentDescription& depthAttachment);
-
-    VulkanRenderPass(const VulkanRenderPassCreateInfo& createInfo,
-                     const std::vector<VkAttachmentDescription>& colorAttachments,
-                     const VkAttachmentDescription& depthAttachment);
+    VulkanRenderPass(RenderPassCreateInfo createInfo, const VulkanRenderPassCreateInfo& vulkanCreateInfo);
 
     virtual ~VulkanRenderPass();
 
@@ -43,7 +32,7 @@ private:
     void create_native_render_pass();
 
 private:
-    VulkanRenderPassCreateInfo m_createInfo;
+    VulkanRenderPassCreateInfo m_vulkanCreateInfo;
     std::vector<VkAttachmentDescription> m_vkColorAttachments;
     VkAttachmentDescription m_vkDepthAttachment;
     std::vector<VkClearValue> m_clearValues;

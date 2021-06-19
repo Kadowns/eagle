@@ -7,30 +7,14 @@
 
 namespace eagle {
 
-VulkanRenderPass::VulkanRenderPass(const VulkanRenderPassCreateInfo &createInfo,
-                                   const VkAttachmentDescription &colorAttachment,
-                                   const VkAttachmentDescription &depthAttachment) :
-    VulkanRenderPass(createInfo, std::vector<VkAttachmentDescription>{colorAttachment}, depthAttachment){
-
-}
-
-
-VulkanRenderPass::VulkanRenderPass(const VulkanRenderPassCreateInfo &createInfo,
-                                   const std::vector<VkAttachmentDescription> &colorAttachments,
-                                   const VkAttachmentDescription &depthAttachment) :
-    VulkanRenderPass(createInfo, VulkanConverter::to_eg_vector<RenderAttachmentDescription>(colorAttachments), VulkanConverter::to_eg(depthAttachment)){
-
-}
-
-VulkanRenderPass::VulkanRenderPass(const VulkanRenderPassCreateInfo &createInfo,
-                                   const std::vector<RenderAttachmentDescription> &colorAttachments,
-                                   const RenderAttachmentDescription &depthAttachment) :
-    RenderPass(colorAttachments, depthAttachment),
-    m_createInfo(createInfo) {
+VulkanRenderPass::VulkanRenderPass(
+        RenderPassCreateInfo createInfo,
+        const VulkanRenderPassCreateInfo& vulkanCreateInfo) :
+        RenderPass(std::move(createInfo)),
+        m_vulkanCreateInfo(vulkanCreateInfo) {
     EG_TRACE("eagle","Creating a VulkanRenderPass!");
-
-    m_vkColorAttachments = std::move(VulkanConverter::to_vk_vector<VkAttachmentDescription>(colorAttachments));
-    m_vkDepthAttachment = VulkanConverter::to_vk(depthAttachment);
+    m_vkColorAttachments = std::move(VulkanConverter::to_vk_vector<VkAttachmentDescription>(m_createInfo.colorAttachments));
+    m_vkDepthAttachment = VulkanConverter::to_vk(m_createInfo.depthAttachment);
 
     m_clearValues.resize(m_vkColorAttachments.size());
     std::for_each(m_clearValues.begin(), m_clearValues.end(), [](VkClearValue& value){
@@ -95,7 +79,7 @@ void VulkanRenderPass::create_native_render_pass() {
     renderPassInfo.dependencyCount = dependencies.size();
     renderPassInfo.pDependencies = dependencies.data();
 
-    VK_CALL_ASSERT(vkCreateRenderPass(m_createInfo.device, &renderPassInfo, nullptr, &m_vkRenderPass)) {
+    VK_CALL_ASSERT(vkCreateRenderPass(m_vulkanCreateInfo.device, &renderPassInfo, nullptr, &m_vkRenderPass)) {
         throw std::runtime_error("failed to create render pass!");
     }
 
@@ -110,7 +94,7 @@ VulkanRenderPass::~VulkanRenderPass() {
 
 void VulkanRenderPass::cleanup() {
     EG_TRACE("eagle","Cleaning up a VulkanRenderPass!");
-    VK_CALL vkDestroyRenderPass(m_createInfo.device, m_vkRenderPass, nullptr);
+    VK_CALL vkDestroyRenderPass(m_vulkanCreateInfo.device, m_vkRenderPass, nullptr);
     EG_TRACE("eagle","VulkanRenderPass cleaned!");
 }
 
