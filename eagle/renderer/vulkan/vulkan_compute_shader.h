@@ -32,9 +32,11 @@ public:
 
     void dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
-    void update_image(uint32_t binding, const WeakPointer<Image>& image) override;
+    void update_image(uint32_t binding, const WeakPointer <ImageView>& image) override;
 
     void update_descriptors() override;
+
+    void update_push_constants(void* data, size_t size) override;
 
     void join() override;
 
@@ -63,6 +65,7 @@ private:
     StrongPointer<VulkanDescriptorSet> m_descriptorSet;
     VkCommandBuffer m_commandBuffer;
     VkFence m_fence;
+    std::vector<uint8_t> m_pushConstantData;
 
     bool m_cleared = true;
 };

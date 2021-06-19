@@ -152,6 +152,10 @@ void VulkanComputeShader::dispatch(uint32_t groupCountX, uint32_t groupCountY, u
 
     VK_CALL vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_computePipeline);
 
+    if (!m_pushConstantData.empty()){
+        VK_CALL vkCmdPushConstants(m_commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, m_pushConstantData.size(), m_pushConstantData.data());
+    }
+
     VK_CALL vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipelineLayout, 0, 1, &m_descriptorSet->get_descriptors()[*m_createInfo.imageIndex], 0, nullptr);
 
     VK_CALL vkCmdDispatch(m_commandBuffer, groupCountX, groupCountY, groupCountZ);
@@ -181,7 +185,7 @@ void VulkanComputeShader::recreate(uint32_t bufferCount) {
     create_descriptor_sets();
 }
 
-void VulkanComputeShader::update_image(uint32_t binding, const WeakPointer<Image>& image) {
+void VulkanComputeShader::update_image(uint32_t binding, const WeakPointer<ImageView>& image) {
     m_descriptorSet->operator[](binding) = image;
 }
 
@@ -191,6 +195,11 @@ void VulkanComputeShader::join() {
 
 void VulkanComputeShader::update_descriptors() {
     m_descriptorSet->flush_all();
+}
+
+void VulkanComputeShader::update_push_constants(void* data, size_t size) {
+    m_pushConstantData.resize(size);
+    memcpy(m_pushConstantData.data(), data, size);
 }
 
 
