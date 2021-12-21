@@ -14,7 +14,6 @@ struct VulkanRenderPassCreateInfo {
     VkDevice device;
 };
 
-
 class VulkanRenderPass : public RenderPass {
 public:
     VulkanRenderPass(RenderPassCreateInfo createInfo, const VulkanRenderPassCreateInfo& vulkanCreateInfo);
@@ -23,8 +22,7 @@ public:
 
     void cleanup();
 
-    inline const std::vector<VkAttachmentDescription>& native_color_attachments() const { return m_vkColorAttachments; }
-    inline const VkAttachmentDescription& native_depth_attachment() const { return m_vkDepthAttachment; }
+    inline const std::vector<VkAttachmentDescription>& native_attachments() const { return m_vkAttachments; }
     inline const VkRenderPass& native_render_pass() const { return m_vkRenderPass; }
     inline const std::vector<VkClearValue>& clear_values() const { return m_clearValues; }
 
@@ -33,8 +31,7 @@ private:
 
 private:
     VulkanRenderPassCreateInfo m_vulkanCreateInfo;
-    std::vector<VkAttachmentDescription> m_vkColorAttachments;
-    VkAttachmentDescription m_vkDepthAttachment;
+    std::vector<VkAttachmentDescription> m_vkAttachments;
     std::vector<VkClearValue> m_clearValues;
     VkRenderPass m_vkRenderPass;
 };

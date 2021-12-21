@@ -8,6 +8,7 @@
 #include <eagle/renderer/renderer_global_definitions.h>
 
 #include <utility>
+#include <optional>
 
 namespace eagle {
 
@@ -21,9 +22,32 @@ struct RenderAttachmentDescription {
     ImageLayout finalLayout;
 };
 
+struct SubpassDependency {
+    uint32_t srcSubpass;
+    uint32_t dstSubpass;
+    PipelineStageFlags srcStageMask;
+    PipelineStageFlags dstStageMask;
+    AccessFlags srcAccessMask;
+    AccessFlags dstAccessMask;
+    DependencyFlags dependencyFlags;
+};
+
+struct AttachmentReference {
+    uint32_t attachmentIndex;
+    ImageLayout layout;
+};
+
+struct SubpassDescription {
+    std::vector<AttachmentReference> colorReferences;
+    std::vector<AttachmentReference> inputReferences;
+    std::optional<AttachmentReference> depthStencilReference;
+};
+
 struct RenderPassCreateInfo {
-    std::vector<RenderAttachmentDescription> colorAttachments;
-    RenderAttachmentDescription depthAttachment;
+    std::vector<RenderAttachmentDescription> attachments;
+    std::vector<SubpassDescription> subpassDescriptions;
+    std::vector<SubpassDependency> subpassDependencies;
+
 };
 
 class RenderPass {
@@ -34,8 +58,7 @@ public:
 
     virtual ~RenderPass() = default;
 
-    inline const std::vector<RenderAttachmentDescription>& color_attachments() const { return m_createInfo.colorAttachments; }
-    inline const RenderAttachmentDescription& depth_attachment() const { return m_createInfo.depthAttachment; }
+    inline const std::vector<RenderAttachmentDescription>& attachments() const { return m_createInfo.attachments; }
 
 protected:
     RenderPassCreateInfo m_createInfo;

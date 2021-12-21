@@ -126,7 +126,7 @@ void VulkanImage::create() {
     for (int i = 0; i < m_nativeCreateInfo.imageCount; i++) {
         if (!m_createInfo.buffer.empty()) {
             copy_buffer_data_to_image(subresourceRange, i);
-        } else {
+        } else if (m_createInfo.layout != ImageLayout::UNDEFINED){
             VK_CALL
             VulkanHelper::transition_image_layout(
                     m_nativeCreateInfo.device,
@@ -146,6 +146,7 @@ void VulkanImage::create() {
     viewCreateInfo.descriptorType = imageInfo.usage & VK_IMAGE_USAGE_STORAGE_BIT ? DescriptorType::STORAGE_IMAGE : DescriptorType::SAMPLED_IMAGE;
     viewCreateInfo.imageCount = m_images.size();
     viewCreateInfo.subresourceRange = subresourceRange;
+    viewCreateInfo.subresourceRange.levelCount = VK_REMAINING_MIP_LEVELS;
     viewCreateInfo.device = m_nativeCreateInfo.device;
     viewCreateInfo.format = VulkanConverter::to_vk(m_createInfo.format);
 

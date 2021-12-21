@@ -32,7 +32,7 @@ void VulkanShaderUtils::add_bindings_from_shader_stage(const std::vector<uint32_
         std::sort(std::begin(reflectedDescriptorBindings), std::end(reflectedDescriptorBindings),
                   [](const SpvReflectDescriptorBinding* a, const SpvReflectDescriptorBinding* b)
                   {
-                      return a->set < b->set || a->binding < b->binding;
+                      return a->set < b->set || (a->binding < b->binding && a->set == b->set);
                   });
 
         for (auto& reflectedBinding : reflectedDescriptorBindings){

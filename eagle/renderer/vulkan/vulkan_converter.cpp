@@ -821,68 +821,68 @@ VkMemoryPropertyFlagBits VulkanConverter::to_vk(MemoryProperty usage) {
     return result;
 }
 
-PipelineStage VulkanConverter::to_eg(VkPipelineStageFlagBits stage) {
-    PipelineStage result;
+PipelineStageFlagsBits VulkanConverter::to_eg(VkPipelineStageFlagBits stage) {
+    PipelineStageFlagsBits result;
     switch(stage){
-        case VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT: result = PipelineStage::TOP_OF_PIPE_BIT; break;
-        case VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT: result = PipelineStage::DRAW_INDIRECT_BIT; break;
-        case VK_PIPELINE_STAGE_VERTEX_INPUT_BIT: result = PipelineStage::VERTEX_INPUT_BIT; break;
-        case VK_PIPELINE_STAGE_VERTEX_SHADER_BIT: result = PipelineStage::VERTEX_SHADER_BIT; break;
-        case VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT: result = PipelineStage::TESSELLATION_CONTROL_SHADER_BIT; break;
-        case VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT: result = PipelineStage::TESSELLATION_EVALUATION_SHADER_BIT; break;
-        case VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT: result = PipelineStage::GEOMETRY_SHADER_BIT; break;
-        case VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT: result = PipelineStage::FRAGMENT_SHADER_BIT; break;
-        case VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT: result = PipelineStage::EARLY_FRAGMENT_TESTS_BIT; break;
-        case VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT: result = PipelineStage::LATE_FRAGMENT_TESTS_BIT; break;
-        case VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT: result = PipelineStage::COLOR_ATTACHMENT_OUTPUT_BIT; break;
-        case VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT: result = PipelineStage::COMPUTE_SHADER_BIT; break;
-        case VK_PIPELINE_STAGE_TRANSFER_BIT: result = PipelineStage::TRANSFER_BIT; break;
-        case VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT: result = PipelineStage::BOTTOM_OF_PIPE_BIT; break;
-        case VK_PIPELINE_STAGE_HOST_BIT: result = PipelineStage::HOST_BIT; break;
-        case VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT: result = PipelineStage::ALL_GRAPHICS_BIT; break;
-        case VK_PIPELINE_STAGE_ALL_COMMANDS_BIT: result = PipelineStage::ALL_COMMANDS_BIT; break;
-        case VK_PIPELINE_STAGE_TRANSFORM_FEEDBACK_BIT_EXT: result = PipelineStage::TRANSFORM_FEEDBACK_BIT_EXT; break;
-        case VK_PIPELINE_STAGE_CONDITIONAL_RENDERING_BIT_EXT: result = PipelineStage::CONDITIONAL_RENDERING_BIT_EXT; break;
+        case VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT: result = PipelineStageFlagsBits::TOP_OF_PIPE_BIT; break;
+        case VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT: result = PipelineStageFlagsBits::DRAW_INDIRECT_BIT; break;
+        case VK_PIPELINE_STAGE_VERTEX_INPUT_BIT: result = PipelineStageFlagsBits::VERTEX_INPUT_BIT; break;
+        case VK_PIPELINE_STAGE_VERTEX_SHADER_BIT: result = PipelineStageFlagsBits::VERTEX_SHADER_BIT; break;
+        case VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT: result = PipelineStageFlagsBits::TESSELLATION_CONTROL_SHADER_BIT; break;
+        case VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT: result = PipelineStageFlagsBits::TESSELLATION_EVALUATION_SHADER_BIT; break;
+        case VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT: result = PipelineStageFlagsBits::GEOMETRY_SHADER_BIT; break;
+        case VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT: result = PipelineStageFlagsBits::FRAGMENT_SHADER_BIT; break;
+        case VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT: result = PipelineStageFlagsBits::EARLY_FRAGMENT_TESTS_BIT; break;
+        case VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT: result = PipelineStageFlagsBits::LATE_FRAGMENT_TESTS_BIT; break;
+        case VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT: result = PipelineStageFlagsBits::COLOR_ATTACHMENT_OUTPUT_BIT; break;
+        case VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT: result = PipelineStageFlagsBits::COMPUTE_SHADER_BIT; break;
+        case VK_PIPELINE_STAGE_TRANSFER_BIT: result = PipelineStageFlagsBits::TRANSFER_BIT; break;
+        case VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT: result = PipelineStageFlagsBits::BOTTOM_OF_PIPE_BIT; break;
+        case VK_PIPELINE_STAGE_HOST_BIT: result = PipelineStageFlagsBits::HOST_BIT; break;
+        case VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT: result = PipelineStageFlagsBits::ALL_GRAPHICS_BIT; break;
+        case VK_PIPELINE_STAGE_ALL_COMMANDS_BIT: result = PipelineStageFlagsBits::ALL_COMMANDS_BIT; break;
+        case VK_PIPELINE_STAGE_TRANSFORM_FEEDBACK_BIT_EXT: result = PipelineStageFlagsBits::TRANSFORM_FEEDBACK_BIT_EXT; break;
+        case VK_PIPELINE_STAGE_CONDITIONAL_RENDERING_BIT_EXT: result = PipelineStageFlagsBits::CONDITIONAL_RENDERING_BIT_EXT; break;
 //        case VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR: result = PipelineStage::RAY_TRACING_SHADER_BIT_KHR; break;
 //        case VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR: result = PipelineStage::ACCELERATION_STRUCTURE_BUILD_BIT_KHR; break;
-        case VK_PIPELINE_STAGE_SHADING_RATE_IMAGE_BIT_NV: result = PipelineStage::SHADING_RATE_IMAGE_BIT_NV; break;
-        case VK_PIPELINE_STAGE_TASK_SHADER_BIT_NV: result = PipelineStage::TASK_SHADER_BIT_NV; break;
-        case VK_PIPELINE_STAGE_MESH_SHADER_BIT_NV: result = PipelineStage::MESH_SHADER_BIT_NV; break;
-        case VK_PIPELINE_STAGE_FRAGMENT_DENSITY_PROCESS_BIT_EXT: result = PipelineStage::FRAGMENT_DENSITY_PROCESS_BIT_EXT; break;
+        case VK_PIPELINE_STAGE_SHADING_RATE_IMAGE_BIT_NV: result = PipelineStageFlagsBits::SHADING_RATE_IMAGE_BIT_NV; break;
+        case VK_PIPELINE_STAGE_TASK_SHADER_BIT_NV: result = PipelineStageFlagsBits::TASK_SHADER_BIT_NV; break;
+        case VK_PIPELINE_STAGE_MESH_SHADER_BIT_NV: result = PipelineStageFlagsBits::MESH_SHADER_BIT_NV; break;
+        case VK_PIPELINE_STAGE_FRAGMENT_DENSITY_PROCESS_BIT_EXT: result = PipelineStageFlagsBits::FRAGMENT_DENSITY_PROCESS_BIT_EXT; break;
 //        case VK_PIPELINE_STAGE_COMMAND_PREPROCESS_BIT_NV: result = PipelineStage::COMMAND_PREPROCESS_BIT_NV; break;
         default: throw std::runtime_error("Invalid VkPipelineStageFlagBits on conversion");
     }
     return result;
 }
 
-VkPipelineStageFlagBits VulkanConverter::to_vk(PipelineStage stage) {
+VkPipelineStageFlagBits VulkanConverter::to_vk(PipelineStageFlagsBits stage) {
     VkPipelineStageFlagBits result;
     switch(stage){
-        case PipelineStage::TOP_OF_PIPE_BIT: result = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT; break;
-        case PipelineStage::DRAW_INDIRECT_BIT: result = VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT; break;
-        case PipelineStage::VERTEX_INPUT_BIT: result = VK_PIPELINE_STAGE_VERTEX_INPUT_BIT; break;
-        case PipelineStage::VERTEX_SHADER_BIT: result = VK_PIPELINE_STAGE_VERTEX_SHADER_BIT; break;
-        case PipelineStage::TESSELLATION_CONTROL_SHADER_BIT: result = VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT; break;
-        case PipelineStage::TESSELLATION_EVALUATION_SHADER_BIT: result = VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT; break;
-        case PipelineStage::GEOMETRY_SHADER_BIT: result = VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT; break;
-        case PipelineStage::FRAGMENT_SHADER_BIT: result = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT; break;
-        case PipelineStage::EARLY_FRAGMENT_TESTS_BIT: result = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT; break;
-        case PipelineStage::LATE_FRAGMENT_TESTS_BIT: result = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT; break;
-        case PipelineStage::COLOR_ATTACHMENT_OUTPUT_BIT: result = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; break;
-        case PipelineStage::COMPUTE_SHADER_BIT: result = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT; break;
-        case PipelineStage::TRANSFER_BIT: result = VK_PIPELINE_STAGE_TRANSFER_BIT; break;
-        case PipelineStage::BOTTOM_OF_PIPE_BIT: result = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT; break;
-        case PipelineStage::HOST_BIT: result = VK_PIPELINE_STAGE_HOST_BIT; break;
-        case PipelineStage::ALL_GRAPHICS_BIT: result = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT; break;
-        case PipelineStage::ALL_COMMANDS_BIT: result = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT; break;
-        case PipelineStage::TRANSFORM_FEEDBACK_BIT_EXT: result = VK_PIPELINE_STAGE_TRANSFORM_FEEDBACK_BIT_EXT; break;
-        case PipelineStage::CONDITIONAL_RENDERING_BIT_EXT: result = VK_PIPELINE_STAGE_CONDITIONAL_RENDERING_BIT_EXT; break;
+        case PipelineStageFlagsBits::TOP_OF_PIPE_BIT: result = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT; break;
+        case PipelineStageFlagsBits::DRAW_INDIRECT_BIT: result = VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT; break;
+        case PipelineStageFlagsBits::VERTEX_INPUT_BIT: result = VK_PIPELINE_STAGE_VERTEX_INPUT_BIT; break;
+        case PipelineStageFlagsBits::VERTEX_SHADER_BIT: result = VK_PIPELINE_STAGE_VERTEX_SHADER_BIT; break;
+        case PipelineStageFlagsBits::TESSELLATION_CONTROL_SHADER_BIT: result = VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT; break;
+        case PipelineStageFlagsBits::TESSELLATION_EVALUATION_SHADER_BIT: result = VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT; break;
+        case PipelineStageFlagsBits::GEOMETRY_SHADER_BIT: result = VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT; break;
+        case PipelineStageFlagsBits::FRAGMENT_SHADER_BIT: result = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT; break;
+        case PipelineStageFlagsBits::EARLY_FRAGMENT_TESTS_BIT: result = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT; break;
+        case PipelineStageFlagsBits::LATE_FRAGMENT_TESTS_BIT: result = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT; break;
+        case PipelineStageFlagsBits::COLOR_ATTACHMENT_OUTPUT_BIT: result = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; break;
+        case PipelineStageFlagsBits::COMPUTE_SHADER_BIT: result = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT; break;
+        case PipelineStageFlagsBits::TRANSFER_BIT: result = VK_PIPELINE_STAGE_TRANSFER_BIT; break;
+        case PipelineStageFlagsBits::BOTTOM_OF_PIPE_BIT: result = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT; break;
+        case PipelineStageFlagsBits::HOST_BIT: result = VK_PIPELINE_STAGE_HOST_BIT; break;
+        case PipelineStageFlagsBits::ALL_GRAPHICS_BIT: result = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT; break;
+        case PipelineStageFlagsBits::ALL_COMMANDS_BIT: result = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT; break;
+        case PipelineStageFlagsBits::TRANSFORM_FEEDBACK_BIT_EXT: result = VK_PIPELINE_STAGE_TRANSFORM_FEEDBACK_BIT_EXT; break;
+        case PipelineStageFlagsBits::CONDITIONAL_RENDERING_BIT_EXT: result = VK_PIPELINE_STAGE_CONDITIONAL_RENDERING_BIT_EXT; break;
 //        case PipelineStage::RAY_TRACING_SHADER_BIT_KHR: result = VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR; break;
 //        case PipelineStage::ACCELERATION_STRUCTURE_BUILD_BIT_KHR: result = VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR; break;
-        case PipelineStage::SHADING_RATE_IMAGE_BIT_NV: result = VK_PIPELINE_STAGE_SHADING_RATE_IMAGE_BIT_NV; break;
-        case PipelineStage::TASK_SHADER_BIT_NV: result = VK_PIPELINE_STAGE_TASK_SHADER_BIT_NV; break;
-        case PipelineStage::MESH_SHADER_BIT_NV: result = VK_PIPELINE_STAGE_MESH_SHADER_BIT_NV; break;
-        case PipelineStage::FRAGMENT_DENSITY_PROCESS_BIT_EXT: result = VK_PIPELINE_STAGE_FRAGMENT_DENSITY_PROCESS_BIT_EXT; break;
+        case PipelineStageFlagsBits::SHADING_RATE_IMAGE_BIT_NV: result = VK_PIPELINE_STAGE_SHADING_RATE_IMAGE_BIT_NV; break;
+        case PipelineStageFlagsBits::TASK_SHADER_BIT_NV: result = VK_PIPELINE_STAGE_TASK_SHADER_BIT_NV; break;
+        case PipelineStageFlagsBits::MESH_SHADER_BIT_NV: result = VK_PIPELINE_STAGE_MESH_SHADER_BIT_NV; break;
+        case PipelineStageFlagsBits::FRAGMENT_DENSITY_PROCESS_BIT_EXT: result = VK_PIPELINE_STAGE_FRAGMENT_DENSITY_PROCESS_BIT_EXT; break;
 //        case PipelineStage::COMMAND_PREPROCESS_BIT_NV: result = VK_PIPELINE_STAGE_COMMAND_PREPROCESS_BIT_NV; break;
         default: throw std::runtime_error("Invalid PipelineStage on conversion");
     }
@@ -947,6 +947,98 @@ CullMode VulkanConverter::to_eg(VkCullModeFlagBits mode) {
         case VK_CULL_MODE_BACK_BIT: result = CullMode::BACK_BIT; break;
         case VK_CULL_MODE_FRONT_AND_BACK: result = CullMode::FRONT_AND_BACK; break;
         default: throw std::runtime_error("Invalid VkCullModeFlagBits on conversion");
+    }
+    return result;
+}
+
+VkAccessFlagBits VulkanConverter::to_vk(AccessFlagBits access) {
+    VkAccessFlagBits result;
+    switch(access){
+        case AccessFlagBits::INDIRECT_COMMAND_READ_BIT: result = VK_ACCESS_INDIRECT_COMMAND_READ_BIT; break;
+        case AccessFlagBits::INDEX_READ_BIT: result = VK_ACCESS_INDEX_READ_BIT; break;
+        case AccessFlagBits::VERTEX_ATTRIBUTE_READ_BIT: result = VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT; break;
+        case AccessFlagBits::UNIFORM_READ_BIT: result = VK_ACCESS_UNIFORM_READ_BIT; break;
+        case AccessFlagBits::INPUT_ATTACHMENT_READ_BIT: result = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT; break;
+        case AccessFlagBits::SHADER_READ_BIT: result = VK_ACCESS_SHADER_READ_BIT; break;
+        case AccessFlagBits::SHADER_WRITE_BIT: result = VK_ACCESS_SHADER_WRITE_BIT; break;
+        case AccessFlagBits::COLOR_ATTACHMENT_READ_BIT: result = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT; break;
+        case AccessFlagBits::COLOR_ATTACHMENT_WRITE_BIT: result = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; break;
+        case AccessFlagBits::DEPTH_STENCIL_ATTACHMENT_READ_BIT: result = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT; break;
+        case AccessFlagBits::DEPTH_STENCIL_ATTACHMENT_WRITE_BIT: result = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT; break;
+        case AccessFlagBits::TRANSFER_READ_BIT: result = VK_ACCESS_TRANSFER_READ_BIT; break;
+        case AccessFlagBits::TRANSFER_WRITE_BIT: result = VK_ACCESS_TRANSFER_WRITE_BIT; break;
+        case AccessFlagBits::HOST_READ_BIT: result = VK_ACCESS_HOST_READ_BIT; break;
+        case AccessFlagBits::HOST_WRITE_BIT: result = VK_ACCESS_HOST_WRITE_BIT; break;
+        case AccessFlagBits::MEMORY_READ_BIT: result = VK_ACCESS_MEMORY_READ_BIT; break;
+        case AccessFlagBits::MEMORY_WRITE_BIT: result = VK_ACCESS_MEMORY_WRITE_BIT; break;
+        case AccessFlagBits::TRANSFORM_FEEDBACK_WRITE_BIT_EXT: result = VK_ACCESS_TRANSFORM_FEEDBACK_WRITE_BIT_EXT; break;
+        case AccessFlagBits::TRANSFORM_FEEDBACK_COUNTER_READ_BIT_EXT: result = VK_ACCESS_TRANSFORM_FEEDBACK_COUNTER_READ_BIT_EXT; break;
+        case AccessFlagBits::TRANSFORM_FEEDBACK_COUNTER_WRITE_BIT_EXT: result = VK_ACCESS_TRANSFORM_FEEDBACK_COUNTER_WRITE_BIT_EXT; break;
+        case AccessFlagBits::CONDITIONAL_RENDERING_READ_BIT_EXT: result = VK_ACCESS_CONDITIONAL_RENDERING_READ_BIT_EXT; break;
+        case AccessFlagBits::COLOR_ATTACHMENT_READ_NONCOHERENT_BIT_EXT: result = VK_ACCESS_COLOR_ATTACHMENT_READ_NONCOHERENT_BIT_EXT; break;
+        case AccessFlagBits::ACCELERATION_STRUCTURE_READ_BIT_KHR: result = VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR; break;
+        case AccessFlagBits::ACCELERATION_STRUCTURE_WRITE_BIT_KHR: result = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR; break;
+        case AccessFlagBits::SHADING_RATE_IMAGE_READ_BIT_NV: result = VK_ACCESS_SHADING_RATE_IMAGE_READ_BIT_NV; break;
+        case AccessFlagBits::FRAGMENT_DENSITY_MAP_READ_BIT_EXT: result = VK_ACCESS_FRAGMENT_DENSITY_MAP_READ_BIT_EXT; break;
+        case AccessFlagBits::COMMAND_PREPROCESS_READ_BIT_NV: result = VK_ACCESS_COMMAND_PREPROCESS_READ_BIT_NV; break;
+        case AccessFlagBits::COMMAND_PREPROCESS_WRITE_BIT_NV: result = VK_ACCESS_COMMAND_PREPROCESS_WRITE_BIT_NV; break;
+        case AccessFlagBits::FLAG_BITS_MAX_ENUM: result = VK_ACCESS_FLAG_BITS_MAX_ENUM; break;
+    }
+    return result;
+}
+
+AccessFlagBits VulkanConverter::to_eg(VkAccessFlagBits access) {
+    AccessFlagBits result;
+    switch(access){
+        case VK_ACCESS_INDIRECT_COMMAND_READ_BIT: result = AccessFlagBits::INDIRECT_COMMAND_READ_BIT; break;
+        case VK_ACCESS_INDEX_READ_BIT: result = AccessFlagBits::INDEX_READ_BIT; break;
+        case VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT: result = AccessFlagBits::VERTEX_ATTRIBUTE_READ_BIT; break;
+        case VK_ACCESS_UNIFORM_READ_BIT: result = AccessFlagBits::UNIFORM_READ_BIT; break;
+        case VK_ACCESS_INPUT_ATTACHMENT_READ_BIT: result = AccessFlagBits::INPUT_ATTACHMENT_READ_BIT; break;
+        case VK_ACCESS_SHADER_READ_BIT: result = AccessFlagBits::SHADER_READ_BIT; break;
+        case VK_ACCESS_SHADER_WRITE_BIT: result = AccessFlagBits::SHADER_WRITE_BIT; break;
+        case VK_ACCESS_COLOR_ATTACHMENT_READ_BIT: result = AccessFlagBits::COLOR_ATTACHMENT_READ_BIT; break;
+        case VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT: result = AccessFlagBits::COLOR_ATTACHMENT_WRITE_BIT; break;
+        case VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT: result = AccessFlagBits::DEPTH_STENCIL_ATTACHMENT_READ_BIT; break;
+        case VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT: result = AccessFlagBits::DEPTH_STENCIL_ATTACHMENT_WRITE_BIT; break;
+        case VK_ACCESS_TRANSFER_READ_BIT: result = AccessFlagBits::TRANSFER_READ_BIT; break;
+        case VK_ACCESS_TRANSFER_WRITE_BIT: result = AccessFlagBits::TRANSFER_WRITE_BIT; break;
+        case VK_ACCESS_HOST_READ_BIT: result = AccessFlagBits::HOST_READ_BIT; break;
+        case VK_ACCESS_HOST_WRITE_BIT: result = AccessFlagBits::HOST_WRITE_BIT; break;
+        case VK_ACCESS_MEMORY_READ_BIT: result = AccessFlagBits::MEMORY_READ_BIT; break;
+        case VK_ACCESS_MEMORY_WRITE_BIT: result = AccessFlagBits::MEMORY_WRITE_BIT; break;
+        case VK_ACCESS_TRANSFORM_FEEDBACK_WRITE_BIT_EXT: result = AccessFlagBits::TRANSFORM_FEEDBACK_WRITE_BIT_EXT; break;
+        case VK_ACCESS_TRANSFORM_FEEDBACK_COUNTER_READ_BIT_EXT: result = AccessFlagBits::TRANSFORM_FEEDBACK_COUNTER_READ_BIT_EXT; break;
+        case VK_ACCESS_TRANSFORM_FEEDBACK_COUNTER_WRITE_BIT_EXT: result = AccessFlagBits::TRANSFORM_FEEDBACK_COUNTER_WRITE_BIT_EXT; break;
+        case VK_ACCESS_CONDITIONAL_RENDERING_READ_BIT_EXT: result = AccessFlagBits::CONDITIONAL_RENDERING_READ_BIT_EXT; break;
+        case VK_ACCESS_COLOR_ATTACHMENT_READ_NONCOHERENT_BIT_EXT: result = AccessFlagBits::COLOR_ATTACHMENT_READ_NONCOHERENT_BIT_EXT; break;
+        case VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR: result = AccessFlagBits::ACCELERATION_STRUCTURE_READ_BIT_KHR; break;
+        case VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR: result = AccessFlagBits::ACCELERATION_STRUCTURE_WRITE_BIT_KHR; break;
+        case VK_ACCESS_SHADING_RATE_IMAGE_READ_BIT_NV: result = AccessFlagBits::SHADING_RATE_IMAGE_READ_BIT_NV; break;
+        case VK_ACCESS_FRAGMENT_DENSITY_MAP_READ_BIT_EXT: result = AccessFlagBits::FRAGMENT_DENSITY_MAP_READ_BIT_EXT; break;
+        case VK_ACCESS_COMMAND_PREPROCESS_READ_BIT_NV: result = AccessFlagBits::COMMAND_PREPROCESS_READ_BIT_NV; break;
+        case VK_ACCESS_COMMAND_PREPROCESS_WRITE_BIT_NV: result = AccessFlagBits::COMMAND_PREPROCESS_WRITE_BIT_NV; break;
+        case VK_ACCESS_FLAG_BITS_MAX_ENUM: result = AccessFlagBits::FLAG_BITS_MAX_ENUM; break;
+    }
+    return result;
+}
+
+VkDependencyFlagBits VulkanConverter::to_vk(DependencyFlagBits dependency) {
+    VkDependencyFlagBits result;
+    switch(dependency){
+        case BY_REGION_BIT: result = VK_DEPENDENCY_BY_REGION_BIT; break;
+        case DEVICE_GROUP_BIT: result = VK_DEPENDENCY_DEVICE_GROUP_BIT; break;
+        case VIEW_LOCAL_BIT: result = VK_DEPENDENCY_VIEW_LOCAL_BIT; break;
+    }
+    return result;
+}
+
+DependencyFlagBits VulkanConverter::to_eg(VkDependencyFlagBits dependency) {
+    DependencyFlagBits result;
+    switch(dependency){
+        case VK_DEPENDENCY_BY_REGION_BIT: result = DependencyFlagBits::BY_REGION_BIT; break;
+        case VK_DEPENDENCY_DEVICE_GROUP_BIT: result = DependencyFlagBits::DEVICE_GROUP_BIT; break;
+        case VK_DEPENDENCY_VIEW_LOCAL_BIT: result = DependencyFlagBits::VIEW_LOCAL_BIT; break;
     }
     return result;
 }

@@ -31,6 +31,13 @@ class Window;
 class RenderingContext {
 public:
 
+    struct Properties {
+        Format presentFormat;
+        Format depthFormat;
+    };
+
+public:
+
     RenderingContext() = default;
     virtual ~RenderingContext() = default;
 
@@ -40,6 +47,8 @@ public:
 
     virtual eagle::WeakPointer<RenderPass> main_render_pass() = 0;
     virtual eagle::WeakPointer<Framebuffer> main_frambuffer() = 0;
+
+    virtual const Properties& properties() = 0;
 
     virtual eagle::WeakPointer<Shader>
     create_shader(const ShaderCreateInfo &shaderCreateInfo) = 0;
@@ -56,7 +65,8 @@ public:
     virtual eagle::WeakPointer<StorageBuffer>
     create_storage_buffer(size_t size, void *data, UpdateType usage) = 0;
 
-    virtual eagle::WeakPointer<CommandBuffer> create_command_buffer(const CommandBufferCreateInfo& createInfo) = 0;
+    virtual eagle::WeakPointer<CommandBuffer>
+    create_command_buffer(const CommandBufferCreateInfo& createInfo) = 0;
 
     virtual eagle::WeakPointer<DescriptorSetLayout>
     create_descriptor_set_layout(const std::vector<DescriptorBindingDescription> &bindings) = 0;

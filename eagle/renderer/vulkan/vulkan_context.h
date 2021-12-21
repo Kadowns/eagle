@@ -72,6 +72,8 @@ public:
 
     WeakPointer<RenderPass> main_render_pass() override;
     WeakPointer<Framebuffer> main_frambuffer() override;
+
+    const Properties& properties() override;
     //------
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
@@ -183,6 +185,8 @@ public:
 
 protected:
 
+    Properties m_properties;
+
     Window* m_window;
 
     VkInstance m_instance;
@@ -196,7 +200,6 @@ protected:
     struct {
         uint32_t imageIndex = 0;
         uint32_t imageCount;
-        VkFormat swapchainFormat;
         VkExtent2D extent2D;
         VkSwapchainKHR swapchain;
         StrongPointer<VulkanRenderPass> renderPass;

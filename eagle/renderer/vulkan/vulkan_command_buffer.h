@@ -42,7 +42,7 @@ public:
                       uint32_t vertexOffset, uint32_t firstInstance) override;
     void set_viewport(float w, float h, float x, float y, float minDepth, float maxDepth) override;
     void set_scissor(uint32_t w, uint32_t h, uint32_t x, uint32_t y) override;
-    void pipeline_barrier(const WeakPointer<Image> &image, const std::vector<PipelineStage> &srcPipelineStages, const std::vector<PipelineStage> &dstPipelineStages) override;
+    void pipeline_barrier(const WeakPointer<Image> &image, const std::vector<PipelineStageFlagsBits> &srcPipelineStages, const std::vector<PipelineStageFlagsBits> &dstPipelineStages) override;
     void dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
     void bind_compute_shader(const WeakPointer<ComputeShader> &shader) override;
     void bind_descriptor_sets(const WeakPointer<ComputeShader> &shader, const WeakPointer<DescriptorSet> &descriptorSet, uint32_t setIndex) override;

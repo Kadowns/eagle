@@ -25,6 +25,8 @@
 
 namespace eagle {
 
+typedef uint32_t Flags;
+
 enum class Cursor {
     ARROW = 0,
     TEXT = 1,

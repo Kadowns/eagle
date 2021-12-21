@@ -39,14 +39,48 @@ public:
     static VkImageAspectFlagBits to_vk(ImageAspect aspect);
     static MemoryProperty to_eg(VkMemoryPropertyFlagBits property);
     static VkMemoryPropertyFlagBits to_vk(MemoryProperty property);
-    static PipelineStage to_eg(VkPipelineStageFlagBits stage);
-    static VkPipelineStageFlagBits to_vk(PipelineStage stage);
+    static PipelineStageFlagsBits to_eg(VkPipelineStageFlagBits stage);
+    static VkPipelineStageFlagBits to_vk(PipelineStageFlagsBits stage);
     static VkCommandBufferLevel to_vk(CommandBufferLevel level);
     static CommandBufferLevel to_eg(VkCommandBufferLevel level);
     static VkVertexInputRate to_vk(VertexInputRate rate);
     static VertexInputRate to_eg(VkVertexInputRate rate);
     static VkCullModeFlags to_vk(CullMode mode);
     static CullMode to_eg(VkCullModeFlagBits mode);
+    static VkAccessFlagBits to_vk(AccessFlagBits access);
+    static AccessFlagBits to_eg(VkAccessFlagBits access);
+    static VkDependencyFlagBits to_vk(DependencyFlagBits access);
+    static DependencyFlagBits to_eg(VkDependencyFlagBits access);
+
+
+    template<typename EgBitType>
+    static VkFlags eg_flags_to_vk_flags(Flags flags){
+        VkFlags result = 0;
+        uint32_t bit = 0;
+        while (bit < sizeof(Flags) * 8){
+            auto flag = static_cast<EgBitType>(flags & (1u << bit));
+            if (flag){
+                result |= to_vk(flag);
+            }
+            bit++;
+        }
+        return result;
+    }
+
+    template<typename VkBitType>
+    static Flags vk_flags_to_eg_flags(VkFlags flags){
+        Flags result = 0;
+        uint32_t bit = 0;
+
+        while (bit < sizeof(Flags) * 8){
+            auto flag = static_cast<VkBitType>(flags & (1u << bit));
+            if (flag){
+                result |= to_eg(flag);
+            }
+            bit++;
+        }
+        return result;
+    }
 
     template<typename EG, typename VK>
     static std::vector<EG> eg_vector_from_vk_flags(VK flags){

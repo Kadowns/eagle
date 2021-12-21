@@ -227,8 +227,8 @@ void VulkanCommandBuffer::set_scissor(uint32_t w, uint32_t h, uint32_t x, uint32
     VK_CALL vkCmdSetScissor(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], 0, 1, &scissor);
 }
 
-void VulkanCommandBuffer::pipeline_barrier(const WeakPointer<Image> &image, const std::vector<PipelineStage> &srcPipelineStages,
-                                           const std::vector<PipelineStage> &dstPipelineStages) {
+void VulkanCommandBuffer::pipeline_barrier(const WeakPointer<Image> &image, const std::vector<PipelineStageFlagsBits> &srcPipelineStages,
+                                           const std::vector<PipelineStageFlagsBits> &dstPipelineStages) {
     VkImageMemoryBarrier imageMemoryBarrier = {};
     imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     // We won't be changing the layout of the image

@@ -519,7 +519,7 @@ void VulkanContext::create_swapchain() {
     //verifica se a swap chain consegue gerar imagens de qualque tamanho e, caso n�o consiga, define qual vai ser o tamanho permitido
     VkExtent2D extent = choose_swap_extent(swapChainSupport.capabilities);
 
-    m_present.swapchainFormat = surfaceFormat.format;
+    m_properties.presentFormat = VulkanConverter::to_eg(surfaceFormat.format);
     m_present.extent2D = extent;
 
     //caso maxImageCount seja 0, a queue da swapchain suporta qualquer quantidade de imagens
@@ -609,7 +609,7 @@ void VulkanContext::create_render_pass() {
     EG_TRACE("eagle","Creating a present render pass!");
 
     RenderAttachmentDescription colorAttachment = {};
-    colorAttachment.format = VulkanConverter::to_eg(m_present.swapchainFormat);
+    colorAttachment.format = m_properties.presentFormat;
     colorAttachment.loadOp = AttachmentLoadOperator::CLEAR;
     colorAttachment.storeOp = AttachmentStoreOperator::STORE;
     colorAttachment.stencilLoadOp = AttachmentLoadOperator::DONT_CARE;
@@ -617,8 +617,10 @@ void VulkanContext::create_render_pass() {
     colorAttachment.initialLayout = ImageLayout::UNDEFINED;
     colorAttachment.finalLayout = ImageLayout::PRESENT_SRC_KHR;
 
+    m_properties.depthFormat = VulkanConverter::to_eg(VulkanHelper::find_depth_format(m_physicalDevice));
+
     RenderAttachmentDescription depthAttachment = {};
-    depthAttachment.format = VulkanConverter::to_eg(VulkanHelper::find_depth_format(m_physicalDevice));
+    depthAttachment.format = m_properties.depthFormat;
     depthAttachment.loadOp = AttachmentLoadOperator::CLEAR;
     depthAttachment.storeOp = AttachmentStoreOperator::DONT_CARE;
     depthAttachment.stencilLoadOp = AttachmentLoadOperator::DONT_CARE;
@@ -626,9 +628,46 @@ void VulkanContext::create_render_pass() {
     depthAttachment.initialLayout = ImageLayout::UNDEFINED;
     depthAttachment.finalLayout = ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
+    SubpassDescription subpassDescription = {};
+    subpassDescription.colorReferences = {{0, ImageLayout::COLOR_ATTACHMENT_OPTIMAL}};
+    subpassDescription.depthStencilReference = {1, ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL};
+
+//    SubpassDependency subpassDependency = {};
+//    subpassDependency.dependencyFlags = DependencyFlagBits::BY_REGION_BIT;
+//    subpassDependency.srcSubpass = EG_SUBPASS_EXTERNAL;
+//    subpassDependency.dstSubpass = 0;
+//    //wait for last image output
+//    subpassDependency.srcStageMask = PipelineStageFlagsBits::COLOR_ATTACHMENT_OUTPUT_BIT;
+//
+//    //execute on image output
+//    subpassDependency.dstStageMask = PipelineStageFlagsBits::COLOR_ATTACHMENT_OUTPUT_BIT;
+//
+//    //we don't care about access on external subpass
+//    subpassDependency.srcAccessMask = 0;
+//
+//    //we will write on our color attachment
+//    subpassDependency.dstAccessMask = AccessFlagBits::COLOR_ATTACHMENT_WRITE_BIT;
+
+
     RenderPassCreateInfo renderPassCreateInfo = {};
-    renderPassCreateInfo.colorAttachments = {colorAttachment};
-    renderPassCreateInfo.depthAttachment = depthAttachment;
+    renderPassCreateInfo.subpassDescriptions = {subpassDescription};
+    renderPassCreateInfo.attachments = {colorAttachment, depthAttachment};
+
+    renderPassCreateInfo.subpassDependencies.resize(2);
+    renderPassCreateInfo.subpassDependencies[0].srcSubpass = EG_SUBPASS_EXTERNAL;
+    renderPassCreateInfo.subpassDependencies[0].dstSubpass = 0;
+    renderPassCreateInfo.subpassDependencies[0].srcStageMask = eagle::PipelineStageFlagsBits::COLOR_ATTACHMENT_OUTPUT_BIT;
+    renderPassCreateInfo.subpassDependencies[0].dstStageMask = eagle::PipelineStageFlagsBits::COLOR_ATTACHMENT_OUTPUT_BIT;
+    renderPassCreateInfo.subpassDependencies[0].srcAccessMask = 0;
+    renderPassCreateInfo.subpassDependencies[0].dstAccessMask = eagle::AccessFlagBits::COLOR_ATTACHMENT_READ_BIT | eagle::AccessFlagBits::COLOR_ATTACHMENT_WRITE_BIT;
+
+    renderPassCreateInfo.subpassDependencies[1].srcSubpass = 0;
+    renderPassCreateInfo.subpassDependencies[1].dstSubpass = EG_SUBPASS_EXTERNAL;
+    renderPassCreateInfo.subpassDependencies[1].srcStageMask = eagle::PipelineStageFlagsBits::COLOR_ATTACHMENT_OUTPUT_BIT;
+    renderPassCreateInfo.subpassDependencies[1].dstStageMask = eagle::PipelineStageFlagsBits::FRAGMENT_SHADER_BIT;
+    renderPassCreateInfo.subpassDependencies[1].srcAccessMask = eagle::AccessFlagBits::COLOR_ATTACHMENT_WRITE_BIT;
+    renderPassCreateInfo.subpassDependencies[1].dstAccessMask = eagle::AccessFlagBits::SHADER_READ_BIT;
+    renderPassCreateInfo.subpassDependencies[1].dependencyFlags = eagle::DependencyFlagBits::BY_REGION_BIT;
 
 
     VulkanRenderPassCreateInfo vulkanCreateInfo = {};
@@ -652,7 +691,7 @@ void VulkanContext::create_framebuffers() {
     ImageCreateInfo imageCreateInfo = {};
     imageCreateInfo.width = m_present.extent2D.width;
     imageCreateInfo.height = m_present.extent2D.height;
-    imageCreateInfo.format = VulkanConverter::to_eg(m_present.swapchainFormat);
+    imageCreateInfo.format = m_properties.presentFormat;
     imageCreateInfo.aspects = {ImageAspect::COLOR};
     imageCreateInfo.usages = {ImageUsage::COLOR_ATTACHMENT};
 
@@ -666,7 +705,7 @@ void VulkanContext::create_framebuffers() {
     StrongPointer<VulkanImage> colorImage = make_strong<VulkanImage>(imageCreateInfo, nativeImageCreateInfo, swapchainImages);
 
     //depth
-    imageCreateInfo.format = VulkanConverter::to_eg(VulkanHelper::find_depth_format(m_physicalDevice));
+    imageCreateInfo.format = m_properties.depthFormat;
     imageCreateInfo.aspects = {ImageAspect::DEPTH};
     imageCreateInfo.usages = {ImageUsage::DEPTH_STENCIL_ATTACHMENT};
     imageCreateInfo.layout = ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
@@ -994,6 +1033,10 @@ WeakPointer<CommandBuffer> VulkanContext::create_command_buffer(const CommandBuf
     vkCreateInfo.currentImageIndex = &m_present.imageIndex;
     m_commandBuffers.emplace_back(make_strong<VulkanCommandBuffer>(createInfo, vkCreateInfo));
     return m_commandBuffers.back();
+}
+
+const RenderingContext::Properties& VulkanContext::properties() {
+    return m_properties;
 }
 
 void VulkanContext::submit_command_buffer(const WeakPointer<CommandBuffer>& commandBuffer) {

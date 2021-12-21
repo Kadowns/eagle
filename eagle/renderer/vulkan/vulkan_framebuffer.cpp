@@ -24,6 +24,8 @@ VulkanFramebuffer::~VulkanFramebuffer() {
     for (auto& framebuffer : m_framebuffers) {
         VK_CALL vkDestroyFramebuffer(m_nativeCreateInfo.device, framebuffer, nullptr);
     }
+
+    m_nativeImageAttachments.clear();
     EG_TRACE("eagle","Vulkan frame buffer destroyed!");
 }
 

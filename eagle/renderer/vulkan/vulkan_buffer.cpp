@@ -114,8 +114,8 @@ void VulkanBuffer::copy_buffer(
     VkCommandBuffer commandBuffer = VulkanHelper::begin_single_time_commands(device, commandPool);
 
     VkBufferCopy copyRegion = {};
-    copyRegion.srcOffset = 0; // Optional
-    copyRegion.dstOffset = offset; // Optional
+    copyRegion.srcOffset = 0;
+    copyRegion.dstOffset = offset;
     copyRegion.size = size;
     vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 

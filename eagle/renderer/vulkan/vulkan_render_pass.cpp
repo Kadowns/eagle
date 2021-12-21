@@ -7,22 +7,63 @@
 
 namespace eagle {
 
+//so we can keep array memory alive when returning from other functions
+struct VkSubpassDescriptionHelper {
+    std::vector<VkAttachmentReference> colorReferences;
+    std::vector<VkAttachmentReference> inputReferences;
+    std::optional<VkAttachmentReference> depthStencilReference;
+};
+
+static VkAttachmentReference create_attachment_reference(const AttachmentReference& reference){
+    VkAttachmentReference vkReference = {};
+    vkReference.attachment = reference.attachmentIndex;
+    vkReference.layout = VulkanConverter::to_vk(reference.layout);
+    return vkReference;
+}
+
+static VkSubpassDescriptionHelper create_subpass_description(const SubpassDescription& description){
+    VkSubpassDescriptionHelper descriptionHelper = {};
+    descriptionHelper.colorReferences.reserve(description.colorReferences.size());
+    for (auto& colorReference : description.colorReferences){
+        descriptionHelper.colorReferences.emplace_back(create_attachment_reference(colorReference));
+    }
+
+    descriptionHelper.inputReferences.reserve(description.inputReferences.size());
+    for (auto& inputReference : description.inputReferences){
+        descriptionHelper.inputReferences.emplace_back(create_attachment_reference(inputReference));
+    }
+
+    if (description.depthStencilReference.has_value()){
+        descriptionHelper.depthStencilReference = create_attachment_reference(description.depthStencilReference.value());
+    }
+
+    return descriptionHelper;
+}
+
+
 VulkanRenderPass::VulkanRenderPass(
         RenderPassCreateInfo createInfo,
         const VulkanRenderPassCreateInfo& vulkanCreateInfo) :
         RenderPass(std::move(createInfo)),
         m_vulkanCreateInfo(vulkanCreateInfo) {
     EG_TRACE("eagle","Creating a VulkanRenderPass!");
-    m_vkColorAttachments = std::move(VulkanConverter::to_vk_vector<VkAttachmentDescription>(m_createInfo.colorAttachments));
-    m_vkDepthAttachment = VulkanConverter::to_vk(m_createInfo.depthAttachment);
+    m_vkAttachments = std::move(VulkanConverter::to_vk_vector<VkAttachmentDescription>(m_createInfo.attachments));
 
-    m_clearValues.resize(m_vkColorAttachments.size());
-    std::for_each(m_clearValues.begin(), m_clearValues.end(), [](VkClearValue& value){
-        value.color = {0.0f, 0.0f, 0.0f, 1.0f};
-    });
-    VkClearValue depthClearValues = {};
-    depthClearValues.depthStencil = {1.0f, 0};
-    m_clearValues.emplace_back(depthClearValues);
+    m_clearValues.resize(m_vkAttachments.size());
+    for (int i = 0; i < m_clearValues.size(); i++){
+        if (i == m_clearValues.size() - 1){
+            m_clearValues[i].depthStencil = {1.0f, 0};
+        }
+        else {
+            m_clearValues[i].color = {0.0f, 0.0f, 0.0f, 1.0f};
+        }
+    }
+//    std::for_each(m_clearValues.begin(), m_clearValues.end(), [](VkClearValue& value){
+//        value.color = {0.0f, 0.0f, 0.0f, 1.0f};
+//    });
+//    VkClearValue depthClearValues = {};
+//    depthClearValues.depthStencil = {1.0f, 0};
+//    m_clearValues.emplace_back(depthClearValues);
 
     create_native_render_pass();
     EG_TRACE("eagle","VulkanRenderPass created!");
@@ -31,51 +72,49 @@ VulkanRenderPass::VulkanRenderPass(
 void VulkanRenderPass::create_native_render_pass() {
     EG_TRACE("eagle","Creating a native render pass!");
 
-    std::vector<VkAttachmentReference> colorAttachmentRefs;
-    colorAttachmentRefs.reserve(m_vkColorAttachments.size());
-    for (int i = 0; i < m_vkColorAttachments.size(); i++){
-        VkAttachmentReference colorAttachmentRef = {};
-        colorAttachmentRef.attachment = i;
-        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        colorAttachmentRefs.emplace_back(colorAttachmentRef);
+    //we need to keep our helper vector alive, so all its internal attachment reference vectors are also kept alive
+    std::vector<VkSubpassDescriptionHelper> subpassDescriptionHelper;
+    std::vector<VkSubpassDescription> subpassDescriptions;
+    subpassDescriptionHelper.reserve(m_createInfo.subpassDescriptions.size());
+    for (auto& description : m_createInfo.subpassDescriptions){
+        subpassDescriptionHelper.push_back(create_subpass_description(description));
+        auto& descriptionHelper = subpassDescriptionHelper.back();
+
+        VkSubpassDescription subpassDescription = {};
+        if (!descriptionHelper.colorReferences.empty()){
+            subpassDescription.pColorAttachments = descriptionHelper.colorReferences.data();
+            subpassDescription.colorAttachmentCount = descriptionHelper.colorReferences.size();
+        }
+
+        if (!descriptionHelper.inputReferences.empty()){
+            subpassDescription.pInputAttachments = descriptionHelper.inputReferences.data();
+            subpassDescription.inputAttachmentCount = descriptionHelper.inputReferences.size();
+        }
+
+        if (descriptionHelper.depthStencilReference.has_value()){
+            subpassDescription.pDepthStencilAttachment = &descriptionHelper.depthStencilReference.value();
+        }
+
+        subpassDescriptions.emplace_back(subpassDescription);
     }
 
-    VkAttachmentReference depthAttachmentRef = {};
-    depthAttachmentRef.attachment = colorAttachmentRefs.size();
-    depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-    VkSubpassDescription subpass = {};
-    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpass.colorAttachmentCount = colorAttachmentRefs.size();
-    subpass.pColorAttachments = colorAttachmentRefs.data();
-    subpass.pDepthStencilAttachment = &depthAttachmentRef;
-
-    std::array<VkSubpassDependency, 2> dependencies = {};
-    dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-    dependencies[0].dstSubpass = 0;
-    dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependencies[0].srcAccessMask = 0;
-    dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-    dependencies[1].srcSubpass = 0;
-    dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-    dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-
-    std::vector<VkAttachmentDescription> attachments(m_vkColorAttachments);
-    attachments.emplace_back(m_vkDepthAttachment);
+    std::vector<VkSubpassDependency> dependencies(m_createInfo.subpassDependencies.size());
+    for (size_t i = 0; i < dependencies.size(); i++){
+        dependencies[i].srcSubpass = m_createInfo.subpassDependencies[i].srcSubpass;
+        dependencies[i].dstSubpass = m_createInfo.subpassDependencies[i].dstSubpass;
+        dependencies[i].srcStageMask = VulkanConverter::eg_flags_to_vk_flags<PipelineStageFlagsBits>(m_createInfo.subpassDependencies[i].srcStageMask);
+        dependencies[i].dstStageMask = VulkanConverter::eg_flags_to_vk_flags<PipelineStageFlagsBits>(m_createInfo.subpassDependencies[i].dstStageMask);
+        dependencies[i].srcAccessMask = VulkanConverter::eg_flags_to_vk_flags<AccessFlagBits>(m_createInfo.subpassDependencies[i].srcAccessMask);
+        dependencies[i].dstAccessMask = VulkanConverter::eg_flags_to_vk_flags<AccessFlagBits>(m_createInfo.subpassDependencies[i].dstAccessMask);
+        dependencies[i].dependencyFlags = VulkanConverter::eg_flags_to_vk_flags<DependencyFlagBits>(m_createInfo.subpassDependencies[i].dependencyFlags);
+    }
 
     VkRenderPassCreateInfo renderPassInfo = {};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    renderPassInfo.attachmentCount = attachments.size();
-    renderPassInfo.pAttachments = attachments.data();
-    renderPassInfo.subpassCount = 1;
-    renderPassInfo.pSubpasses = &subpass;
+    renderPassInfo.attachmentCount = m_vkAttachments.size();
+    renderPassInfo.pAttachments = m_vkAttachments.data();
+    renderPassInfo.subpassCount = subpassDescriptions.size();
+    renderPassInfo.pSubpasses = subpassDescriptions.data();
     renderPassInfo.dependencyCount = dependencies.size();
     renderPassInfo.pDependencies = dependencies.data();
 

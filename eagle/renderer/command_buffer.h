@@ -85,8 +85,8 @@ public:
     begin_render_pass(const WeakPointer<RenderPass> &renderPass, const WeakPointer<Framebuffer>& framebuffer) = 0;
 
     virtual void
-    pipeline_barrier(const WeakPointer<Image> &image, const std::vector<PipelineStage> &srcPipelineStages,
-                     const std::vector<PipelineStage> &dstPipelineStages) = 0;
+    pipeline_barrier(const WeakPointer<Image> &image, const std::vector<PipelineStageFlagsBits> &srcPipelineStages,
+                     const std::vector<PipelineStageFlagsBits> &dstPipelineStages) = 0;
 
     virtual void
     dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
