@@ -33,6 +33,9 @@ public:
     StrongPointer() = default;
 
     StrongPointer(T* ptr) {
+        if (ptr == nullptr){
+            return;
+        }
         m_sharedObject = new SharedObject();
         m_sharedObject->data = ptr;
         increase_strong_reference();
