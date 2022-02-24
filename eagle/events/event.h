@@ -223,15 +223,16 @@ protected:
 };
 
 class BaseEventListener {
-protected:
-    static size_t s_globalIdCounter;
+
 };
 
 template<typename TBus>
 class GenericEventListener : private BaseEventListener {
 public:
 
-    GenericEventListener() {}
+    GenericEventListener() = default;
+    GenericEventListener(const GenericEventListener&) = delete;
+    GenericEventListener(GenericEventListener&&) = delete;
 
     virtual ~GenericEventListener() {
         destroy();
