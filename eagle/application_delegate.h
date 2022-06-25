@@ -14,7 +14,6 @@ public:
     virtual ~ApplicationDelegate() = default;
     virtual void init() = 0;
     virtual void step() = 0;
-    virtual void destroy() = 0;
 };
 
 }

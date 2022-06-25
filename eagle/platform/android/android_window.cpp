@@ -12,7 +12,7 @@ eagle::AndroidWindow::AndroidWindow(android_app *androidApp) :
 }
 
 eagle::AndroidWindow::~AndroidWindow() {
-
+    destroy();
 }
 
 void eagle::AndroidWindow::init() {

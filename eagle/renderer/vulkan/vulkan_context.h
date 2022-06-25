@@ -67,11 +67,11 @@ public:
     virtual void destroy();
 
     bool prepare_frame() override;
-    void submit_command_buffer(const WeakPointer<CommandBuffer>& commandBuffer) override;
+    void submit_command_buffer(const std::shared_ptr<CommandBuffer>& commandBuffer) override;
     void present_frame() override;
 
-    WeakPointer<RenderPass> main_render_pass() override;
-    WeakPointer<Framebuffer> main_frambuffer() override;
+    std::shared_ptr<RenderPass> main_render_pass() override;
+    std::shared_ptr<Framebuffer> main_frambuffer() override;
 
     const Properties& properties() override;
     //------
@@ -141,47 +141,46 @@ protected:
 
 public:
     //inherited via RenderingContext
-    WeakPointer<Shader>
+    std::shared_ptr<Shader>
     create_shader(const ShaderCreateInfo &pipelineInfo) override;
 
-    WeakPointer<VertexBuffer>
+    std::shared_ptr<VertexBuffer>
     create_vertex_buffer(const VertexBufferCreateInfo& usage) override;
 
-    WeakPointer<IndexBuffer>
+    std::shared_ptr<IndexBuffer>
     create_index_buffer(const IndexBufferCreateInfo& createInfo) override;
 
-    WeakPointer<UniformBuffer>
+    std::shared_ptr<UniformBuffer>
     create_uniform_buffer(size_t size, void *data) override;
 
-    WeakPointer<DescriptorSetLayout>
-    create_descriptor_set_layout(const std::vector<DescriptorBindingDescription> &bindings) override;
+    std::shared_ptr<DescriptorSetLayout>
+    create_descriptor_set_layout(const DescriptorSetLayoutInfo& descriptorSetLayoutInfo) override;
 
-    WeakPointer<DescriptorSet>
-    create_descriptor_set(const WeakPointer<DescriptorSetLayout> &descriptorLayout,
-                          const std::vector<WeakPointer<DescriptorItem>> &descriptorItems) override;
+    std::shared_ptr<DescriptorSet>
+    create_descriptor_set(const DescriptorSetInfo& descriptorSetInfo) override;
 
-    WeakPointer<Texture>
+    std::shared_ptr<Texture>
     create_texture(const TextureCreateInfo &createInfo) override;
 
-    WeakPointer <RenderPass>
+    std::shared_ptr <RenderPass>
     create_render_pass(RenderPassCreateInfo createInfo) override;
 
-    WeakPointer<Framebuffer>
+    std::shared_ptr<Framebuffer>
     create_framebuffer(const FramebufferCreateInfo& createInfo) override;
 
-    WeakPointer<Image>
+    std::shared_ptr<Image>
     create_image(const ImageCreateInfo& createInfo) override;
 
-    WeakPointer<StorageBuffer>
+    std::shared_ptr<StorageBuffer>
     create_storage_buffer(size_t size, void *data, UpdateType usage) override;
 
-    WeakPointer<ComputeShader>
+    std::shared_ptr<ComputeShader>
     create_compute_shader(const std::string& path) override;
 
-    WeakPointer<CommandBuffer>
+    std::shared_ptr<CommandBuffer>
     create_command_buffer(const CommandBufferCreateInfo& createInfo) override;
 
-    void destroy_texture_2d(const WeakPointer<Texture> &texture) override;
+    void destroy_texture_2d(const std::shared_ptr<Texture> &texture) override;
 
 protected:
 
@@ -193,6 +192,7 @@ protected:
     VkSurfaceKHR m_surface;
     VkPhysicalDevice m_physicalDevice;
     VkDevice m_device;
+    std::shared_ptr<VulkanDeleter> m_deleter;
 
     VkDebugUtilsMessengerEXT m_debugMessenger;
     VkQueue m_graphicsQueue;
@@ -202,8 +202,8 @@ protected:
         uint32_t imageCount;
         VkExtent2D extent2D;
         VkSwapchainKHR swapchain;
-        StrongPointer<VulkanRenderPass> renderPass;
-        StrongPointer<VulkanFramebuffer> framebuffer;
+        std::shared_ptr<VulkanRenderPass> renderPass;
+        std::shared_ptr<VulkanFramebuffer> framebuffer;
         std::vector<VkCommandBuffer> commandBuffers;
     } m_present;
 
@@ -216,20 +216,6 @@ protected:
 
     //compute
     VkQueue m_computeQueue;
-
-    std::vector<StrongPointer<VulkanVertexBuffer>> m_vertexBuffers;
-    std::vector<StrongPointer<VulkanIndexBuffer>> m_indexBuffers;
-    std::vector<StrongPointer<VulkanUniformBuffer>> m_uniformBuffers;
-    std::vector<StrongPointer<VulkanStorageBuffer>> m_storageBuffers;
-    std::vector<StrongPointer<VulkanDescriptorSet>> m_descriptorSets;
-    std::vector<StrongPointer<VulkanDescriptorSetLayout>> m_descriptorSetsLayouts;
-    std::vector<StrongPointer<VulkanShader>> m_shaders;
-    std::vector<StrongPointer<VulkanComputeShader>> m_computeShaders;
-    std::vector<StrongPointer<VulkanTexture>> m_textures;
-    std::vector<StrongPointer<VulkanImage>> m_images;
-    std::vector<StrongPointer<VulkanRenderPass>> m_renderPasses;
-    std::vector<StrongPointer<VulkanFramebuffer>> m_framebuffers;
-    std::vector<StrongPointer<VulkanCommandBuffer>> m_commandBuffers;
 
     uint32_t m_currentFrame = 0;
 

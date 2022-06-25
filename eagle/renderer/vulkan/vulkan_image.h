@@ -61,15 +61,15 @@ public:
     ~VulkanImage();
 
     void generate_mipmaps() override;
-    WeakPointer<ImageView> view(uint32_t mipLevel = 0) override;
+    std::shared_ptr<ImageView> view(uint32_t mipLevel = 0) override;
 
     inline VkImage& native_image(size_t index) { return m_images[index % m_nativeCreateInfo.imageCount]; }
     inline VkDeviceMemory& native_memory(size_t index) { return m_memories[index % m_nativeCreateInfo.imageCount]; }
-    inline WeakPointer<VulkanImageView> native_view(uint32_t mipLevel = 0) { return m_views[mipLevel]; }
+    inline std::shared_ptr<VulkanImageView> native_view(uint32_t mipLevel = 0) { return m_views[mipLevel]; }
 
     inline const VkImage& native_image(size_t index) const { return m_images[index % m_nativeCreateInfo.imageCount]; }
     inline const VkDeviceMemory& native_memory(size_t index) const { return m_memories[index % m_nativeCreateInfo.imageCount]; }
-    inline const WeakPointer<VulkanImageView> native_view(uint32_t mipLevel = 0) const { return m_views[mipLevel]; }
+    inline const std::shared_ptr<VulkanImageView> native_view(uint32_t mipLevel = 0) const { return m_views[mipLevel]; }
 
 protected:
     void on_resize() override;
@@ -84,7 +84,7 @@ private:
     VulkanImageCreateInfo m_nativeCreateInfo;
     std::vector<VkImage> m_images;
     std::vector<VkDeviceMemory> m_memories;
-    std::vector<StrongPointer<VulkanImageView>> m_views;
+    std::vector<std::shared_ptr<VulkanImageView>> m_views;
     bool m_createdFromExternalImage = false;
 };
 

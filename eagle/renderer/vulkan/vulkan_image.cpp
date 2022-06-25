@@ -7,6 +7,8 @@
 #include <eagle/renderer/vulkan/vulkan_helper.h>
 #include <eagle/renderer/vulkan/vulkan_buffer.h>
 
+#include <memory>
+
 namespace eagle {
 
 VulkanImage::VulkanImage(const ImageCreateInfo &imageCreateInfo, const VulkanImageCreateInfo &nativeCreateInfo) :
@@ -45,7 +47,7 @@ VulkanImage::VulkanImage(const ImageCreateInfo &imageCreateInfo, const VulkanIma
 
     m_views.resize(m_images.size());
     for (auto& view : m_views) {
-        view.reset_all(new VulkanImageView(viewCreateInfo));
+        view = std::make_shared<VulkanImageView>(viewCreateInfo);
     }
 
     EG_TRACE("eagle","Vulkan image created from a swapchain image!");
@@ -153,28 +155,24 @@ void VulkanImage::create() {
     m_views.resize(m_createInfo.mipLevels);
     for (uint32_t i = 0; i < m_views.size(); i++) {
         viewCreateInfo.subresourceRange.baseMipLevel = i;
-        m_views[i].reset_all(new VulkanImageView(viewCreateInfo));
+        m_views[i] = std::make_shared<VulkanImageView>(viewCreateInfo);
     }
     EG_TRACE("eagle","Vulkan image created!");
 }
 
 void VulkanImage::copy_buffer_data_to_image(VkImageSubresourceRange subresourceRange, uint32_t index) {
     EG_TRACE("eagle","Copying buffer to image!");
-    StrongPointer<VulkanBuffer> stagingBuffer;
+
 
     VulkanBufferCreateInfo bufferInfo = {};
+    bufferInfo.physicalDevice = m_nativeCreateInfo.physicalDevice;
+    bufferInfo.device = m_nativeCreateInfo.device;
+    bufferInfo.data = m_createInfo.buffer.data();
+    bufferInfo.size = m_createInfo.buffer.size();
     bufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
     bufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
-    VK_CALL VulkanBuffer::create_buffer(
-            m_nativeCreateInfo.physicalDevice,
-            m_nativeCreateInfo.device,
-            stagingBuffer,
-            bufferInfo,
-            m_createInfo.buffer.size(),
-            m_createInfo.buffer.data()
-    );
-
+    auto stagingBuffer = std::make_shared<VulkanBuffer>(bufferInfo);
 
     VK_CALL VulkanHelper::transition_image_layout(
             m_nativeCreateInfo.device,
@@ -244,8 +242,6 @@ void VulkanImage::copy_buffer_data_to_image(VkImageSubresourceRange subresourceR
             VK_PIPELINE_STAGE_TRANSFER_BIT,
             VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT
     );
-
-    stagingBuffer->destroy();
     EG_TRACE("eagle","Buffer copied to image!");
 }
 
@@ -365,7 +361,7 @@ void VulkanImage::clear() {
     EG_TRACE("eagle","Clearing a vulkan image!");
 
     for (auto& view : m_views){
-        view.reset_all();
+        view.reset();
     }
 
     if (!m_createdFromExternalImage) {
@@ -386,7 +382,7 @@ void VulkanImage::clear() {
     EG_TRACE("eagle","Vulkan image cleared!");
 }
 
-WeakPointer<ImageView> VulkanImage::view(uint32_t mipLevel) {
+std::shared_ptr<ImageView> VulkanImage::view(uint32_t mipLevel) {
     return m_views[mipLevel];
 }
 

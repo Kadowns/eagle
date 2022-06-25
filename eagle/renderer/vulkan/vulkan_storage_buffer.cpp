@@ -4,6 +4,7 @@
 
 #include <eagle/renderer/vulkan/vulkan_storage_buffer.h>
 #include <eagle/renderer/vulkan/vulkan_cleaner.h>
+#include <eagle/renderer/vulkan/vulkan_helper.h>
 
 namespace eagle {
 
@@ -56,13 +57,8 @@ void VulkanStorageBuffer::create_storage_buffer() {
 
     switch(m_usage) {
         case UpdateType::DYNAMIC: {
-
-            VulkanBufferCreateInfo createBufferInfo = {};
-            createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-            createBufferInfo.usageFlags = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
             for (auto &buffer : m_buffers) {
-                VulkanBuffer::create_buffer(m_createInfo.physicalDevice, m_createInfo.device, buffer, createBufferInfo,
-                                            m_bytes.size());
+                buffer = VulkanHelper::create_dynamic_buffer(m_createInfo.physicalDevice, m_createInfo.device, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, m_bytes.data(), m_bytes.size());
                 buffer->map();
                 buffer->copy_to(m_bytes.data(), m_bytes.size());
                 buffer->flush();
@@ -70,36 +66,16 @@ void VulkanStorageBuffer::create_storage_buffer() {
         }
             break;
         case UpdateType::BAKED: {
-            VulkanBufferCreateInfo createBufferInfo = {};
-            createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-            createBufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-
-            StrongPointer<VulkanBuffer> stagingBuffer;
-            VK_CALL
-            VulkanBuffer::create_buffer(
-                    m_createInfo.physicalDevice, m_createInfo.device, stagingBuffer, createBufferInfo, m_bytes.size(),
-                    m_bytes.data());
-
-
-            createBufferInfo.memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-            createBufferInfo.usageFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-
-            for (int i = 0; i < m_buffers.size(); i++) {
-                VK_CALL
-                VulkanBuffer::create_buffer(m_createInfo.physicalDevice, m_createInfo.device, m_buffers[i],
-                                            createBufferInfo, m_bytes.size());
-
-                VK_CALL
-                VulkanBuffer::copy_buffer(
+            for (auto& buffer : m_buffers){
+                buffer = VulkanHelper::create_baked_buffer(
+                        m_createInfo.physicalDevice,
                         m_createInfo.device,
-                        m_createInfo.commandPool,
-                        m_createInfo.graphicsQueue,
-                        stagingBuffer->native_buffer(),
-                        m_buffers[i]->native_buffer(),
+                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                        m_bytes.data(),
                         m_bytes.size(),
-                        0);
+                        m_createInfo.commandPool,
+                        m_createInfo.graphicsQueue);
             }
-            stagingBuffer->destroy();
             break;
         }
     }
@@ -121,10 +97,12 @@ void VulkanStorageBuffer::flush(uint32_t index) {
 
 void VulkanStorageBuffer::cleanup() {
     if (m_cleared) return;
-    for (size_t i = 0; i < m_buffers.size(); i++) {
-        m_buffers[i]->unmap();
-        m_buffers[i]->destroy();
+
+    for (int i = 0; i < m_buffers.size(); i++){
+        m_createInfo.deleter.destroy_buffer(m_buffers[i], i);
     }
+
+    m_buffers.clear();
     m_dirtyBuffers.clear();
     m_cleared = true;
 }

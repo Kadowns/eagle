@@ -30,8 +30,8 @@ public:
     virtual void resize(uint32_t width, uint32_t height) override;
 
     virtual DescriptorType type() const override;
-    virtual WeakPointer<Image> image() const override { return m_image; }
-    inline const StrongPointer<VulkanImage>& native_image() const { return m_image; }
+    virtual std::shared_ptr<Image> image() const override { return m_image; }
+    inline const std::shared_ptr<VulkanImage>& native_image() const { return m_image; }
     inline VkSampler sampler() const { return m_sampler; }
 
 private:
@@ -40,7 +40,7 @@ private:
 
 private:
     VulkanTextureCreateInfo m_nativeCreateInfo;
-    StrongPointer<VulkanImage> m_image;
+    std::shared_ptr<VulkanImage> m_image;
     VkSampler m_sampler;
 };
 

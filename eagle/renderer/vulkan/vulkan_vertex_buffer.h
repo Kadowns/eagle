@@ -11,10 +11,12 @@
 #include "eagle/renderer/vertex_layout.h"
 #include "vulkan_buffer.h"
 #include "vulkan_cleaner.h"
+#include "vulkan_deleter.h"
 
 namespace eagle {
 
 struct VulkanVertexBufferCreateInfo {
+    VulkanDeleter& deleter;
     VkDevice device;
     uint32_t bufferCount;
     VkPhysicalDevice physicalDevice;
@@ -43,7 +45,7 @@ public:
 private:
     VulkanVertexBufferCreateInfo m_vulkanCreateInfo;
 
-    std::vector<StrongPointer<VulkanBuffer>> m_buffers;
+    std::vector<std::shared_ptr<VulkanBuffer>> m_buffers;
     std::set<int> m_dirtyBuffers;
 };
 

@@ -20,7 +20,7 @@ class DesktopApplication : public Application {
 public:
 
      DesktopApplication(uint32_t width, uint32_t height, ApplicationDelegate *delegate);
-     ~DesktopApplication() = default;
+     ~DesktopApplication();
 
     void run();
 
@@ -30,8 +30,8 @@ public:
     ApplicationDelegate& delegate() override { return *m_delegate; }
 
 protected:
-    StrongPointer<ApplicationDelegate> m_delegate;
-    StrongPointer<DesktopWindowGLFW> m_window;
+    std::shared_ptr<ApplicationDelegate> m_delegate;
+    std::shared_ptr<DesktopWindowGLFW> m_window;
     EventBus m_eventBus;
 
     bool m_quit = false;

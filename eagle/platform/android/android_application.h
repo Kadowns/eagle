@@ -31,8 +31,8 @@ protected:
 
 protected:
     android_app* m_androidApp;
-    StrongPointer<ApplicationDelegate> m_delegate;
-    StrongPointer<AndroidWindow> m_window;
+    std::shared_ptr<ApplicationDelegate> m_delegate;
+    std::shared_ptr<AndroidWindow> m_window;
     EventBus m_eventBus;
 
     bool m_quit = false;

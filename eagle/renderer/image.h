@@ -26,7 +26,7 @@ struct ImageCreateInfo {
 
 class Image;
 
-class ImageView : public DescriptorItem {
+class ImageView : public Descriptor {
 public:
     virtual uint32_t mip_level() const = 0;
     virtual Image& image() const = 0;
@@ -40,7 +40,7 @@ public:
 
     virtual ~Image() = default;
     virtual void generate_mipmaps() = 0;
-    virtual WeakPointer<ImageView> view(uint32_t mipLevel = 0) = 0;
+    virtual std::shared_ptr<ImageView> view(uint32_t mipLevel = 0) = 0;
 
     inline uint32_t width() const { return m_createInfo.width; }
     inline uint32_t height() const { return m_createInfo.height; }

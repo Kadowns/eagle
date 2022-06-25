@@ -2,6 +2,7 @@
 // Created by Novak on 08/05/2019.
 //
 
+#include <memory>
 #include <set>
 
 #include "vulkan_context.h"
@@ -36,20 +37,9 @@ void VulkanContext::destroy() {
 
     VK_CALL vkDeviceWaitIdle(m_device);
 
-    m_vertexBuffers.clear();
-    m_indexBuffers.clear();
-
     cleanup_swapchain();
-    m_descriptorSets.clear();
-    m_descriptorSetsLayouts.clear();
-    m_uniformBuffers.clear();
-    m_textures.clear();
-    m_shaders.clear();
-    m_commandBuffers.clear();
-    m_computeShaders.clear();
+
     m_present.renderPass.reset();
-    m_renderPasses.clear();
-    m_framebuffers.clear();
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         VK_CALL
@@ -482,6 +472,11 @@ void VulkanContext::create_logical_device() {
     VK_CALL vkGetDeviceQueue(m_device, indices.presentFamily.value(), 0, &m_presentQueue);
     VK_CALL vkGetDeviceQueue(m_device, indices.computeFamily.value(), 0, &m_computeQueue);
 
+    VulkanDeleterInfo deleterCreateInfo = {};
+    deleterCreateInfo.device = m_device;
+
+    m_deleter = std::make_shared<VulkanDeleter>(deleterCreateInfo);
+
     EG_TRACE("eagle","Logical device created!");
 }
 
@@ -673,7 +668,7 @@ void VulkanContext::create_render_pass() {
     VulkanRenderPassCreateInfo vulkanCreateInfo = {};
     vulkanCreateInfo.device = m_device;
 
-    m_present.renderPass = make_strong<VulkanRenderPass>(std::move(renderPassCreateInfo), vulkanCreateInfo);
+    m_present.renderPass = std::make_shared<VulkanRenderPass>(std::move(renderPassCreateInfo), vulkanCreateInfo);
 
     EG_TRACE("eagle","Present render pass created!");
 }
@@ -702,7 +697,7 @@ void VulkanContext::create_framebuffers() {
     nativeImageCreateInfo.commandPool = m_graphicsCommandPool;
     nativeImageCreateInfo.imageCount = m_present.imageCount;
 
-    StrongPointer<VulkanImage> colorImage = make_strong<VulkanImage>(imageCreateInfo, nativeImageCreateInfo, swapchainImages);
+    std::shared_ptr<VulkanImage> colorImage = std::make_shared<VulkanImage>(imageCreateInfo, nativeImageCreateInfo, swapchainImages);
 
     //depth
     imageCreateInfo.format = m_properties.depthFormat;
@@ -718,7 +713,7 @@ void VulkanContext::create_framebuffers() {
         EG_INFO("eagle","Depth format allows stencil aspect");
     }
 
-    StrongPointer<VulkanImage> depthImage = make_strong<VulkanImage>(imageCreateInfo, nativeImageCreateInfo);
+    std::shared_ptr<VulkanImage> depthImage = std::make_shared<VulkanImage>(imageCreateInfo, nativeImageCreateInfo);
 
     FramebufferCreateInfo framebufferCreateInfo = {};
     framebufferCreateInfo.width = m_present.extent2D.width;
@@ -730,7 +725,7 @@ void VulkanContext::create_framebuffers() {
     nativeFramebufferCreateInfo.device = m_device;
     nativeFramebufferCreateInfo.imageCount = m_present.imageCount;
 
-    m_present.framebuffer.reset_all(new VulkanFramebuffer(framebufferCreateInfo, nativeFramebufferCreateInfo));
+    m_present.framebuffer = std::make_shared<VulkanFramebuffer>(framebufferCreateInfo, nativeFramebufferCreateInfo);
 
     EG_TRACE("eagle","Framebuffers created!");
 }
@@ -810,29 +805,29 @@ void VulkanContext::recreate_swapchain() {
 }
 
 void VulkanContext::recreate_objects() {
-    for (auto &shader : m_shaders) {
-        shader->create_pipeline();
-    }
-
-    for (auto &uniformBuffer : m_uniformBuffers) {
-        uniformBuffer->recreate(m_present.imageCount);
-    }
-
-    for (auto& storageBuffer : m_storageBuffers){
-        storageBuffer->recreate(m_present.imageCount);
-    }
-
-    for (auto &descriptorSet : m_descriptorSets) {
-        descriptorSet->recreate(m_present.imageCount);
-    }
-
-    for (auto& computeShader : m_computeShaders){
-        computeShader->recreate(m_present.imageCount);
-    }
-
-    for (auto& commandBuffer : m_commandBuffers){
-        commandBuffer->recreate(m_present.imageCount);
-    }
+//    for (auto &shader : m_shaders) {
+//        shader->create_pipeline();
+//    }
+//
+//    for (auto &uniformBuffer : m_uniformBuffers) {
+//        uniformBuffer->recreate(m_present.imageCount);
+//    }
+//
+//    for (auto& storageBuffer : m_storageBuffers){
+//        storageBuffer->recreate(m_present.imageCount);
+//    }
+//
+//    for (auto &descriptorSet : m_descriptorSets) {
+//        descriptorSet->recreate(m_present.imageCount);
+//    }
+//
+//    for (auto& computeShader : m_computeShaders){
+//        computeShader->recreate(m_present.imageCount);
+//    }
+//
+//    for (auto& commandBuffer : m_commandBuffers){
+//        commandBuffer->recreate(m_present.imageCount);
+//    }
 
     context_recreated(this);
 }
@@ -840,29 +835,29 @@ void VulkanContext::recreate_objects() {
 void VulkanContext::clear_objects() {
     VulkanCleaner::clear();
 
-    for (auto& commandBuffer : m_commandBuffers){
-        commandBuffer->cleanup();
-    }
-
-    for (auto& computeShader : m_computeShaders){
-        computeShader->clear_descriptor_set();
-    }
-
-    for (auto &descriptorSet : m_descriptorSets) {
-        descriptorSet->cleanup();
-    }
-
-    for (auto &uniformBuffer : m_uniformBuffers) {
-        uniformBuffer->cleanup();
-    }
-
-    for (auto& storageBuffer : m_storageBuffers){
-        storageBuffer->cleanup();
-    }
-
-    for (auto &shader : m_shaders) {
-        shader->cleanup_pipeline();
-    }
+//    for (auto& commandBuffer : m_commandBuffers){
+//        commandBuffer->cleanup();
+//    }
+//
+//    for (auto& computeShader : m_computeShaders){
+//        computeShader->clear_descriptor_set();
+//    }
+//
+//    for (auto &descriptorSet : m_descriptorSets) {
+//        descriptorSet->cleanup();
+//    }
+//
+//    for (auto &uniformBuffer : m_uniformBuffers) {
+//        uniformBuffer->cleanup();
+//    }
+//
+//    for (auto& storageBuffer : m_storageBuffers){
+//        storageBuffer->cleanup();
+//    }
+//
+//    for (auto &shader : m_shaders) {
+//        shader->cleanup_pipeline();
+//    }
 }
 
 
@@ -871,24 +866,23 @@ void VulkanContext::cleanup_swapchain() {
 
     clear_objects();
 
-    m_present.framebuffer.reset_all();
+    m_present.framebuffer.reset();
 
     VK_CALL vkDestroySwapchainKHR(m_device, m_present.swapchain, nullptr);
     EG_TRACE("eagle","Swapchain cleared!");
 }
 
-WeakPointer<Shader>
+std::shared_ptr<Shader>
 VulkanContext::create_shader(const ShaderCreateInfo &createInfo) {
     EG_TRACE("eagle","Creating a vulkan shader!");
 
     VulkanShaderCreateInfo nativeCreateInfo = {};
     nativeCreateInfo.device = m_device;
     nativeCreateInfo.pExtent = &m_present.extent2D;
-    m_shaders.emplace_back(make_strong<VulkanShader>(createInfo, nativeCreateInfo));
-    return m_shaders.back();
+    return std::make_shared<VulkanShader>(createInfo, nativeCreateInfo);
 }
 
-WeakPointer<ComputeShader>
+std::shared_ptr<ComputeShader>
 VulkanContext::create_compute_shader(const std::string &path) {
     VulkanComputeShaderCreateInfo createInfo = {};
     createInfo.device = m_device;
@@ -896,86 +890,74 @@ VulkanContext::create_compute_shader(const std::string &path) {
     createInfo.imageIndex = &m_present.imageIndex;
     createInfo.bufferCount = m_present.imageCount;
     createInfo.computeQueue = m_computeQueue;
-    m_computeShaders.emplace_back(make_strong<VulkanComputeShader>(path, createInfo));
-    return m_computeShaders.back();
+    return std::make_shared<VulkanComputeShader>(path, createInfo);
 }
 
-WeakPointer<VertexBuffer>
+std::shared_ptr<VertexBuffer>
 VulkanContext::create_vertex_buffer(const VertexBufferCreateInfo& createInfo) {
     EG_TRACE("eagle","Creating a vulkan vertex buffer!");
-    VulkanVertexBufferCreateInfo vulkanCreateInfo = {};
+    VulkanVertexBufferCreateInfo vulkanCreateInfo = {*m_deleter};
     vulkanCreateInfo.physicalDevice = m_physicalDevice;
     vulkanCreateInfo.device = m_device;
     vulkanCreateInfo.commandPool = m_graphicsCommandPool;
     vulkanCreateInfo.graphicsQueue = m_graphicsQueue;
     vulkanCreateInfo.bufferCount = m_present.imageCount;
-    m_vertexBuffers.emplace_back(make_strong<VulkanVertexBuffer>(createInfo, vulkanCreateInfo));
-    return m_vertexBuffers.back();
+    return std::make_shared<VulkanVertexBuffer>(createInfo, vulkanCreateInfo);
 }
 
-WeakPointer<IndexBuffer>
+std::shared_ptr<IndexBuffer>
 VulkanContext::create_index_buffer(const IndexBufferCreateInfo& createInfo) {
     EG_TRACE("eagle","Creating a vulkan index buffer!");
-    VulkanIndexBufferCreateInfo vulkanCreateInfo = {};
+    VulkanIndexBufferCreateInfo vulkanCreateInfo = {*m_deleter};
     vulkanCreateInfo.device = m_device;
     vulkanCreateInfo.graphicsQueue = m_graphicsQueue;
     vulkanCreateInfo.physicalDevice = m_physicalDevice;
     vulkanCreateInfo.commandPool = m_graphicsCommandPool;
     vulkanCreateInfo.bufferCount = m_present.imageCount;
-    m_indexBuffers.emplace_back(make_strong<VulkanIndexBuffer>(createInfo, vulkanCreateInfo));
-    return m_indexBuffers.back();
+    return std::make_shared<VulkanIndexBuffer>(createInfo, vulkanCreateInfo);
 }
 
-WeakPointer<UniformBuffer>
+std::shared_ptr<UniformBuffer>
 VulkanContext::create_uniform_buffer(size_t size, void *data) {
     EG_TRACE("eagle","Creating a vulkan uniform buffer!");
-    VulkanUniformBufferCreateInfo createInfo = {};
+    VulkanUniformBufferCreateInfo createInfo = {*m_deleter};
     createInfo.device = m_device;
     createInfo.physicalDevice = m_physicalDevice;
     createInfo.bufferCount = m_present.imageCount;
-    m_uniformBuffers.emplace_back(make_strong<VulkanUniformBuffer>(createInfo, size, data));
-    return m_uniformBuffers.back();
+    return std::make_shared<VulkanUniformBuffer>(createInfo, size, data);
 }
 
-WeakPointer<StorageBuffer>
+std::shared_ptr<StorageBuffer>
 VulkanContext::create_storage_buffer(size_t size, void *data, UpdateType usage) {
     EG_TRACE("eagle","Creating a vulkan storage buffer!");
-    VulkanStorageBufferCreateInfo createInfo = {};
+    VulkanStorageBufferCreateInfo createInfo = {*m_deleter};
     createInfo.device = m_device;
     createInfo.physicalDevice = m_physicalDevice;
     createInfo.bufferCount = m_present.imageCount;
     createInfo.commandPool = m_graphicsCommandPool;
     createInfo.graphicsQueue = m_graphicsQueue;
-    m_storageBuffers.emplace_back(make_strong<VulkanStorageBuffer>(createInfo, size, data, usage));
-    return m_storageBuffers.back();
+    return std::make_shared<VulkanStorageBuffer>(createInfo, size, data, usage);
 }
 
+std::shared_ptr<DescriptorSetLayout>
+VulkanContext::create_descriptor_set_layout(const DescriptorSetLayoutInfo& descriptorSetLayoutInfo) {
+    VulkanDescriptorSetLayoutInfo vulkanDescriptorSetLayoutInfo = {};
+    vulkanDescriptorSetLayoutInfo.device = m_device;
 
-WeakPointer<DescriptorSetLayout>
-VulkanContext::create_descriptor_set_layout(const std::vector<DescriptorBindingDescription> &bindings) {
-    m_descriptorSetsLayouts.emplace_back(make_strong<VulkanDescriptorSetLayout>(m_device, bindings));
-    return m_descriptorSetsLayouts.back();
+    return std::make_shared<VulkanDescriptorSetLayout>(descriptorSetLayoutInfo, vulkanDescriptorSetLayoutInfo);
 }
 
-
-WeakPointer<DescriptorSet>
-VulkanContext::create_descriptor_set(const WeakPointer<DescriptorSetLayout>& descriptorLayout,
-                                     const std::vector<WeakPointer<DescriptorItem>> &descriptorItems) {
+std::shared_ptr<DescriptorSet>
+VulkanContext::create_descriptor_set(const DescriptorSetInfo& descriptorSetInfo) {
     EG_TRACE("eagle","Creating a vulkan descriptor set!");
-    VulkanDescriptorSetCreateInfo createInfo = {};
-    createInfo.device = m_device;
-    createInfo.bufferCount = m_present.imageCount;
+    VulkanDescriptorSetInfo vulkanDescriptorSetInfo = {};
+    vulkanDescriptorSetInfo.device = m_device;
+    vulkanDescriptorSetInfo.bufferCount = m_present.imageCount;
 
-    m_descriptorSets.emplace_back(make_strong<VulkanDescriptorSet>(
-            descriptorLayout.cast<VulkanDescriptorSetLayout>(),
-            descriptorItems,
-            createInfo
-            )
-    );
-    return m_descriptorSets.back();
+    return std::make_shared<VulkanDescriptorSet>(descriptorSetInfo, vulkanDescriptorSetInfo);
 }
 
-WeakPointer<Texture>
+std::shared_ptr<Texture>
 VulkanContext::create_texture(const TextureCreateInfo &createInfo) {
 
     EG_TRACE("eagle","Creating a vulkan texture!");
@@ -986,11 +968,10 @@ VulkanContext::create_texture(const TextureCreateInfo &createInfo) {
     vulkanTextureCreateInfo.graphicsQueue = m_graphicsQueue;
     vulkanTextureCreateInfo.imageCount = m_present.imageCount;
 
-    m_textures.emplace_back(make_strong<VulkanTexture>(createInfo, vulkanTextureCreateInfo));
-    return m_textures.back();
+    return std::make_shared<VulkanTexture>(createInfo, vulkanTextureCreateInfo);
 }
 
-WeakPointer<Image>
+std::shared_ptr<Image>
 VulkanContext::create_image(const ImageCreateInfo &createInfo) {
     EG_TRACE("eagle","Creating a vulkan image!");
     VulkanImageCreateInfo vulkanImageCreateInfo = {};
@@ -1000,29 +981,26 @@ VulkanContext::create_image(const ImageCreateInfo &createInfo) {
     vulkanImageCreateInfo.graphicsQueue = m_graphicsQueue;
     vulkanImageCreateInfo.imageCount = m_present.imageCount;
 
-    m_images.emplace_back(make_strong<VulkanImage>(createInfo, vulkanImageCreateInfo));
-    return m_images.back();
+    return std::make_shared<VulkanImage>(createInfo, vulkanImageCreateInfo);
 }
 
-WeakPointer <RenderPass> VulkanContext::create_render_pass(RenderPassCreateInfo createInfo) {
+std::shared_ptr <RenderPass> VulkanContext::create_render_pass(RenderPassCreateInfo createInfo) {
     VulkanRenderPassCreateInfo vulkanCreateInfo = {};
     vulkanCreateInfo.device = m_device;
 
-    m_renderPasses.emplace_back(make_strong<VulkanRenderPass>(createInfo, vulkanCreateInfo));
-    return m_renderPasses.back();
+    return std::make_shared<VulkanRenderPass>(createInfo, vulkanCreateInfo);
 }
 
-WeakPointer<Framebuffer> VulkanContext::create_framebuffer(const FramebufferCreateInfo &createInfo) {
+std::shared_ptr<Framebuffer> VulkanContext::create_framebuffer(const FramebufferCreateInfo &createInfo) {
 
     VulkanFramebufferCreateInfo vulkanCreateInfo = {};
     vulkanCreateInfo.device = m_device;
     vulkanCreateInfo.imageCount = m_present.imageCount;
 
-    m_framebuffers.emplace_back(make_strong<VulkanFramebuffer>(createInfo, vulkanCreateInfo));
-    return m_framebuffers.back();
+    return std::make_shared<VulkanFramebuffer>(createInfo, vulkanCreateInfo);
 }
 
-WeakPointer<CommandBuffer> VulkanContext::create_command_buffer(const CommandBufferCreateInfo& createInfo) {
+std::shared_ptr<CommandBuffer> VulkanContext::create_command_buffer(const CommandBufferCreateInfo& createInfo) {
 
     QueueFamilyIndices queueFamilyIndices = find_family_indices(m_physicalDevice);
 
@@ -1031,16 +1009,15 @@ WeakPointer<CommandBuffer> VulkanContext::create_command_buffer(const CommandBuf
     vkCreateInfo.device = m_device;
     vkCreateInfo.imageCount = m_present.imageCount;
     vkCreateInfo.currentImageIndex = &m_present.imageIndex;
-    m_commandBuffers.emplace_back(make_strong<VulkanCommandBuffer>(createInfo, vkCreateInfo));
-    return m_commandBuffers.back();
+    return std::make_shared<VulkanCommandBuffer>(createInfo, vkCreateInfo);
 }
 
 const RenderingContext::Properties& VulkanContext::properties() {
     return m_properties;
 }
 
-void VulkanContext::submit_command_buffer(const WeakPointer<CommandBuffer>& commandBuffer) {
-    auto vcb = commandBuffer.cast<VulkanCommandBuffer>();
+void VulkanContext::submit_command_buffer(const std::shared_ptr<CommandBuffer>& commandBuffer) {
+    auto vcb = std::static_pointer_cast<VulkanCommandBuffer>(commandBuffer);
     m_present.commandBuffers.emplace_back(vcb->native_command_buffers()[m_present.imageIndex]);
 }
 
@@ -1123,16 +1100,16 @@ void VulkanContext::present_frame() {
     }
 }
 
-void VulkanContext::destroy_texture_2d(const WeakPointer<Texture> &texture) {
-    StrongPointer<VulkanTexture> t(texture.cast<VulkanTexture>());
-    m_textures.erase(std::find(m_textures.begin(), m_textures.end(), t));
+void VulkanContext::destroy_texture_2d(const std::shared_ptr<Texture> &texture) {
+    std::shared_ptr<VulkanTexture> t = std::static_pointer_cast<VulkanTexture>(texture);
+//    m_textures.erase(std::find(m_textures.begin(), m_textures.end(), t));
 }
 
-WeakPointer<RenderPass> VulkanContext::main_render_pass() {
+std::shared_ptr<RenderPass> VulkanContext::main_render_pass() {
     return m_present.renderPass;
 }
 
-WeakPointer<Framebuffer> VulkanContext::main_frambuffer() {
+std::shared_ptr<Framebuffer> VulkanContext::main_frambuffer() {
     return m_present.framebuffer;
 }
 

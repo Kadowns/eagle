@@ -10,7 +10,7 @@
 
 namespace eagle {
 
-class UniformBuffer : public DescriptorItem {
+class UniformBuffer : public Descriptor {
 public:
     explicit UniformBuffer(size_t size) : m_bytes(size) {}
     virtual ~UniformBuffer() = default;

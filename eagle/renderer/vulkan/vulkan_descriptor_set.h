@@ -8,21 +8,20 @@
 #include "vulkan_texture.h"
 #include "vulkan_cleaner.h"
 
+
 namespace eagle {
 
-struct VulkanDescriptorSetCreateInfo {
+
+
+struct VulkanDescriptorSetInfo {
     VkDevice device;
     uint32_t bufferCount;
 };
 
 class VulkanDescriptorSet : public DescriptorSet, public VulkanCleanable {
 public:
-    VulkanDescriptorSet(const WeakPointer<VulkanDescriptorSetLayout> &descriptorSetLayout,
-                        const std::vector<WeakPointer<DescriptorItem>> &descriptorItems,
-                        const VulkanDescriptorSetCreateInfo& createInfo);
-
-    VulkanDescriptorSet(const WeakPointer<VulkanDescriptorSetLayout>& descriptorSetLayout, const VulkanDescriptorSetCreateInfo& createInfo);
-    ~VulkanDescriptorSet();
+    VulkanDescriptorSet(DescriptorSetInfo info, VulkanDescriptorSetInfo vkInfo);
+    ~VulkanDescriptorSet() override;
 
     void cleanup();
     void recreate(uint32_t bufferCount);
@@ -33,17 +32,16 @@ public:
     inline std::vector<VkDescriptorSet>& get_descriptors() {return m_descriptorSets;}
 
     bool is_dirty() const override;
+    bool valid() const;
 
     void flush(uint32_t index) override;
     void flush_all();
 
 private:
-
+    VulkanDescriptorSetInfo m_vkInfo;
     VkDescriptorPool m_descriptorPool;
     std::vector<VkDescriptorSet> m_descriptorSets;
     std::set<int> m_dirtyDescriptors;
-    WeakPointer<VulkanDescriptorSetLayout> m_descriptorSetLayout;
-    VulkanDescriptorSetCreateInfo m_info;
     bool m_cleared = true;
 
 };

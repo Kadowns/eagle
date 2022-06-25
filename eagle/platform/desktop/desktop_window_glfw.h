@@ -21,9 +21,9 @@ class DesktopWindowGLFW : public Window {
 public:
 
     DesktopWindowGLFW(uint32_t width, uint32_t height);
+    ~DesktopWindowGLFW();
 
     void init(EventBus* eventBus);
-    void destroy();
 
     void pool_events() override;
 

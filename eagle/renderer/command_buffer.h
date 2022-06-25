@@ -37,26 +37,26 @@ public:
 
     virtual void begin() = 0;
 
-    virtual void begin(const WeakPointer<RenderPass>& renderPass, const WeakPointer<Framebuffer>& framebuffer) = 0;
+    virtual void begin(const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Framebuffer>& framebuffer) = 0;
 
     virtual void end() = 0;
 
-    virtual void execute_commands(const std::vector<WeakPointer<CommandBuffer>>& commandBuffers) = 0;
+    virtual void execute_commands(const std::vector<std::shared_ptr<CommandBuffer>>& commandBuffers) = 0;
 
     virtual void
-    bind_shader(const WeakPointer<Shader> &shader) = 0;
+    bind_shader(const std::shared_ptr<Shader> &shader) = 0;
 
     virtual void
-    bind_compute_shader(const WeakPointer<ComputeShader>& shader) = 0;
+    bind_compute_shader(const std::shared_ptr<ComputeShader>& shader) = 0;
 
     virtual void
     draw(uint32_t vertexCount) = 0;
 
     virtual void
-    bind_vertex_buffer(const WeakPointer<VertexBuffer>& vertexBuffer, uint32_t binding) = 0;
+    bind_vertex_buffer(const std::shared_ptr<VertexBuffer>& vertexBuffer, uint32_t binding) = 0;
 
     virtual void
-    bind_index_buffer(const WeakPointer<IndexBuffer> &indexBuffer) = 0;
+    bind_index_buffer(const std::shared_ptr<IndexBuffer> &indexBuffer) = 0;
 
     virtual void
     push_constants(ShaderStage stage, uint32_t offset, size_t size, void *data) = 0;
@@ -66,10 +66,10 @@ public:
                  uint32_t vertexOffset, uint32_t instanceOffset) = 0;
 
     virtual void
-    bind_descriptor_sets(const WeakPointer<DescriptorSet> &descriptorSet, uint32_t setIndex) = 0;
+    bind_descriptor_sets(const std::shared_ptr<DescriptorSet> &descriptorSet, uint32_t setIndex) = 0;
 
     virtual void
-    bind_descriptor_sets(const WeakPointer<ComputeShader> &shader, const WeakPointer<DescriptorSet> &descriptorSet,
+    bind_descriptor_sets(const std::shared_ptr<ComputeShader> &shader, const std::shared_ptr<DescriptorSet> &descriptorSet,
                                       uint32_t setIndex) = 0;
 
     virtual void
@@ -82,10 +82,10 @@ public:
     end_render_pass() = 0;
 
     virtual void
-    begin_render_pass(const WeakPointer<RenderPass> &renderPass, const WeakPointer<Framebuffer>& framebuffer) = 0;
+    begin_render_pass(const std::shared_ptr<RenderPass> &renderPass, const std::shared_ptr<Framebuffer>& framebuffer) = 0;
 
     virtual void
-    pipeline_barrier(const WeakPointer<Image> &image, const std::vector<PipelineStageFlagsBits> &srcPipelineStages,
+    pipeline_barrier(const std::shared_ptr<Image> &image, const std::vector<PipelineStageFlagsBits> &srcPipelineStages,
                      const std::vector<PipelineStageFlagsBits> &dstPipelineStages) = 0;
 
     virtual void

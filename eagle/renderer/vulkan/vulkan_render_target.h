@@ -40,7 +40,7 @@ public:
     void cleanup();
     void create(uint32_t width, uint32_t height);
 
-    virtual WeakPointer<Image> get_image() override;
+    virtual std::shared_ptr<Image> get_image() override;
     virtual VkExtent2D& get_extent() override {return m_extent;}
     virtual VkRenderPass& get_render_pass() override {return m_renderPass;}
     virtual VkFramebuffer& get_framebuffer() override {return m_framebuffer;}
@@ -70,7 +70,7 @@ public:
     VulkanMainRenderTarget(const VulkanRenderTargetCreateInfo &info, VkImage image, VkRenderPass& renderPass, uint32_t width, uint32_t height);
 
     virtual ~VulkanMainRenderTarget() override;
-    virtual WeakPointer<Image> get_image() override;
+    virtual std::shared_ptr<Image> get_image() override;
     virtual VkRenderPass &get_render_pass() override;
     virtual VkFramebuffer &get_framebuffer() override;
     virtual VkExtent2D &get_extent() override;

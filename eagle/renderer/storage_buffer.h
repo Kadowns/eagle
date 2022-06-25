@@ -10,7 +10,7 @@
 
 namespace eagle {
 
-class StorageBuffer : public DescriptorItem {
+class StorageBuffer : public Descriptor {
 public:
 
     explicit StorageBuffer(size_t size, UpdateType usage) : m_bytes(size), m_usage(usage) {}

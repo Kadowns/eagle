@@ -6,7 +6,6 @@
 #define EAGLE_RENDERPASS_H
 
 #include <eagle/renderer/renderer_global_definitions.h>
-
 #include <utility>
 #include <optional>
 
@@ -52,14 +51,9 @@ struct RenderPassCreateInfo {
 
 class RenderPass {
 public:
-
-    RenderPass(RenderPassCreateInfo  renderPassCreateInfo) :
-            m_createInfo(std::move(renderPassCreateInfo)) {}
-
+    explicit RenderPass(RenderPassCreateInfo createInfo) : m_createInfo(std::move(createInfo)) {}
     virtual ~RenderPass() = default;
-
-    inline const std::vector<RenderAttachmentDescription>& attachments() const { return m_createInfo.attachments; }
-
+    inline const RenderPassCreateInfo& info() const { return m_createInfo; }
 protected:
     RenderPassCreateInfo m_createInfo;
 };

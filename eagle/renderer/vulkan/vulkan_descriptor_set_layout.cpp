@@ -7,25 +7,30 @@
 
 namespace eagle {
 
-VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(VkDevice device, const std::vector<DescriptorBindingDescription> &bindings) :
-    m_device(device), m_bindings(bindings) {
-    std::vector<VkDescriptorSetLayoutBinding> vkBindings(bindings.size());
-    for (uint32_t i = 0; i < bindings.size(); i++){
+
+
+
+VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(
+        DescriptorSetLayoutInfo info,
+        VulkanDescriptorSetLayoutInfo vkInfo) :
+        DescriptorSetLayout(std::move(info)),
+        m_vkInfo(vkInfo){
+    std::vector<VkDescriptorSetLayoutBinding> vkBindings(m_info.bindings.size());
+    for (uint32_t i = 0; i < m_info.bindings.size(); i++){
         VkDescriptorSetLayoutBinding descriptorBinding = {};
 
-        descriptorBinding.binding = bindings[i].binding;
+        descriptorBinding.binding = m_info.bindings[i].binding;
         descriptorBinding.descriptorCount = 1;
         descriptorBinding.pImmutableSamplers = nullptr;
-        descriptorBinding.descriptorType = VulkanConverter::to_vk(bindings[i].descriptorType);
-        descriptorBinding.stageFlags = VulkanConverter::to_vk(bindings[i].shaderStage);
+        descriptorBinding.descriptorType = VulkanConverter::to_vk(m_info.bindings[i].descriptorType);
+        descriptorBinding.stageFlags = VulkanConverter::to_vk(m_info.bindings[i].shaderStage);
         vkBindings[i] = descriptorBinding;
     }
-
     create_layout(vkBindings);
 }
 
 VulkanDescriptorSetLayout::~VulkanDescriptorSetLayout() {
-    VK_CALL vkDestroyDescriptorSetLayout(m_device, m_layout, nullptr);
+    VK_CALL vkDestroyDescriptorSetLayout(m_vkInfo.device, m_layout, nullptr);
 }
 
 void VulkanDescriptorSetLayout::create_layout(const std::vector<VkDescriptorSetLayoutBinding> &bindings) {
@@ -37,11 +42,7 @@ void VulkanDescriptorSetLayout::create_layout(const std::vector<VkDescriptorSetL
     createInfo.pBindings = bindings.data();
     createInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 
-    VK_CALL vkCreateDescriptorSetLayout(m_device, &createInfo, nullptr, &m_layout);
-}
-
-const std::vector<DescriptorBindingDescription> &VulkanDescriptorSetLayout::bindings() {
-    return m_bindings;
+    VK_CALL vkCreateDescriptorSetLayout(m_vkInfo.device, &createInfo, nullptr, &m_layout);
 }
 
 }

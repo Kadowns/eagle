@@ -9,10 +9,12 @@
 #include <eagle/renderer/vulkan/vulkan_global_definitions.h>
 #include "vulkan_buffer.h"
 #include "vulkan_cleaner.h"
+#include "vulkan_deleter.h"
 
 namespace eagle {
 
 struct VulkanStorageBufferCreateInfo{
+    VulkanDeleter& deleter;
     VkDevice device;
     VkPhysicalDevice physicalDevice;
     size_t bufferCount;
@@ -36,11 +38,11 @@ public:
     void recreate(uint32_t bufferCount);
     void create_storage_buffer();
 
-    inline std::vector<StrongPointer<VulkanBuffer>>& get_buffers() { return m_buffers; }
+    inline std::vector<std::shared_ptr<VulkanBuffer>>& get_buffers() { return m_buffers; }
 private:
     VulkanStorageBufferCreateInfo m_createInfo;
 
-    std::vector<StrongPointer<VulkanBuffer>> m_buffers;
+    std::vector<std::shared_ptr<VulkanBuffer>> m_buffers;
     std::set<int> m_dirtyBuffers;
     bool m_cleared = true;
     bool m_dirtyBytes = false;

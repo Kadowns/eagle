@@ -8,11 +8,12 @@
 #include "eagle/renderer/uniform_buffer.h"
 #include "vulkan_buffer.h"
 #include "vulkan_cleaner.h"
-
+#include "vulkan_deleter.h"
 
 namespace eagle {
 
 struct VulkanUniformBufferCreateInfo{
+    VulkanDeleter& deleter;
     VkDevice device;
     VkPhysicalDevice physicalDevice;
     size_t bufferCount;
@@ -25,7 +26,7 @@ public:
     explicit VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createInfo, size_t size, void *data);
     ~VulkanUniformBuffer() override;
 
-    inline std::vector<StrongPointer<VulkanBuffer>>& get_buffers() { return m_buffers; }
+    inline std::vector<std::shared_ptr<VulkanBuffer>>& get_buffers() { return m_buffers; }
     void create_uniform_buffer();
 
     DescriptorType type() const override;
@@ -44,7 +45,7 @@ public:
 private:
 
     VulkanUniformBufferCreateInfo m_info;
-    std::vector<StrongPointer<VulkanBuffer>> m_buffers;
+    std::vector<std::shared_ptr<VulkanBuffer>> m_buffers;
     std::set<int> m_dirtyBuffers;
     bool m_cleared = true;
 };

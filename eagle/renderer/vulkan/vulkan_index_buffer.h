@@ -5,15 +5,17 @@
 #ifndef EAGLE_VULKANINDEXBUFFER_H
 #define EAGLE_VULKANINDEXBUFFER_H
 
-#include <set>
+#include <eagle/renderer/index_buffer.h>
+#include <eagle/renderer/vulkan/vulkan_buffer.h>
+#include <eagle/renderer/vulkan/vulkan_cleaner.h>
+#include <eagle/renderer/vulkan/vulkan_deleter.h>
 
-#include "eagle/renderer/index_buffer.h"
-#include "vulkan_buffer.h"
-#include "vulkan_cleaner.h"
+#include <set>
 
 namespace eagle {
 
 struct VulkanIndexBufferCreateInfo {
+    VulkanDeleter& deleter;
     VkDevice device;
     VkPhysicalDevice physicalDevice;
     VkCommandPool commandPool;
@@ -46,8 +48,8 @@ public:
 private:
     VulkanIndexBufferCreateInfo m_vulkanCreateInfo;
 
-    std::vector<StrongPointer<VulkanBuffer>> m_buffers;
-    std::set<int> m_dirtyBuffers;
+    std::vector<std::shared_ptr<VulkanBuffer>> m_buffers;
+    std::set<uint32_t> m_dirtyBuffers;
 
 };
 

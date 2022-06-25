@@ -32,7 +32,7 @@ public:
 
     void dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
-    void update_image(uint32_t binding, const WeakPointer <ImageView>& image) override;
+    void update_image(uint32_t binding, const std::shared_ptr <ImageView>& image) override;
 
     void update_descriptors() override;
 
@@ -61,8 +61,8 @@ private:
     VkPipelineLayout m_pipelineLayout;
     VkPipeline m_computePipeline;
     std::vector<DescriptorBindingDescription> m_bindingDescriptions;
-    StrongPointer<VulkanDescriptorSetLayout> m_descriptorLayout;
-    StrongPointer<VulkanDescriptorSet> m_descriptorSet;
+    std::shared_ptr<VulkanDescriptorSetLayout> m_descriptorLayout;
+    std::shared_ptr<VulkanDescriptorSet> m_descriptorSet;
     VkCommandBuffer m_commandBuffer;
     VkFence m_fence;
     std::vector<uint8_t> m_pushConstantData;

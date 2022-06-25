@@ -82,8 +82,8 @@ void eagle::AndroidApplication::run() {
         }
         m_delegate->step();
     }
-    m_delegate->destroy();
-    m_window->destroy();
+    m_delegate.reset();
+    m_window.reset();
 }
 
 eagle::Window& eagle::AndroidApplication::window() {

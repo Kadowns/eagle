@@ -9,42 +9,78 @@
 
 namespace eagle {
 
-VulkanBuffer::~VulkanBuffer() = default;
+VulkanBuffer::VulkanBuffer(const VulkanBufferCreateInfo& info):
+    m_info(info){
+    VkBufferCreateInfo bufferInfo = {};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = info.size;
+    bufferInfo.usage = info.usageFlags;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-VulkanBuffer::VulkanBuffer(VkDevice device, const VulkanBufferCreateInfo& createInfo):
-        m_device(device),
-        m_usageFlags(createInfo.usageFlags),
-        m_memoryFlags(createInfo.memoryFlags){
+    if (vkCreateBuffer(info.device, &bufferInfo, nullptr, &m_buffer) != VK_SUCCESS) {
+        EG_ERROR("eagle", "Failed to create vulkan buffer");
+        return;
+    }
 
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(info.device, m_buffer, &memRequirements);
+
+    m_alignment = memRequirements.alignment;
+    m_size = memRequirements.size;
+    VkMemoryAllocateInfo allocInfo = {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = VulkanHelper::find_memory_type(
+            info.physicalDevice, memRequirements.memoryTypeBits, info.memoryFlags
+    );
+
+    //TODO --- implementar solução top de alocação de memória (ver vulkan tutorial)
+    if (vkAllocateMemory(info.device, &allocInfo, nullptr, &m_memory) != VK_SUCCESS) {
+        EG_ERROR("eagle", "Failed allocate memory for vulkan buffer");
+        return;
+    }
+
+    if (info.data != nullptr) {
+        if (map() != VK_SUCCESS) {
+            EG_ERROR("eagle", "Failed to map memory for vulkan buffer");
+            return;
+        }
+        memcpy(m_mapped, info.data, info.size);
+        unmap();
+    }
+
+    bind();
+}
+
+VulkanBuffer::~VulkanBuffer() {
+
+    unmap();
+
+    if (m_buffer) {
+        VK_CALL vkDestroyBuffer(m_info.device, m_buffer, nullptr);
+    }
+
+    if (m_memory) {
+        VK_CALL vkFreeMemory(m_info.device, m_memory, nullptr);
+    }
 }
 
 VkResult
 VulkanBuffer::map(VkDeviceSize size, VkDeviceSize offset) {
-    return vkMapMemory(m_device, m_memory, offset, size, 0, &m_mapped);
+    return vkMapMemory(m_info.device, m_memory, offset, size, 0, &m_mapped);
 }
 
 void
 VulkanBuffer::unmap() {
     if (m_mapped) {
-        vkUnmapMemory(m_device, m_memory);
+        vkUnmapMemory(m_info.device, m_memory);
         m_mapped = nullptr;
     }
 }
 
 VkResult
 VulkanBuffer::bind(VkDeviceSize offset) {
-    return vkBindBufferMemory(m_device, m_buffer, m_memory, offset);
-}
-
-void
-VulkanBuffer::destroy() {
-    if (m_buffer) {
-        vkDestroyBuffer(m_device, m_buffer, nullptr);
-    }
-
-    if (m_memory) {
-        vkFreeMemory(m_device, m_memory, nullptr);
-    }
+    return vkBindBufferMemory(m_info.device, m_buffer, m_memory, offset);
 }
 
 void
@@ -53,73 +89,19 @@ VulkanBuffer::copy_to(void *data, VkDeviceSize size) {
     memcpy(m_mapped, data, size);
 }
 
-VkResult
-VulkanBuffer::create_buffer(VkPhysicalDevice physicalDevice, VkDevice device, StrongPointer<VulkanBuffer> &buffer,
-                            const VulkanBufferCreateInfo &info, VkDeviceSize size, void *data) {
-    EG_TRACE("eagle","Creating vulkan buffer");
-    buffer = make_strong<VulkanBuffer>(device, info);
-    VkResult result;
-    VkBufferCreateInfo bufferInfo = {};
-    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferInfo.size = size;
-    bufferInfo.usage = info.usageFlags;
-    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-    if ((result = vkCreateBuffer(device, &bufferInfo, nullptr, &buffer->native_buffer())) != VK_SUCCESS) {
-        EG_ERROR("eagle", "Failed to create vulkan buffer");
-        return result;
-    }
-
-    VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(device, buffer->native_buffer(), &memRequirements);
-
-    buffer->m_alignment = memRequirements.alignment;
-    buffer->m_size = memRequirements.size;
-    VkMemoryAllocateInfo allocInfo = {};
-    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = VulkanHelper::find_memory_type(
-            physicalDevice, memRequirements.memoryTypeBits, info.memoryFlags
-            );
-
-    //TODO --- implementar solução top de alocação de memória (ver vulkan tutorial)
-    if ((result = vkAllocateMemory(device, &allocInfo, nullptr, &buffer->get_memory())) != VK_SUCCESS) {
-        EG_ERROR("eagle", "Failed allocate memory for vulkan buffer");
-        return result;
-    }
-
-    if (data != nullptr) {
-        if ((result = buffer->map()) != VK_SUCCESS) {
-            EG_ERROR("eagle", "Failed to map memory for vulkan buffer");
-            return result;
-        }
-        memcpy(buffer->get_data(), data, size);
-        buffer->unmap();
-    }
-
-    EG_TRACE("eagle","Vulkan buffer created");
-    return buffer->bind();
-
-}
-
-void VulkanBuffer::copy_buffer(
-        VkDevice device,
-        VkCommandPool commandPool,
-        VkQueue graphicsQueue,
-        VkBuffer srcBuffer,
-        VkBuffer dstBuffer,
-        VkDeviceSize size,
-        VkDeviceSize offset) {
+void VulkanBuffer::copy_buffer(VkCommandPool commandPool, VkQueue queue, VulkanBuffer* src, VulkanBuffer* dst,
+                               VkDeviceSize size, VkDeviceSize srcOffset, VkDeviceSize dstOffset) {
     EG_TRACE("eagle","Copying vulkan buffer");
+    auto device = src->info().device;
     VkCommandBuffer commandBuffer = VulkanHelper::begin_single_time_commands(device, commandPool);
 
     VkBufferCopy copyRegion = {};
-    copyRegion.srcOffset = 0;
-    copyRegion.dstOffset = offset;
+    copyRegion.srcOffset = srcOffset;
+    copyRegion.dstOffset = dstOffset;
     copyRegion.size = size;
-    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+    vkCmdCopyBuffer(commandBuffer, src->m_buffer, dst->m_buffer, 1, &copyRegion);
 
-    VulkanHelper::end_single_time_commnds(device, commandPool, commandBuffer, graphicsQueue);
+    VulkanHelper::end_single_time_commnds(device, commandPool, commandBuffer, queue);
     EG_TRACE("eagle","Vulkan buffer copied");
 }
 
@@ -129,9 +111,12 @@ void VulkanBuffer::flush(VkDeviceSize size, VkDeviceSize offset) {
     memoryRange.size = size;
     memoryRange.offset = offset;
     memoryRange.memory = m_memory;
-    vkFlushMappedMemoryRanges(m_device, 1, &memoryRange);
+    vkFlushMappedMemoryRanges(m_info.device, 1, &memoryRange);
 }
 
+const VulkanBufferCreateInfo& VulkanBuffer::info() const {
+    return m_info;
+}
 
 }
 

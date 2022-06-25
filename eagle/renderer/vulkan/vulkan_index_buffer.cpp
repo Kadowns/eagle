@@ -24,10 +24,10 @@ VulkanIndexBuffer::VulkanIndexBuffer(const IndexBufferCreateInfo& createInfo,
 }
 
 VulkanIndexBuffer::~VulkanIndexBuffer() {
-    for (auto& buffer : m_buffers){
+    for (int i = 0; i < m_buffers.size(); i++){
+        auto& buffer = m_buffers[i];
         if (buffer){
-            buffer->unmap();
-            buffer->destroy();
+            m_vulkanCreateInfo.deleter.destroy_buffer(buffer, i);
         }
     }
 }
@@ -43,23 +43,23 @@ void VulkanIndexBuffer::flush(uint32_t bufferIndex) {
     if (!buffer || buffer->size() < bufferSize){
         switch(m_createInfo.updateType){
             case UpdateType::BAKED:
-                VulkanHelper::create_baked_buffer(
+                buffer = VulkanHelper::create_baked_buffer(
                         m_vulkanCreateInfo.physicalDevice,
                         m_vulkanCreateInfo.device,
-                        m_vulkanCreateInfo.graphicsQueue,
-                        m_vulkanCreateInfo.commandPool,
-                        buffer,
                         VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                        m_data,
                         bufferSize,
-                        m_data);
+                        m_vulkanCreateInfo.commandPool,
+                        m_vulkanCreateInfo.graphicsQueue);
+
                 break;
             case UpdateType::DYNAMIC:
-                VulkanHelper::create_dynamic_buffer(
+                buffer = VulkanHelper::create_dynamic_buffer(
                         m_vulkanCreateInfo.physicalDevice,
-                        m_vulkanCreateInfo.device, buffer,
+                        m_vulkanCreateInfo.device,
                         VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-                        bufferSize,
-                        m_data);
+                        m_data,
+                        bufferSize);
                 break;
         }
     }
@@ -67,12 +67,9 @@ void VulkanIndexBuffer::flush(uint32_t bufferIndex) {
         switch(m_createInfo.updateType){
             case UpdateType::BAKED:
                 VulkanHelper::upload_baked_buffer(
-                        m_vulkanCreateInfo.physicalDevice,
-                        m_vulkanCreateInfo.device,
+                        buffer,
                         m_vulkanCreateInfo.graphicsQueue,
                         m_vulkanCreateInfo.commandPool,
-                        buffer,
-                        bufferSize,
                         m_data);
                 break;
             case UpdateType::DYNAMIC:

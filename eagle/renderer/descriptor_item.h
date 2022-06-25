@@ -9,9 +9,9 @@
 
 namespace eagle {
 
-class DescriptorItem {
+class Descriptor {
 public:
-    virtual ~DescriptorItem() = default;
+    virtual ~Descriptor() = default;
     virtual DescriptorType type() const = 0;
 };
 

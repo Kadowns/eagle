@@ -19,7 +19,7 @@ public:
 
     virtual void dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
 
-    virtual void update_image(uint32_t binding, const WeakPointer <ImageView>& image) = 0;
+    virtual void update_image(uint32_t binding, const std::shared_ptr <ImageView>& image) = 0;
     virtual void update_descriptors() = 0;
     virtual void update_push_constants(void* data, size_t size) = 0;
 

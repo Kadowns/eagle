@@ -29,7 +29,6 @@ private:
     void create_framebuffer();
 private:
     VulkanFramebufferCreateInfo m_nativeCreateInfo;
-    std::vector<StrongPointer<VulkanImage>> m_nativeImageAttachments;
     std::vector<VkFramebuffer> m_framebuffers;
 };
 

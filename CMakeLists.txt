@@ -26,6 +26,7 @@ set(EAGLE_SOURCE
 
         eagle/renderer/vertex_layout.cpp
         eagle/renderer/graphics_buffer.cpp
+        eagle/renderer/descriptor_set_layout.h
         eagle/renderer/vulkan/vulkan_context.cpp
         eagle/renderer/vulkan/vulkan_helper.cpp
         eagle/renderer/vulkan/vulkan_global_definitions.cpp
@@ -47,6 +48,7 @@ set(EAGLE_SOURCE
         eagle/renderer/vulkan/vulkan_framebuffer.cpp
         eagle/renderer/vulkan/vulkan_render_pass.cpp
         eagle/renderer/vulkan/vulkan_image.cpp
+        eagle/renderer/vulkan/vulkan_deleter.cpp
         )
 
 
@@ -135,3 +137,4 @@ include(cmake/Eagle.cmake)
 define_file_basename_for_sources(eagle)
 
 target_link_libraries(eagle PUBLIC spdlog ${EAGLE_PLATFORM_LIBS})
+

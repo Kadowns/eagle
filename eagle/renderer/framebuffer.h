@@ -9,20 +9,22 @@
 #include <eagle/renderer/image.h>
 #include <eagle/renderer/render_pass.h>
 
+#include <utility>
+
 namespace eagle {
 
 struct FramebufferCreateInfo {
-    WeakPointer<RenderPass> renderPass;
-    std::vector<WeakPointer<Image>> attachments;
+    std::shared_ptr<RenderPass> renderPass;
+    std::vector<std::shared_ptr<Image>> attachments;
     uint32_t width, height;
 };
 
 class Framebuffer {
 public:
-    Framebuffer(const FramebufferCreateInfo& createInfo) : m_createInfo(createInfo) {}
+    Framebuffer(FramebufferCreateInfo createInfo) : m_createInfo(std::move(createInfo)) {}
     virtual ~Framebuffer() = default;
 
-    inline const std::vector<WeakPointer<Image>>& attachments() const { return m_createInfo.attachments; }
+    inline const std::vector<std::shared_ptr<Image>>& attachments() const { return m_createInfo.attachments; }
     inline uint32_t width() const { return m_createInfo.width; }
     inline uint32_t height() const { return m_createInfo.height; }
 

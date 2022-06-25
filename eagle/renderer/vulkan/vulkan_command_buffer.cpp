@@ -47,12 +47,11 @@ void VulkanCommandBuffer::begin() {
     m_finished = false;
 }
 
-void VulkanCommandBuffer::begin(const WeakPointer<RenderPass> &renderPass,
-                                const WeakPointer<Framebuffer> &framebuffer) {
+void VulkanCommandBuffer::begin(const std::shared_ptr<RenderPass> &renderPass,
+                                const std::shared_ptr<Framebuffer> &framebuffer) {
     assert(m_createInfo.level == CommandBufferLevel::SECONDARY);
-
-    auto vrp = renderPass.cast<VulkanRenderPass>();
-    auto vfb = framebuffer.cast<VulkanFramebuffer>();
+    auto vrp = std::static_pointer_cast<VulkanRenderPass>(renderPass);
+    auto vfb = std::static_pointer_cast<VulkanFramebuffer>(framebuffer);
 
     VkCommandBufferInheritanceInfo inheritanceInfo = {};
     inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
@@ -78,7 +77,7 @@ void VulkanCommandBuffer::end() {
     m_boundShader.reset();
 }
 
-void VulkanCommandBuffer::execute_commands(const std::vector<WeakPointer<CommandBuffer>> &commandBuffers) {
+void VulkanCommandBuffer::execute_commands(const std::vector<std::shared_ptr<CommandBuffer>> &commandBuffers) {
     assert(m_createInfo.level == CommandBufferLevel::PRIMARY);
     std::vector<VkCommandBuffer> vkCommandBuffers;
     vkCommandBuffers.reserve(commandBuffers.size());
@@ -94,18 +93,18 @@ void VulkanCommandBuffer::execute_commands(const std::vector<WeakPointer<Command
             vkCommandBuffers.data());
 }
 
-void VulkanCommandBuffer::begin_render_pass(const WeakPointer<RenderPass> &renderPass,
-                                            const WeakPointer<Framebuffer> &framebuffer) {
+void VulkanCommandBuffer::begin_render_pass(const std::shared_ptr<RenderPass> &renderPass,
+                                            const std::shared_ptr<Framebuffer> &framebuffer) {
     assert(m_createInfo.level == CommandBufferLevel::PRIMARY || m_createInfo.level == CommandBufferLevel::MASTER);
-    auto vrp = renderPass.cast<VulkanRenderPass>();
-    auto vf = framebuffer.cast<VulkanFramebuffer>();
+    auto vrp = std::static_pointer_cast<VulkanRenderPass>(renderPass);
+    auto vfb = std::static_pointer_cast<VulkanFramebuffer>(framebuffer);
 
     VkRenderPassBeginInfo renderPassInfo = {};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderPassInfo.renderPass = vrp->native_render_pass();
-    renderPassInfo.framebuffer = vf->native_framebuffers()[*m_vkCreateInfo.currentImageIndex];
+    renderPassInfo.framebuffer = vfb->native_framebuffers()[*m_vkCreateInfo.currentImageIndex];
     renderPassInfo.renderArea.offset = {0, 0};
-    renderPassInfo.renderArea.extent = {vf->width(), vf->height()};
+    renderPassInfo.renderArea.extent = {vfb->width(), vfb->height()};
     auto& clearValues = vrp->clear_values();
     renderPassInfo.clearValueCount = clearValues.size();
     renderPassInfo.pClearValues = clearValues.data();
@@ -124,20 +123,18 @@ void VulkanCommandBuffer::end_render_pass() {
     VK_CALL vkCmdEndRenderPass(m_commandBuffers[*m_vkCreateInfo.currentImageIndex]);
 }
 
-void VulkanCommandBuffer::bind_shader(const WeakPointer<Shader> &shader) {
-    m_boundShader = shader.cast<VulkanShader>();
-
+void VulkanCommandBuffer::bind_shader(const std::shared_ptr<Shader> &shader) {
+    m_boundShader = std::static_pointer_cast<VulkanShader>(shader);
     VK_CALL vkCmdBindPipeline(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundShader->get_pipeline());
 }
 
-void VulkanCommandBuffer::bind_compute_shader(const WeakPointer<ComputeShader> &shader) {
-    WeakPointer<VulkanComputeShader> vcs = shader.cast<VulkanComputeShader>();
-
+void VulkanCommandBuffer::bind_compute_shader(const std::shared_ptr<ComputeShader> &shader) {
+    auto vcs = std::static_pointer_cast<VulkanComputeShader>(shader);
     VK_CALL vkCmdBindPipeline(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], VK_PIPELINE_BIND_POINT_COMPUTE, vcs->get_pipeline());
 }
 
-void VulkanCommandBuffer::bind_vertex_buffer(const WeakPointer<VertexBuffer>& vertexBuffer, uint32_t binding) {
-    WeakPointer<VulkanVertexBuffer> vvb = vertexBuffer.cast<VulkanVertexBuffer>();
+void VulkanCommandBuffer::bind_vertex_buffer(const std::shared_ptr<VertexBuffer>& vertexBuffer, uint32_t binding) {
+    auto vvb = std::static_pointer_cast<VulkanVertexBuffer>(vertexBuffer);
     VkDeviceSize offsets[] = {0};
 
     VK_CALL vkCmdBindVertexBuffers(
@@ -148,8 +145,8 @@ void VulkanCommandBuffer::bind_vertex_buffer(const WeakPointer<VertexBuffer>& ve
             offsets);
 }
 
-void VulkanCommandBuffer::bind_index_buffer(const WeakPointer<IndexBuffer> &indexBuffer) {
-    WeakPointer<VulkanIndexBuffer> vib = indexBuffer.cast<VulkanIndexBuffer>();
+void VulkanCommandBuffer::bind_index_buffer(const std::shared_ptr<IndexBuffer> &indexBuffer) {
+    auto vib = std::static_pointer_cast<VulkanIndexBuffer>(indexBuffer);
 
     VK_CALL vkCmdBindIndexBuffer(
             m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
@@ -158,8 +155,8 @@ void VulkanCommandBuffer::bind_index_buffer(const WeakPointer<IndexBuffer> &inde
             vib->native_index_type());
 }
 
-void VulkanCommandBuffer::bind_descriptor_sets(const WeakPointer<DescriptorSet> &descriptorSet, uint32_t setIndex) {
-    WeakPointer<VulkanDescriptorSet> vds = descriptorSet.cast<VulkanDescriptorSet>();
+void VulkanCommandBuffer::bind_descriptor_sets(const std::shared_ptr<DescriptorSet> &descriptorSet, uint32_t setIndex) {
+    auto vds = std::static_pointer_cast<VulkanDescriptorSet>(descriptorSet);
 
     VK_CALL vkCmdBindDescriptorSets(
             m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
@@ -172,9 +169,9 @@ void VulkanCommandBuffer::bind_descriptor_sets(const WeakPointer<DescriptorSet> 
             nullptr);
 }
 
-void VulkanCommandBuffer::bind_descriptor_sets(const WeakPointer<ComputeShader> &shader, const WeakPointer<DescriptorSet> &descriptorSet, uint32_t setIndex) {
-    WeakPointer<VulkanComputeShader> vcs = shader.cast<VulkanComputeShader>();
-    WeakPointer<VulkanDescriptorSet> vds = descriptorSet.cast<VulkanDescriptorSet>();
+void VulkanCommandBuffer::bind_descriptor_sets(const std::shared_ptr<ComputeShader> &shader, const std::shared_ptr<DescriptorSet> &descriptorSet, uint32_t setIndex) {
+    auto vcs = std::static_pointer_cast<VulkanComputeShader>(shader);
+    auto vds = std::static_pointer_cast<VulkanDescriptorSet>(descriptorSet);
 
     VK_CALL vkCmdBindDescriptorSets(
             m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
@@ -227,7 +224,7 @@ void VulkanCommandBuffer::set_scissor(uint32_t w, uint32_t h, uint32_t x, uint32
     VK_CALL vkCmdSetScissor(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], 0, 1, &scissor);
 }
 
-void VulkanCommandBuffer::pipeline_barrier(const WeakPointer<Image> &image, const std::vector<PipelineStageFlagsBits> &srcPipelineStages,
+void VulkanCommandBuffer::pipeline_barrier(const std::shared_ptr<Image> &image, const std::vector<PipelineStageFlagsBits> &srcPipelineStages,
                                            const std::vector<PipelineStageFlagsBits> &dstPipelineStages) {
     VkImageMemoryBarrier imageMemoryBarrier = {};
     imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -240,7 +237,7 @@ void VulkanCommandBuffer::pipeline_barrier(const WeakPointer<Image> &image, cons
     imageMemoryBarrier.srcQueueFamilyIndex = 0;
     imageMemoryBarrier.dstQueueFamilyIndex = 0;
 
-    auto vkImage = image.cast<VulkanImage>();
+    auto vkImage = std::static_pointer_cast<VulkanImage>(image);
 
     imageMemoryBarrier.image = vkImage->native_image(*m_vkCreateInfo.currentImageIndex);
     VK_CALL vkCmdPipelineBarrier(

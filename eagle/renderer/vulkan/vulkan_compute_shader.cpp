@@ -49,7 +49,10 @@ void VulkanComputeShader::create_pipeline_layout() {
     }
 
 
-    m_descriptorLayout = make_strong<VulkanDescriptorSetLayout>(m_createInfo.device, m_bindingDescriptions);
+    m_descriptorLayout = std::make_shared<VulkanDescriptorSetLayout>(
+            DescriptorSetLayoutInfo{m_bindingDescriptions},
+            VulkanDescriptorSetLayoutInfo{m_createInfo.device}
+            );
 
 
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
@@ -57,7 +60,7 @@ void VulkanComputeShader::create_pipeline_layout() {
     pipelineLayoutCreateInfo.pushConstantRangeCount = pushConstantsRanges.size();
     pipelineLayoutCreateInfo.pPushConstantRanges = pushConstantsRanges.data();
     pipelineLayoutCreateInfo.setLayoutCount = 1;
-    pipelineLayoutCreateInfo.pSetLayouts = &m_descriptorLayout->get_native_layout();
+    pipelineLayoutCreateInfo.pSetLayouts = &m_descriptorLayout->native_layout();
 
     VK_CALL_ASSERT(vkCreatePipelineLayout(m_createInfo.device, &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout)) {
         throw std::runtime_error("failed to create pipeline layout!");
@@ -96,10 +99,15 @@ void VulkanComputeShader::create_pipeline(){
 
 void VulkanComputeShader::create_descriptor_sets() {
     EG_TRACE("eagle","BEGIN");
-    VulkanDescriptorSetCreateInfo descriptorSetCreateInfo = {};
+
+    DescriptorSetInfo descriptorSetInfo = {};
+    descriptorSetInfo.layout = m_descriptorLayout;
+
+    VulkanDescriptorSetInfo descriptorSetCreateInfo = {};
     descriptorSetCreateInfo.device = m_createInfo.device;
     descriptorSetCreateInfo.bufferCount = m_createInfo.bufferCount;
-    m_descriptorSet = make_strong<VulkanDescriptorSet>(m_descriptorLayout, descriptorSetCreateInfo);
+
+    m_descriptorSet = std::make_shared<VulkanDescriptorSet>(descriptorSetInfo, descriptorSetCreateInfo);
     EG_TRACE("eagle","END");
 }
 
@@ -185,7 +193,7 @@ void VulkanComputeShader::recreate(uint32_t bufferCount) {
     create_descriptor_sets();
 }
 
-void VulkanComputeShader::update_image(uint32_t binding, const WeakPointer<ImageView>& image) {
+void VulkanComputeShader::update_image(uint32_t binding, const std::shared_ptr<ImageView>& image) {
     m_descriptorSet->operator[](binding) = image;
 }
 

@@ -42,20 +42,23 @@ void VulkanUniformBuffer::create_uniform_buffer() {
     VulkanBufferCreateInfo bufferCreateInfo = {};
     bufferCreateInfo.usageFlags = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
     bufferCreateInfo.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    bufferCreateInfo.data = m_bytes.data();
+    bufferCreateInfo.size = m_bytes.size();
+    bufferCreateInfo.device = m_info.device;
+    bufferCreateInfo.physicalDevice = m_info.physicalDevice;
 
-    for (size_t i = 0; i < m_info.bufferCount; i++) {
-        VulkanBuffer::create_buffer(m_info.physicalDevice, m_info.device, m_buffers[i],
-                                    bufferCreateInfo, m_bytes.size(), m_bytes.data());
-        m_buffers[i]->map(m_bytes.size());
+    for (auto& buffer : m_buffers) {
+        buffer = std::make_shared<VulkanBuffer>(bufferCreateInfo);
+        buffer->map(m_bytes.size());
     }
     m_cleared = false;
 }
 
 void VulkanUniformBuffer::cleanup() {
     if (m_cleared) return;
-    for (auto& buffer : m_buffers) {
-        buffer->unmap();
-        buffer->destroy();
+    for (uint32_t i = 0; i < m_buffers.size(); i++) {
+        auto& buffer = m_buffers[i];
+        m_info.deleter.destroy_buffer(buffer, i);
     }
     m_dirtyBuffers.clear();
     m_cleared = true;

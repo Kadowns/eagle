@@ -24,7 +24,7 @@ void VulkanCustomRenderTarget::cleanup() {
 
     EG_TRACE("eagle","Clearing render target!");
 
-    auto destroy_attachment = [&](StrongPointer<VulkanImageAttachment>& attachment){
+    auto destroy_attachment = [&](std::shared_ptr<VulkanImageAttachment>& attachment){
         vkDestroyImageView(m_info.device, attachment->view, nullptr);
         vkDestroyImage(m_info.device, attachment->image, nullptr);
         vkFreeMemory(m_info.device, attachment->memory, nullptr);
@@ -106,7 +106,7 @@ void VulkanCustomRenderTarget::create(uint32_t width, uint32_t height) {
     m_cleared = false;
 }
 
-void VulkanCustomRenderTarget::create_image_resources(StrongPointer<VulkanImageAttachment> &image, VkFormat format,
+void VulkanCustomRenderTarget::create_image_resources(std::shared_ptr<VulkanImageAttachment> &image, VkFormat format,
                                                 VkImageUsageFlags usageFlags, VkImageAspectFlags aspectMask) {
 
     VK_CALL VulkanHelper::create_image(m_info.physicalDevice, m_info.device, m_extent.width, m_extent.height,
@@ -125,7 +125,7 @@ void VulkanCustomRenderTarget::create_image_resources(StrongPointer<VulkanImageA
 
 }
 
-WeakPointer<Image> VulkanCustomRenderTarget::get_image() {
+std::shared_ptr<Image> VulkanCustomRenderTarget::get_image() {
     return m_image;
 }
 
@@ -220,7 +220,7 @@ VulkanMainRenderTarget::~VulkanMainRenderTarget() {
 
 }
 
-WeakPointer<Image> VulkanMainRenderTarget::get_image() {
+std::shared_ptr<Image> VulkanMainRenderTarget::get_image() {
     return m_image;
 }
 

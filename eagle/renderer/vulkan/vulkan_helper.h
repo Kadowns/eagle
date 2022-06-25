@@ -30,7 +30,7 @@ public:
     begin_single_time_commands(VkDevice device, VkCommandPool commandPool);
 
     static void
-    end_single_time_commnds(VkDevice device, VkCommandPool commandPool, VkCommandBuffer commandBuffer, VkQueue graphicsQueue);
+    end_single_time_commnds(VkDevice device, VkCommandPool commandPool, VkCommandBuffer commandBuffer, VkQueue queue);
 
     static void
     create_image(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t width, uint32_t height,
@@ -48,21 +48,18 @@ public:
     static VkFormat find_supported_format(VkPhysicalDevice physicalDevice, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
     static VkFormat find_depth_format(VkPhysicalDevice physicalDevice);
 
-    static void create_baked_buffer(VkPhysicalDevice physicalDevice, VkDevice device,
-                                    VkQueue queue, VkCommandPool commandPool,
-                                    StrongPointer<VulkanBuffer>& buffer, VkBufferUsageFlagBits bufferUsage,
-                                    VkDeviceSize size, void* data = nullptr);
+    static std::shared_ptr<VulkanBuffer>
+    create_baked_buffer(VkPhysicalDevice physicalDevice, VkDevice device, VkBufferUsageFlags usageFlags,
+                        void *data, VkDeviceSize size, VkCommandPool commandPool, VkQueue queue);
 
-    static void create_dynamic_buffer(VkPhysicalDevice physicalDevice, VkDevice device,
-                                    StrongPointer<VulkanBuffer>& buffer, VkBufferUsageFlagBits bufferUsage,
-                                    VkDeviceSize size, void* data = nullptr);
+    static std::shared_ptr<VulkanBuffer>
+    create_dynamic_buffer(VkPhysicalDevice physicalDevice, VkDevice device, VkBufferUsageFlagBits bufferUsage,
+                          void *data, VkDeviceSize size);
 
-    static void upload_baked_buffer(VkPhysicalDevice physicalDevice, VkDevice device,
-                                    VkQueue queue, VkCommandPool commandPool,
-                                    StrongPointer<VulkanBuffer>& buffer,
-                                    VkDeviceSize size, void* data);
+    static void upload_baked_buffer(std::shared_ptr<VulkanBuffer> &buffer, VkQueue queue, VkCommandPool commandPool,
+                                    void *data);
 
-    static void upload_dynamic_buffer(StrongPointer<VulkanBuffer>& buffer, VkDeviceSize size, void* data);
+    static void upload_dynamic_buffer(std::shared_ptr<VulkanBuffer>& buffer, VkDeviceSize size, void* data);
 
 };
 

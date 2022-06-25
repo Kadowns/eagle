@@ -19,14 +19,14 @@ struct TextureCreateInfo {
     Filter filter = Filter::LINEAR;
 };
 
-class Texture : public DescriptorItem {
+class Texture : public Descriptor {
 public:
     explicit Texture(TextureCreateInfo createInfo) :
         m_createInfo(std::move(createInfo)) {}
     virtual ~Texture() = default;
 
     virtual void resize(uint32_t width, uint32_t height) = 0;
-    virtual WeakPointer<Image> image() const = 0;
+    virtual std::shared_ptr<Image> image() const = 0;
 
 protected:
     TextureCreateInfo m_createInfo;

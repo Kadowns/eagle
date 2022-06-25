@@ -15,6 +15,18 @@
 namespace eagle {
 
 DesktopWindowGLFW::DesktopWindowGLFW(uint32_t width, uint32_t height) : m_windowData(width, height) {
+
+}
+
+DesktopWindowGLFW::~DesktopWindowGLFW() {
+    m_renderingContext->destroy();
+
+    for (auto& it : m_mouseCursors){
+        glfwDestroyCursor(it.second);
+    }
+    m_mouseCursors.clear();
+
+    glfwTerminate();
 }
 
 void DesktopWindowGLFW::init(EventBus* eventBus) {
@@ -121,18 +133,6 @@ void DesktopWindowGLFW::init(EventBus* eventBus) {
     m_renderingContext->init();
 
     EG_TRACE("eagle","Window initialized!");
-}
-
-void DesktopWindowGLFW::destroy() {
-
-    m_renderingContext->destroy();
-
-    for (auto& it : m_mouseCursors){
-        glfwDestroyCursor(it.second);
-    }
-    m_mouseCursors.clear();
-
-    glfwTerminate();
 }
 
 void* DesktopWindowGLFW::native_window() {
