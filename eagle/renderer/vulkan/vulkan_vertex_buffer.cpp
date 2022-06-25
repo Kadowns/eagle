@@ -40,7 +40,7 @@ void VulkanVertexBuffer::flush(uint32_t bufferIndex) {
     if (!buffer || buffer->size() < bufferSize){
         switch(m_createInfo.updateType){
             case UpdateType::BAKED:
-                VulkanHelper::create_baked_buffer(
+                buffer = VulkanHelper::create_baked_buffer(
                         m_vulkanCreateInfo.physicalDevice,
                         m_vulkanCreateInfo.device,
                         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
@@ -51,7 +51,7 @@ void VulkanVertexBuffer::flush(uint32_t bufferIndex) {
                         );
                 break;
             case UpdateType::DYNAMIC:
-                VulkanHelper::create_dynamic_buffer(
+                buffer = VulkanHelper::create_dynamic_buffer(
                         m_vulkanCreateInfo.physicalDevice,
                         m_vulkanCreateInfo.device,
                         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
