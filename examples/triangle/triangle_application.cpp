@@ -48,10 +48,8 @@ void TriangleApplication::init() {
 
     eagle::VertexBufferCreateInfo vbCreateInfo = {};
     vbCreateInfo.updateType = eagle::UpdateType::BAKED;
-    vbCreateInfo.size = 4 * sizeof(Vertex);
-    vbCreateInfo.data = vertices;
 
-    m_vertexBuffer = m_renderingContext->create_vertex_buffer(vbCreateInfo);
+    m_vertexBuffer = m_renderingContext->create_vertex_buffer(vbCreateInfo, vertices, 4 * sizeof(Vertex));
 
     uint16_t indices[6];
     indices[0] = 0;
@@ -62,7 +60,11 @@ void TriangleApplication::init() {
     indices[4] = 2;
     indices[5] = 3;
 
-    m_indexBuffer = m_renderingContext->create_index_buffer({eagle::UpdateType::BAKED, eagle::IndexBufferType::UINT_16, 6 * sizeof(uint16_t), indices});
+    eagle::IndexBufferCreateInfo ibCreateInfo = {};
+    ibCreateInfo.indexType = eagle::IndexBufferType::UINT_16;
+    ibCreateInfo.updateType = eagle::UpdateType::BAKED;
+
+    m_indexBuffer = m_renderingContext->create_index_buffer(ibCreateInfo, indices, 6 * sizeof(uint16_t));
 
     eagle::CommandBufferCreateInfo commandBufferCreateInfo = {};
     commandBufferCreateInfo.level = eagle::CommandBufferLevel::MASTER;
