@@ -22,10 +22,10 @@ set(EAGLE_SOURCE
         eagle/random.cpp
         eagle/timer.cpp
         eagle/file_system.cpp
+        eagle/memory/buffer.cpp
         eagle/events/event.cpp
 
         eagle/renderer/vertex_layout.cpp
-        eagle/renderer/graphics_buffer.cpp
         eagle/renderer/descriptor_set_layout.h
         eagle/renderer/vulkan/vulkan_context.cpp
         eagle/renderer/vulkan/vulkan_helper.cpp
