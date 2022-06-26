@@ -894,7 +894,7 @@ VulkanContext::create_compute_shader(const std::string &path) {
 }
 
 std::shared_ptr<VertexBuffer>
-VulkanContext::create_vertex_buffer(const VertexBufferCreateInfo& createInfo) {
+VulkanContext::create_vertex_buffer(const VertexBufferCreateInfo &createInfo, void *data, size_t size) {
     EG_TRACE("eagle","Creating a vulkan vertex buffer!");
     VulkanVertexBufferCreateInfo vulkanCreateInfo = {*m_deleter};
     vulkanCreateInfo.physicalDevice = m_physicalDevice;
@@ -902,11 +902,11 @@ VulkanContext::create_vertex_buffer(const VertexBufferCreateInfo& createInfo) {
     vulkanCreateInfo.commandPool = m_graphicsCommandPool;
     vulkanCreateInfo.graphicsQueue = m_graphicsQueue;
     vulkanCreateInfo.bufferCount = m_present.imageCount;
-    return std::make_shared<VulkanVertexBuffer>(createInfo, vulkanCreateInfo);
+    return std::make_shared<VulkanVertexBuffer>(createInfo, vulkanCreateInfo, data, size);
 }
 
 std::shared_ptr<IndexBuffer>
-VulkanContext::create_index_buffer(const IndexBufferCreateInfo& createInfo) {
+VulkanContext::create_index_buffer(const IndexBufferCreateInfo &createInfo, void *data, size_t size) {
     EG_TRACE("eagle","Creating a vulkan index buffer!");
     VulkanIndexBufferCreateInfo vulkanCreateInfo = {*m_deleter};
     vulkanCreateInfo.device = m_device;
@@ -914,7 +914,7 @@ VulkanContext::create_index_buffer(const IndexBufferCreateInfo& createInfo) {
     vulkanCreateInfo.physicalDevice = m_physicalDevice;
     vulkanCreateInfo.commandPool = m_graphicsCommandPool;
     vulkanCreateInfo.bufferCount = m_present.imageCount;
-    return std::make_shared<VulkanIndexBuffer>(createInfo, vulkanCreateInfo);
+    return std::make_shared<VulkanIndexBuffer>(createInfo, vulkanCreateInfo, data, size);
 }
 
 std::shared_ptr<UniformBuffer>

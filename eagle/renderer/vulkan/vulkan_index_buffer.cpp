@@ -8,18 +8,15 @@
 
 namespace eagle {
 
-VulkanIndexBuffer::VulkanIndexBuffer(const IndexBufferCreateInfo& createInfo,
-                                     VulkanIndexBufferCreateInfo& vulkanCreateInfo) :
-        IndexBuffer(createInfo),
+VulkanIndexBuffer::VulkanIndexBuffer(const IndexBufferCreateInfo& createInfo, const VulkanIndexBufferCreateInfo& vulkanCreateInfo, void* data, size_t size) :
+        IndexBuffer(createInfo, data, size),
         m_vulkanCreateInfo(vulkanCreateInfo),
         m_buffers(vulkanCreateInfo.bufferCount) {
-    if (createInfo.size == 0){
-        return;
-    }
-    reserve(createInfo.size);
-    copy_from(createInfo.data, createInfo.size);
-    for (int i = 0; i < m_buffers.size(); i++){
-        flush(i);
+
+    if (size > 0){
+        for (int i = 0; i < m_buffers.size(); i++){
+            VulkanIndexBuffer::flush(i);
+        }
     }
 }
 
@@ -41,7 +38,7 @@ void VulkanIndexBuffer::flush(uint32_t bufferIndex) {
     VkDeviceSize bufferSize = m_size;
     auto& buffer = m_buffers[bufferIndex];
     if (!buffer || buffer->size() < bufferSize){
-        switch(m_createInfo.updateType){
+        switch(m_info.updateType){
             case UpdateType::BAKED:
                 buffer = VulkanHelper::create_baked_buffer(
                         m_vulkanCreateInfo.physicalDevice,
@@ -64,7 +61,7 @@ void VulkanIndexBuffer::flush(uint32_t bufferIndex) {
         }
     }
     else {
-        switch(m_createInfo.updateType){
+        switch(m_info.updateType){
             case UpdateType::BAKED:
                 VulkanHelper::upload_baked_buffer(
                         buffer,
@@ -82,7 +79,7 @@ void VulkanIndexBuffer::flush(uint32_t bufferIndex) {
 
 }
 
-void VulkanIndexBuffer::upload() {
+void VulkanIndexBuffer::flush() {
     for (int i = 0; i < m_buffers.size(); i++){
         m_dirtyBuffers.insert(i);
     }

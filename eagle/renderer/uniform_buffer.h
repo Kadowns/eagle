@@ -5,23 +5,19 @@
 #ifndef EAGLE_UNIFORMBUFFER_H
 #define EAGLE_UNIFORMBUFFER_H
 
-#include "descriptor_item.h"
-#include "shader.h"
+#include <eagle/renderer/gpu_buffer.h>
+#include <eagle/renderer/descriptor_item.h>
 
 namespace eagle {
 
-class UniformBuffer : public Descriptor {
+class UniformBuffer : public Descriptor, public GPUBuffer {
 public:
-    explicit UniformBuffer(size_t size) : m_bytes(size) {}
-    virtual ~UniformBuffer() = default;
+    UniformBuffer(void* data, size_t size) : GPUBuffer(data, size) {}
 
-    virtual void copy_from(void *data, size_t size, size_t offset) = 0;
-    virtual void upload() = 0;
-    size_t size() {return m_bytes.size();}
-    const std::vector<char>& data() const { return m_bytes; }
-
-protected:
-    std::vector<char> m_bytes;
+    // from eagle::Descriptor
+    DescriptorType type() const override {
+        return DescriptorType::UNIFORM_BUFFER;
+    }
 };
 
 }

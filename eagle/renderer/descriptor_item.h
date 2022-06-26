@@ -5,7 +5,7 @@
 #ifndef EAGLE_DESCRIPTORITEM_H
 #define EAGLE_DESCRIPTORITEM_H
 
-#include "renderer_global_definitions.h"
+#include <eagle/renderer/renderer_global_definitions.h>
 
 namespace eagle {
 

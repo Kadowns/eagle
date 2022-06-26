@@ -20,23 +20,18 @@ struct VulkanUniformBufferCreateInfo{
 };
 
 class VulkanUniformBuffer : public UniformBuffer, public VulkanCleanable {
-
 public:
 
     explicit VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createInfo, size_t size, void *data);
     ~VulkanUniformBuffer() override;
 
-    inline std::vector<std::shared_ptr<VulkanBuffer>>& get_buffers() { return m_buffers; }
+    inline std::vector<std::shared_ptr<VulkanBuffer>>& buffers() { return m_buffers; }
     void create_uniform_buffer();
-
-    DescriptorType type() const override;
-
     void cleanup();
     void recreate(uint32_t bufferCount);
 
     //uniform buffer
-    void copy_from(void *data, size_t size, size_t offset) override;
-    void upload() override;
+    void flush() override;
 
     //vulkan cleanable
     void flush(uint32_t bufferIndex) override;
@@ -46,7 +41,7 @@ private:
 
     VulkanUniformBufferCreateInfo m_info;
     std::vector<std::shared_ptr<VulkanBuffer>> m_buffers;
-    std::set<int> m_dirtyBuffers;
+    std::set<uint32_t> m_dirtyBuffers;
     bool m_cleared = true;
 };
 

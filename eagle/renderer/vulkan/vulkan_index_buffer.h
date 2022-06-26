@@ -27,19 +27,19 @@ class VulkanIndexBuffer : public IndexBuffer, public VulkanCleanable {
 
 public:
 
-    VulkanIndexBuffer(const IndexBufferCreateInfo& createInfo, VulkanIndexBufferCreateInfo &vulkanCreateInfo);
+    VulkanIndexBuffer(const IndexBufferCreateInfo& createInfo, const VulkanIndexBufferCreateInfo &vulkanCreateInfo, void* data, size_t size);
     ~VulkanIndexBuffer() override;
 
     bool is_dirty() const override;
     void flush(uint32_t bufferIndex) override;
 
-    void upload() override;
+    void flush() override;
     inline VulkanBuffer& native_buffer(uint32_t bufferIndex) {
         return *(m_buffers[bufferIndex]);
     }
 
     inline VkIndexType native_index_type(){
-        switch(m_createInfo.indexType) {
+        switch(m_info.indexType) {
             case IndexBufferType::UINT_16: return VK_INDEX_TYPE_UINT16;
             case IndexBufferType::UINT_32: return VK_INDEX_TYPE_UINT32;
         }

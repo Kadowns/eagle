@@ -25,10 +25,9 @@ struct VulkanVertexBufferCreateInfo {
 };
 
 class VulkanVertexBuffer : public VertexBuffer, public VulkanCleanable {
-
 public:
 
-    VulkanVertexBuffer(const VertexBufferCreateInfo& createInfo, const VulkanVertexBufferCreateInfo &vulkanCreateInfo);
+    VulkanVertexBuffer(const VertexBufferCreateInfo& createInfo, const VulkanVertexBufferCreateInfo &vulkanCreateInfo, void* data, size_t size);
     ~VulkanVertexBuffer() override;
 
     //vulkan cleanable
@@ -36,17 +35,17 @@ public:
     void flush(uint32_t bufferIndex) override;
 
     //vertex buffer
-    void upload() override;
+    void flush() override;
 
     inline VulkanBuffer& native_buffer(uint32_t bufferIndex) {
         return *(m_buffers[bufferIndex]);
     }
 
 private:
-    VulkanVertexBufferCreateInfo m_vulkanCreateInfo;
+    VulkanVertexBufferCreateInfo m_vulkanInfo;
 
     std::vector<std::shared_ptr<VulkanBuffer>> m_buffers;
-    std::set<int> m_dirtyBuffers;
+    std::set<uint32_t> m_dirtyBuffers;
 };
 
 }

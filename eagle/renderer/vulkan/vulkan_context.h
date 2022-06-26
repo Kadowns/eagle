@@ -145,10 +145,10 @@ public:
     create_shader(const ShaderCreateInfo &pipelineInfo) override;
 
     std::shared_ptr<VertexBuffer>
-    create_vertex_buffer(const VertexBufferCreateInfo& usage) override;
+    create_vertex_buffer(const VertexBufferCreateInfo &createInfo, void *data, size_t size) override;
 
     std::shared_ptr<IndexBuffer>
-    create_index_buffer(const IndexBufferCreateInfo& createInfo) override;
+    create_index_buffer(const IndexBufferCreateInfo &createInfo, void *data, size_t size) override;
 
     std::shared_ptr<UniformBuffer>
     create_uniform_buffer(size_t size, void *data) override;

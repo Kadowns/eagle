@@ -6,22 +6,20 @@
 #define EAGLE_VERTEXBUFFER_H
 
 #include <eagle/renderer/renderer_global_definitions.h>
-#include <eagle/renderer/graphics_buffer.h>
+#include <eagle/renderer/gpu_buffer.h>
 
 namespace eagle {
 
 struct VertexBufferCreateInfo {
     UpdateType updateType;
-    uint32_t size = 0;
-    void* data = nullptr;
 };
 
-class VertexBuffer : public GraphicsBuffer {
+class VertexBuffer : public GPUBuffer {
 public:
-    explicit VertexBuffer(const VertexBufferCreateInfo& createInfo) : m_createInfo(createInfo) {}
-    ~VertexBuffer() override = default;
+    explicit VertexBuffer(const VertexBufferCreateInfo& info) : m_info(info) {}
+    VertexBuffer(const VertexBufferCreateInfo& info, void* data, size_t size) : GPUBuffer(data, size), m_info(info) {}
 protected:
-    VertexBufferCreateInfo m_createInfo;
+    VertexBufferCreateInfo m_info;
 };
 
 }
