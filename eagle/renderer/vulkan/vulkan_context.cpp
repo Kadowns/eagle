@@ -2,27 +2,22 @@
 // Created by Novak on 08/05/2019.
 //
 
-#include <memory>
-#include <set>
-
-#include "vulkan_context.h"
-#include "vulkan_helper.h"
+#include <eagle/renderer/vulkan/vulkan_context.h>
+#include <eagle/renderer/vulkan/vulkan_helper.h>
 #include <eagle/renderer/vulkan/vulkan_command_buffer.h>
-#include "eagle/window.h"
-
-
-#include "eagle/log.h"
 #include <eagle/renderer/vulkan/vulkan_converter.h>
+#include <eagle/renderer/vulkan/vulkan_semaphore.h>
+
+#include <eagle/log.h>
+#include <eagle/window.h>
 
 namespace eagle {
-
 
 #ifdef EG_PLATFORM_WIN32
     bool VulkanContext::enableValidationLayers = true;
 #else
     bool VulkanContext::enableValidationLayers = false;
 #endif
-
 
 
 VulkanContext::VulkanContext() {
@@ -1016,18 +1011,19 @@ const RenderingContext::Properties& VulkanContext::properties() {
     return m_properties;
 }
 
-void VulkanContext::submit_command_buffer(const std::shared_ptr<CommandBuffer>& commandBuffer) {
-    auto vcb = std::static_pointer_cast<VulkanCommandBuffer>(commandBuffer);
-    m_present.commandBuffers.emplace_back(vcb->native_command_buffers()[m_present.imageIndex]);
-}
+bool VulkanContext::prepare_frame(Semaphore* signalAvailableImage) {
 
-bool VulkanContext::prepare_frame() {
-    VK_CALL vkWaitForFences(m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
+    auto semaphore = dynamic_cast<VulkanSemaphore*>(signalAvailableImage);
 
     VkResult result;
     VK_CALL
-    result = vkAcquireNextImageKHR(m_device, m_present.swapchain, std::numeric_limits<uint64_t>::max(),
-                                   m_imageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &m_present.imageIndex);
+    result = vkAcquireNextImageKHR(
+            m_device,
+            m_present.swapchain,
+            std::numeric_limits<uint64_t>::max(),
+            semaphore->native_semaphore(m_currentFrame),
+            VK_NULL_HANDLE,
+            &m_present.imageIndex);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
         recreate_swapchain();
@@ -1109,7 +1105,7 @@ std::shared_ptr<RenderPass> VulkanContext::main_render_pass() {
     return m_present.renderPass;
 }
 
-std::shared_ptr<Framebuffer> VulkanContext::main_frambuffer() {
+std::shared_ptr<Framebuffer> VulkanContext::main_framebuffer() {
     return m_present.framebuffer;
 }
 

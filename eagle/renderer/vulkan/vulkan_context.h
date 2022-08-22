@@ -66,12 +66,11 @@ public:
     //inherited via RenderingContext
     virtual void destroy();
 
-    bool prepare_frame() override;
-    void submit_command_buffer(const std::shared_ptr<CommandBuffer>& commandBuffer) override;
+    bool prepare_frame(Semaphore* signalAvailableImage) override;
     void present_frame() override;
 
     std::shared_ptr<RenderPass> main_render_pass() override;
-    std::shared_ptr<Framebuffer> main_frambuffer() override;
+    std::shared_ptr<Framebuffer> main_framebuffer() override;
 
     const Properties& properties() override;
     //------

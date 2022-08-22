@@ -7,7 +7,9 @@
 
 #include <eagle/renderer/render_pass.h>
 #include <eagle/renderer/command_buffer.h>
-#include "vulkan_global_definitions.h"
+#include <eagle/renderer/vulkan/vulkan_global_definitions.h>
+
+#include <span>
 
 namespace eagle {
 
@@ -99,7 +101,7 @@ public:
     }
 
     template<typename VK, typename EG>
-    static VK to_vk_flags(const std::vector<EG>& elements) {
+    static VK to_vk_flags(const std::span<EG>& elements) {
         VK flags = 0;
         for (auto &element : elements) {
             flags |= to_vk(element);
@@ -108,7 +110,7 @@ public:
     }
 
     template<typename EG, typename VK>
-    static std::vector<EG> to_eg_vector(const std::vector<VK>& elements){
+    static std::vector<EG> to_eg_vector(const std::span<VK>& elements){
         std::vector<EG> result;
         result.reserve(elements.size());
         for (auto& element : elements){
@@ -118,7 +120,7 @@ public:
     }
 
     template<typename VK, typename EG>
-    static std::vector<VK> to_vk_vector(const std::vector<EG>& elements){
+    static std::vector<VK> to_vk_vector(const std::span<EG>& elements){
         std::vector<VK> result;
         result.reserve(elements.size());
         for (auto& element : elements){

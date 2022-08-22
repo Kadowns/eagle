@@ -50,7 +50,7 @@ public:
     void cleanup();
     void recreate(uint32_t imageCount);
 
-    inline const std::vector<VkCommandBuffer>& native_command_buffers() { return m_commandBuffers; }
+    inline VkCommandBuffer native_command_buffer(size_t index) { return m_commandBuffers[index]; }
 
 private:
     VulkanCommandBufferCreateInfo m_vkCreateInfo;

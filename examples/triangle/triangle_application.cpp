@@ -17,6 +17,8 @@ void TriangleApplication::init() {
     EG_INFO("triangle", "Triangle attached!");
     m_renderingContext = eagle::Application::instance().window().rendering_context();
 
+    m_renderQueue = m_renderingContext->create_queue({eagle::GPUQueueUsage::RENDER});
+
     m_listener.attach(&eagle::Application::instance().event_bus());
     m_listener.subscribe<eagle::OnWindowClose>([](const eagle::OnWindowClose& ev){
         eagle::Application::instance().quit();
@@ -73,13 +75,16 @@ void TriangleApplication::init() {
 }
 
 void TriangleApplication::step() {
-    if (!m_renderingContext->prepare_frame()){
+
+    m_framesInFlight->wait();
+
+    if (!m_renderingContext->prepare_frame(m_frameAvailable.get())){
         EG_WARNING("triangle", "Failed to prepare frame, skipping");
         return;
     }
 
     m_commandBuffer->begin();
-    m_commandBuffer->begin_render_pass(m_renderingContext->main_render_pass(), m_renderingContext->main_frambuffer());
+    m_commandBuffer->begin_render_pass(m_renderingContext->main_render_pass(), m_renderingContext->main_framebuffer());
     m_commandBuffer->bind_shader(m_shader);
     m_commandBuffer->bind_vertex_buffer(m_vertexBuffer, 0);
     m_commandBuffer->bind_index_buffer(m_indexBuffer);
@@ -87,7 +92,30 @@ void TriangleApplication::step() {
     m_commandBuffer->end_render_pass();
     m_commandBuffer->end();
 
-    m_renderingContext->submit_command_buffer(m_commandBuffer);
+
+    eagle::GPUQueueSubmitInfo submitInfo = {};
+
+    //command buffers to execute
+    eagle::CommandBuffer* commandBuffers[] = {m_commandBuffer.get()};
+    submitInfo.commandBuffers = commandBuffers;
+
+    //fences to synchronize with cpu
+    submitInfo.fence = m_framesInFlight.get();
+
+    //semaphores to wait for signal before starting
+    eagle::Semaphore* waitSemaphores[] = {m_frameAvailable.get()};
+    submitInfo.waitSemaphores = waitSemaphores;
+
+    //semaphores to signal when finished
+    eagle::Semaphore* signalSemaphores[] = {m_renderFinished.get()};
+    submitInfo.signalSemaphores = signalSemaphores;
+
+    //wait for color output
+    eagle::PipelineStageFlagsBits waitStages[] = {eagle::PipelineStageFlagsBits::COLOR_ATTACHMENT_OUTPUT_BIT};
+    submitInfo.waitStages = waitStages;
+
+    m_renderQueue->submit(submitInfo);
+
     m_renderingContext->present_frame();
 }
 
