@@ -6,8 +6,6 @@
 #define EAGLE_EAGLE_H
 
 #include <eagle/log.h>
-#include <eagle/layer.h>
-#include <eagle/input_layer.h>
 #include <eagle/input.h>
 #include <eagle/random.h>
 #include <eagle/timer.h>
@@ -18,7 +16,7 @@
 #include <eagle/events/key_codes.h>
 
 #include <eagle/renderer/renderer_global_definitions.h>
-#include <eagle/renderer/rendering_context.h>
+#include <eagle/renderer/render_context.h>
 
 #include <eagle/memory/stack_allocator.h>
 #include <eagle/memory/pool_allocator.h>

@@ -16,8 +16,8 @@ public:
     virtual ~Buffer();
 
     template<typename T>
-    inline void write(const T& obj){
-        write(&obj, sizeof(obj));
+    void write_from(const T& obj){
+        write((void*)&obj, sizeof(obj), 0);
     }
 
     void write(void* data, size_t size, size_t offset = 0);

@@ -2,34 +2,38 @@
 // Created by Novak on 12/05/2019.
 //
 
-#include "desktop_window_glfw.h"
-#include "eagle/log.h"
-#include "eagle/events/window_events.h"
-#include "eagle/events/input_events.h"
-
+#include <eagle/platform/desktop/desktop_window_glfw.h>
+#include <eagle/log.h>
+#include <eagle/events/window_events.h>
+#include <eagle/events/input_events.h>
 
 #include <GLFW/glfw3.h>
-#include <eagle/renderer/vulkan/platform/desktop/vulkan_context_glfw.h>
-
+#include <eagle/renderer/vulkan/platform/desktop/vulkan_render_context_glfw.h>
 
 namespace eagle {
 
-DesktopWindowGLFW::DesktopWindowGLFW(uint32_t width, uint32_t height) : m_windowData(width, height) {
+DesktopWindowGLFW::DesktopWindowGLFW(const WindowCreateInfo& createInfo, DesktopWindowGLFWCreateInfo desktopCreateInfo) :
+    Window(createInfo),
+    m_desktopCreateInfo(desktopCreateInfo){
 
 }
 
 DesktopWindowGLFW::~DesktopWindowGLFW() {
-    m_renderingContext->destroy();
+    if (m_renderContext){
+        m_renderContext->exit();
+    }
 
     for (auto& it : m_mouseCursors){
         glfwDestroyCursor(it.second);
     }
+
     m_mouseCursors.clear();
 
     glfwTerminate();
 }
 
 void DesktopWindowGLFW::init(EventBus* eventBus) {
+    EG_LOG_CREATE("eagle");
 
     EG_TRACE("eagle","Initializing glfw window!");
 
@@ -41,85 +45,92 @@ void DesktopWindowGLFW::init(EventBus* eventBus) {
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUSED , GLFW_TRUE);
 
-    m_window = glfwCreateWindow(m_windowData.width, m_windowData.height, "Eagle - NAME_ME", nullptr, nullptr);
+    m_glfwWindow = glfwCreateWindow(
+            (int32_t)m_desktopCreateInfo.width,
+            (int32_t)m_desktopCreateInfo.height,
+            m_createInfo.applicationName,
+            nullptr,
+            nullptr
+            );
 
-    if (!m_window){
+    if (!m_glfwWindow){
         glfwTerminate();
         throw std::runtime_error("Failed to create glfw window!");
     }
 
-    m_windowData.eventBus = eventBus;
+    m_eventBus = eventBus;
 
     int framebufferWidth, framebufferHeight;
-    glfwGetFramebufferSize(m_window, &framebufferWidth, &framebufferHeight);
-    m_windowData.framebufferWidth = framebufferWidth;
-    m_windowData.framebufferHeight = framebufferHeight;
+    glfwGetFramebufferSize(m_glfwWindow, &framebufferWidth, &framebufferHeight);
+    m_framebufferWidth = framebufferWidth;
+    m_framebufferHeight = framebufferHeight;
 
-    glfwMakeContextCurrent(m_window);
-    glfwShowWindow(m_window);
+    glfwMakeContextCurrent(m_glfwWindow);
+    glfwShowWindow(m_glfwWindow);
 
     EG_TRACE("eagle","Setting up GLFW callbacks!");
 
-    glfwSetWindowUserPointer(m_window, &m_windowData);
+    glfwSetWindowUserPointer(m_glfwWindow, this);
 
     //window resize
-    glfwSetWindowSizeCallback(m_window, [](GLFWwindow* window, int width, int height){
-        auto data = (WindowData*)glfwGetWindowUserPointer(window);
-        data->width = width;
-        data->height = height;
+    glfwSetWindowSizeCallback(m_glfwWindow, [](GLFWwindow* glfwWindow, int width, int height){
+        auto window = (DesktopWindowGLFW*)glfwGetWindowUserPointer(glfwWindow);
+
+        window->m_desktopCreateInfo.width = width;
+        window->m_desktopCreateInfo.height = height;
 
         int framebufferWidth, framebufferHeight;
-        glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
-        data->framebufferWidth = framebufferWidth;
-        data->framebufferHeight = framebufferHeight;
+        glfwGetFramebufferSize(glfwWindow, &framebufferWidth, &framebufferHeight);
+        window->m_framebufferWidth = framebufferWidth;
+        window->m_framebufferHeight = framebufferHeight;
 
         if (width != 0 && height != 0){
-            data->eventBus->emit(OnWindowResized{static_cast<uint32_t>(width), static_cast<uint32_t>(height)});
+            window->m_eventBus->emit(OnWindowResized{static_cast<uint32_t>(width), static_cast<uint32_t>(height)});
         }
     });
 
     //window focus
-    glfwSetWindowFocusCallback(m_window, [](GLFWwindow* window, int focused){
-        auto data = (WindowData*)glfwGetWindowUserPointer(window);
+    glfwSetWindowFocusCallback(m_glfwWindow, [](GLFWwindow* glfwWindow, int focused){
+        auto window = (DesktopWindowGLFW*)glfwGetWindowUserPointer(glfwWindow);
         if (focused == GLFW_TRUE){
-            data->eventBus->emit(OnWindowFocus{});
+            window->m_eventBus->emit(OnWindowFocus{});
         }
         else {
-            data->eventBus->emit(OnWindowLostFocus{});
+            window->m_eventBus->emit(OnWindowLostFocus{});
         }
     });
 
     //window close
-    glfwSetWindowCloseCallback(m_window, [](GLFWwindow* window){
-        auto data = (WindowData*)glfwGetWindowUserPointer(window);
-        data->eventBus->emit(OnWindowClose{});
+    glfwSetWindowCloseCallback(m_glfwWindow, [](GLFWwindow* glfwWindow){
+        auto window = (DesktopWindowGLFW*)glfwGetWindowUserPointer(glfwWindow);
+        window->m_eventBus->emit(OnWindowClose{});
     });
 
     //mouse move
-    glfwSetCursorPosCallback(m_window, [](GLFWwindow* window, double x, double y){
-        auto data = (WindowData*)glfwGetWindowUserPointer(window);
-        data->eventBus->emit(OnMouseMove{static_cast<float>(x), static_cast<float>(y)});
+    glfwSetCursorPosCallback(m_glfwWindow, [](GLFWwindow* glfwWindow, double x, double y){
+        auto window = (DesktopWindowGLFW*)glfwGetWindowUserPointer(glfwWindow);
+        window->m_eventBus->emit(OnMouseMove{static_cast<float>(x), static_cast<float>(y)});
     });
 
-    glfwSetScrollCallback(m_window, [](GLFWwindow* window, double x, double y){
-        auto data = (WindowData*)glfwGetWindowUserPointer(window);
-        data->eventBus->emit(OnMouseScrolled{static_cast<float>(x), static_cast<float>(y)});
+    glfwSetScrollCallback(m_glfwWindow, [](GLFWwindow* glfwWindow, double x, double y){
+        auto window = (DesktopWindowGLFW*)glfwGetWindowUserPointer(glfwWindow);
+        window->m_eventBus->emit(OnMouseScrolled{static_cast<float>(x), static_cast<float>(y)});
     });
 
     //mouse click
-    glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int key, int action, int mod){
-        auto data = (WindowData*)glfwGetWindowUserPointer(window);
-        data->eventBus->emit(OnMouseButton{key, action, mod});
+    glfwSetMouseButtonCallback(m_glfwWindow, [](GLFWwindow* glfwWindow, int key, int action, int mod){
+        auto window = (DesktopWindowGLFW*)glfwGetWindowUserPointer(glfwWindow);
+        window->m_eventBus->emit(OnMouseButton{key, action, mod});
     });
 
-    glfwSetKeyCallback(m_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
-        auto data = (WindowData*)glfwGetWindowUserPointer(window);
-        data->eventBus->emit(OnKey{key, action, mods});
+    glfwSetKeyCallback(m_glfwWindow, [](GLFWwindow* glfwWindow, int key, int scancode, int action, int mods) {
+        auto window = (DesktopWindowGLFW*)glfwGetWindowUserPointer(glfwWindow);
+        window->m_eventBus->emit(OnKey{key, action, mods});
     });
 
-    glfwSetCharCallback(m_window, [](GLFWwindow* window, unsigned int c){
-        auto data = (WindowData*)glfwGetWindowUserPointer(window);
-        data->eventBus->emit(OnKeyTyped{c});
+    glfwSetCharCallback(m_glfwWindow, [](GLFWwindow* glfwWindow, unsigned int c){
+        auto window = (DesktopWindowGLFW*)glfwGetWindowUserPointer(glfwWindow);
+        window->m_eventBus->emit(OnKeyTyped{c});
     });
 
     m_mouseCursors[Cursor::ARROW] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
@@ -129,14 +140,25 @@ void DesktopWindowGLFW::init(EventBus* eventBus) {
     m_mouseCursors[Cursor::HORI_RESIZE] = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
     m_mouseCursors[Cursor::VERT_RESIZE] = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
 
-    m_renderingContext = make_strong<VulkanContextGLFW>(this);
-    m_renderingContext->init();
+
+    RenderContextCreateInfo renderContextCreateInfo = {};
+    renderContextCreateInfo.window = (Window*)this;
+    renderContextCreateInfo.maxFramesInFlight = 2;
+    renderContextCreateInfo.engineName = m_createInfo.engineName;
+    renderContextCreateInfo.applicationName = m_createInfo.applicationName;
+    renderContextCreateInfo.physicalDeviceIndex = 0;
+
+    VulkanRenderContextCreateInfo vulkanRenderContextCreateInfo = {};
+    vulkanRenderContextCreateInfo.enableValidationLayers = true;
+
+    m_renderContext = std::make_shared<VulkanRenderContextGLFW>(renderContextCreateInfo, vulkanRenderContextCreateInfo);
+    m_renderContext->init();
 
     EG_TRACE("eagle","Window initialized!");
 }
 
 void* DesktopWindowGLFW::native_window() {
-    return m_window;
+    return m_glfwWindow;
 }
 
 void DesktopWindowGLFW::pool_events() {
@@ -145,7 +167,7 @@ void DesktopWindowGLFW::pool_events() {
 
 bool DesktopWindowGLFW::is_minimized() {
     int width, height;
-    glfwGetWindowSize(m_window, &width, &height);
+    glfwGetWindowSize(m_glfwWindow, &width, &height);
     return width == 0 || height == 0;
 }
 
@@ -155,40 +177,39 @@ void DesktopWindowGLFW::wait_native_events() {
 
 void DesktopWindowGLFW::set_cursor_shape(Cursor cursorType) {
     auto cursor = m_mouseCursors.find(cursorType);
-    glfwSetCursor(m_window, cursor != m_mouseCursors.end() ? cursor->second : m_mouseCursors[Cursor::ARROW]);
+    glfwSetCursor(m_glfwWindow, cursor != m_mouseCursors.end() ? cursor->second : m_mouseCursors[Cursor::ARROW]);
 }
 
 void DesktopWindowGLFW::set_cursor_visible(bool visible) {
-    glfwSetInputMode(m_window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(m_glfwWindow, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
 }
 
-RenderingContext* DesktopWindowGLFW::rendering_context() {
-    return m_renderingContext.get();
+RenderContext* DesktopWindowGLFW::render_context() {
+    return m_renderContext.get();
 }
 
 uint32_t DesktopWindowGLFW::width() {
-    return m_windowData.width;
+    return m_desktopCreateInfo.width;
 }
 
 uint32_t DesktopWindowGLFW::height() {
-    return m_windowData.height;
+    return m_desktopCreateInfo.height;
 }
 
 uint32_t DesktopWindowGLFW::framebuffer_width() {
-    return m_windowData.framebufferWidth;
+    return m_framebufferWidth;
 }
 
 uint32_t DesktopWindowGLFW::framebuffer_height() {
-    return m_windowData.framebufferHeight;
+    return m_framebufferHeight;
 }
 
 float DesktopWindowGLFW::framebuffer_width_scale() {
-    return static_cast<float>(m_windowData.framebufferWidth) / m_windowData.width;
+    return (float)m_framebufferWidth / (float)m_desktopCreateInfo.width;
 }
 
 float DesktopWindowGLFW::framebuffer_height_scale() {
-    return static_cast<float>(m_windowData.framebufferHeight) / m_windowData.height;
+    return (float)m_framebufferHeight / (float)m_desktopCreateInfo.height;
 }
-
 
 }

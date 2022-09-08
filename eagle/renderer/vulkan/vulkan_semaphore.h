@@ -13,18 +13,22 @@
 namespace eagle {
 
 struct VulkanSemaphoreCreateInfo {
-
+    VkDevice device;
+    uint32_t frameCount;
 };
 
 class VulkanSemaphore : public Semaphore {
 public:
+    explicit VulkanSemaphore(const VulkanSemaphoreCreateInfo& createInfo);
+    ~VulkanSemaphore() override;
 
-    VkSemaphore native_semaphore(uint32_t frame) { return m_semaphores[frame]; }
+    VkSemaphore native_semaphore(uint32_t frame);
 
 private:
+    VulkanSemaphoreCreateInfo m_createInfo;
     std::vector<VkSemaphore> m_semaphores;
 };
 
 } // eagle
 
-#endif //TRIANGLE_VULKAN_SEMAPHORE_H
+#endif //EAGLE_VULKAN_SEMAPHORE_H

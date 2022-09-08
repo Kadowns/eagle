@@ -44,9 +44,4 @@ private:
 
 }
 
-#define VK_CALL eagle::VkDebugInfo::set_call(__FILE__, SPDLOG_FUNCTION, __LINE__);
-
-#define VK_CALL_ASSERT(result) VK_CALL if (result != VK_SUCCESS)
-
-
 #endif //EAGLE_VULKANCORE_H

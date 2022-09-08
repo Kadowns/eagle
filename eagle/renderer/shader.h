@@ -14,11 +14,11 @@ namespace eagle {
 
 
 struct ShaderCreateInfo {
-    ShaderCreateInfo(const std::shared_ptr<RenderPass>& renderPass,
+    ShaderCreateInfo(RenderPass* renderPass,
                      const std::unordered_map<ShaderStage, std::string>& shaderStages) :
                      renderPass(renderPass),
                      shaderStages(shaderStages){}
-    std::shared_ptr<RenderPass> renderPass;
+    RenderPass* renderPass;
     std::unordered_map<ShaderStage, std::string> shaderStages;
     bool blendEnable = false;
     bool depthTesting = false;

@@ -11,7 +11,7 @@ namespace eagle {
 VulkanVertexBuffer::VulkanVertexBuffer(const VertexBufferCreateInfo &createInfo, const VulkanVertexBufferCreateInfo &vulkanCreateInfo, void *data, size_t size) :
         VertexBuffer(createInfo, data, size),
         m_vulkanInfo(vulkanCreateInfo),
-        m_buffers(vulkanCreateInfo.bufferCount) {
+        m_buffers(vulkanCreateInfo.frameCount) {
     if (size > 0){
         for (uint32_t i = 0; i < m_buffers.size(); i++){
             VulkanVertexBuffer::flush(i);
@@ -24,7 +24,7 @@ VulkanVertexBuffer::~VulkanVertexBuffer() {
     for (int i = 0; i < m_buffers.size(); i++){
         if (m_buffers[i]){
             m_buffers[i]->unmap();
-            m_vulkanInfo.deleter.destroy_buffer(m_buffers[i], i);
+            m_buffers[i].reset();
         }
     }
 }
@@ -42,8 +42,7 @@ void VulkanVertexBuffer::flush(uint32_t bufferIndex) {
                         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                         m_data,
                         bufferSize,
-                        m_vulkanInfo.commandPool,
-                        m_vulkanInfo.graphicsQueue
+                        m_vulkanInfo.queue
                         );
                 break;
             case UpdateType::DYNAMIC:
@@ -61,8 +60,7 @@ void VulkanVertexBuffer::flush(uint32_t bufferIndex) {
             case UpdateType::BAKED:
                 VulkanHelper::upload_baked_buffer(
                         buffer,
-                        m_vulkanInfo.graphicsQueue,
-                        m_vulkanInfo.commandPool,
+                        m_vulkanInfo.queue,
                         m_data);
                 break;
             case UpdateType::DYNAMIC:

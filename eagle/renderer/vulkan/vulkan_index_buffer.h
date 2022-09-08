@@ -8,19 +8,18 @@
 #include <eagle/renderer/index_buffer.h>
 #include <eagle/renderer/vulkan/vulkan_buffer.h>
 #include <eagle/renderer/vulkan/vulkan_cleaner.h>
-#include <eagle/renderer/vulkan/vulkan_deleter.h>
 
 #include <set>
 
 namespace eagle {
 
+class VulkanSharedCommandPool;
+
 struct VulkanIndexBufferCreateInfo {
-    VulkanDeleter& deleter;
     VkDevice device;
     VkPhysicalDevice physicalDevice;
-    VkCommandPool commandPool;
-    VkQueue graphicsQueue;
-    uint32_t bufferCount;
+    uint32_t frameCount;
+    VulkanQueue* queue;
 };
 
 class VulkanIndexBuffer : public IndexBuffer, public VulkanCleanable {
@@ -34,7 +33,7 @@ public:
     void flush(uint32_t bufferIndex) override;
 
     void flush() override;
-    inline VulkanBuffer& native_buffer(uint32_t bufferIndex) {
+    inline VulkanBuffer& internal_buffer(uint32_t bufferIndex) {
         return *(m_buffers[bufferIndex]);
     }
 
@@ -42,6 +41,7 @@ public:
         switch(m_info.indexType) {
             case IndexBufferType::UINT_16: return VK_INDEX_TYPE_UINT16;
             case IndexBufferType::UINT_32: return VK_INDEX_TYPE_UINT32;
+            default:                       return VK_INDEX_TYPE_NONE_KHR;
         }
     }
 

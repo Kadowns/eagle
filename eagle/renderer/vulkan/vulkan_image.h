@@ -12,16 +12,17 @@
 
 namespace eagle {
 
+class VulkanSharedCommandPool;
+class VulkanQueue;
+
 struct VulkanImageCreateInfo {
-    VkPhysicalDevice physicalDevice;
-    VkDevice device;
-    VkCommandPool commandPool;
-    VkQueue graphicsQueue;
-    uint32_t imageCount;
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    VkDevice device = VK_NULL_HANDLE;
+    uint32_t frameCount = 0;
+    VulkanQueue* queue = nullptr;
 };
 
 class VulkanImage;
-
 
 struct VulkanImageViewCreateInfo {
     VkDevice device;
@@ -45,7 +46,6 @@ public:
     Image& image() const override;
 
     inline VkImageView& native_image_view(size_t index) { return m_views[index % m_createInfo.imageCount]; }
-    inline const VkImageView& native_image_view(size_t index) const { return m_views[index % m_createInfo.imageCount]; }
 
 private:
     VulkanImageViewCreateInfo m_createInfo;
@@ -58,18 +58,15 @@ public:
 
     //Used for swapchain images
     VulkanImage(const ImageCreateInfo& imageCreateInfo, const VulkanImageCreateInfo& nativeCreateInfo, std::vector<VkImage> images);
-    ~VulkanImage();
+    ~VulkanImage() override;
 
     void generate_mipmaps() override;
-    std::shared_ptr<ImageView> view(uint32_t mipLevel = 0) override;
+    std::shared_ptr<ImageView> view(uint32_t mipLevel) override;
 
-    inline VkImage& native_image(size_t index) { return m_images[index % m_nativeCreateInfo.imageCount]; }
-    inline VkDeviceMemory& native_memory(size_t index) { return m_memories[index % m_nativeCreateInfo.imageCount]; }
+
+    inline VkImage& native_image(size_t index) { return m_images[index % m_nativeCreateInfo.frameCount]; }
+    inline VkDeviceMemory& native_memory(size_t index) { return m_memories[index % m_nativeCreateInfo.frameCount]; }
     inline std::shared_ptr<VulkanImageView> native_view(uint32_t mipLevel = 0) { return m_views[mipLevel]; }
-
-    inline const VkImage& native_image(size_t index) const { return m_images[index % m_nativeCreateInfo.imageCount]; }
-    inline const VkDeviceMemory& native_memory(size_t index) const { return m_memories[index % m_nativeCreateInfo.imageCount]; }
-    inline const std::shared_ptr<VulkanImageView> native_view(uint32_t mipLevel = 0) const { return m_views[mipLevel]; }
 
 protected:
     void on_resize() override;

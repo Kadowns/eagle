@@ -16,11 +16,16 @@ namespace eagle {
 class DesktopWindowGLFW;
 class RenderingContext;
 
+struct DesktopApplicationCreateInfo {
+    uint32_t width;
+    uint32_t height;
+};
+
 class DesktopApplication : public Application {
 public:
 
-     DesktopApplication(uint32_t width, uint32_t height, ApplicationDelegate *delegate);
-     ~DesktopApplication();
+     DesktopApplication(const ApplicationCreateInfo createInfo, const DesktopApplicationCreateInfo desktopCreateInfo);
+     ~DesktopApplication() override;
 
     void run();
 
@@ -30,6 +35,7 @@ public:
     ApplicationDelegate& delegate() override { return *m_delegate; }
 
 protected:
+    DesktopApplicationCreateInfo m_desktopCreateInfo;
     std::shared_ptr<ApplicationDelegate> m_delegate;
     std::shared_ptr<DesktopWindowGLFW> m_window;
     EventBus m_eventBus;

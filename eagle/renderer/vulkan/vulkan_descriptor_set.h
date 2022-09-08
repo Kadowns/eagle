@@ -1,26 +1,23 @@
 #ifndef EAGLE_VULKANDESCRIPTORSET_H
 #define EAGLE_VULKANDESCRIPTORSET_H
 
-#include "eagle/renderer/descriptor_set.h"
-#include "vulkan_global_definitions.h"
-#include "vulkan_shader.h"
-#include "vulkan_uniform_buffer.h"
-#include "vulkan_texture.h"
-#include "vulkan_cleaner.h"
-
+#include <eagle/renderer/descriptor_set.h>
+#include <eagle/renderer/vulkan/vulkan_global_definitions.h>
+#include <eagle/renderer/vulkan/vulkan_shader.h>
+#include <eagle/renderer/vulkan/vulkan_uniform_buffer.h>
+#include <eagle/renderer/vulkan/vulkan_texture.h>
+#include <eagle/renderer/vulkan/vulkan_cleaner.h>
 
 namespace eagle {
 
-
-
 struct VulkanDescriptorSetInfo {
     VkDevice device;
-    uint32_t bufferCount;
+    uint32_t frameCount;
 };
 
 class VulkanDescriptorSet : public DescriptorSet, public VulkanCleanable {
 public:
-    VulkanDescriptorSet(DescriptorSetInfo info, VulkanDescriptorSetInfo vkInfo);
+    VulkanDescriptorSet(DescriptorSetCreateInfo info, VulkanDescriptorSetInfo vkInfo);
     ~VulkanDescriptorSet() override;
 
     void cleanup();
@@ -29,7 +26,7 @@ public:
     void create_descriptor_sets();
 
     void update() override;
-    inline std::vector<VkDescriptorSet>& get_descriptors() {return m_descriptorSets;}
+    VkDescriptorSet native_descriptor_set(uint32_t frameIndex);
 
     bool is_dirty() const override;
     bool valid() const;

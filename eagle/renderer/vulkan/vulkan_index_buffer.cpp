@@ -11,7 +11,7 @@ namespace eagle {
 VulkanIndexBuffer::VulkanIndexBuffer(const IndexBufferCreateInfo& createInfo, const VulkanIndexBufferCreateInfo& vulkanCreateInfo, void* data, size_t size) :
         IndexBuffer(createInfo, data, size),
         m_vulkanCreateInfo(vulkanCreateInfo),
-        m_buffers(vulkanCreateInfo.bufferCount) {
+        m_buffers(vulkanCreateInfo.frameCount) {
 
     if (size > 0){
         for (int i = 0; i < m_buffers.size(); i++){
@@ -21,11 +21,8 @@ VulkanIndexBuffer::VulkanIndexBuffer(const IndexBufferCreateInfo& createInfo, co
 }
 
 VulkanIndexBuffer::~VulkanIndexBuffer() {
-    for (int i = 0; i < m_buffers.size(); i++){
-        auto& buffer = m_buffers[i];
-        if (buffer){
-            m_vulkanCreateInfo.deleter.destroy_buffer(buffer, i);
-        }
+    for (auto& buffer : m_buffers){
+        buffer.reset();
     }
 }
 
@@ -46,8 +43,7 @@ void VulkanIndexBuffer::flush(uint32_t bufferIndex) {
                         VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
                         m_data,
                         bufferSize,
-                        m_vulkanCreateInfo.commandPool,
-                        m_vulkanCreateInfo.graphicsQueue);
+                        m_vulkanCreateInfo.queue);
 
                 break;
             case UpdateType::DYNAMIC:
@@ -65,8 +61,7 @@ void VulkanIndexBuffer::flush(uint32_t bufferIndex) {
             case UpdateType::BAKED:
                 VulkanHelper::upload_baked_buffer(
                         buffer,
-                        m_vulkanCreateInfo.graphicsQueue,
-                        m_vulkanCreateInfo.commandPool,
+                        m_vulkanCreateInfo.queue,
                         m_data);
                 break;
             case UpdateType::DYNAMIC:

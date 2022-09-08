@@ -1,11 +1,12 @@
 #include <eagle/renderer/vulkan/vulkan_storage_buffer.h>
 #include <eagle/renderer/vulkan/vulkan_converter.h>
-#include "vulkan_descriptor_set.h"
-#include "vulkan_image.h"
+#include <eagle/renderer/vulkan/vulkan_exception.h>
+#include <eagle/renderer/vulkan/vulkan_descriptor_set.h>
+#include <eagle/renderer/vulkan/vulkan_image.h>
 
 namespace eagle {
 
-VulkanDescriptorSet::VulkanDescriptorSet(DescriptorSetInfo info, VulkanDescriptorSetInfo vkInfo) :
+VulkanDescriptorSet::VulkanDescriptorSet(DescriptorSetCreateInfo info, VulkanDescriptorSetInfo vkInfo) :
     DescriptorSet(std::move(info)),
     m_vkInfo(vkInfo) {
     create_descriptor_sets();
@@ -29,35 +30,38 @@ void VulkanDescriptorSet::create_descriptor_sets() {
     poolSizes.resize(layoutBindings.size());
     for (size_t i = 0; i < layoutBindings.size(); i++) {
         poolSizes[i].type = layoutBindings[i].descriptorType;
-        poolSizes[i].descriptorCount = m_vkInfo.bufferCount;
+        poolSizes[i].descriptorCount = m_vkInfo.frameCount;
     }
 
     VkDescriptorPoolCreateInfo poolInfo = {};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = static_cast<uint32_t>(m_vkInfo.bufferCount);
+    poolInfo.maxSets = static_cast<uint32_t>(m_vkInfo.frameCount);
 
-    VK_CALL_ASSERT(vkCreateDescriptorPool(m_vkInfo.device, &poolInfo, nullptr, &m_descriptorPool)) {
-        throw std::runtime_error("failed to create descriptor pool!");
+    auto result = vkCreateDescriptorPool(m_vkInfo.device, &poolInfo, nullptr, &m_descriptorPool);
+
+    if (result != VK_SUCCESS) {
+        throw VulkanException("failed to create descriptor pool", result);
     }
 
-    std::vector<VkDescriptorSetLayout> layouts(m_vkInfo.bufferCount, nativeDescriptorSetLayout->native_layout());
+    std::vector<VkDescriptorSetLayout> layouts(m_vkInfo.frameCount, nativeDescriptorSetLayout->native_layout());
     VkDescriptorSetAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfo.descriptorPool = m_descriptorPool;
-    allocInfo.descriptorSetCount = m_vkInfo.bufferCount;
+    allocInfo.descriptorSetCount = m_vkInfo.frameCount;
     allocInfo.pSetLayouts = layouts.data();
 
-    m_descriptorSets.resize(m_vkInfo.bufferCount);
-    VK_CALL_ASSERT(vkAllocateDescriptorSets(m_vkInfo.device, &allocInfo, m_descriptorSets.data())) {
-        throw std::runtime_error("failed to allocate descriptor sets!");
+    m_descriptorSets.resize(m_vkInfo.frameCount);
+    result = vkAllocateDescriptorSets(m_vkInfo.device, &allocInfo, m_descriptorSets.data());
+    if (result != VK_SUCCESS) {
+        throw VulkanException("failed to allocate descriptor sets", result);
     }
     m_cleared = false;
 }
 
 bool VulkanDescriptorSet::valid() const {
-    return !m_info.descriptors.empty() && std::all_of(m_info.descriptors.begin(), m_info.descriptors.end(), [](const std::shared_ptr<Descriptor>& descriptor){
+    return !m_info.descriptors.empty() && std::all_of(m_info.descriptors.begin(), m_info.descriptors.end(), [](Descriptor* descriptor){
         return descriptor != nullptr;
     });
 }
@@ -76,12 +80,11 @@ void VulkanDescriptorSet::flush(uint32_t index) {
     std::vector<VkDescriptorImageInfo> imageInfos;
 
     //foreach descriptor item in descriptor set
-    for (uint32_t j = 0; j < m_info.descriptors.size(); j++){
-        auto descriptor = m_info.descriptors[j];
+    for (auto descriptor : m_info.descriptors){
         switch (descriptor->type()){
 
             case DescriptorType::UNIFORM_BUFFER:{
-                auto buffer = std::static_pointer_cast<VulkanUniformBuffer>(descriptor);
+                auto buffer = (VulkanUniformBuffer*)descriptor;
                 VkDescriptorBufferInfo bufferInfo = {};
                 bufferInfo.buffer = buffer->buffers()[index]->native_buffer();
                 bufferInfo.offset = 0;
@@ -90,7 +93,7 @@ void VulkanDescriptorSet::flush(uint32_t index) {
                 break;
             }
             case DescriptorType::STORAGE_BUFFER:{
-                auto buffer = std::static_pointer_cast<VulkanStorageBuffer>(descriptor);
+                auto buffer = (VulkanStorageBuffer*)descriptor;
                 VkDescriptorBufferInfo bufferInfo = {};
                 bufferInfo.buffer = buffer->get_buffers()[index]->native_buffer();
                 bufferInfo.offset = 0;
@@ -99,7 +102,7 @@ void VulkanDescriptorSet::flush(uint32_t index) {
                 break;
             }
             case DescriptorType::SAMPLED_IMAGE:{
-                auto view = std::static_pointer_cast<VulkanImageView>(descriptor);
+                auto view = (VulkanImageView*)descriptor;
                 VkDescriptorImageInfo imageInfo = {};
                 imageInfo.imageLayout = VulkanConverter::to_vk(view->image().layout());
                 imageInfo.imageView = view->native_image_view(index);
@@ -107,7 +110,7 @@ void VulkanDescriptorSet::flush(uint32_t index) {
                 break;
             }
             case DescriptorType::STORAGE_IMAGE:{
-                auto view = std::static_pointer_cast<VulkanImageView>(descriptor);
+                auto view = (VulkanImageView*)descriptor;
                 VkDescriptorImageInfo imageInfo = {};
                 imageInfo.imageLayout = VulkanConverter::to_vk(view->image().layout());
                 imageInfo.imageView = view->native_image_view(index);
@@ -115,7 +118,7 @@ void VulkanDescriptorSet::flush(uint32_t index) {
                 break;
             }
             case DescriptorType::COMBINED_IMAGE_SAMPLER:{
-                auto texture = std::static_pointer_cast<VulkanTexture>(descriptor);
+                auto texture = (VulkanTexture*)descriptor;
                 VkDescriptorImageInfo imageInfo = {};
                 imageInfo.imageLayout = VulkanConverter::to_vk(texture->native_image()->layout());
                 imageInfo.imageView = texture->native_image()->native_view()->native_image_view(index);
@@ -151,14 +154,14 @@ void VulkanDescriptorSet::flush(uint32_t index) {
         }
     }
 
-    VK_CALL vkUpdateDescriptorSets(m_vkInfo.device, static_cast<uint32_t>(descriptorWrite.size()), descriptorWrite.data(), 0, nullptr);
+    vkUpdateDescriptorSets(m_vkInfo.device, static_cast<uint32_t>(descriptorWrite.size()), descriptorWrite.data(), 0, nullptr);
 
     m_dirtyDescriptors.erase(index);
 }
 
 void VulkanDescriptorSet::cleanup() {
     if (m_cleared) return;
-    VK_CALL vkDestroyDescriptorPool(m_vkInfo.device, m_descriptorPool, nullptr);
+    vkDestroyDescriptorPool(m_vkInfo.device, m_descriptorPool, nullptr);
     m_cleared = true;
 }
 
@@ -166,7 +169,7 @@ void VulkanDescriptorSet::recreate(uint32_t bufferCount) {
     if (!m_cleared) {
         return;
     }
-    m_vkInfo.bufferCount = bufferCount;
+    m_vkInfo.frameCount = bufferCount;
     create_descriptor_sets();
     for (uint32_t i = 0; i < m_descriptorSets.size(); i++){
         flush(i);
@@ -186,6 +189,10 @@ void VulkanDescriptorSet::flush_all() {
     for (uint32_t i = 0; i < m_descriptorSets.size(); i++){
         flush(i);
     }
+}
+
+VkDescriptorSet VulkanDescriptorSet::native_descriptor_set(uint32_t frameIndex) {
+    return m_descriptorSets[frameIndex];
 }
 
 }

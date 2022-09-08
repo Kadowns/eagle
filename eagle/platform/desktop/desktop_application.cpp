@@ -13,11 +13,25 @@
 
 namespace eagle {
 
-DesktopApplication::DesktopApplication(uint32_t width, uint32_t height, ApplicationDelegate* delegate) {
+
+DesktopApplication::DesktopApplication(const ApplicationCreateInfo createInfo, const DesktopApplicationCreateInfo desktopCreateInfo) :
+    Application(createInfo),
+    m_desktopCreateInfo(desktopCreateInfo) {
+
     s_instance = this;
-    m_delegate = std::shared_ptr<ApplicationDelegate>(delegate);
-    m_window = std::make_shared<DesktopWindowGLFW>(width, height);
+
+    WindowCreateInfo windowCreateInfo = {};
+    windowCreateInfo.applicationName = m_createInfo.applicationName;
+    windowCreateInfo.engineName = m_createInfo.engineName;
+
+    DesktopWindowGLFWCreateInfo desktopWindowGlfwCreateInfo = {};
+    desktopWindowGlfwCreateInfo.width = m_desktopCreateInfo.width;
+    desktopWindowGlfwCreateInfo.height = m_desktopCreateInfo.height;
+
+    m_window = std::make_shared<DesktopWindowGLFW>(windowCreateInfo, desktopWindowGlfwCreateInfo);
     DesktopFileSystem::init();
+
+    m_delegate = std::shared_ptr<ApplicationDelegate>(m_createInfo.delegate);
 }
 
 DesktopApplication::~DesktopApplication() {

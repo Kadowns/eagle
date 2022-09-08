@@ -7,32 +7,32 @@
 
 #include <eagle/renderer/storage_buffer.h>
 #include <eagle/renderer/vulkan/vulkan_global_definitions.h>
-#include "vulkan_buffer.h"
-#include "vulkan_cleaner.h"
-#include "vulkan_deleter.h"
+#include <eagle/renderer/vulkan/vulkan_buffer.h>
+#include <eagle/renderer/vulkan/vulkan_cleaner.h>
 
 namespace eagle {
 
+class VulkanSharedCommandPool;
+
 struct VulkanStorageBufferCreateInfo{
-    VulkanDeleter& deleter;
     VkDevice device;
     VkPhysicalDevice physicalDevice;
-    size_t bufferCount;
-    VkCommandPool commandPool;
-    VkQueue graphicsQueue;
+    size_t frameCount;
+    VulkanQueue* queue;
+
 };
 
 class VulkanStorageBuffer : public StorageBuffer, public VulkanCleanable {
 public:
     explicit VulkanStorageBuffer(VulkanStorageBufferCreateInfo createInfo, size_t size, void* data, UpdateType usage);
-    virtual ~VulkanStorageBuffer();
-    virtual void copy_from(void *data, size_t size, size_t offset) override;
-    virtual void upload() override;
+    ~VulkanStorageBuffer() override;
+    void copy_from(void *data, size_t size, size_t offset) override;
+    void upload() override;
 
     DescriptorType type() const override;
 
-    virtual bool is_dirty() const override;
-    virtual void flush(uint32_t index) override;
+    bool is_dirty() const override;
+    void flush(uint32_t index) override;
 
     void cleanup();
     void recreate(uint32_t bufferCount);

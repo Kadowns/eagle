@@ -2,8 +2,8 @@
 // Created by Novak on 02/06/2019.
 //
 
-
-#include "vulkan_helper.h"
+#include <eagle/renderer/vulkan/vulkan_helper.h>
+#include <eagle/renderer/vulkan/vulkan_queue.h>
 
 namespace eagle {
 
@@ -38,15 +38,10 @@ VulkanHelper::find_memory_type(VkPhysicalDevice physicalDevice, uint32_t typeFil
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-VkCommandBuffer VulkanHelper::begin_single_time_commands(VkDevice device, VkCommandPool commandPool) {
-    VkCommandBufferAllocateInfo allocInfo = {};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandPool = commandPool;
-    allocInfo.commandBufferCount = 1;
+VkCommandBuffer VulkanHelper::begin_single_time_commands(VulkanQueue* queue) {
 
-    VkCommandBuffer commandBuffer;
-    vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
+    VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+    queue->allocate(commandBuffer, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -57,8 +52,7 @@ VkCommandBuffer VulkanHelper::begin_single_time_commands(VkDevice device, VkComm
     return commandBuffer;
 }
 
-void VulkanHelper::end_single_time_commnds(
-        VkDevice device, VkCommandPool commandPool, VkCommandBuffer commandBuffer, VkQueue queue) {
+void VulkanHelper::end_single_time_commnds(VulkanQueue* queue, VkCommandBuffer commandBuffer) {
 
     vkEndCommandBuffer(commandBuffer);
 
@@ -67,10 +61,11 @@ void VulkanHelper::end_single_time_commnds(
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &commandBuffer;
 
-    vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
-    vkQueueWaitIdle(queue);
+    queue->submit(submitInfo, VK_NULL_HANDLE);
 
-    vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+    vkQueueWaitIdle(queue->native_queue());
+
+    queue->free(commandBuffer);
 }
 
 void
@@ -114,12 +109,15 @@ VulkanHelper::create_image(VkPhysicalDevice physicalDevice, VkDevice device, uin
     vkBindImageMemory(device, image, imageMemory, 0);
 }
 
-void
-VulkanHelper::transition_image_layout(VkDevice device, VkCommandPool commandPool, VkQueue graphicsQueue, VkImage image,
-                                      VkImageLayout oldLayout, VkImageLayout newLayout,
-                                      VkImageSubresourceRange subresourceRange, VkPipelineStageFlags srcStage,
-                                      VkPipelineStageFlags dstStage) {
-    VkCommandBuffer commandBuffer = begin_single_time_commands(device, commandPool);
+void VulkanHelper::transition_image_layout(
+        VulkanQueue* queue,
+        VkImage image,
+        VkImageLayout oldLayout,
+        VkImageLayout newLayout,
+        VkImageSubresourceRange subresourceRange,
+        VkPipelineStageFlags srcStage,
+        VkPipelineStageFlags dstStage) {
+    VkCommandBuffer commandBuffer = begin_single_time_commands(queue);
 
     VkImageMemoryBarrier barrier = {};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -176,8 +174,7 @@ VulkanHelper::transition_image_layout(VkDevice device, VkCommandPool commandPool
             break;
         default:
             // Other source layouts aren't handled (yet)
-            EG_WARNING("eagle", "Old image layout not handled!");
-            break;
+            throw std::logic_error("image source layout is not handled");
     }
 
     // Target layouts (new)
@@ -230,7 +227,7 @@ VulkanHelper::transition_image_layout(VkDevice device, VkCommandPool commandPool
             1, &barrier
     );
 
-    end_single_time_commnds(device, commandPool, commandBuffer, graphicsQueue);
+    end_single_time_commnds(queue, commandBuffer);
 }
 
 void
@@ -286,8 +283,7 @@ std::shared_ptr<VulkanBuffer> VulkanHelper::create_baked_buffer(
         VkBufferUsageFlags usageFlags,
         void *data,
         VkDeviceSize size,
-        VkCommandPool commandPool,
-        VkQueue queue) {
+        VulkanQueue* queue) {
 
     VulkanBufferCreateInfo stagingBufferCreateInfo = {};
     stagingBufferCreateInfo.physicalDevice = physicalDevice;
@@ -309,9 +305,7 @@ std::shared_ptr<VulkanBuffer> VulkanHelper::create_baked_buffer(
 
     auto bakedBuffer = std::make_shared<VulkanBuffer>(bakedBufferCreateInfo);
 
-    VK_CALL
     VulkanBuffer::copy_buffer(
-            commandPool,
             queue,
             stagingBuffer.get(),
             bakedBuffer.get(),
@@ -339,8 +333,7 @@ std::shared_ptr<VulkanBuffer> VulkanHelper::create_dynamic_buffer(
     return std::make_shared<VulkanBuffer>(createBufferInfo);
 }
 
-void VulkanHelper::upload_baked_buffer(std::shared_ptr<VulkanBuffer> &buffer, VkQueue queue, VkCommandPool commandPool,
-                                       void *data) {
+void VulkanHelper::upload_baked_buffer(std::shared_ptr<VulkanBuffer> &buffer, VulkanQueue* queue, void *data) {
 
     auto& info = buffer->info();
 
@@ -355,9 +348,7 @@ void VulkanHelper::upload_baked_buffer(std::shared_ptr<VulkanBuffer> &buffer, Vk
 
     auto stagingBuffer = std::make_shared<VulkanBuffer>(statingBufferCreateInfo);
 
-    VK_CALL
     VulkanBuffer::copy_buffer(
-            commandPool,
             queue,
             stagingBuffer.get(),
             buffer.get(),

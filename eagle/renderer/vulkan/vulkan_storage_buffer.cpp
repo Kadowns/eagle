@@ -53,7 +53,7 @@ void VulkanStorageBuffer::create_storage_buffer() {
     EG_TRACE("eagle","Creating vulkan storage buffer impl");
     if (!m_cleared) return;
 
-    m_buffers.resize(m_createInfo.bufferCount);
+    m_buffers.resize(m_createInfo.frameCount);
 
     switch(m_usage) {
         case UpdateType::DYNAMIC: {
@@ -73,8 +73,7 @@ void VulkanStorageBuffer::create_storage_buffer() {
                         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                         m_bytes.data(),
                         m_bytes.size(),
-                        m_createInfo.commandPool,
-                        m_createInfo.graphicsQueue);
+                        m_createInfo.queue);
             }
             break;
         }
@@ -98,10 +97,6 @@ void VulkanStorageBuffer::flush(uint32_t index) {
 void VulkanStorageBuffer::cleanup() {
     if (m_cleared) return;
 
-    for (int i = 0; i < m_buffers.size(); i++){
-        m_createInfo.deleter.destroy_buffer(m_buffers[i], i);
-    }
-
     m_buffers.clear();
     m_dirtyBuffers.clear();
     m_cleared = true;
@@ -112,7 +107,7 @@ DescriptorType VulkanStorageBuffer::type() const {
 }
 
 void VulkanStorageBuffer::recreate(uint32_t bufferCount) {
-    m_createInfo.bufferCount = bufferCount;
+    m_createInfo.frameCount = bufferCount;
     create_storage_buffer();
 }
 

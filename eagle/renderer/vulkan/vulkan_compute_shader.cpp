@@ -24,10 +24,10 @@ VulkanComputeShader::VulkanComputeShader(const std::string &path, const VulkanCo
 }
 
 VulkanComputeShader::~VulkanComputeShader(){
-    VK_CALL vkDestroyFence(m_createInfo.device, m_fence, nullptr);
-    VK_CALL vkFreeCommandBuffers(m_createInfo.device, m_createInfo.commandPool, 1, &m_commandBuffer);
+    vkDestroyFence(m_createInfo.device, m_fence, nullptr);
+    vkFreeCommandBuffers(m_createInfo.device, m_createInfo.commandPool, 1, &m_commandBuffer);
     cleanup_pipeline();
-    VK_CALL vkDestroyPipelineLayout(m_createInfo.device, m_pipelineLayout, nullptr);
+    vkDestroyPipelineLayout(m_createInfo.device, m_pipelineLayout, nullptr);
     clear_descriptor_set();
     m_descriptorLayout.reset();
 }
@@ -92,7 +92,7 @@ void VulkanComputeShader::create_pipeline(){
         throw std::runtime_error("Failed to create compute pipeline!");
     }
 
-    VK_CALL vkDestroyShaderModule(m_createInfo.device, shaderModule, nullptr);
+    vkDestroyShaderModule(m_createInfo.device, shaderModule, nullptr);
     m_cleared = false;
     EG_TRACE("eagle","END");
 }
@@ -100,12 +100,12 @@ void VulkanComputeShader::create_pipeline(){
 void VulkanComputeShader::create_descriptor_sets() {
     EG_TRACE("eagle","BEGIN");
 
-    DescriptorSetInfo descriptorSetInfo = {};
+    DescriptorSetCreateInfo descriptorSetInfo = {};
     descriptorSetInfo.layout = m_descriptorLayout;
 
     VulkanDescriptorSetInfo descriptorSetCreateInfo = {};
     descriptorSetCreateInfo.device = m_createInfo.device;
-    descriptorSetCreateInfo.bufferCount = m_createInfo.bufferCount;
+    descriptorSetCreateInfo.frameCount = m_createInfo.bufferCount;
 
     m_descriptorSet = std::make_shared<VulkanDescriptorSet>(descriptorSetInfo, descriptorSetCreateInfo);
     EG_TRACE("eagle","END");
@@ -132,7 +132,7 @@ void VulkanComputeShader::create_fence() {
     fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-    VK_CALL vkCreateFence(m_createInfo.device, &fenceCreateInfo, nullptr, &m_fence);
+    vkCreateFence(m_createInfo.device, &fenceCreateInfo, nullptr, &m_fence);
     EG_TRACE("eagle","END");
 }
 
@@ -142,7 +142,7 @@ void VulkanComputeShader::cleanup_pipeline(){
         EG_WARNING("eagle", "END - ALREADY CLEARED");
         return;
     }
-    VK_CALL vkDestroyPipeline(m_createInfo.device, m_computePipeline, nullptr);
+    vkDestroyPipeline(m_createInfo.device, m_computePipeline, nullptr);
 
     m_cleared = true;
     EG_TRACE("eagle","BEGIN");
@@ -150,28 +150,28 @@ void VulkanComputeShader::cleanup_pipeline(){
 
 void VulkanComputeShader::dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
 
-    VK_CALL vkQueueWaitIdle(m_createInfo.computeQueue);
+    vkQueueWaitIdle(m_createInfo.computeQueue);
 
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-    VK_CALL vkBeginCommandBuffer(m_commandBuffer, &beginInfo);
+    vkBeginCommandBuffer(m_commandBuffer, &beginInfo);
 
-    VK_CALL vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_computePipeline);
+    vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_computePipeline);
 
     if (!m_pushConstantData.empty()){
-        VK_CALL vkCmdPushConstants(m_commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, m_pushConstantData.size(), m_pushConstantData.data());
+        vkCmdPushConstants(m_commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, m_pushConstantData.size(), m_pushConstantData.data());
     }
 
-    VK_CALL vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipelineLayout, 0, 1, &m_descriptorSet->get_descriptors()[*m_createInfo.imageIndex], 0, nullptr);
+    vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipelineLayout, 0, 1, &m_descriptorSet->get_descriptors()[*m_createInfo.imageIndex], 0, nullptr);
 
-    VK_CALL vkCmdDispatch(m_commandBuffer, groupCountX, groupCountY, groupCountZ);
+    vkCmdDispatch(m_commandBuffer, groupCountX, groupCountY, groupCountZ);
 
-    VK_CALL vkEndCommandBuffer(m_commandBuffer);
+    vkEndCommandBuffer(m_commandBuffer);
 
-    VK_CALL vkWaitForFences(m_createInfo.device, 1, &m_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
-    VK_CALL vkResetFences(m_createInfo.device, 1, &m_fence);
+    vkWaitForFences(m_createInfo.device, 1, &m_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+    vkResetFences(m_createInfo.device, 1, &m_fence);
 
     VkSubmitInfo computeSubmitInfo = {};
     computeSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -198,7 +198,7 @@ void VulkanComputeShader::update_image(uint32_t binding, const std::shared_ptr<I
 }
 
 void VulkanComputeShader::join() {
-    VK_CALL vkQueueWaitIdle(m_createInfo.computeQueue);
+    vkQueueWaitIdle(m_createInfo.computeQueue);
 }
 
 void VulkanComputeShader::update_descriptors() {

@@ -8,6 +8,13 @@
 #include <eagle/eagle.h>
 
 class TriangleApplication : public eagle::ApplicationDelegate {
+private:
+    struct Mat2 {
+        Mat2();
+        explicit Mat2(float rotation);
+
+        float data[2][2];
+    };
 public:
     TriangleApplication();
     ~TriangleApplication() override;
@@ -16,15 +23,17 @@ public:
 
     void step() override;
 private:
-    eagle::RenderingContext* m_renderingContext = nullptr;
+    eagle::RenderContext* m_renderContext = nullptr;
     eagle::EventListener m_listener;
-    std::shared_ptr<eagle::GPUQueue> m_renderQueue;
+    eagle::Timer m_timer;
     std::shared_ptr<eagle::Fence> m_framesInFlight;
     std::shared_ptr<eagle::Semaphore> m_frameAvailable;
     std::shared_ptr<eagle::Semaphore> m_renderFinished;
     std::shared_ptr<eagle::Shader> m_shader;
     std::shared_ptr<eagle::VertexBuffer> m_vertexBuffer;
     std::shared_ptr<eagle::IndexBuffer> m_indexBuffer;
+    std::shared_ptr<eagle::UniformBuffer> m_uniformBuffer;
+    std::shared_ptr<eagle::DescriptorSet> m_descriptorSet;
     std::shared_ptr<eagle::CommandBuffer> m_commandBuffer;
 };
 

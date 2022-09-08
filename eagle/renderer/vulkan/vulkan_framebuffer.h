@@ -14,7 +14,8 @@ namespace eagle {
 
 struct VulkanFramebufferCreateInfo {
     VkDevice device;
-    uint32_t imageCount;
+    uint32_t frameCount;
+    uint32_t* currentFrame;
 };
 
 
@@ -24,7 +25,8 @@ public:
                       const VulkanFramebufferCreateInfo& nativeFramebufferCreateInfo);
     virtual ~VulkanFramebuffer();
 
-    inline const std::vector<VkFramebuffer>& native_framebuffers() const { return m_framebuffers; }
+    VkFramebuffer current_native_framebuffer();
+
 private:
     void create_framebuffer();
 private:

@@ -721,16 +721,16 @@ ImageTiling VulkanConverter::to_eg(VkImageTiling tiling) {
 VkImageUsageFlagBits VulkanConverter::to_vk(ImageUsage usage) {
     VkImageUsageFlagBits result;
     switch(usage){
-        case ImageUsage::TRANSFER_SRC: result = VK_IMAGE_USAGE_TRANSFER_SRC_BIT; break;
-        case ImageUsage::TRANSFER_DST: result = VK_IMAGE_USAGE_TRANSFER_DST_BIT; break;
-        case ImageUsage::SAMPLED: result = VK_IMAGE_USAGE_SAMPLED_BIT; break;
-        case ImageUsage::STORAGE: result = VK_IMAGE_USAGE_STORAGE_BIT; break;
-        case ImageUsage::COLOR_ATTACHMENT: result = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT; break;
-        case ImageUsage::DEPTH_STENCIL_ATTACHMENT: result = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT; break;
-        case ImageUsage::TRANSIENT_ATTACHMENT: result = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT; break;
-        case ImageUsage::INPUT_ATTACHMENT: result = VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT; break;
-        case ImageUsage::SHADING_RATE_IMAGE_NV: result = VK_IMAGE_USAGE_SHADING_RATE_IMAGE_BIT_NV; break;
-        case ImageUsage::FRAGMENT_DENSITY_MAP_EXT: result = VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT; break;
+        case IMAGE_USAGE_TRANSFER_SRC: result = VK_IMAGE_USAGE_TRANSFER_SRC_BIT; break;
+        case IMAGE_USAGE_TRANSFER_DST: result = VK_IMAGE_USAGE_TRANSFER_DST_BIT; break;
+        case IMAGE_USAGE_SAMPLED: result = VK_IMAGE_USAGE_SAMPLED_BIT; break;
+        case IMAGE_USAGE_STORAGE: result = VK_IMAGE_USAGE_STORAGE_BIT; break;
+        case IMAGE_USAGE_COLOR_ATTACHMENT: result = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT; break;
+        case IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT: result = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT; break;
+        case IMAGE_USAGE_TRANSIENT_ATTACHMENT: result = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT; break;
+        case IMAGE_USAGE_INPUT_ATTACHMENT: result = VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT; break;
+        case IMAGE_USAGE_SHADING_RATE_IMAGE_NV: result = VK_IMAGE_USAGE_SHADING_RATE_IMAGE_BIT_NV; break;
+        case IMAGE_USAGE_FRAGMENT_DENSITY_MAP_EXT: result = VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT; break;
     }
     return result;
 }
@@ -738,16 +738,16 @@ VkImageUsageFlagBits VulkanConverter::to_vk(ImageUsage usage) {
 ImageUsage VulkanConverter::to_eg(VkImageUsageFlagBits usage) {
     ImageUsage result;
     switch(usage){
-        case VK_IMAGE_USAGE_TRANSFER_SRC_BIT: result = ImageUsage::TRANSFER_SRC; break;
-        case VK_IMAGE_USAGE_TRANSFER_DST_BIT: result = ImageUsage::TRANSFER_DST; break;
-        case VK_IMAGE_USAGE_SAMPLED_BIT: result = ImageUsage::SAMPLED; break;
-        case VK_IMAGE_USAGE_STORAGE_BIT: result = ImageUsage::STORAGE; break;
-        case VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT: result = ImageUsage::COLOR_ATTACHMENT; break;
-        case VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT: result = ImageUsage::DEPTH_STENCIL_ATTACHMENT; break;
-        case VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT: result = ImageUsage::TRANSIENT_ATTACHMENT; break;
-        case VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT: result = ImageUsage::INPUT_ATTACHMENT; break;
-        case VK_IMAGE_USAGE_SHADING_RATE_IMAGE_BIT_NV: result = ImageUsage::SHADING_RATE_IMAGE_NV; break;
-        case VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT: result = ImageUsage::FRAGMENT_DENSITY_MAP_EXT; break;
+        case VK_IMAGE_USAGE_TRANSFER_SRC_BIT: result = IMAGE_USAGE_TRANSFER_SRC; break;
+        case VK_IMAGE_USAGE_TRANSFER_DST_BIT: result = IMAGE_USAGE_TRANSFER_DST; break;
+        case VK_IMAGE_USAGE_SAMPLED_BIT: result = IMAGE_USAGE_SAMPLED; break;
+        case VK_IMAGE_USAGE_STORAGE_BIT: result = IMAGE_USAGE_STORAGE; break;
+        case VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT: result = IMAGE_USAGE_COLOR_ATTACHMENT; break;
+        case VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT: result = IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT; break;
+        case VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT: result = IMAGE_USAGE_TRANSIENT_ATTACHMENT; break;
+        case VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT: result = IMAGE_USAGE_INPUT_ATTACHMENT; break;
+        case VK_IMAGE_USAGE_SHADING_RATE_IMAGE_BIT_NV: result = IMAGE_USAGE_SHADING_RATE_IMAGE_NV; break;
+        case VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT: result = IMAGE_USAGE_FRAGMENT_DENSITY_MAP_EXT; break;
         default: throw std::runtime_error("Invalid VkImageUsageFlagBits on conversion");
     }
     return result;
@@ -756,17 +756,17 @@ ImageUsage VulkanConverter::to_eg(VkImageUsageFlagBits usage) {
 ImageAspect VulkanConverter::to_eg(VkImageAspectFlagBits usage) {
     ImageAspect result;
     switch(usage){
-        case VK_IMAGE_ASPECT_COLOR_BIT: result = ImageAspect::COLOR; break;
-        case VK_IMAGE_ASPECT_DEPTH_BIT: result = ImageAspect::DEPTH; break;
-        case VK_IMAGE_ASPECT_STENCIL_BIT: result = ImageAspect::STENCIL; break;
-        case VK_IMAGE_ASPECT_METADATA_BIT: result = ImageAspect::METADATA; break;
-        case VK_IMAGE_ASPECT_PLANE_0_BIT: result = ImageAspect::PLANE_0; break;
-        case VK_IMAGE_ASPECT_PLANE_1_BIT: result = ImageAspect::PLANE_1; break;
-        case VK_IMAGE_ASPECT_PLANE_2_BIT: result = ImageAspect::PLANE_2; break;
-        case VK_IMAGE_ASPECT_MEMORY_PLANE_0_BIT_EXT: result = ImageAspect::MEMORY_PLANE_0_EXT; break;
-        case VK_IMAGE_ASPECT_MEMORY_PLANE_1_BIT_EXT: result = ImageAspect::MEMORY_PLANE_1_EXT; break;
-        case VK_IMAGE_ASPECT_MEMORY_PLANE_2_BIT_EXT: result = ImageAspect::MEMORY_PLANE_2_EXT; break;
-        case VK_IMAGE_ASPECT_MEMORY_PLANE_3_BIT_EXT: result = ImageAspect::MEMORY_PLANE_3_EXT; break;
+        case VK_IMAGE_ASPECT_COLOR_BIT: result = IMAGE_ASPECT_COLOR; break;
+        case VK_IMAGE_ASPECT_DEPTH_BIT: result = IMAGE_ASPECT_DEPTH; break;
+        case VK_IMAGE_ASPECT_STENCIL_BIT: result = IMAGE_ASPECT_STENCIL; break;
+        case VK_IMAGE_ASPECT_METADATA_BIT: result = IMAGE_ASPECT_METADATA; break;
+        case VK_IMAGE_ASPECT_PLANE_0_BIT: result = IMAGE_ASPECT_PLANE_0; break;
+        case VK_IMAGE_ASPECT_PLANE_1_BIT: result = IMAGE_ASPECT_PLANE_1; break;
+        case VK_IMAGE_ASPECT_PLANE_2_BIT: result = IMAGE_ASPECT_PLANE_2; break;
+        case VK_IMAGE_ASPECT_MEMORY_PLANE_0_BIT_EXT: result = IMAGE_ASPECT_MEMORY_PLANE_0_EXT; break;
+        case VK_IMAGE_ASPECT_MEMORY_PLANE_1_BIT_EXT: result = IMAGE_ASPECT_MEMORY_PLANE_1_EXT; break;
+        case VK_IMAGE_ASPECT_MEMORY_PLANE_2_BIT_EXT: result = IMAGE_ASPECT_MEMORY_PLANE_2_EXT; break;
+        case VK_IMAGE_ASPECT_MEMORY_PLANE_3_BIT_EXT: result = IMAGE_ASPECT_MEMORY_PLANE_3_EXT; break;
         default: throw std::runtime_error("Invalid VkImageAspectFlagBits on conversion");
     }
     return result;
@@ -775,17 +775,17 @@ ImageAspect VulkanConverter::to_eg(VkImageAspectFlagBits usage) {
 VkImageAspectFlagBits VulkanConverter::to_vk(ImageAspect usage) {
     VkImageAspectFlagBits result;
     switch(usage){
-        case ImageAspect::COLOR: result = VK_IMAGE_ASPECT_COLOR_BIT; break;
-        case ImageAspect::DEPTH: result = VK_IMAGE_ASPECT_DEPTH_BIT; break;
-        case ImageAspect::STENCIL: result = VK_IMAGE_ASPECT_STENCIL_BIT; break;
-        case ImageAspect::METADATA: result = VK_IMAGE_ASPECT_METADATA_BIT; break;
-        case ImageAspect::PLANE_0: result = VK_IMAGE_ASPECT_PLANE_0_BIT; break;
-        case ImageAspect::PLANE_1: result = VK_IMAGE_ASPECT_PLANE_1_BIT; break;
-        case ImageAspect::PLANE_2: result = VK_IMAGE_ASPECT_PLANE_2_BIT; break;
-        case ImageAspect::MEMORY_PLANE_0_EXT: result = VK_IMAGE_ASPECT_MEMORY_PLANE_0_BIT_EXT; break;
-        case ImageAspect::MEMORY_PLANE_1_EXT: result = VK_IMAGE_ASPECT_MEMORY_PLANE_1_BIT_EXT; break;
-        case ImageAspect::MEMORY_PLANE_2_EXT: result = VK_IMAGE_ASPECT_MEMORY_PLANE_2_BIT_EXT; break;
-        case ImageAspect::MEMORY_PLANE_3_EXT: result = VK_IMAGE_ASPECT_MEMORY_PLANE_3_BIT_EXT; break;
+        case IMAGE_ASPECT_COLOR: result = VK_IMAGE_ASPECT_COLOR_BIT; break;
+        case IMAGE_ASPECT_DEPTH: result = VK_IMAGE_ASPECT_DEPTH_BIT; break;
+        case IMAGE_ASPECT_STENCIL: result = VK_IMAGE_ASPECT_STENCIL_BIT; break;
+        case IMAGE_ASPECT_METADATA: result = VK_IMAGE_ASPECT_METADATA_BIT; break;
+        case IMAGE_ASPECT_PLANE_0: result = VK_IMAGE_ASPECT_PLANE_0_BIT; break;
+        case IMAGE_ASPECT_PLANE_1: result = VK_IMAGE_ASPECT_PLANE_1_BIT; break;
+        case IMAGE_ASPECT_PLANE_2: result = VK_IMAGE_ASPECT_PLANE_2_BIT; break;
+        case IMAGE_ASPECT_MEMORY_PLANE_0_EXT: result = VK_IMAGE_ASPECT_MEMORY_PLANE_0_BIT_EXT; break;
+        case IMAGE_ASPECT_MEMORY_PLANE_1_EXT: result = VK_IMAGE_ASPECT_MEMORY_PLANE_1_BIT_EXT; break;
+        case IMAGE_ASPECT_MEMORY_PLANE_2_EXT: result = VK_IMAGE_ASPECT_MEMORY_PLANE_2_BIT_EXT; break;
+        case IMAGE_ASPECT_MEMORY_PLANE_3_EXT: result = VK_IMAGE_ASPECT_MEMORY_PLANE_3_BIT_EXT; break;
     }
     return result;
 }
@@ -793,14 +793,14 @@ VkImageAspectFlagBits VulkanConverter::to_vk(ImageAspect usage) {
 MemoryProperty VulkanConverter::to_eg(VkMemoryPropertyFlagBits usage) {
     MemoryProperty result;
     switch(usage){
-        case VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT: result = MemoryProperty::DEVICE_LOCAL; break;
-        case VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT: result = MemoryProperty::HOST_VISIBLE; break;
-        case VK_MEMORY_PROPERTY_HOST_COHERENT_BIT: result = MemoryProperty::HOST_COHERENT; break;
-        case VK_MEMORY_PROPERTY_HOST_CACHED_BIT: result = MemoryProperty::HOST_CACHED; break;
-        case VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT: result = MemoryProperty::LAZILY_ALLOCATED; break;
-        case VK_MEMORY_PROPERTY_PROTECTED_BIT: result = MemoryProperty::PROTECTED; break;
-        case VK_MEMORY_PROPERTY_DEVICE_COHERENT_BIT_AMD: result = MemoryProperty::DEVICE_COHERENT_AMD; break;
-        case VK_MEMORY_PROPERTY_DEVICE_UNCACHED_BIT_AMD: result = MemoryProperty::DEVICE_UNCACHED_AMD; break;
+        case VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT: result = MEMORY_PROPERTY_DEVICE_LOCAL; break;
+        case VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT: result = MEMORY_PROPERTY_HOST_VISIBLE; break;
+        case VK_MEMORY_PROPERTY_HOST_COHERENT_BIT: result = MEMORY_PROPERTY_HOST_COHERENT; break;
+        case VK_MEMORY_PROPERTY_HOST_CACHED_BIT: result = MEMORY_PROPERTY_HOST_CACHED; break;
+        case VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT: result = MEMORY_PROPERTY_LAZILY_ALLOCATED; break;
+        case VK_MEMORY_PROPERTY_PROTECTED_BIT: result = MEMORY_PROPERTY_PROTECTED; break;
+        case VK_MEMORY_PROPERTY_DEVICE_COHERENT_BIT_AMD: result = MEMORY_PROPERTY_DEVICE_COHERENT_AMD; break;
+        case VK_MEMORY_PROPERTY_DEVICE_UNCACHED_BIT_AMD: result = MEMORY_PROPERTY_DEVICE_UNCACHED_AMD; break;
         default: throw std::runtime_error("Invalid VkMemoryPropertyFlagBits on conversion");
     }
     return result;
@@ -809,14 +809,14 @@ MemoryProperty VulkanConverter::to_eg(VkMemoryPropertyFlagBits usage) {
 VkMemoryPropertyFlagBits VulkanConverter::to_vk(MemoryProperty usage) {
     VkMemoryPropertyFlagBits result;
     switch(usage){
-        case MemoryProperty::DEVICE_LOCAL: result = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT; break;
-        case MemoryProperty::HOST_VISIBLE: result = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT; break;
-        case MemoryProperty::HOST_COHERENT: result = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT; break;
-        case MemoryProperty::HOST_CACHED: result = VK_MEMORY_PROPERTY_HOST_CACHED_BIT; break;
-        case MemoryProperty::LAZILY_ALLOCATED: result = VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT; break;
-        case MemoryProperty::PROTECTED: result = VK_MEMORY_PROPERTY_PROTECTED_BIT; break;
-        case MemoryProperty::DEVICE_COHERENT_AMD: result = VK_MEMORY_PROPERTY_DEVICE_COHERENT_BIT_AMD; break;
-        case MemoryProperty::DEVICE_UNCACHED_AMD: result = VK_MEMORY_PROPERTY_DEVICE_UNCACHED_BIT_AMD; break;
+        case MEMORY_PROPERTY_DEVICE_LOCAL: result = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT; break;
+        case MEMORY_PROPERTY_HOST_VISIBLE: result = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT; break;
+        case MEMORY_PROPERTY_HOST_COHERENT: result = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT; break;
+        case MEMORY_PROPERTY_HOST_CACHED: result = VK_MEMORY_PROPERTY_HOST_CACHED_BIT; break;
+        case MEMORY_PROPERTY_LAZILY_ALLOCATED: result = VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT; break;
+        case MEMORY_PROPERTY_PROTECTED: result = VK_MEMORY_PROPERTY_PROTECTED_BIT; break;
+        case MEMORY_PROPERTY_DEVICE_COHERENT_AMD: result = VK_MEMORY_PROPERTY_DEVICE_COHERENT_BIT_AMD; break;
+        case MEMORY_PROPERTY_DEVICE_UNCACHED_AMD: result = VK_MEMORY_PROPERTY_DEVICE_UNCACHED_BIT_AMD; break;
     }
     return result;
 }

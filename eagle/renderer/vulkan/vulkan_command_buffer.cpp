@@ -4,105 +4,108 @@
 
 #include <eagle/renderer/vulkan/vulkan_command_buffer.h>
 #include <eagle/renderer/vulkan/vulkan_converter.h>
+#include <eagle/renderer/vulkan/vulkan_shared_command_pool.h>
 #include <eagle/renderer/vulkan/vulkan_shader.h>
 #include <eagle/renderer/vulkan/vulkan_vertex_buffer.h>
 #include <eagle/renderer/vulkan/vulkan_index_buffer.h>
 #include <eagle/renderer/vulkan/vulkan_descriptor_set.h>
-#include <eagle/renderer/vulkan/vulkan_compute_shader.h>
 #include <eagle/renderer/vulkan/vulkan_render_pass.h>
 #include <eagle/renderer/vulkan/vulkan_framebuffer.h>
 
 namespace eagle {
 
+namespace detail{
+
+static std::vector<VkCommandBuffer> native_command_buffers(const std::span<CommandBuffer*>& commandBuffers, uint32_t frameIndex){
+    std::vector<VkCommandBuffer> result;
+    result.reserve(commandBuffers.size());
+    for (auto commandBuffer : commandBuffers){
+        auto castedCommandBuffer = (VulkanCommandBuffer*)commandBuffer;
+        result.push_back(castedCommandBuffer->native_command_buffer(frameIndex));
+    }
+    return result;
+}
+
+}
+
 VulkanCommandBuffer::VulkanCommandBuffer(const CommandBufferCreateInfo &createInfo,
                                          const VulkanCommandBufferCreateInfo &vkCreateInfo) :
                                          CommandBuffer(createInfo),
-                                         m_vkCreateInfo(vkCreateInfo) {
-    VkCommandPoolCreateInfo poolInfo = {};
-    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    poolInfo.queueFamilyIndex = vkCreateInfo.queueFamilyIndex;
-    poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-
-    VK_CALL_ASSERT(vkCreateCommandPool(vkCreateInfo.device, &poolInfo, nullptr, &m_commandPool)) {
-        throw std::runtime_error("failed to create graphics command pool!");
-    }
-
-   recreate(m_vkCreateInfo.imageCount);
+                                         m_vkCreateInfo(vkCreateInfo),
+                                         m_threadCommandBuffers(vkCreateInfo.frameCount){
 }
 
 VulkanCommandBuffer::~VulkanCommandBuffer() {
-    cleanup();
-
-    VK_CALL vkDestroyCommandPool(m_vkCreateInfo.device, m_commandPool, nullptr);
+    for (auto& threadCommandBuffer : m_threadCommandBuffers){
+        m_vkCreateInfo.queue->free(threadCommandBuffer.commandBuffer, threadCommandBuffer.threadId);
+    }
 }
 
 void VulkanCommandBuffer::begin() {
     assert(m_createInfo.level == CommandBufferLevel::PRIMARY || m_createInfo.level == CommandBufferLevel::MASTER);
+
+    m_currentFrame = *m_vkCreateInfo.currentFrame;
+    auto& threadCommandBuffer = prepare_command_buffer(m_currentFrame);
+    m_currentCommandBuffer = threadCommandBuffer.commandBuffer;
+
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
-    VK_CALL vkBeginCommandBuffer(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], &beginInfo);
-
-    m_finished = false;
+    vkBeginCommandBuffer(m_currentCommandBuffer, &beginInfo);
 }
 
-void VulkanCommandBuffer::begin(const std::shared_ptr<RenderPass> &renderPass,
-                                const std::shared_ptr<Framebuffer> &framebuffer) {
+void VulkanCommandBuffer::begin(RenderPass* renderPass,
+                                Framebuffer* framebuffer) {
     assert(m_createInfo.level == CommandBufferLevel::SECONDARY);
-    auto vrp = std::static_pointer_cast<VulkanRenderPass>(renderPass);
-    auto vfb = std::static_pointer_cast<VulkanFramebuffer>(framebuffer);
+
+    m_currentFrame = *m_vkCreateInfo.currentFrame;
+    auto& threadCommandBuffer = prepare_command_buffer(m_currentFrame);
+    m_currentCommandBuffer = threadCommandBuffer.commandBuffer;
+
+    auto vrp = (VulkanRenderPass*)renderPass;
+    auto vfb = (VulkanFramebuffer*)framebuffer;
 
     VkCommandBufferInheritanceInfo inheritanceInfo = {};
     inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
     inheritanceInfo.occlusionQueryEnable = VK_FALSE;
     inheritanceInfo.renderPass = vrp->native_render_pass();
 
-
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT | VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
     beginInfo.pInheritanceInfo = &inheritanceInfo;
 
-    inheritanceInfo.framebuffer = vfb->native_framebuffers()[*m_vkCreateInfo.currentImageIndex];
-    VK_CALL vkBeginCommandBuffer(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], &beginInfo);
-    m_finished = false;
+    inheritanceInfo.framebuffer = vfb->current_native_framebuffer();
+    vkBeginCommandBuffer(m_currentCommandBuffer, &beginInfo);
 }
-
 
 void VulkanCommandBuffer::end() {
-    VK_CALL vkEndCommandBuffer(m_commandBuffers[*m_vkCreateInfo.currentImageIndex]);
-
-    m_finished = true;
-    m_boundShader.reset();
+    vkEndCommandBuffer(m_currentCommandBuffer);
+    m_boundShader = nullptr;
+    m_currentCommandBuffer = VK_NULL_HANDLE;
 }
 
-void VulkanCommandBuffer::execute_commands(const std::vector<std::shared_ptr<CommandBuffer>> &commandBuffers) {
+void VulkanCommandBuffer::execute_commands(const std::span<CommandBuffer*>& commandBuffers) {
     assert(m_createInfo.level == CommandBufferLevel::PRIMARY);
-    std::vector<VkCommandBuffer> vkCommandBuffers;
-    vkCommandBuffers.reserve(commandBuffers.size());
+    auto nativeCommandBuffers = detail::native_command_buffers(commandBuffers, m_currentFrame);
 
-
-    for (auto& commandBuffer : commandBuffers){
-        vkCommandBuffers.emplace_back(((VulkanCommandBuffer*)(commandBuffer.get()))->native_command_buffers()[*m_vkCreateInfo.currentImageIndex]);
-    }
-
-    VK_CALL vkCmdExecuteCommands(
-            m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
-            vkCommandBuffers.size(),
-            vkCommandBuffers.data());
+    vkCmdExecuteCommands(
+            m_currentCommandBuffer,
+            nativeCommandBuffers.size(),
+            nativeCommandBuffers.data());
 }
 
-void VulkanCommandBuffer::begin_render_pass(const std::shared_ptr<RenderPass> &renderPass,
-                                            const std::shared_ptr<Framebuffer> &framebuffer) {
+void VulkanCommandBuffer::begin_render_pass(RenderPass* renderPass,
+                                            Framebuffer* framebuffer) {
     assert(m_createInfo.level == CommandBufferLevel::PRIMARY || m_createInfo.level == CommandBufferLevel::MASTER);
-    auto vrp = std::static_pointer_cast<VulkanRenderPass>(renderPass);
-    auto vfb = std::static_pointer_cast<VulkanFramebuffer>(framebuffer);
+    auto vrp = (VulkanRenderPass*)renderPass;
+    auto vfb = (VulkanFramebuffer*)framebuffer;
 
     VkRenderPassBeginInfo renderPassInfo = {};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderPassInfo.renderPass = vrp->native_render_pass();
-    renderPassInfo.framebuffer = vfb->native_framebuffers()[*m_vkCreateInfo.currentImageIndex];
+    renderPassInfo.framebuffer = vfb->current_native_framebuffer();
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = {vfb->width(), vfb->height()};
     auto& clearValues = vrp->clear_values();
@@ -113,81 +116,63 @@ void VulkanCommandBuffer::begin_render_pass(const std::shared_ptr<RenderPass> &r
             ? VK_SUBPASS_CONTENTS_INLINE
             : VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS;
 
-    VK_CALL vkCmdBeginRenderPass(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], &renderPassInfo, contents);
+    vkCmdBeginRenderPass(m_currentCommandBuffer, &renderPassInfo, contents);
 
 }
 
 void VulkanCommandBuffer::end_render_pass() {
     assert(m_createInfo.level == CommandBufferLevel::PRIMARY || m_createInfo.level == CommandBufferLevel::MASTER);
 
-    VK_CALL vkCmdEndRenderPass(m_commandBuffers[*m_vkCreateInfo.currentImageIndex]);
+    vkCmdEndRenderPass(m_currentCommandBuffer);
 }
 
-void VulkanCommandBuffer::bind_shader(const std::shared_ptr<Shader> &shader) {
-    m_boundShader = std::static_pointer_cast<VulkanShader>(shader);
-    VK_CALL vkCmdBindPipeline(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundShader->get_pipeline());
+void VulkanCommandBuffer::bind_shader(Shader* shader) {
+    m_boundShader = (VulkanShader*)shader;
+    vkCmdBindPipeline(m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundShader->get_pipeline());
 }
 
-void VulkanCommandBuffer::bind_compute_shader(const std::shared_ptr<ComputeShader> &shader) {
-    auto vcs = std::static_pointer_cast<VulkanComputeShader>(shader);
-    VK_CALL vkCmdBindPipeline(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], VK_PIPELINE_BIND_POINT_COMPUTE, vcs->get_pipeline());
-}
-
-void VulkanCommandBuffer::bind_vertex_buffer(const std::shared_ptr<VertexBuffer>& vertexBuffer, uint32_t binding) {
-    auto vvb = std::static_pointer_cast<VulkanVertexBuffer>(vertexBuffer);
+void VulkanCommandBuffer::bind_vertex_buffer(VertexBuffer* vertexBuffer, uint32_t binding) {
+    auto vvb = (VulkanVertexBuffer*)vertexBuffer;
     VkDeviceSize offsets[] = {0};
 
-    VK_CALL vkCmdBindVertexBuffers(
-            m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
+    vkCmdBindVertexBuffers(
+            m_currentCommandBuffer,
             binding,
             1,
-            &vvb->native_buffer(*m_vkCreateInfo.currentImageIndex).native_buffer(),
+            &vvb->internal_buffer(m_currentFrame).native_buffer(),
             offsets);
 }
 
-void VulkanCommandBuffer::bind_index_buffer(const std::shared_ptr<IndexBuffer> &indexBuffer) {
-    auto vib = std::static_pointer_cast<VulkanIndexBuffer>(indexBuffer);
+void VulkanCommandBuffer::bind_index_buffer(IndexBuffer* indexBuffer) {
+    auto vib = (VulkanIndexBuffer*)indexBuffer;
 
-    VK_CALL vkCmdBindIndexBuffer(
-            m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
-            vib->native_buffer(*m_vkCreateInfo.currentImageIndex).native_buffer(),
+    vkCmdBindIndexBuffer(
+            m_currentCommandBuffer,
+            vib->internal_buffer(m_currentFrame).native_buffer(),
             0,
             vib->native_index_type());
 }
 
-void VulkanCommandBuffer::bind_descriptor_sets(const std::shared_ptr<DescriptorSet> &descriptorSet, uint32_t setIndex) {
-    auto vds = std::static_pointer_cast<VulkanDescriptorSet>(descriptorSet);
+void VulkanCommandBuffer::bind_descriptor_sets(DescriptorSet* descriptorSet, uint32_t setIndex) {
+    auto vds = (VulkanDescriptorSet*)descriptorSet;
 
-    VK_CALL vkCmdBindDescriptorSets(
-            m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
+    VkDescriptorSet descriptorSets[] = {vds->native_descriptor_set(m_currentFrame)};
+
+    vkCmdBindDescriptorSets(
+            m_currentCommandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
             m_boundShader->get_layout(),
             setIndex,
             1,
-            &vds->get_descriptors()[*m_vkCreateInfo.currentImageIndex],
-            0,
-            nullptr);
-}
-
-void VulkanCommandBuffer::bind_descriptor_sets(const std::shared_ptr<ComputeShader> &shader, const std::shared_ptr<DescriptorSet> &descriptorSet, uint32_t setIndex) {
-    auto vcs = std::static_pointer_cast<VulkanComputeShader>(shader);
-    auto vds = std::static_pointer_cast<VulkanDescriptorSet>(descriptorSet);
-
-    VK_CALL vkCmdBindDescriptorSets(
-            m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
-            VK_PIPELINE_BIND_POINT_COMPUTE,
-            vcs->get_layout(),
-            setIndex,
-            1,
-            &vds->get_descriptors()[*m_vkCreateInfo.currentImageIndex],
+            descriptorSets,
             0,
             nullptr);
 }
 
 void VulkanCommandBuffer::push_constants(ShaderStage stage, uint32_t offset, size_t size, void *data) {
 
-    VK_CALL vkCmdPushConstants(
-            m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
+    vkCmdPushConstants(
+            m_currentCommandBuffer,
             m_boundShader->get_layout(),
             VulkanConverter::to_vk(stage),
             offset,
@@ -196,12 +181,12 @@ void VulkanCommandBuffer::push_constants(ShaderStage stage, uint32_t offset, siz
 }
 
 void VulkanCommandBuffer::draw(uint32_t vertexCount) {
-    VK_CALL vkCmdDraw(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], vertexCount, 1, 0, 0);
+    vkCmdDraw(m_currentCommandBuffer, vertexCount, 1, 0, 0);
 }
 
 void VulkanCommandBuffer::draw_indexed(uint32_t indicesCount, uint32_t instanceCount, uint32_t firstIndex,
                                        uint32_t vertexOffset, uint32_t firstInstance) {
-    VK_CALL vkCmdDrawIndexed(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], indicesCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+    vkCmdDrawIndexed(m_currentCommandBuffer, indicesCount, instanceCount, firstIndex, (int32_t)vertexOffset, firstInstance);
 }
 
 void VulkanCommandBuffer::set_viewport(float w, float h, float x, float y, float minDepth, float maxDepth) {
@@ -213,7 +198,7 @@ void VulkanCommandBuffer::set_viewport(float w, float h, float x, float y, float
     viewport.minDepth = minDepth;
     viewport.maxDepth = maxDepth;
 
-    VK_CALL vkCmdSetViewport(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], 0, 1, &viewport);
+    vkCmdSetViewport(m_currentCommandBuffer, 0, 1, &viewport);
 }
 
 void VulkanCommandBuffer::set_scissor(uint32_t w, uint32_t h, uint32_t x, uint32_t y) {
@@ -221,11 +206,11 @@ void VulkanCommandBuffer::set_scissor(uint32_t w, uint32_t h, uint32_t x, uint32
     scissor.extent = {w, h};
     scissor.offset = {static_cast<int32_t>(x), static_cast<int32_t>(y)};
 
-    VK_CALL vkCmdSetScissor(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], 0, 1, &scissor);
+    vkCmdSetScissor(m_currentCommandBuffer, 0, 1, &scissor);
 }
 
-void VulkanCommandBuffer::pipeline_barrier(const std::shared_ptr<Image> &image, const std::vector<PipelineStageFlagsBits> &srcPipelineStages,
-                                           const std::vector<PipelineStageFlagsBits> &dstPipelineStages) {
+void VulkanCommandBuffer::pipeline_barrier(Image* image, PipelineStageFlags srcPipelineStages,
+                                           PipelineStageFlags dstPipelineStages) {
     VkImageMemoryBarrier imageMemoryBarrier = {};
     imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     // We won't be changing the layout of the image
@@ -237,13 +222,13 @@ void VulkanCommandBuffer::pipeline_barrier(const std::shared_ptr<Image> &image, 
     imageMemoryBarrier.srcQueueFamilyIndex = 0;
     imageMemoryBarrier.dstQueueFamilyIndex = 0;
 
-    auto vkImage = std::static_pointer_cast<VulkanImage>(image);
+    auto vkImage = (VulkanImage*)image;
 
-    imageMemoryBarrier.image = vkImage->native_image(*m_vkCreateInfo.currentImageIndex);
-    VK_CALL vkCmdPipelineBarrier(
-            m_commandBuffers[*m_vkCreateInfo.currentImageIndex],
-            VulkanConverter::to_vk_flags<VkPipelineStageFlags>(srcPipelineStages),
-            VulkanConverter::to_vk_flags<VkPipelineStageFlags>(dstPipelineStages),
+    imageMemoryBarrier.image = vkImage->native_image(m_currentFrame);
+    vkCmdPipelineBarrier(
+            m_currentCommandBuffer,
+            VulkanConverter::eg_flags_to_vk_flags<PipelineStageFlagsBits>(srcPipelineStages),
+            VulkanConverter::eg_flags_to_vk_flags<PipelineStageFlagsBits>(dstPipelineStages),
             0,
             0, nullptr,
             0, nullptr,
@@ -251,31 +236,30 @@ void VulkanCommandBuffer::pipeline_barrier(const std::shared_ptr<Image> &image, 
 }
 
 void VulkanCommandBuffer::dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
-    VK_CALL vkCmdDispatch(m_commandBuffers[*m_vkCreateInfo.currentImageIndex], groupCountX, groupCountY, groupCountZ);
+    vkCmdDispatch(m_currentCommandBuffer, groupCountX, groupCountY, groupCountZ);
 }
 
-void VulkanCommandBuffer::cleanup() {
-    if (m_cleared){
-        return;
+VkCommandBuffer VulkanCommandBuffer::native_command_buffer(uint32_t index) {
+    return m_threadCommandBuffers[index].commandBuffer;
+}
+
+VulkanCommandBuffer::ThreadCommandBuffer& VulkanCommandBuffer::prepare_command_buffer(uint32_t frameIndex) {
+
+    auto currentThreadId = std::this_thread::get_id();
+    auto& threadCommandBuffer = m_threadCommandBuffers[frameIndex];
+
+    if (threadCommandBuffer.threadId != currentThreadId){
+
+        //free old command buffer
+        if (threadCommandBuffer.commandBuffer != VK_NULL_HANDLE){
+            m_vkCreateInfo.queue->free(threadCommandBuffer.commandBuffer, threadCommandBuffer.threadId);
+        }
+
+        //allocate a new one for this thread
+        m_vkCreateInfo.queue->allocate(threadCommandBuffer.commandBuffer, VulkanConverter::to_vk(m_createInfo.level));
+        threadCommandBuffer.threadId = currentThreadId;
     }
-    VK_CALL vkFreeCommandBuffers(m_vkCreateInfo.device, m_commandPool, m_vkCreateInfo.imageCount, m_commandBuffers.data());
-    m_cleared = true;
+
+    return threadCommandBuffer;
 }
-
-void VulkanCommandBuffer::recreate(uint32_t imageCount) {
-    m_vkCreateInfo.imageCount = imageCount;
-    VkCommandBufferAllocateInfo allocInfo = {};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = m_commandPool;
-    allocInfo.level = VulkanConverter::to_vk(m_createInfo.level);
-    allocInfo.commandBufferCount = imageCount;
-
-    m_commandBuffers.resize(imageCount);
-
-    VK_CALL_ASSERT(vkAllocateCommandBuffers(m_vkCreateInfo.device, &allocInfo, m_commandBuffers.data())) {
-        throw std::runtime_error("failed to allocate command buffer!");
-    }
-    m_cleared = false;
-}
-
 }

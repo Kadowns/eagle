@@ -5,21 +5,26 @@
 #ifndef EAGLE_WINDOW_H
 #define EAGLE_WINDOW_H
 
-#include "core_global_definitions.h"
+#include <eagle/core_global_definitions.h>
 #include <eagle/events/event.h>
-
 
 namespace eagle {
 
-class RenderingContext;
+class RenderContext;
+
+struct WindowCreateInfo {
+    const char* applicationName;
+    const char* engineName;
+};
 
 class Window {
 public:
+    explicit Window(const WindowCreateInfo& createInfo);
     virtual ~Window() = default;
 
     virtual void pool_events() = 0;
 
-    virtual RenderingContext* rendering_context() = 0;
+    virtual RenderContext* render_context() = 0;
 
     virtual bool is_minimized() = 0;
     virtual void wait_native_events() = 0;
@@ -37,6 +42,8 @@ public:
 
     virtual float framebuffer_width_scale() = 0;
     virtual float framebuffer_height_scale() = 0;
+protected:
+    WindowCreateInfo m_createInfo;
 };
 
 }

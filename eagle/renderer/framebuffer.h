@@ -14,8 +14,8 @@
 namespace eagle {
 
 struct FramebufferCreateInfo {
-    std::shared_ptr<RenderPass> renderPass;
     std::vector<std::shared_ptr<Image>> attachments;
+    RenderPass* renderPass;
     uint32_t width, height;
 };
 
@@ -24,7 +24,6 @@ public:
     Framebuffer(FramebufferCreateInfo createInfo) : m_createInfo(std::move(createInfo)) {}
     virtual ~Framebuffer() = default;
 
-    inline const std::vector<std::shared_ptr<Image>>& attachments() const { return m_createInfo.attachments; }
     inline uint32_t width() const { return m_createInfo.width; }
     inline uint32_t height() const { return m_createInfo.height; }
 

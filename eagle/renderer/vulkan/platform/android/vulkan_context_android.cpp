@@ -27,7 +27,7 @@ std::vector<const char*> eagle::VulkanContextAndroid::get_platform_extensions() 
 }
 
 void eagle::VulkanContextAndroid::recreate_surface() {
-    VK_CALL vkDeviceWaitIdle(m_device);
+    vkDeviceWaitIdle(m_device);
 
     create_surface();
     create_swapchain();
@@ -39,15 +39,15 @@ void eagle::VulkanContextAndroid::recreate_surface() {
 }
 
 void eagle::VulkanContextAndroid::destroy_surface() {
-    VK_CALL vkDeviceWaitIdle(m_device);
+    vkDeviceWaitIdle(m_device);
 
     clear_objects();
 
     m_present.framebuffer.reset();
 
-    VK_CALL vkDestroySwapchainKHR(m_device, m_present.swapchain, nullptr);
+    vkDestroySwapchainKHR(m_device, m_present.swapchain, nullptr);
 
-    VK_CALL vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+    vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
 }
 
 void eagle::VulkanContextAndroid::init() {

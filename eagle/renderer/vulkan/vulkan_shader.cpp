@@ -3,6 +3,7 @@
 #include <eagle/renderer/vulkan/vulkan_converter.h>
 #include <eagle/renderer/vulkan/vulkan_shader_utils.h>
 #include <eagle/renderer/vulkan/vulkan_render_pass.h>
+#include <eagle/renderer/vulkan/vulkan_exception.h>
 #include <eagle/file_system.h>
 
 namespace eagle {
@@ -31,7 +32,7 @@ VulkanShader::VulkanShader(const ShaderCreateInfo &createInfo, const VulkanShade
 
 VulkanShader::~VulkanShader() {
     cleanup_pipeline();
-    VK_CALL vkDestroyPipelineLayout(m_nativeCreateInfo.device, m_pipelineLayout, nullptr);
+    vkDestroyPipelineLayout(m_nativeCreateInfo.device, m_pipelineLayout, nullptr);
 
     m_descriptorSetLayouts.clear();
 }
@@ -103,8 +104,10 @@ void VulkanShader::create_pipeline_layout() {
     pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
     pipelineLayoutInfo.pSetLayouts = layouts.data();
 
-    VK_CALL_ASSERT(vkCreatePipelineLayout(m_nativeCreateInfo.device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout)) {
-        throw std::runtime_error("failed to create pipeline layout!");
+    auto result = vkCreatePipelineLayout(m_nativeCreateInfo.device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout);
+
+    if (result != VK_SUCCESS) {
+        throw VulkanException("failed to create pipeline layout!", result);
     }
 }
 
@@ -266,16 +269,18 @@ void VulkanShader::create_pipeline() {
         pipelineInfo.pDynamicState = &dynamicState;
     }
     pipelineInfo.layout = m_pipelineLayout;
-    pipelineInfo.renderPass = std::static_pointer_cast<VulkanRenderPass>(m_createInfo.renderPass)->native_render_pass();
+    pipelineInfo.renderPass = ((VulkanRenderPass*)m_createInfo.renderPass)->native_render_pass();
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-    VK_CALL_ASSERT(vkCreateGraphicsPipelines(m_nativeCreateInfo.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_graphicsPipeline)) {
-        throw std::runtime_error("failed to create graphics pipeline!");
+
+    auto result = vkCreateGraphicsPipelines(m_nativeCreateInfo.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_graphicsPipeline);
+    if (result != VK_SUCCESS) {
+        throw VulkanException("failed to create graphics pipeline", result);
     }
 
-    VK_CALL vkDestroyShaderModule(m_nativeCreateInfo.device, fragShaderModule, nullptr);
-    VK_CALL vkDestroyShaderModule(m_nativeCreateInfo.device, vertShaderModule, nullptr);
+    vkDestroyShaderModule(m_nativeCreateInfo.device, fragShaderModule, nullptr);
+    vkDestroyShaderModule(m_nativeCreateInfo.device, vertShaderModule, nullptr);
 
     m_cleared = false;
 
@@ -284,7 +289,7 @@ void VulkanShader::create_pipeline() {
 
 void VulkanShader::cleanup_pipeline(){
     if (m_cleared){ return; }
-    VK_CALL vkDestroyPipeline(m_nativeCreateInfo.device, m_graphicsPipeline, nullptr);
+    vkDestroyPipeline(m_nativeCreateInfo.device, m_graphicsPipeline, nullptr);
     m_cleared = true;
 }
 
@@ -305,7 +310,7 @@ const std::vector<std::shared_ptr<DescriptorSetLayout>> VulkanShader::descriptor
 }
 
 const std::shared_ptr<DescriptorSetLayout> VulkanShader::descriptor_set_layout(uint32_t index) const {
-    return std::shared_ptr<DescriptorSetLayout>();
+    return m_descriptorSetLayouts[index];
 }
 
 }

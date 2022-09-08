@@ -11,17 +11,16 @@
 namespace eagle {
 
 struct ImageCreateInfo {
-    int32_t width, height;
+    uint32_t width, height;
     uint32_t mipLevels = 1, arrayLayers = 1;
     Format format = Format::UNDEFINED;
     ImageTiling tiling = ImageTiling::OPTIMAL;
     ImageLayout layout = ImageLayout::UNDEFINED;
     ImageType type = ImageType::D2;
     std::vector<uint8_t> buffer;
-    std::vector<ImageUsage> usages;
-    std::vector<MemoryProperty> memoryProperties = {MemoryProperty::DEVICE_LOCAL};
-    std::vector<ImageAspect> aspects;
-    bool useMultiBuffering = false;
+    ImageUsageFlags usages;
+    MemoryPropertyFlags memoryProperties = {MEMORY_PROPERTY_DEVICE_LOCAL};
+    ImageAspectFlags aspects;
 };
 
 class Image;
@@ -49,9 +48,9 @@ public:
     inline Format format() const { return m_createInfo.format; }
     inline ImageTiling tiling() const { return m_createInfo.tiling; }
     inline ImageLayout layout() const { return m_createInfo.layout; }
-    inline const std::vector<ImageUsage>& usages() const { return m_createInfo.usages; }
-    inline const std::vector<MemoryProperty>& memory_properties() const { return m_createInfo.memoryProperties; }
-    inline const std::vector<ImageAspect>& aspects() const { return m_createInfo.aspects; }
+    inline const ImageUsageFlags usages() const { return m_createInfo.usages; }
+    inline const MemoryPropertyFlags memory_properties() const { return m_createInfo.memoryProperties; }
+    inline const ImageAspectFlags aspects() const { return m_createInfo.aspects; }
     inline const std::vector<uint8_t>& data() const { return m_createInfo.buffer; }
     inline void resize(uint32_t width, uint32_t height) {
         m_createInfo.width = width;

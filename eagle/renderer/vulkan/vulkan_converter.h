@@ -101,7 +101,7 @@ public:
     }
 
     template<typename VK, typename EG>
-    static VK to_vk_flags(const std::span<EG>& elements) {
+    static VK to_vk_flags(std::span<EG> elements) {
         VK flags = 0;
         for (auto &element : elements) {
             flags |= to_vk(element);
@@ -120,7 +120,7 @@ public:
     }
 
     template<typename VK, typename EG>
-    static std::vector<VK> to_vk_vector(const std::span<EG>& elements){
+    static std::vector<VK> to_vk_vector(const std::vector<EG>& elements){
         std::vector<VK> result;
         result.reserve(elements.size());
         for (auto& element : elements){

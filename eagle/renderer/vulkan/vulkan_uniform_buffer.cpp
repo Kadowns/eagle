@@ -38,7 +38,7 @@ void VulkanUniformBuffer::create_uniform_buffer() {
 
     if (!m_cleared) return;
 
-    m_buffers.resize(m_info.bufferCount);
+    m_buffers.resize(m_info.frameCount);
 
     VulkanBufferCreateInfo bufferCreateInfo = {};
     bufferCreateInfo.usageFlags = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
@@ -57,9 +57,8 @@ void VulkanUniformBuffer::create_uniform_buffer() {
 
 void VulkanUniformBuffer::cleanup() {
     if (m_cleared) return;
-    for (uint32_t i = 0; i < m_buffers.size(); i++) {
-        auto& buffer = m_buffers[i];
-        m_info.deleter.destroy_buffer(buffer, i);
+    for (auto& buffer : m_buffers) {
+        buffer.reset();
     }
     m_dirtyBuffers.clear();
     m_cleared = true;
@@ -78,7 +77,7 @@ bool VulkanUniformBuffer::is_dirty() const {
 }
 
 void VulkanUniformBuffer::recreate(uint32_t bufferCount) {
-    m_info.bufferCount = bufferCount;
+    m_info.frameCount = bufferCount;
     create_uniform_buffer();
 }
 

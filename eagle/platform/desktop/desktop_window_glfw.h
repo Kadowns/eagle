@@ -15,19 +15,24 @@ struct GLFWcursor;
 
 namespace eagle {
 
-class VulkanContextGLFW;
+class VulkanRenderContextGLFW;
+
+struct DesktopWindowGLFWCreateInfo {
+    uint32_t width;
+    uint32_t height;
+};
 
 class DesktopWindowGLFW : public Window {
 public:
 
-    DesktopWindowGLFW(uint32_t width, uint32_t height);
-    ~DesktopWindowGLFW();
+    DesktopWindowGLFW(const WindowCreateInfo& createInfo, DesktopWindowGLFWCreateInfo desktopWindowCreateInfo);
+    ~DesktopWindowGLFW() override;
 
     void init(EventBus* eventBus);
 
     void pool_events() override;
 
-    RenderingContext* rendering_context() override;
+    RenderContext* render_context() override;
 
     void* native_window() override;
 
@@ -47,17 +52,12 @@ public:
     float framebuffer_height_scale() override;
 
 private:
-    struct WindowData {
-        WindowData(uint32_t w, uint32_t h) : width(w), height(h){}
-
-        uint32_t width, height;
-        uint32_t framebufferWidth, framebufferHeight;
-        EventBus* eventBus;
-    } m_windowData;
-
-    GLFWwindow* m_window;
+    DesktopWindowGLFWCreateInfo m_desktopCreateInfo;
+    uint32_t m_framebufferWidth, m_framebufferHeight;
+    EventBus* m_eventBus;
+    GLFWwindow* m_glfwWindow;
     std::map<Cursor, GLFWcursor*> m_mouseCursors;
-    StrongPointer<VulkanContextGLFW> m_renderingContext;
+    std::shared_ptr<VulkanRenderContextGLFW> m_renderContext;
 };
 
 }

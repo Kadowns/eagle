@@ -15,10 +15,16 @@ class Window;
 class Timer;
 class ApplicationDelegate;
 
+struct ApplicationCreateInfo {
+    const char* applicationName;
+    const char* engineName;
+    ApplicationDelegate *delegate;
+};
+
 class Application {
 public:
-    Application() { EG_LOG_CREATE("eagle"); }
-    virtual ~Application() = default;
+    explicit Application(const ApplicationCreateInfo&);
+    virtual ~Application();
     virtual void quit() = 0;
     virtual Window& window() = 0;
     virtual EventBus& event_bus() = 0;
@@ -28,6 +34,7 @@ public:
 
 protected:
     static Application* s_instance;
+    ApplicationCreateInfo m_createInfo;
 };
 
 }

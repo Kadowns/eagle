@@ -4,6 +4,7 @@
 
 #include <eagle/renderer/vulkan/vulkan_render_pass.h>
 #include <eagle/renderer/vulkan/vulkan_converter.h>
+#include <eagle/renderer/vulkan/vulkan_exception.h>
 
 namespace eagle {
 
@@ -47,7 +48,7 @@ VulkanRenderPass::VulkanRenderPass(
         RenderPass(std::move(createInfo)),
         m_vulkanCreateInfo(vulkanCreateInfo) {
     EG_TRACE("eagle","Creating a VulkanRenderPass!");
-    m_vkAttachments = std::move(VulkanConverter::to_vk_vector<VkAttachmentDescription>(m_createInfo.attachments));
+    m_vkAttachments = VulkanConverter::to_vk_vector<VkAttachmentDescription>(m_createInfo.attachments);
 
     m_clearValues.resize(m_vkAttachments.size());
     for (int i = 0; i < m_clearValues.size(); i++){
@@ -118,8 +119,10 @@ void VulkanRenderPass::create_native_render_pass() {
     renderPassInfo.dependencyCount = dependencies.size();
     renderPassInfo.pDependencies = dependencies.data();
 
-    VK_CALL_ASSERT(vkCreateRenderPass(m_vulkanCreateInfo.device, &renderPassInfo, nullptr, &m_vkRenderPass)) {
-        throw std::runtime_error("failed to create render pass!");
+    auto result = vkCreateRenderPass(m_vulkanCreateInfo.device, &renderPassInfo, nullptr, &m_vkRenderPass);
+
+    if(result != VK_SUCCESS) {
+        throw VulkanException("failed to create render pass", result);
     }
 
     EG_TRACE("eagle","Native render pass created!");
@@ -133,7 +136,7 @@ VulkanRenderPass::~VulkanRenderPass() {
 
 void VulkanRenderPass::cleanup() {
     EG_TRACE("eagle","Cleaning up a VulkanRenderPass!");
-    VK_CALL vkDestroyRenderPass(m_vulkanCreateInfo.device, m_vkRenderPass, nullptr);
+    vkDestroyRenderPass(m_vulkanCreateInfo.device, m_vkRenderPass, nullptr);
     EG_TRACE("eagle","VulkanRenderPass cleaned!");
 }
 

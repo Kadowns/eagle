@@ -7,6 +7,21 @@
 #include <eagle/application.h>
 #include <eagle/window.h>
 
+
+TriangleApplication::Mat2::Mat2() {
+    data[0][0] = 1;
+    data[1][0] = 0;
+    data[0][1] = 0;
+    data[1][1] = 1;
+}
+
+TriangleApplication::Mat2::Mat2(float radians) {
+    data[0][0] = cosf(radians);
+    data[1][0] = 0;
+    data[0][1] = 0;
+    data[1][1] = sinf(radians);;
+}
+
 TriangleApplication::TriangleApplication() {
     EG_LOG_CREATE("triangle");
     EG_LOG_PATTERN("[%T.%e] [%n] [%^%l%$] [%s:%#::%!()] %v");
@@ -15,9 +30,7 @@ TriangleApplication::TriangleApplication() {
 
 void TriangleApplication::init() {
     EG_INFO("triangle", "Triangle attached!");
-    m_renderingContext = eagle::Application::instance().window().rendering_context();
-
-    m_renderQueue = m_renderingContext->create_queue({eagle::GPUQueueUsage::RENDER});
+    m_renderContext = eagle::Application::instance().window().render_context();
 
     m_listener.attach(&eagle::Application::instance().event_bus());
     m_listener.subscribe<eagle::OnWindowClose>([](const eagle::OnWindowClose& ev){
@@ -29,13 +42,13 @@ void TriangleApplication::init() {
     vertexLayout.add(0, eagle::Format::R32G32_SFLOAT);
     vertexLayout.add(0, eagle::Format::R32G32B32A32_SFLOAT);
 
-    eagle::ShaderCreateInfo pipelineInfo = {m_renderingContext->main_render_pass(), {
+    eagle::ShaderCreateInfo pipelineInfo = {m_renderContext->main_render_pass(), {
             {eagle::ShaderStage::VERTEX, "color.vert.spv"},
             {eagle::ShaderStage::FRAGMENT, "color.frag.spv"}
     }};
     pipelineInfo.blendEnable = true;
     pipelineInfo.vertexLayout = vertexLayout;
-    m_shader = m_renderingContext->create_shader(pipelineInfo);
+    m_shader = m_renderContext->create_shader(pipelineInfo);
 
     struct Vertex {
         float position[2];
@@ -51,7 +64,7 @@ void TriangleApplication::init() {
     eagle::VertexBufferCreateInfo vbCreateInfo = {};
     vbCreateInfo.updateType = eagle::UpdateType::BAKED;
 
-    m_vertexBuffer = m_renderingContext->create_vertex_buffer(vbCreateInfo, vertices, 4 * sizeof(Vertex));
+    m_vertexBuffer = m_renderContext->create_vertex_buffer(vbCreateInfo, vertices, 4 * sizeof(Vertex));
 
     uint16_t indices[6];
     indices[0] = 0;
@@ -66,34 +79,55 @@ void TriangleApplication::init() {
     ibCreateInfo.indexType = eagle::IndexBufferType::UINT_16;
     ibCreateInfo.updateType = eagle::UpdateType::BAKED;
 
-    m_indexBuffer = m_renderingContext->create_index_buffer(ibCreateInfo, indices, 6 * sizeof(uint16_t));
+    m_indexBuffer = m_renderContext->create_index_buffer(ibCreateInfo, indices, 6 * sizeof(uint16_t));
+
+    Mat2 rotation;
+    m_uniformBuffer = m_renderContext->create_uniform_buffer(sizeof(rotation), rotation.data);
+
+    eagle::DescriptorSetCreateInfo descriptorSetCreateInfo = {};
+    descriptorSetCreateInfo.layout = m_shader->descriptor_set_layout(0);
+    descriptorSetCreateInfo.descriptors = {m_uniformBuffer.get()};
+
+    m_descriptorSet = m_renderContext->create_descriptor_set(descriptorSetCreateInfo);
 
     eagle::CommandBufferCreateInfo commandBufferCreateInfo = {};
     commandBufferCreateInfo.level = eagle::CommandBufferLevel::MASTER;
-    m_commandBuffer = m_renderingContext->create_command_buffer(commandBufferCreateInfo);
+    m_commandBuffer = m_renderContext->create_command_buffer(commandBufferCreateInfo);
 
+    m_framesInFlight = m_renderContext->create_fence();
+    m_renderFinished = m_renderContext->create_semaphore();
+    m_frameAvailable = m_renderContext->create_semaphore();
+    m_timer.start();
 }
 
 void TriangleApplication::step() {
 
+    m_timer.update();
+
+    Mat2 rotation(m_timer.delta_time());
+//    m_uniformBuffer->clear();
+//    m_uniformBuffer->write_from(rotation);
+//    m_uniformBuffer->flush();
+
     m_framesInFlight->wait();
 
-    if (!m_renderingContext->prepare_frame(m_frameAvailable.get())){
+    if (!m_renderContext->prepare_frame(m_frameAvailable.get())){
         EG_WARNING("triangle", "Failed to prepare frame, skipping");
         return;
     }
 
     m_commandBuffer->begin();
-    m_commandBuffer->begin_render_pass(m_renderingContext->main_render_pass(), m_renderingContext->main_framebuffer());
-    m_commandBuffer->bind_shader(m_shader);
-    m_commandBuffer->bind_vertex_buffer(m_vertexBuffer, 0);
-    m_commandBuffer->bind_index_buffer(m_indexBuffer);
+    m_commandBuffer->begin_render_pass(m_renderContext->main_render_pass(), m_renderContext->main_framebuffer());
+    m_commandBuffer->bind_shader(m_shader.get());
+    m_commandBuffer->bind_descriptor_sets(m_descriptorSet.get(), 0);
+    m_commandBuffer->bind_vertex_buffer(m_vertexBuffer.get(), 0);
+    m_commandBuffer->bind_index_buffer(m_indexBuffer.get());
     m_commandBuffer->draw_indexed(6, 1, 0, 0, 0);
     m_commandBuffer->end_render_pass();
     m_commandBuffer->end();
 
 
-    eagle::GPUQueueSubmitInfo submitInfo = {};
+    eagle::CommandBufferSubmitInfo submitInfo = {};
 
     //command buffers to execute
     eagle::CommandBuffer* commandBuffers[] = {m_commandBuffer.get()};
@@ -111,16 +145,17 @@ void TriangleApplication::step() {
     submitInfo.signalSemaphores = signalSemaphores;
 
     //wait for color output
-    eagle::PipelineStageFlagsBits waitStages[] = {eagle::PipelineStageFlagsBits::COLOR_ATTACHMENT_OUTPUT_BIT};
+    eagle::PipelineStageFlags waitStages[] = {eagle::PipelineStageFlagsBits::COLOR_ATTACHMENT_OUTPUT_BIT};
     submitInfo.waitStages = waitStages;
 
-    m_renderQueue->submit(submitInfo);
+    submitInfo.queueType = eagle::QueueType::GRAPHICS;
 
-    m_renderingContext->present_frame();
+    m_renderContext->submit(submitInfo);
+
+    m_renderContext->present_frame(signalSemaphores);
 }
 
 TriangleApplication::~TriangleApplication() {
-    EG_INFO("triangle", "Triangle destroyed!");
     m_listener.destroy();
 }
 

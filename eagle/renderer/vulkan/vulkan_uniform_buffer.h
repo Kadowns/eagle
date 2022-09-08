@@ -5,18 +5,16 @@
 #ifndef EAGLE_VULKANUNIFORMBUFFER_H
 #define EAGLE_VULKANUNIFORMBUFFER_H
 
-#include "eagle/renderer/uniform_buffer.h"
-#include "vulkan_buffer.h"
-#include "vulkan_cleaner.h"
-#include "vulkan_deleter.h"
+#include <eagle/renderer/uniform_buffer.h>
+#include <eagle/renderer/vulkan/vulkan_buffer.h>
+#include <eagle/renderer/vulkan/vulkan_cleaner.h>
 
 namespace eagle {
 
-struct VulkanUniformBufferCreateInfo{
-    VulkanDeleter& deleter;
+struct VulkanUniformBufferCreateInfo {
     VkDevice device;
     VkPhysicalDevice physicalDevice;
-    size_t bufferCount;
+    size_t frameCount;
 };
 
 class VulkanUniformBuffer : public UniformBuffer, public VulkanCleanable {

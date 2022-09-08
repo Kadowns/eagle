@@ -49,6 +49,7 @@ set(EAGLE_HEADER
         eagle/renderer/render_target.h
         eagle/renderer/renderer_global_definitions.h
         eagle/renderer/rendering_context.h
+        eagle/renderer/render_context.h
         eagle/renderer/semaphore.h
         eagle/renderer/shader.h
         eagle/renderer/storage_buffer.h
@@ -61,18 +62,19 @@ set(EAGLE_HEADER
         eagle/renderer/vulkan/vulkan_buffer.h
         eagle/renderer/vulkan/vulkan_cleaner.h
         eagle/renderer/vulkan/vulkan_command_buffer.h
-        eagle/renderer/vulkan/vulkan_compute_shader.h
-        eagle/renderer/vulkan/vulkan_context.h
         eagle/renderer/vulkan/vulkan_converter.h
         eagle/renderer/vulkan/vulkan_deleter.h
         eagle/renderer/vulkan/vulkan_descriptor_set.h
         eagle/renderer/vulkan/vulkan_descriptor_set_layout.h
+        eagle/renderer/vulkan/vulkan_exception.h
+        eagle/renderer/vulkan/vulkan_fence.h
         eagle/renderer/vulkan/vulkan_framebuffer.h
         eagle/renderer/vulkan/vulkan_global_definitions.h
-        eagle/renderer/vulkan/vulkan_gpu_queue.h
         eagle/renderer/vulkan/vulkan_helper.h
         eagle/renderer/vulkan/vulkan_image.h
         eagle/renderer/vulkan/vulkan_index_buffer.h
+        eagle/renderer/vulkan/vulkan_queue.h
+        eagle/renderer/vulkan/vulkan_render_context.h
         eagle/renderer/vulkan/vulkan_render_pass.h
         eagle/renderer/vulkan/vulkan_semaphore.h
         eagle/renderer/vulkan/vulkan_shader.h
@@ -89,26 +91,29 @@ set(EAGLE_SOURCE
         eagle/random.cpp
         eagle/timer.cpp
         eagle/file_system.cpp
+        eagle/window.cpp
         eagle/memory/buffer.cpp
         eagle/events/event.cpp
 
         eagle/renderer/vertex_layout.cpp
+        eagle/renderer/render_context.cpp
         eagle/renderer/vulkan/spirv_reflect.cpp
         eagle/renderer/vulkan/vulkan_buffer.cpp
         eagle/renderer/vulkan/vulkan_cleaner.cpp
         eagle/renderer/vulkan/vulkan_command_buffer.cpp
-        eagle/renderer/vulkan/vulkan_compute_shader.cpp
-        eagle/renderer/vulkan/vulkan_context.cpp
         eagle/renderer/vulkan/vulkan_converter.cpp
         eagle/renderer/vulkan/vulkan_deleter.cpp
         eagle/renderer/vulkan/vulkan_descriptor_set.cpp
         eagle/renderer/vulkan/vulkan_descriptor_set_layout.cpp
+        eagle/renderer/vulkan/vulkan_exception.cpp
+        eagle/renderer/vulkan/vulkan_fence.cpp
         eagle/renderer/vulkan/vulkan_framebuffer.cpp
         eagle/renderer/vulkan/vulkan_global_definitions.cpp
-        eagle/renderer/vulkan/vulkan_gpu_queue.cpp
         eagle/renderer/vulkan/vulkan_helper.cpp
         eagle/renderer/vulkan/vulkan_image.cpp
         eagle/renderer/vulkan/vulkan_index_buffer.cpp
+        eagle/renderer/vulkan/vulkan_queue.cpp
+        eagle/renderer/vulkan/vulkan_render_context.cpp
         eagle/renderer/vulkan/vulkan_render_pass.cpp
         eagle/renderer/vulkan/vulkan_semaphore.cpp
         eagle/renderer/vulkan/vulkan_shader.cpp
@@ -139,14 +144,14 @@ if (WIN32)
             eagle/platform/desktop/desktop_window_glfw.h
             eagle/platform/desktop/desktop_application.h
             eagle/platform/desktop/desktop_file_system.h
-            eagle/renderer/vulkan/platform/desktop/vulkan_context_glfw.h
+            eagle/renderer/vulkan/platform/desktop/vulkan_render_context_glfw.h
             )
 
     list(APPEND EAGLE_SOURCE
             eagle/platform/desktop/desktop_window_glfw.cpp
             eagle/platform/desktop/desktop_application.cpp
             eagle/platform/desktop/desktop_file_system.cpp
-            eagle/renderer/vulkan/platform/desktop/vulkan_context_glfw.cpp
+            eagle/renderer/vulkan/platform/desktop/vulkan_render_context_glfw.cpp
             )
 
     list(APPEND EAGLE_PLATFORM_LIBS glfw Vulkan::Vulkan)

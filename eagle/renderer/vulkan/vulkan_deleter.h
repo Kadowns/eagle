@@ -6,39 +6,78 @@
 #define EAGLE_VULKAN_DELETER_H
 
 #include <eagle/renderer/vulkan/vulkan_global_definitions.h>
-#include <eagle/renderer/vulkan/vulkan_buffer.h>
+#include <eagle/renderer/vulkan/vulkan_fence.h>
+#include <eagle/renderer/vulkan/vulkan_semaphore.h>
+#include <eagle/renderer/vulkan/vulkan_image.h>
+#include <eagle/renderer/vulkan/vulkan_texture.h>
+#include <eagle/renderer/vulkan/vulkan_render_pass.h>
+#include <eagle/renderer/vulkan/vulkan_shader.h>
+#include <eagle/renderer/vulkan/vulkan_framebuffer.h>
+#include <eagle/renderer/vulkan/vulkan_vertex_buffer.h>
+#include <eagle/renderer/vulkan/vulkan_index_buffer.h>
+#include <eagle/renderer/vulkan/vulkan_uniform_buffer.h>
+#include <eagle/renderer/vulkan/vulkan_storage_buffer.h>
+#include <eagle/renderer/vulkan/vulkan_command_buffer.h>
+#include <eagle/renderer/vulkan/vulkan_descriptor_set.h>
+#include <eagle/renderer/vulkan/vulkan_descriptor_set_layout.h>
 
 #include <memory>
 #include <vector>
 
 namespace eagle {
 
-struct VulkanDeleterInfo {
+struct VulkanDeleterCreateInfo {
     VkDevice device;
+    size_t frameCount;
 };
 
 class VulkanDeleter {
 public:
 
-    VulkanDeleter(const VulkanDeleterInfo& info);
+    VulkanDeleter(const VulkanDeleterCreateInfo& info);
+    ~VulkanDeleter();
 
-    void destroy_image(VkImage image, uint32_t frameIndex);
-    void destroy_image_view(VkImageView view, uint32_t frameIndex);
-    void destroy_device_memory(VkDeviceMemory memory, uint32_t frameIndex);
-    void destroy_buffer(const std::shared_ptr<VulkanBuffer>& buffer, uint32_t frameIndex);
+    void destroy(VulkanDescriptorSetLayout* setLayout);
+    void destroy(VulkanDescriptorSet* set);
+    void destroy(VulkanFramebuffer* buffer);
+    void destroy(VulkanFence* fence);
+    void destroy(VulkanSemaphore* semaphore);
+    void destroy(VulkanRenderPass* renderPass);
+    void destroy(VulkanShader* renderPass);
+    void destroy(VulkanImage* image);
+    void destroy(VulkanTexture* texture);
+    void destroy(VulkanVertexBuffer* buffer);
+    void destroy(VulkanIndexBuffer* buffer);
+    void destroy(VulkanUniformBuffer* buffer);
+    void destroy(VulkanStorageBuffer* buffer);
+    void destroy(VulkanCommandBuffer* buffer);
 
-    void destroy(uint32_t frameIndex);
+    void clear_frame();
+    void clear_all();
 
 private:
-
-    struct Frame {
-        std::vector<VkDeviceMemory> memories;
-        std::vector<VkImage> images;
-        std::vector<VkImageView> views;
-        std::vector<std::shared_ptr<VulkanBuffer>> buffers;
+    template<typename T>
+    struct Resource {
+        using type = T;
+        std::unique_ptr<T> ptr;
+        size_t framesRemaining;
     };
-    VulkanDeleterInfo m_info;
-    std::vector<Frame> m_frames;
+
+    VulkanDeleterCreateInfo m_info;
+    std::vector<Resource<VulkanImage>> m_images;
+    std::vector<Resource<VulkanTexture>> m_textures;
+    std::vector<Resource<VulkanVertexBuffer>> m_vertexBuffers;
+    std::vector<Resource<VulkanIndexBuffer>> m_indexBuffers;
+    std::vector<Resource<VulkanUniformBuffer>> m_uniformBuffers;
+    std::vector<Resource<VulkanStorageBuffer>> m_storageBuffers;
+    std::vector<Resource<VulkanCommandBuffer>> m_commandBuffers;
+    std::vector<Resource<VulkanDescriptorSetLayout>> m_descriptorSetLayouts;
+    std::vector<Resource<VulkanDescriptorSet>> m_descriptorSets;
+    std::vector<Resource<VulkanFramebuffer>> m_framebuffers;
+    std::vector<Resource<VulkanFence>> m_fences;
+    std::vector<Resource<VulkanSemaphore>> m_semaphores;
+    std::vector<Resource<VulkanRenderPass>> m_renderPasses;
+    std::vector<Resource<VulkanShader>> m_shaders;
 
 };
 

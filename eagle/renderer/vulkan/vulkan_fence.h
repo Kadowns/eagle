@@ -11,12 +11,25 @@
 
 namespace eagle {
 
+struct VulkanFenceCreateInfo {
+    VkDevice device;
+    uint32_t frameCount;
+    uint32_t* currentFrame;
+};
+
 class VulkanFence : public Fence {
 public:
+    explicit VulkanFence(const VulkanFenceCreateInfo& createInfo);
+    ~VulkanFence() override;
 
-    VkFence native_fence(size_t index) { return m_fences[index]; }
+    bool wait(std::chrono::milliseconds timeout) override;
+
+    void reset() override;
+
+    VkFence native_fence(size_t index);
 
 private:
+    VulkanFenceCreateInfo m_createInfo;
     std::vector<VkFence> m_fences;
 };
 

@@ -57,11 +57,11 @@ VulkanBuffer::~VulkanBuffer() {
     unmap();
 
     if (m_buffer) {
-        VK_CALL vkDestroyBuffer(m_info.device, m_buffer, nullptr);
+        vkDestroyBuffer(m_info.device, m_buffer, nullptr);
     }
 
     if (m_memory) {
-        VK_CALL vkFreeMemory(m_info.device, m_memory, nullptr);
+        vkFreeMemory(m_info.device, m_memory, nullptr);
     }
 }
 
@@ -89,11 +89,10 @@ VulkanBuffer::copy_to(void *data, VkDeviceSize size) {
     memcpy(m_mapped, data, size);
 }
 
-void VulkanBuffer::copy_buffer(VkCommandPool commandPool, VkQueue queue, VulkanBuffer* src, VulkanBuffer* dst,
+void VulkanBuffer::copy_buffer(VulkanQueue* queue, VulkanBuffer* src, VulkanBuffer* dst,
                                VkDeviceSize size, VkDeviceSize srcOffset, VkDeviceSize dstOffset) {
     EG_TRACE("eagle","Copying vulkan buffer");
-    auto device = src->info().device;
-    VkCommandBuffer commandBuffer = VulkanHelper::begin_single_time_commands(device, commandPool);
+    VkCommandBuffer commandBuffer = VulkanHelper::begin_single_time_commands(queue);
 
     VkBufferCopy copyRegion = {};
     copyRegion.srcOffset = srcOffset;
@@ -101,8 +100,7 @@ void VulkanBuffer::copy_buffer(VkCommandPool commandPool, VkQueue queue, VulkanB
     copyRegion.size = size;
     vkCmdCopyBuffer(commandBuffer, src->m_buffer, dst->m_buffer, 1, &copyRegion);
 
-    VulkanHelper::end_single_time_commnds(device, commandPool, commandBuffer, queue);
-    EG_TRACE("eagle","Vulkan buffer copied");
+    VulkanHelper::end_single_time_commnds(queue, commandBuffer);
 }
 
 void VulkanBuffer::flush(VkDeviceSize size, VkDeviceSize offset) {

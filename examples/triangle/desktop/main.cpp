@@ -8,12 +8,21 @@
 
 int main(){
 
+    eagle::ApplicationCreateInfo applicationCreateInfo = {};
+    applicationCreateInfo.applicationName = "Triangle";
+    applicationCreateInfo.engineName = "Eagle";
+    applicationCreateInfo.delegate = new TriangleApplication();
 
-    eagle::DesktopApplication application(1280, 720, new TriangleApplication());
+    eagle::DesktopApplicationCreateInfo desktopApplicationCreateInfo = {};
+    desktopApplicationCreateInfo.width = 1280;
+    desktopApplicationCreateInfo.height = 720;
+
+    eagle::DesktopApplication application(applicationCreateInfo, desktopApplicationCreateInfo);
 
     try {
         application.run();
-    } catch(const std::exception& e) {
+    }
+    catch(const std::exception& e) {
         EG_CRITICAL("eagle", "An exception occurred: {0}", e.what());
         return 1;
     }

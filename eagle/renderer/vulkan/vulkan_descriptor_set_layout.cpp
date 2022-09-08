@@ -30,7 +30,7 @@ VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(
 }
 
 VulkanDescriptorSetLayout::~VulkanDescriptorSetLayout() {
-    VK_CALL vkDestroyDescriptorSetLayout(m_vkInfo.device, m_layout, nullptr);
+    vkDestroyDescriptorSetLayout(m_vkInfo.device, m_layout, nullptr);
 }
 
 void VulkanDescriptorSetLayout::create_layout(const std::vector<VkDescriptorSetLayoutBinding> &bindings) {
@@ -42,7 +42,7 @@ void VulkanDescriptorSetLayout::create_layout(const std::vector<VkDescriptorSetL
     createInfo.pBindings = bindings.data();
     createInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 
-    VK_CALL vkCreateDescriptorSetLayout(m_vkInfo.device, &createInfo, nullptr, &m_layout);
+    vkCreateDescriptorSetLayout(m_vkInfo.device, &createInfo, nullptr, &m_layout);
 }
 
 }

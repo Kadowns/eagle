@@ -5,23 +5,22 @@
 #ifndef EAGLE_VULKANVERTEXBUFFER_H
 #define EAGLE_VULKANVERTEXBUFFER_H
 
-#include <set>
+#include <eagle/renderer/vertex_buffer.h>
+#include <eagle/renderer/vertex_layout.h>
+#include <eagle/renderer/vulkan/vulkan_buffer.h>
+#include <eagle/renderer/vulkan/vulkan_cleaner.h>
 
-#include "eagle/renderer/vertex_buffer.h"
-#include "eagle/renderer/vertex_layout.h"
-#include "vulkan_buffer.h"
-#include "vulkan_cleaner.h"
-#include "vulkan_deleter.h"
+#include <set>
 
 namespace eagle {
 
+class VulkanSharedCommandPool;
+
 struct VulkanVertexBufferCreateInfo {
-    VulkanDeleter& deleter;
     VkDevice device;
-    uint32_t bufferCount;
+    uint32_t frameCount;
     VkPhysicalDevice physicalDevice;
-    VkCommandPool commandPool;
-    VkQueue graphicsQueue;
+    VulkanQueue* queue;
 };
 
 class VulkanVertexBuffer : public VertexBuffer, public VulkanCleanable {
@@ -37,7 +36,7 @@ public:
     //vertex buffer
     void flush() override;
 
-    inline VulkanBuffer& native_buffer(uint32_t bufferIndex) {
+    inline VulkanBuffer& internal_buffer(uint32_t bufferIndex) {
         return *(m_buffers[bufferIndex]);
     }
 

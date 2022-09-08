@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <chrono>
 
 namespace eagle {
 
@@ -14,19 +15,20 @@ namespace eagle {
 class Fence {
 public:
 
+    virtual ~Fence() = default;
+
     // Blocks current thread until fence is signaled or the timeout is reached
     // timeout specified in milli seconds
     // returns true in case the fence becomes signaled, false if timeout was reached
-    virtual bool wait(uint64_t timeout) = 0;
+    virtual bool wait(std::chrono::milliseconds timeout) = 0;
 
     // Overload to wait indefinably
-    inline bool wait() { return wait(std::numeric_limits<uint64_t>::max()); }
-
-    // Returns true if signaled, false if not
-    virtual bool signaled() const = 0;
+    inline bool wait() {
+        return wait(std::chrono::milliseconds(std::numeric_limits<uint64_t>::max()));
+    }
 
     // Sets fence to an unsignaled state
-    virtual bool reset() = 0;
+    virtual void reset() = 0;
 
 };
 

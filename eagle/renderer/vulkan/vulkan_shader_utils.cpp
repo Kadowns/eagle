@@ -5,7 +5,7 @@
 #include <eagle/renderer/vulkan/vulkan_shader_utils.h>
 #include <eagle/renderer/vulkan/spirv_reflect.h>
 #include <eagle/renderer/vulkan/vulkan_converter.h>
-
+#include <eagle/renderer/vulkan/vulkan_exception.h>
 
 namespace eagle {
 
@@ -188,8 +188,9 @@ VkShaderModule VulkanShaderUtils::create_shader_module(VkDevice device, const st
     createInfo.pCode = code.data();
 
     VkShaderModule shaderModule;
-    VK_CALL_ASSERT(vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule)) {
-        throw std::runtime_error("failed to create shader module!");
+    auto result = vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule);
+    if (result != VK_SUCCESS) {
+        throw VulkanException("failed to create shader module", result);
     }
 
     return shaderModule;

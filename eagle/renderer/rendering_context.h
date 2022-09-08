@@ -52,7 +52,7 @@ public:
     virtual RenderPass* main_render_pass() = 0;
     virtual Framebuffer* main_framebuffer() = 0;
 
-    virtual GPUQueue* find_queue(GPUQueueType type, const std::string& name = "") = 0;
+    virtual GPUQueue* find_queue(QueueType type, const std::string& name = "") = 0;
 
     virtual const Properties& properties() = 0;
 
@@ -80,7 +80,7 @@ public:
     create_descriptor_set_layout(const DescriptorSetLayoutInfo& descriptorSetLayoutInfo) = 0;
 
     virtual std::shared_ptr<DescriptorSet>
-    create_descriptor_set(const DescriptorSetInfo& descriptorSetInfo) = 0;
+    create_descriptor_set(const DescriptorSetCreateInfo& descriptorSetInfo) = 0;
 
     virtual std::shared_ptr<Texture>
     create_texture(const TextureCreateInfo &createInfo) = 0;
