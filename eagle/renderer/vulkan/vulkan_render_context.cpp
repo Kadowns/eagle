@@ -126,7 +126,18 @@ void VulkanRenderContext::exit() {
 
     vkDeviceWaitIdle(m_device);
 
-    m_deleter.reset();
+    m_deleter->destroy(m_mainFramebuffer.release());
+    m_deleter->destroy(m_mainRenderPass.release());
+
+    m_deleter->clear_all();
+
+    m_queues.clear();
+
+    vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
+
+    vkDestroyDevice(m_device, nullptr);
+
+    vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
 
     vkDestroyInstance(m_instance, nullptr);
 
@@ -798,7 +809,7 @@ void VulkanRenderContext::create_main_framebuffers() {
     nativeFramebufferCreateInfo.frameCount = m_swapchainProperties.imageCount;
     nativeFramebufferCreateInfo.currentFrame = &m_currentSwapchainImage;
 
-    m_mainFramebuffer = std::make_shared<VulkanFramebuffer>(framebufferCreateInfo, nativeFramebufferCreateInfo);
+    m_mainFramebuffer = std::make_unique<VulkanFramebuffer>(framebufferCreateInfo, nativeFramebufferCreateInfo);
 
     EG_TRACE("eagle", "Framebuffers created!");
 }
@@ -870,7 +881,7 @@ void VulkanRenderContext::create_main_render_pass() {
     VulkanRenderPassCreateInfo vulkanCreateInfo = {};
     vulkanCreateInfo.device = m_device;
 
-    m_mainRenderPass = std::make_shared<VulkanRenderPass>(std::move(renderPassCreateInfo), vulkanCreateInfo);
+    m_mainRenderPass = std::make_unique<VulkanRenderPass>(std::move(renderPassCreateInfo), vulkanCreateInfo);
 
 }
 
