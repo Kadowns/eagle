@@ -343,6 +343,7 @@ std::shared_ptr<Framebuffer> VulkanRenderContext::create_framebuffer(const Frame
     VulkanFramebufferCreateInfo vulkanCreateInfo = {};
     vulkanCreateInfo.device = m_device;
     vulkanCreateInfo.frameCount = m_createInfo.maxFramesInFlight;
+    vulkanCreateInfo.currentFrame = &m_currentFrame;
 
     auto ptr = new VulkanFramebuffer(createInfo, vulkanCreateInfo);
     return detail::make_shared_with_deleter(ptr, m_deleter);

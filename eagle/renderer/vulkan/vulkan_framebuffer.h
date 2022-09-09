@@ -13,9 +13,9 @@
 namespace eagle {
 
 struct VulkanFramebufferCreateInfo {
-    VkDevice device;
-    uint32_t frameCount;
-    uint32_t* currentFrame;
+    VkDevice device = VK_NULL_HANDLE;
+    uint32_t frameCount = 0;
+    uint32_t* currentFrame = nullptr;
 };
 
 
