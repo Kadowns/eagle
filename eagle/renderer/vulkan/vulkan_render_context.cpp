@@ -749,62 +749,6 @@ void VulkanRenderContext::create_deleter() {
     m_deleter = std::make_unique<VulkanDeleter>(info);
 }
 
-void VulkanRenderContext::create_main_framebuffers() {
-
-    vkGetSwapchainImagesKHR(m_device, m_swapchain, &m_swapchainProperties.imageCount, nullptr);
-
-    std::vector<VkImage> swapchainImages(m_swapchainProperties.imageCount);
-
-    vkGetSwapchainImagesKHR(m_device, m_swapchain, &m_swapchainProperties.imageCount, swapchainImages.data());
-
-    //we will create a framebuffer object for each swapchain image separately
-
-    ImageCreateInfo imageCreateInfo = {};
-    imageCreateInfo.width = m_swapchainProperties.extent.width;
-    imageCreateInfo.height = m_swapchainProperties.extent.height;
-    imageCreateInfo.format = VulkanConverter::to_eg(m_swapchainProperties.surfaceFormat.format);
-    imageCreateInfo.aspects = {IMAGE_ASPECT_COLOR};
-    imageCreateInfo.usages = {IMAGE_USAGE_COLOR_ATTACHMENT};
-
-    VulkanImageCreateInfo nativeImageCreateInfo = {};
-    nativeImageCreateInfo.physicalDevice = m_physicalDevice;
-    nativeImageCreateInfo.device = m_device;
-    nativeImageCreateInfo.queue = m_queues.at(QueueType::GRAPHICS).get();
-    nativeImageCreateInfo.frameCount = m_swapchainProperties.imageCount;
-
-    std::shared_ptr<VulkanImage> colorImage = std::make_shared<VulkanImage>(imageCreateInfo, nativeImageCreateInfo, swapchainImages);
-
-    //depth
-    imageCreateInfo.format = VulkanConverter::to_eg(m_swapchainProperties.depthFormat);
-    imageCreateInfo.aspects = {IMAGE_ASPECT_DEPTH};
-    imageCreateInfo.usages = {IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT};
-    imageCreateInfo.layout = ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-    imageCreateInfo.tiling = ImageTiling::OPTIMAL;
-    imageCreateInfo.memoryProperties = {MEMORY_PROPERTY_DEVICE_LOCAL};
-    imageCreateInfo.mipLevels = 1;
-    imageCreateInfo.arrayLayers = 1;
-    if (imageCreateInfo.format == Format::D32_SFLOAT_S8_UINT || imageCreateInfo.format == Format::D24_UNORM_S8_UINT) {
-        imageCreateInfo.aspects |= IMAGE_ASPECT_STENCIL;
-    }
-
-    std::shared_ptr<VulkanImage> depthImage = std::make_shared<VulkanImage>(imageCreateInfo, nativeImageCreateInfo);
-
-    FramebufferCreateInfo framebufferCreateInfo = {};
-    framebufferCreateInfo.width = m_swapchainProperties.extent.width;
-    framebufferCreateInfo.height = m_swapchainProperties.extent.height;
-    framebufferCreateInfo.renderPass = m_mainRenderPass.get();
-    framebufferCreateInfo.attachments = {colorImage, depthImage};
-
-    VulkanFramebufferCreateInfo nativeFramebufferCreateInfo = {};
-    nativeFramebufferCreateInfo.device = m_device;
-    nativeFramebufferCreateInfo.frameCount = m_swapchainProperties.imageCount;
-    nativeFramebufferCreateInfo.currentFrame = &m_currentSwapchainImage;
-
-    m_mainFramebuffer = std::make_unique<VulkanFramebuffer>(framebufferCreateInfo, nativeFramebufferCreateInfo);
-
-    EG_TRACE("eagle", "Framebuffers created!");
-}
-
 void VulkanRenderContext::create_main_render_pass() {
 
     RenderAttachmentDescription colorAttachment = {};
@@ -876,5 +820,79 @@ void VulkanRenderContext::create_main_render_pass() {
 
 }
 
+void VulkanRenderContext::create_main_framebuffers() {
+
+    vkGetSwapchainImagesKHR(m_device, m_swapchain, &m_swapchainProperties.imageCount, nullptr);
+
+    std::vector<VkImage> swapchainImages(m_swapchainProperties.imageCount);
+
+    vkGetSwapchainImagesKHR(m_device, m_swapchain, &m_swapchainProperties.imageCount, swapchainImages.data());
+
+    //we will create a framebuffer object for each swapchain image separately
+
+    ImageCreateInfo imageCreateInfo = {};
+    imageCreateInfo.width = m_swapchainProperties.extent.width;
+    imageCreateInfo.height = m_swapchainProperties.extent.height;
+    imageCreateInfo.format = VulkanConverter::to_eg(m_swapchainProperties.surfaceFormat.format);
+    imageCreateInfo.aspects = {IMAGE_ASPECT_COLOR};
+    imageCreateInfo.usages = {IMAGE_USAGE_COLOR_ATTACHMENT};
+
+    VulkanImageCreateInfo nativeImageCreateInfo = {};
+    nativeImageCreateInfo.physicalDevice = m_physicalDevice;
+    nativeImageCreateInfo.device = m_device;
+    nativeImageCreateInfo.queue = m_queues.at(QueueType::GRAPHICS).get();
+    nativeImageCreateInfo.frameCount = m_swapchainProperties.imageCount;
+
+    std::shared_ptr<VulkanImage> colorImage = std::make_shared<VulkanImage>(imageCreateInfo, nativeImageCreateInfo, swapchainImages);
+
+    //depth
+    imageCreateInfo.format = VulkanConverter::to_eg(m_swapchainProperties.depthFormat);
+    imageCreateInfo.aspects = {IMAGE_ASPECT_DEPTH};
+    imageCreateInfo.usages = {IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT};
+    imageCreateInfo.layout = ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    imageCreateInfo.tiling = ImageTiling::OPTIMAL;
+    imageCreateInfo.memoryProperties = {MEMORY_PROPERTY_DEVICE_LOCAL};
+    imageCreateInfo.mipLevels = 1;
+    imageCreateInfo.arrayLayers = 1;
+    if (imageCreateInfo.format == Format::D32_SFLOAT_S8_UINT || imageCreateInfo.format == Format::D24_UNORM_S8_UINT) {
+        imageCreateInfo.aspects |= IMAGE_ASPECT_STENCIL;
+    }
+
+    std::shared_ptr<VulkanImage> depthImage = std::make_shared<VulkanImage>(imageCreateInfo, nativeImageCreateInfo);
+
+    FramebufferCreateInfo framebufferCreateInfo = {};
+    framebufferCreateInfo.width = m_swapchainProperties.extent.width;
+    framebufferCreateInfo.height = m_swapchainProperties.extent.height;
+    framebufferCreateInfo.renderPass = m_mainRenderPass.get();
+    framebufferCreateInfo.attachments = {colorImage, depthImage};
+
+    VulkanFramebufferCreateInfo nativeFramebufferCreateInfo = {};
+    nativeFramebufferCreateInfo.device = m_device;
+    nativeFramebufferCreateInfo.frameCount = m_swapchainProperties.imageCount;
+    nativeFramebufferCreateInfo.currentFrame = &m_currentSwapchainImage;
+
+    m_mainFramebuffer = std::make_unique<VulkanFramebuffer>(framebufferCreateInfo, nativeFramebufferCreateInfo);
+
+    EG_TRACE("eagle", "Framebuffers created!");
+}
+
+void VulkanRenderContext::recreate_swapchain() {
+
+    vkDeviceWaitIdle(m_device);
+
+    //Waits until window is visible
+    while (m_createInfo.window->is_minimized()) {
+        m_createInfo.window->wait_native_events();
+    }
+
+    m_deleter->destroy(m_mainFramebuffer.release());
+    m_deleter->clear_all();
+    vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
+
+    create_swapchain();
+    create_main_framebuffers();
+
+    on_window_resized(m_swapchainProperties.extent);
+}
 
 } // eagle
