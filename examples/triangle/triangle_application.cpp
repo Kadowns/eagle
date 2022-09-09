@@ -66,18 +66,8 @@ void TriangleApplication::init() {
 
     m_indexBuffer = m_renderContext->create_index_buffer(ibCreateInfo, indices, 6 * sizeof(uint16_t));
 
-
-    struct Color {
-        union {
-            float data[4];
-            struct {
-                float r, g, b, a;
-            };
-        };
-
-    };
-    Color color = {1.0f, 0.2f, 0.3f, 1.0f};
-    m_uniformBuffer = m_renderContext->create_uniform_buffer(sizeof(Color), color.data);
+    m_color = {1.0f, 0.2f, 0.3f, 1.0f};
+    m_uniformBuffer = m_renderContext->create_uniform_buffer(sizeof(Color), m_color.data);
 
 
     eagle::DescriptorBindingDescription bindingDescription = {};
@@ -103,9 +93,22 @@ void TriangleApplication::init() {
     m_framesInFlight = m_renderContext->create_fence();
     m_renderFinished = m_renderContext->create_semaphore();
     m_frameAvailable = m_renderContext->create_semaphore();
+
+    m_timer.start();
 }
 
 void TriangleApplication::step() {
+
+    m_timer.update();
+
+    auto time = m_timer.time();
+
+    m_color.r = abs(sinf(time));
+    m_color.g = abs(cosf(time * 0.5f));
+    m_color.b = abs(acosf(time * 0.25f));
+
+    m_uniformBuffer->write(m_color);
+    m_uniformBuffer->flush();
 
     m_framesInFlight->wait();
 

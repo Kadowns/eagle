@@ -7,6 +7,16 @@
 
 #include <eagle/eagle.h>
 
+struct Color {
+    union {
+        float data[4];
+        struct {
+            float r, g, b, a;
+        };
+    };
+
+};
+
 class TriangleApplication : public eagle::ApplicationDelegate {
 public:
     TriangleApplication();
@@ -28,6 +38,9 @@ private:
     std::shared_ptr<eagle::DescriptorSetLayout> m_descriptorSetLayout;
     std::shared_ptr<eagle::DescriptorSet> m_descriptorSet;
     std::shared_ptr<eagle::CommandBuffer> m_commandBuffer;
+
+    Color m_color;
+    eagle::Timer m_timer;
 };
 
 
