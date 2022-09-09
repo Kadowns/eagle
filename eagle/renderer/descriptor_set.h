@@ -14,7 +14,7 @@
 namespace eagle {
 
 struct DescriptorSetCreateInfo {
-    std::shared_ptr<DescriptorSetLayout> layout;
+    DescriptorSetLayout* layout;
     std::vector<Descriptor*> descriptors;
 };
 

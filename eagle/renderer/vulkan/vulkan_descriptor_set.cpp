@@ -23,7 +23,7 @@ void VulkanDescriptorSet::create_descriptor_sets() {
 
     if (!m_cleared) return;
 
-    auto nativeDescriptorSetLayout = std::static_pointer_cast<VulkanDescriptorSetLayout>(m_info.layout);
+    auto nativeDescriptorSetLayout = (VulkanDescriptorSetLayout*)m_info.layout;
     auto layoutBindings = nativeDescriptorSetLayout->native_bindings();
 
     std::vector<VkDescriptorPoolSize> poolSizes = {};
@@ -73,7 +73,7 @@ bool VulkanDescriptorSet::is_dirty() const {
 
 void VulkanDescriptorSet::flush(uint32_t index) {
 
-    auto nativeDescriptorSetLayout = std::static_pointer_cast<VulkanDescriptorSetLayout>(m_info.layout);
+    auto nativeDescriptorSetLayout = (VulkanDescriptorSetLayout*)m_info.layout;
 
     std::vector<VkDescriptorSetLayoutBinding> descriptorBindings = nativeDescriptorSetLayout->native_bindings();
     std::vector<VkDescriptorBufferInfo> bufferInfos;
