@@ -177,18 +177,18 @@ public:
 template<typename ...Args>
 class ImmediateEvent : public BaseImmediateEvent{
 public:
-    using Callback =  std::function<void(Args&&...)>;
+    using Callback =  std::function<void(Args...)>;
 public:
 
-    inline void operator()(Args&&... args){
-        emit(std::forward<Args>(args)...);
+    inline void operator()(const Args&... args){
+        emit(args...);
     }
 
-    void emit(Args&&... args) {
+    void emit(const Args&... args) {
         assert(!m_emitting && "Attempted to emit a event that was already being emitted.");
         m_emitting = true;
         for (auto &callback : m_callbacks) {
-            callback(std::forward<Args>(args)...);
+            callback(args...);
         }
         m_emitting = false;
     }
