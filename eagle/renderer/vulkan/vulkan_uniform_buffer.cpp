@@ -11,13 +11,6 @@ VulkanUniformBuffer::VulkanUniformBuffer(VulkanUniformBufferCreateInfo &createIn
     UniformBuffer(data, size),
     m_info(createInfo) {
     assert(size > 0);
-    if (data != nullptr) {
-        write(data, size);
-    }
-    else {
-        memset(m_data, 0, size);
-    }
-
     create_uniform_buffer();
 }
 

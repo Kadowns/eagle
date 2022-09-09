@@ -16,21 +16,19 @@ public:
     virtual ~Buffer();
 
     template<typename T>
-    void write_from(const T& obj){
-        write((void*)&obj, sizeof(obj), 0);
+    void write(const T& obj){
+        write_data((void*)&obj, sizeof(obj), 0);
     }
 
-    void write(void* data, size_t size, size_t offset = 0);
+    void write_data(void* data, size_t size, size_t offset = 0);
     void reserve(size_t size);
     void clear();
 
     uint32_t size() const { return m_size; }
-    uint32_t capacity() const { return m_capacity; }
 
 protected:
     uint8_t* m_data = nullptr;
     size_t m_size = 0;
-    size_t m_capacity = 0;
 };
 
 }
