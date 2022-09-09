@@ -13,6 +13,12 @@ VulkanShader::VulkanShader(const ShaderCreateInfo &createInfo, const VulkanShade
         m_nativeCreateInfo(nativeCreateInfo),
         m_cleared(true) {
 
+    m_listener.subscribe(*m_nativeCreateInfo.on_window_resized, [this](VkExtent2D extent){
+        m_nativeCreateInfo.extent = extent;
+        cleanup_pipeline();
+        create_pipeline();
+    });
+
     for(auto& kv : createInfo.shaderStages){
         ShaderStage stage = kv.first;
         std::string path = kv.second;
@@ -154,8 +160,8 @@ void VulkanShader::create_pipeline() {
 
 
     VkExtent2D extent = {};
-    extent.width = m_nativeCreateInfo.pExtent->width * m_createInfo.viewport.widthPercent;
-    extent.height = m_nativeCreateInfo.pExtent->height * m_createInfo.viewport.heightPercent;
+    extent.width = (uint32_t)((float)m_nativeCreateInfo.extent.width * m_createInfo.viewport.widthPercent);
+    extent.height = (uint32_t)((float)m_nativeCreateInfo.extent.height * m_createInfo.viewport.heightPercent);
     VkViewport viewport = {};
     viewport.x = m_createInfo.viewport.x;
     viewport.y = m_createInfo.viewport.y;

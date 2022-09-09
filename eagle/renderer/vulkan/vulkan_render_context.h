@@ -8,6 +8,7 @@
 #include <eagle/renderer/render_context.h>
 #include <eagle/renderer/vulkan/vulkan_deleter.h>
 #include <eagle/renderer/vulkan/vulkan_queue.h>
+#include <eagle/events/event.h>
 
 namespace eagle {
 
@@ -149,6 +150,8 @@ protected:
     virtual void create_main_framebuffers();
 
     virtual void create_main_render_pass();
+
+    virtual void recreate_swapchain();
     //-------------------------------------
 
 protected:
@@ -170,6 +173,8 @@ protected:
     std::unordered_map<QueueType, std::unique_ptr<VulkanQueue>> m_queues;
     std::unique_ptr<VulkanFramebuffer> m_mainFramebuffer;
     std::unique_ptr<VulkanRenderPass> m_mainRenderPass;
+
+    ImmediateEvent<VkExtent2D> on_window_resized;
     bool m_windowResized = false;
 };
 

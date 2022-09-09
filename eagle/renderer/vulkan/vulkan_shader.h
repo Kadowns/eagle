@@ -1,16 +1,18 @@
 #ifndef EAGLE_VULKANSHADER_H
 #define EAGLE_VULKANSHADER_H
 
-#include "eagle/renderer/shader.h"
-#include "eagle/memory/pointer.h"
-#include "vulkan_global_definitions.h"
-#include "vulkan_descriptor_set_layout.h"
+
+#include <eagle/renderer/shader.h>
+#include <eagle/renderer/vulkan/vulkan_global_definitions.h>
+#include <eagle/renderer/vulkan/vulkan_descriptor_set_layout.h>
+#include <eagle/events/event.h>
 
 namespace eagle {
 
 struct VulkanShaderCreateInfo {
-    VkDevice device;
-    VkExtent2D* pExtent;
+    VkDevice device = VK_NULL_HANDLE;
+    VkExtent2D extent = {0, 0};
+    ImmediateEvent<VkExtent2D>* on_window_resized = nullptr;
 };
 
 class VulkanShader : public Shader {
@@ -44,6 +46,7 @@ private:
     std::vector<std::shared_ptr<VulkanDescriptorSetLayout>> m_descriptorSetLayouts;
     std::vector<VkVertexInputAttributeDescription> m_inputAttributes;
     std::unordered_map<VkShaderStageFlags, std::vector<uint32_t>> m_shaderCodes;
+    EventListener m_listener;
 
     bool m_cleared;
 

@@ -119,9 +119,9 @@ void VulkanRenderContext::exit() {
 
     m_deleter->clear_all();
 
-    m_queues.clear();
-
     vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
+
+    m_queues.clear();
 
     vkDestroyDevice(m_device, nullptr);
 
@@ -149,7 +149,7 @@ bool VulkanRenderContext::prepare_frame(Semaphore *signalAvailableImage) {
             &m_currentSwapchainImage);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-//        recreate_swapchain();
+        recreate_swapchain();
         return false;
     }
     else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
@@ -186,7 +186,7 @@ void VulkanRenderContext::present_frame(std::span<Semaphore*> waitSemaphores) {
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_windowResized) {
         m_windowResized = false;
-//        recreate_swapchain();
+        recreate_swapchain();
     }
     else if (result != VK_SUCCESS) {
         throw VulkanException("failed to present swapchain image!", result);
@@ -231,7 +231,8 @@ void VulkanRenderContext::submit(const CommandBufferSubmitInfo& submitInfo) {
 std::shared_ptr<Shader> VulkanRenderContext::create_shader(const ShaderCreateInfo &shaderCreateInfo) {
     VulkanShaderCreateInfo nativeCreateInfo = {};
     nativeCreateInfo.device = m_device;
-    nativeCreateInfo.pExtent = &m_swapchainProperties.extent;
+    nativeCreateInfo.extent = m_swapchainProperties.extent;
+    nativeCreateInfo.on_window_resized = &on_window_resized;
 
     auto ptr = new VulkanShader(shaderCreateInfo, nativeCreateInfo);
     return detail::make_shared_with_deleter(ptr, m_deleter);
