@@ -107,6 +107,10 @@ public:
 
     RenderPass* main_render_pass() override;
 
+    virtual void debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData);
+
 protected:
 
     ///helper functions------------------
@@ -125,10 +129,6 @@ protected:
     virtual VkPresentModeKHR choose_swap_present_mode(const std::vector<VkPresentModeKHR>& presentModes);
 
     virtual VkExtent2D choose_swap_extent(const VkSurfaceCapabilitiesKHR& capabilities);
-
-    virtual void debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                                VkDebugUtilsMessageTypeFlagsEXT messageType,
-                                const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData);
 
     ///main initializing functions-------
     virtual void create_instance();

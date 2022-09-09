@@ -381,6 +381,31 @@ RenderPass* VulkanRenderContext::main_render_pass() {
     return m_mainRenderPass.get();
 }
 
+void VulkanRenderContext::debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData) {
+
+#define VK_LOG(level, message) spdlog::get("eagle")->log(level, message);
+
+    switch (messageSeverity) {
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+            VK_LOG(spdlog::level::trace, pCallbackData->pMessage);
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+            VK_LOG(spdlog::level::info, pCallbackData->pMessage);
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+            VK_LOG(spdlog::level::warn, pCallbackData->pMessage);
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+            VK_LOG(spdlog::level::err, pCallbackData->pMessage);
+            break;
+        default:
+            VK_LOG(spdlog::level::critical, pCallbackData->pMessage);
+            break;
+    }
+
+#undef VK_LOG
+}
+
 std::vector<const char*> VulkanRenderContext::query_instance_extensions() {
     std::vector<const char*> extensions = {VK_KHR_SURFACE_EXTENSION_NAME};
     if (m_vkCreateInfo.enableValidationLayers) {
@@ -513,32 +538,6 @@ VkExtent2D VulkanRenderContext::choose_swap_extent(const VkSurfaceCapabilitiesKH
                                                capabilities.minImageExtent.height,
                                                capabilities.maxImageExtent.height);
     return actualExtent;
-}
-
-
-void VulkanRenderContext::debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData) {
-
-#define VK_LOG(level, message) spdlog::get("eagle")->log(level, message);
-
-    switch (messageSeverity) {
-        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-            VK_LOG(spdlog::level::trace, pCallbackData->pMessage);
-            break;
-        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-            VK_LOG(spdlog::level::info, pCallbackData->pMessage);
-            break;
-        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-            VK_LOG(spdlog::level::warn, pCallbackData->pMessage);
-            break;
-        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-            VK_LOG(spdlog::level::err, pCallbackData->pMessage);
-            break;
-        default:
-            VK_LOG(spdlog::level::critical, pCallbackData->pMessage);
-            break;
-    }
-
-#undef VK_LOG
 }
 
 void VulkanRenderContext::create_instance() {
