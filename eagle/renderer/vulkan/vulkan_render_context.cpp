@@ -51,33 +51,12 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
         const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
         void *pUserData
 ){
-//    VkDebugInfo::VkCall& info = VkDebugInfo::m_callInfo;//*((VkDebugInfo::VkCall *) pUserData);
-//
-//#define VK_LOG(level, message) spdlog::get("eagle")->log(spdlog::source_loc{info.fileName, info.line, info.funcName}, level, message);
-//
-//    switch (messageSeverity) {
-//        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-//            VK_LOG(spdlog::level::trace, pCallbackData->pMessage);
-//            break;
-//        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-//            VK_LOG(spdlog::level::info, pCallbackData->pMessage);
-//            break;
-//        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-//            VK_LOG(spdlog::level::warn, pCallbackData->pMessage);
-//            break;
-//        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-//            VK_LOG(spdlog::level::err, pCallbackData->pMessage);
-//            break;
-//        default:
-//            VK_LOG(spdlog::level::critical, pCallbackData->pMessage);
-//            break;
-//    }
-//
-//#undef VK_LOG
+    auto renderContext = (VulkanRenderContext*)pUserData;
+    renderContext->debug_callback(messageSeverity, messageType, pCallbackData);
     return VK_FALSE;
 }
 
-VkResult create_debug_utils_messenger(VkInstance instance,
+static VkResult create_debug_utils_messenger(VkInstance instance,
                                       const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
                                       const VkAllocationCallbacks *pAllocator,
                                       VkDebugUtilsMessengerEXT *pCallback) {
@@ -88,6 +67,15 @@ VkResult create_debug_utils_messenger(VkInstance instance,
     }
     else {
         return VK_ERROR_EXTENSION_NOT_PRESENT;
+    }
+}
+
+static void destroy_debug_utils_messenger(VkInstance instance,
+                                   VkDebugUtilsMessengerEXT callback,
+                                   const VkAllocationCallbacks *pAllocator) {
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance,"vkDestroyDebugUtilsMessengerEXT");
+    if (func != nullptr) {
+        func(instance, callback, pAllocator);
     }
 }
 
@@ -138,6 +126,10 @@ void VulkanRenderContext::exit() {
     vkDestroyDevice(m_device, nullptr);
 
     vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+
+    if (m_vkCreateInfo.enableValidationLayers) {
+        detail::destroy_debug_utils_messenger(m_instance, m_debugMessenger, nullptr);
+    }
 
     vkDestroyInstance(m_instance, nullptr);
 
