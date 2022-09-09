@@ -168,8 +168,8 @@ protected:
 
     std::unique_ptr<VulkanDeleter> m_deleter;
     std::unordered_map<QueueType, std::unique_ptr<VulkanQueue>> m_queues;
-    std::shared_ptr<Framebuffer> m_mainFramebuffer;
-    std::shared_ptr<RenderPass> m_mainRenderPass;
+    std::unique_ptr<VulkanFramebuffer> m_mainFramebuffer;
+    std::unique_ptr<VulkanRenderPass> m_mainRenderPass;
     bool m_windowResized = false;
 };
 
