@@ -7,21 +7,6 @@
 #include <eagle/application.h>
 #include <eagle/window.h>
 
-
-TriangleApplication::Mat2::Mat2() {
-    data[0][0] = 1;
-    data[1][0] = 0;
-    data[0][1] = 0;
-    data[1][1] = 1;
-}
-
-TriangleApplication::Mat2::Mat2(float radians) {
-    data[0][0] = cosf(radians);
-    data[1][0] = 0;
-    data[0][1] = 0;
-    data[1][1] = sinf(radians);;
-}
-
 TriangleApplication::TriangleApplication() {
     EG_LOG_CREATE("triangle");
     EG_LOG_PATTERN("[%T.%e] [%n] [%^%l%$] [%s:%#::%!()] %v");
@@ -81,12 +66,33 @@ void TriangleApplication::init() {
 
     m_indexBuffer = m_renderContext->create_index_buffer(ibCreateInfo, indices, 6 * sizeof(uint16_t));
 
-    Mat2 rotation;
-    m_uniformBuffer = m_renderContext->create_uniform_buffer(sizeof(rotation), rotation.data);
+
+    struct Color {
+        union {
+            float data[4];
+            struct {
+                float r, g, b, a;
+            };
+        };
+
+    };
+    Color color = {1.0f, 0.2f, 0.3f, 1.0f};
+    m_uniformBuffer = m_renderContext->create_uniform_buffer(sizeof(Color), color.data);
+
+
+    eagle::DescriptorBindingDescription bindingDescription = {};
+    bindingDescription.size = sizeof(Color);
+    bindingDescription.descriptorType = eagle::DescriptorType::UNIFORM_BUFFER;
+    bindingDescription.shaderStage = eagle::ShaderStage::FRAGMENT;
+
+    eagle::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
+    descriptorSetLayoutCreateInfo.bindings = {bindingDescription};
+
+    m_descriptorSetLayout = m_renderContext->create_descriptor_set_layout(descriptorSetLayoutCreateInfo);
 
     eagle::DescriptorSetCreateInfo descriptorSetCreateInfo = {};
-    descriptorSetCreateInfo.layout = m_shader->descriptor_set_layout(0);
     descriptorSetCreateInfo.descriptors = {m_uniformBuffer.get()};
+    descriptorSetCreateInfo.layout = m_descriptorSetLayout.get();
 
     m_descriptorSet = m_renderContext->create_descriptor_set(descriptorSetCreateInfo);
 
@@ -97,17 +103,9 @@ void TriangleApplication::init() {
     m_framesInFlight = m_renderContext->create_fence();
     m_renderFinished = m_renderContext->create_semaphore();
     m_frameAvailable = m_renderContext->create_semaphore();
-    m_timer.start();
 }
 
 void TriangleApplication::step() {
-
-    m_timer.update();
-
-    Mat2 rotation(m_timer.delta_time());
-//    m_uniformBuffer->clear();
-//    m_uniformBuffer->write_from(rotation);
-//    m_uniformBuffer->flush();
 
     m_framesInFlight->wait();
 

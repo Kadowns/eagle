@@ -5,6 +5,11 @@ layout(location = 0) in vec4 vColor;
 
 layout(location = 0) out vec4 outColor;
 
+layout(binding = 0, set = 0) uniform PaintUBO {
+    vec4 color;
+} uPaint;
+
+
 void main() {
-    outColor = vColor;
+    outColor = uPaint.color * vColor;
 }
