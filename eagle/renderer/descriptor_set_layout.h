@@ -26,21 +26,21 @@ struct DescriptorBindingDescription {
     std::map<std::string, DescriptorBindingMemberDescription> members;
 };
 
-struct DescriptorSetLayoutInfo {
+struct DescriptorSetLayoutCreateInfo {
     std::vector<DescriptorBindingDescription> bindings;
 };
 
 class DescriptorSetLayout {
 public:
-    explicit DescriptorSetLayout(DescriptorSetLayoutInfo info) :
+    explicit DescriptorSetLayout(DescriptorSetLayoutCreateInfo info) :
     m_info(std::move(info)) {}
 
     virtual ~DescriptorSetLayout() = default;
 
-    const DescriptorSetLayoutInfo& info() const { return m_info; }
+    const DescriptorSetLayoutCreateInfo& info() const { return m_info; }
 
 protected:
-    DescriptorSetLayoutInfo m_info;
+    DescriptorSetLayoutCreateInfo m_info;
 };
 
 

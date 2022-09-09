@@ -87,8 +87,8 @@ void VulkanShader::create_pipeline_layout() {
         }
 
         m_descriptorSetLayouts.emplace_back(std::make_shared<VulkanDescriptorSetLayout>(
-                DescriptorSetLayoutInfo{descriptions},
-                VulkanDescriptorSetLayoutInfo{m_nativeCreateInfo.device}
+                DescriptorSetLayoutCreateInfo{descriptions},
+                VulkanDescriptorSetLayoutCreateInfo{m_nativeCreateInfo.device}
                 ));
     }
 

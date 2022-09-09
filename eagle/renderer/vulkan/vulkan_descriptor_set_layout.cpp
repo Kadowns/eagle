@@ -11,8 +11,8 @@ namespace eagle {
 
 
 VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(
-        DescriptorSetLayoutInfo info,
-        VulkanDescriptorSetLayoutInfo vkInfo) :
+        DescriptorSetLayoutCreateInfo info,
+        VulkanDescriptorSetLayoutCreateInfo vkInfo) :
         DescriptorSetLayout(std::move(info)),
         m_vkInfo(vkInfo){
     std::vector<VkDescriptorSetLayoutBinding> vkBindings(m_info.bindings.size());

@@ -77,7 +77,7 @@ public:
     create_command_buffer(const CommandBufferCreateInfo& createInfo) = 0;
 
     virtual std::shared_ptr<DescriptorSetLayout>
-    create_descriptor_set_layout(const DescriptorSetLayoutInfo& descriptorSetLayoutInfo) = 0;
+    create_descriptor_set_layout(const DescriptorSetLayoutCreateInfo& descriptorSetLayoutInfo) = 0;
 
     virtual std::shared_ptr<DescriptorSet>
     create_descriptor_set(const DescriptorSetCreateInfo& descriptorSetInfo) = 0;

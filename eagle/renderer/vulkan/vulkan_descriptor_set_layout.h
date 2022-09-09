@@ -10,13 +10,13 @@
 
 namespace eagle {
 
-struct VulkanDescriptorSetLayoutInfo {
+struct VulkanDescriptorSetLayoutCreateInfo {
     VkDevice device;
 };
 
 class VulkanDescriptorSetLayout : public DescriptorSetLayout {
 public:
-    VulkanDescriptorSetLayout(DescriptorSetLayoutInfo info, VulkanDescriptorSetLayoutInfo vkInfo);
+    VulkanDescriptorSetLayout(DescriptorSetLayoutCreateInfo info, VulkanDescriptorSetLayoutCreateInfo vkInfo);
     virtual ~VulkanDescriptorSetLayout();
 
     inline VkDescriptorSetLayout& native_layout() { return m_layout; }
@@ -26,7 +26,7 @@ private:
     void create_layout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 
 private:
-    VulkanDescriptorSetLayoutInfo m_vkInfo;
+    VulkanDescriptorSetLayoutCreateInfo m_vkInfo;
     VkDescriptorSetLayout m_layout;
     std::vector<VkDescriptorSetLayoutBinding> m_nativeBindings;
 

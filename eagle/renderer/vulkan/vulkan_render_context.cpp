@@ -307,11 +307,11 @@ std::shared_ptr<CommandBuffer> VulkanRenderContext::create_command_buffer(const 
 }
 
 std::shared_ptr<DescriptorSetLayout>
-VulkanRenderContext::create_descriptor_set_layout(const DescriptorSetLayoutInfo &descriptorSetLayoutInfo) {
-    VulkanDescriptorSetLayoutInfo vulkanDescriptorSetLayoutInfo = {};
-    vulkanDescriptorSetLayoutInfo.device = m_device;
+VulkanRenderContext::create_descriptor_set_layout(const DescriptorSetLayoutCreateInfo &descriptorSetLayoutInfo) {
+    VulkanDescriptorSetLayoutCreateInfo vulkanDescriptorSetLayoutCreateInfo = {};
+    vulkanDescriptorSetLayoutCreateInfo.device = m_device;
 
-    auto ptr = new VulkanDescriptorSetLayout(descriptorSetLayoutInfo, vulkanDescriptorSetLayoutInfo);
+    auto ptr = new VulkanDescriptorSetLayout(descriptorSetLayoutInfo, vulkanDescriptorSetLayoutCreateInfo);
     return detail::make_shared_with_deleter(ptr, m_deleter);
 }
 

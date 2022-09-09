@@ -38,7 +38,7 @@ private:
     VulkanDescriptorSetInfo m_vkInfo;
     VkDescriptorPool m_descriptorPool;
     std::vector<VkDescriptorSet> m_descriptorSets;
-    std::set<int> m_dirtyDescriptors;
+    std::set<uint32_t> m_dirtyDescriptors;
     bool m_cleared = true;
 
 };

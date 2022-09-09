@@ -50,8 +50,8 @@ void VulkanComputeShader::create_pipeline_layout() {
 
 
     m_descriptorLayout = std::make_shared<VulkanDescriptorSetLayout>(
-            DescriptorSetLayoutInfo{m_bindingDescriptions},
-            VulkanDescriptorSetLayoutInfo{m_createInfo.device}
+            DescriptorSetLayoutCreateInfo{m_bindingDescriptions},
+            VulkanDescriptorSetLayoutCreateInfo{m_createInfo.device}
             );
 
 

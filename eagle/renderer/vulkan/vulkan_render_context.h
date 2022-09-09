@@ -87,7 +87,7 @@ public:
 
     std::shared_ptr<CommandBuffer> create_command_buffer(const CommandBufferCreateInfo &createInfo) override;
 
-    std::shared_ptr<DescriptorSetLayout> create_descriptor_set_layout(const DescriptorSetLayoutInfo &descriptorSetLayoutInfo) override;
+    std::shared_ptr<DescriptorSetLayout> create_descriptor_set_layout(const DescriptorSetLayoutCreateInfo &descriptorSetLayoutInfo) override;
 
     std::shared_ptr<DescriptorSet> create_descriptor_set(const DescriptorSetCreateInfo &descriptorSetInfo) override;
 
