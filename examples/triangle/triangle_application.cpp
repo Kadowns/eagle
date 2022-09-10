@@ -27,11 +27,12 @@ void TriangleApplication::init() {
     vertexLayout.add(0, eagle::Format::R32G32_SFLOAT);
     vertexLayout.add(0, eagle::Format::R32G32B32A32_SFLOAT);
 
-    eagle::ShaderCreateInfo pipelineInfo = {m_renderContext->main_render_pass(), {
-            {eagle::ShaderStage::VERTEX, "color.vert.spv"},
-            {eagle::ShaderStage::FRAGMENT, "color.frag.spv"}
-    }};
-    pipelineInfo.blendEnable = true;
+    eagle::ShaderCreateInfo pipelineInfo = {};
+    pipelineInfo.shaderStages = {
+            {eagle::ShaderStage::VERTEX, eagle::Shader::read_spir_v_code("color.vert.spv")},
+            {eagle::ShaderStage::FRAGMENT, eagle::Shader::read_spir_v_code("color.frag.spv")},
+    };
+    pipelineInfo.renderPass = m_renderContext->main_render_pass();
     pipelineInfo.vertexLayout = vertexLayout;
     m_shader = m_renderContext->create_shader(pipelineInfo);
 
@@ -41,10 +42,10 @@ void TriangleApplication::init() {
     };
 
     Vertex vertices[4];
-    vertices[0] = {{-0.5f, 0.5f}, {1.0f, 1.0f, 0.0f, 1.0f}};
-    vertices[1] = {{0.5f,  0.5f}, {0.0f, 1.0f, 1.0f, 1.0f}};
-    vertices[2] = {{0.5f, -0.5f}, {1.0f, 0.0f, 1.0f, 1.0f}};
-    vertices[3] = {{-0.5f, -0.5f}, {1.0f, 0.0f, 1.0f, 1.0f}};
+    vertices[0] = {{-1.0f, 1.0f}, {1.0f, 1.0f, 0.0f, 1.0f}};
+    vertices[1] = {{1.0f,  1.0f}, {0.0f, 1.0f, 1.0f, 1.0f}};
+    vertices[2] = {{1.0f, -1.0f}, {1.0f, 0.0f, 1.0f, 1.0f}};
+    vertices[3] = {{-1.0f, -1.0f}, {1.0f, 0.0f, 1.0f, 1.0f}};
 
     eagle::VertexBufferCreateInfo vbCreateInfo = {};
     vbCreateInfo.updateType = eagle::UpdateType::BAKED;

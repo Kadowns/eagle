@@ -97,6 +97,7 @@ set(EAGLE_SOURCE
 
         eagle/renderer/vertex_layout.cpp
         eagle/renderer/render_context.cpp
+        eagle/renderer/shader.cpp
         eagle/renderer/vulkan/spirv_reflect.cpp
         eagle/renderer/vulkan/vulkan_buffer.cpp
         eagle/renderer/vulkan/vulkan_cleaner.cpp

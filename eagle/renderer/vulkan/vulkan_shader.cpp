@@ -19,17 +19,10 @@ VulkanShader::VulkanShader(const ShaderCreateInfo &createInfo, const VulkanShade
         create_pipeline();
     });
 
-    for(auto& kv : createInfo.shaderStages){
-        ShaderStage stage = kv.first;
-        std::string path = kv.second;
-        if (stage == ShaderStage::COMPUTE){
-            throw std::runtime_error("Compute shaders are not allowed on a graphics shader!");
+    for(auto& stageDescription : m_createInfo.shaderStages){
+        if (stageDescription.stage == ShaderStage::COMPUTE) {
+            throw std::logic_error("compute shaders are not allowed on a graphics shader");
         }
-
-        std::vector<uint8_t> byteCode = std::move(FileSystem::instance()->read_bytes(path));
-        std::vector<uint32_t> intCode(byteCode.size() / sizeof(uint32_t));
-        std::memcpy(intCode.data(), byteCode.data(), byteCode.size());
-        m_shaderCodes.emplace(VulkanConverter::to_vk(stage), std::move(intCode));
     }
 
     create_pipeline_layout();
@@ -44,7 +37,6 @@ VulkanShader::~VulkanShader() {
 }
 
 void VulkanShader::create_pipeline_layout() {
-
 
     //vertex input-----------------------------
     m_inputAttributes.resize(m_createInfo.vertexLayout.attribute_count());
@@ -74,14 +66,13 @@ void VulkanShader::create_pipeline_layout() {
     std::map<uint32_t, std::map<uint32_t, DescriptorBindingDescription>> descriptorSetMap;
     std::vector<VkPushConstantRange> pushConstantsRanges;
 
-    for (auto& shaderCode : m_shaderCodes){
-        VkShaderStageFlags stage = shaderCode.first;
-        std::vector<uint32_t>& code = shaderCode.second;
+    for (auto& stageDescription : m_createInfo.shaderStages){
+        VkShaderStageFlags stage = VulkanConverter::to_vk(stageDescription.stage);
 
-        VulkanShaderUtils::add_bindings_from_shader_stage(code, stage, descriptorSetMap, pushConstantsRanges);
+        VulkanShaderUtils::add_bindings_from_shader_stage(stageDescription.spirVCode, stage, descriptorSetMap, pushConstantsRanges);
         //fragment shader output count
         if (stage == VK_SHADER_STAGE_FRAGMENT_BIT){
-           VulkanShaderUtils::enumerate_output_variables(code, m_outputAttachmentCount);
+           VulkanShaderUtils::enumerate_output_variables(stageDescription.spirVCode, m_outputAttachmentCount);
         }
     }
 
@@ -92,7 +83,7 @@ void VulkanShader::create_pipeline_layout() {
             descriptions.emplace_back(binding.second);
         }
 
-        m_descriptorSetLayouts.emplace_back(std::make_shared<VulkanDescriptorSetLayout>(
+        m_descriptorSetLayouts.emplace_back(std::make_unique<VulkanDescriptorSetLayout>(
                 DescriptorSetLayoutCreateInfo{descriptions},
                 VulkanDescriptorSetLayoutCreateInfo{m_nativeCreateInfo.device}
                 ));
@@ -120,22 +111,20 @@ void VulkanShader::create_pipeline_layout() {
 void VulkanShader::create_pipeline() {
     EG_TRACE("eagle","Creating shader pipeline!");
 
-    VkShaderModule vertShaderModule = VulkanShaderUtils::create_shader_module(m_nativeCreateInfo.device, m_shaderCodes.at(VK_SHADER_STAGE_VERTEX_BIT));
-    VkShaderModule fragShaderModule = VulkanShaderUtils::create_shader_module(m_nativeCreateInfo.device, m_shaderCodes.at(VK_SHADER_STAGE_FRAGMENT_BIT));
 
-    VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
-    vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertShaderStageInfo.module = vertShaderModule;
-    vertShaderStageInfo.pName = "main";
+    std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+    shaderStages.reserve(m_createInfo.shaderStages.size());
 
-    VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
-    fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    fragShaderStageInfo.module = fragShaderModule;
-    fragShaderStageInfo.pName = "main";
+    for (auto& stageDescription : m_createInfo.shaderStages){
 
-    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
+        VkPipelineShaderStageCreateInfo shaderStageCreateInfo = {};
+        shaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        shaderStageCreateInfo.stage = VulkanConverter::to_vk(stageDescription.stage);
+        shaderStageCreateInfo.module = VulkanShaderUtils::create_shader_module(m_nativeCreateInfo.device, stageDescription.spirVCode);
+        shaderStageCreateInfo.pName = stageDescription.entryPointName.c_str();
+
+        shaderStages.push_back(shaderStageCreateInfo);
+    }
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -262,8 +251,8 @@ void VulkanShader::create_pipeline() {
 
     VkGraphicsPipelineCreateInfo pipelineInfo = {};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipelineInfo.stageCount = 2;
-    pipelineInfo.pStages = shaderStages;
+    pipelineInfo.stageCount = shaderStages.size();
+    pipelineInfo.pStages = shaderStages.data();
     pipelineInfo.pVertexInputState = &vertexInputInfo;
     pipelineInfo.pInputAssemblyState = &inputAssembly;
     pipelineInfo.pViewportState = &viewportState;
@@ -285,8 +274,9 @@ void VulkanShader::create_pipeline() {
         throw VulkanException("failed to create graphics pipeline", result);
     }
 
-    vkDestroyShaderModule(m_nativeCreateInfo.device, fragShaderModule, nullptr);
-    vkDestroyShaderModule(m_nativeCreateInfo.device, vertShaderModule, nullptr);
+    for (auto& shaderStage : shaderStages){
+        vkDestroyShaderModule(m_nativeCreateInfo.device, shaderStage.module, nullptr);
+    }
 
     m_cleared = false;
 
@@ -294,29 +284,23 @@ void VulkanShader::create_pipeline() {
 }
 
 void VulkanShader::cleanup_pipeline(){
-    if (m_cleared){ return; }
+    if (m_cleared){
+        return;
+    }
     vkDestroyPipeline(m_nativeCreateInfo.device, m_graphicsPipeline, nullptr);
     m_cleared = true;
 }
 
-VkPipeline& VulkanShader::get_pipeline() {
+VkPipeline VulkanShader::native_pipeline() {
     return m_graphicsPipeline;
 }
 
-VkPipelineLayout& VulkanShader::get_layout() {
+VkPipelineLayout VulkanShader::native_pipeline_layout() {
     return m_pipelineLayout;
 }
 
-const std::vector<std::shared_ptr<DescriptorSetLayout>> VulkanShader::descriptor_set_layouts() const  {
-    std::vector<std::shared_ptr<DescriptorSetLayout>> sets(m_descriptorSetLayouts.size());
-    for (size_t i = 0; i < sets.size(); i++){
-        sets[i] = m_descriptorSetLayouts[i];
-    }
-    return sets;
-}
-
-const std::shared_ptr<DescriptorSetLayout> VulkanShader::descriptor_set_layout(uint32_t index) const {
-    return m_descriptorSetLayouts[index];
+DescriptorSetLayout* VulkanShader::descriptor_set_layout(uint32_t index) const {
+    return m_descriptorSetLayouts[index].get();
 }
 
 }

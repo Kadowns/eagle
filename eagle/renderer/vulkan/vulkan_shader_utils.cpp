@@ -178,7 +178,7 @@ VulkanShaderUtils::enumerate_output_variables(const std::vector<uint32_t> &code,
     spvReflectDestroyShaderModule(&shaderReflection);
 }
 
-VkShaderModule VulkanShaderUtils::create_shader_module(VkDevice device, const std::vector<uint32_t> &code) {
+VkShaderModule VulkanShaderUtils::create_shader_module(VkDevice device, const std::vector<uint32_t>& code) {
 
     EG_TRACE("eagle","Creating shader module!");
 

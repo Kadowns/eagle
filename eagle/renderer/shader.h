@@ -5,24 +5,22 @@
 #ifndef EAGLE_SHADER_H
 #define EAGLE_SHADER_H
 
-#include "renderer_global_definitions.h"
-#include "vertex_layout.h"
-#include "descriptor_set_layout.h"
-#include "render_pass.h"
+#include <eagle/renderer/renderer_global_definitions.h>
+#include <eagle/renderer/vertex_layout.h>
+#include <eagle/renderer/descriptor_set_layout.h>
+#include <eagle/renderer/render_pass.h>
 
 namespace eagle {
 
+struct ShaderStageDescription {
+    ShaderStage stage = ShaderStage::INVALID;
+    std::vector<uint32_t> spirVCode;
+    std::string entryPointName = "main";
+};
 
 struct ShaderCreateInfo {
-    ShaderCreateInfo(RenderPass* renderPass,
-                     const std::unordered_map<ShaderStage, std::string>& shaderStages) :
-                     renderPass(renderPass),
-                     shaderStages(shaderStages){}
-    RenderPass* renderPass;
-    std::unordered_map<ShaderStage, std::string> shaderStages;
-    bool blendEnable = false;
-    bool depthTesting = false;
-    bool dynamicStates = false;
+    std::vector<ShaderStageDescription> shaderStages;
+    RenderPass* renderPass = nullptr;
     VertexLayout vertexLayout;
     PrimitiveTopology primitiveTopology = PrimitiveTopology::TRIANGLE_LIST;
     CullMode cullMode = CullMode::BACK_BIT;
@@ -30,15 +28,18 @@ struct ShaderCreateInfo {
         float x = 0, y = 0;
         float widthPercent = 1, heightPercent = 1;
     } viewport;
+    bool blendEnable = false;
+    bool depthTesting = false;
+    bool dynamicStates = false;
 };
 
 class Shader {
 public:
-    explicit Shader(ShaderCreateInfo  createInfo) : m_createInfo(std::move(createInfo)) {}
+    explicit Shader(ShaderCreateInfo createInfo) : m_createInfo(std::move(createInfo)) {}
 
-    inline const ShaderCreateInfo& info() const { return m_createInfo; }
-    virtual const std::vector<std::shared_ptr<DescriptorSetLayout>> descriptor_set_layouts() const = 0;
-    virtual const std::shared_ptr<DescriptorSetLayout> descriptor_set_layout(uint32_t index) const = 0;
+    virtual DescriptorSetLayout* descriptor_set_layout(uint32_t index) const = 0;
+
+    static std::vector<uint32_t> read_spir_v_code(const std::string& filename);
 
 protected:
     ShaderCreateInfo m_createInfo;

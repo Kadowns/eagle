@@ -128,7 +128,7 @@ void VulkanCommandBuffer::end_render_pass() {
 
 void VulkanCommandBuffer::bind_shader(Shader* shader) {
     m_boundShader = (VulkanShader*)shader;
-    vkCmdBindPipeline(m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundShader->get_pipeline());
+    vkCmdBindPipeline(m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundShader->native_pipeline());
 }
 
 void VulkanCommandBuffer::bind_vertex_buffer(VertexBuffer* vertexBuffer, uint32_t binding) {
@@ -161,7 +161,7 @@ void VulkanCommandBuffer::bind_descriptor_sets(DescriptorSet* descriptorSet, uin
     vkCmdBindDescriptorSets(
             m_currentCommandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
-            m_boundShader->get_layout(),
+            m_boundShader->native_pipeline_layout(),
             setIndex,
             1,
             descriptorSets,
@@ -173,7 +173,7 @@ void VulkanCommandBuffer::push_constants(ShaderStage stage, uint32_t offset, siz
 
     vkCmdPushConstants(
             m_currentCommandBuffer,
-            m_boundShader->get_layout(),
+            m_boundShader->native_pipeline_layout(),
             VulkanConverter::to_vk(stage),
             offset,
             size,

@@ -25,12 +25,11 @@ public:
     void create_pipeline();
     void cleanup_pipeline();
 
-    const std::vector<std::shared_ptr<DescriptorSetLayout>> descriptor_set_layouts() const override;
-    const std::shared_ptr<DescriptorSetLayout> descriptor_set_layout(uint32_t index) const override;
+    DescriptorSetLayout* descriptor_set_layout(uint32_t index) const override;
 
-    VkPipeline &get_pipeline();
+    VkPipeline native_pipeline();
 
-    VkPipelineLayout &get_layout();
+    VkPipelineLayout native_pipeline_layout();
 
 private:
 
@@ -39,16 +38,14 @@ private:
 private:
 
     VulkanShaderCreateInfo m_nativeCreateInfo;
-    VkPipelineLayout m_pipelineLayout;
-    VkPipeline m_graphicsPipeline;
+    VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
+    VkPipeline m_graphicsPipeline = VK_NULL_HANDLE;
     uint32_t m_outputAttachmentCount = 0;
     std::vector<VkVertexInputBindingDescription> m_inputBindings;
-    std::vector<std::shared_ptr<VulkanDescriptorSetLayout>> m_descriptorSetLayouts;
+    std::vector<std::unique_ptr<VulkanDescriptorSetLayout>> m_descriptorSetLayouts;
     std::vector<VkVertexInputAttributeDescription> m_inputAttributes;
-    std::unordered_map<VkShaderStageFlags, std::vector<uint32_t>> m_shaderCodes;
     EventListener m_listener;
-
-    bool m_cleared;
+    bool m_cleared = true;
 
 };
 

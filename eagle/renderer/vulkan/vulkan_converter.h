@@ -17,7 +17,7 @@ class VulkanConverter {
 public:
     static VkFormat to_vk(Format format);
     static Format to_eg(VkFormat format);
-    static VkShaderStageFlags to_vk(ShaderStage stage);
+    static VkShaderStageFlagBits to_vk(ShaderStage stage);
     static ShaderStage to_eg(VkShaderStageFlags stage);
     static VkDescriptorType to_vk(DescriptorType type);
     static DescriptorType to_eg(VkDescriptorType type);

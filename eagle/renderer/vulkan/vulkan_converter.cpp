@@ -477,8 +477,8 @@ Format VulkanConverter::to_eg(VkFormat format) {
     return result;
 }
 
-VkShaderStageFlags VulkanConverter::to_vk(ShaderStage stage) {
-    VkShaderStageFlags result;
+VkShaderStageFlagBits VulkanConverter::to_vk(ShaderStage stage) {
+    VkShaderStageFlagBits result;
     switch(stage){
         case ShaderStage::VERTEX: result = VK_SHADER_STAGE_VERTEX_BIT; break;
         case ShaderStage::FRAGMENT:result = VK_SHADER_STAGE_FRAGMENT_BIT; break;
@@ -486,6 +486,7 @@ VkShaderStageFlags VulkanConverter::to_vk(ShaderStage stage) {
         case ShaderStage::GEOMETRY: result = VK_SHADER_STAGE_GEOMETRY_BIT; break;
         case ShaderStage::TESSALATION_CONTROL: result = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT; break;
         case ShaderStage::TESSALATION_EVALUATE: result = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT; break;
+        case ShaderStage::INVALID: throw std::logic_error("tried to convert an invalid shader stage");
     }
     return result;
 }
