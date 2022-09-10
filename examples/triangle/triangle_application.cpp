@@ -27,10 +27,17 @@ void TriangleApplication::init() {
     vertexLayout.add(0, eagle::Format::R32G32_SFLOAT);
     vertexLayout.add(0, eagle::Format::R32G32B32A32_SFLOAT);
 
+    eagle::ShaderStageDescription vertexShaderDescription = {};
+    vertexShaderDescription.stage = eagle::ShaderStage::VERTEX;
+    vertexShaderDescription.spirVCode = eagle::Shader::read_spir_v_code("color.vert.spv");
+
+    eagle::ShaderStageDescription fragmentShaderDescription = {};
+    vertexShaderDescription.stage = eagle::ShaderStage::FRAGMENT;
+    vertexShaderDescription.spirVCode = eagle::Shader::read_spir_v_code("color.frag.spv");
+
     eagle::ShaderCreateInfo pipelineInfo = {};
     pipelineInfo.shaderStages = {
-            {eagle::ShaderStage::VERTEX, eagle::Shader::read_spir_v_code("color.vert.spv")},
-            {eagle::ShaderStage::FRAGMENT, eagle::Shader::read_spir_v_code("color.frag.spv")},
+            vertexShaderDescription, fragmentShaderDescription
     };
     pipelineInfo.renderPass = m_renderContext->main_render_pass();
     pipelineInfo.vertexLayout = vertexLayout;
