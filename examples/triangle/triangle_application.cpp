@@ -138,16 +138,15 @@ void TriangleApplication::step() {
     submitInfo.fence = m_framesInFlight.get();
 
     //semaphores to wait for signal before starting
+    //wait for color output
+    eagle::PipelineStageFlags waitStages[] = {eagle::PipelineStageFlagsBits::COLOR_ATTACHMENT_OUTPUT_BIT};
     eagle::Semaphore* waitSemaphores[] = {m_frameAvailable.get()};
+    submitInfo.waitStages = waitStages;
     submitInfo.waitSemaphores = waitSemaphores;
 
     //semaphores to signal when finished
     eagle::Semaphore* signalSemaphores[] = {m_renderFinished.get()};
     submitInfo.signalSemaphores = signalSemaphores;
-
-    //wait for color output
-    eagle::PipelineStageFlags waitStages[] = {eagle::PipelineStageFlagsBits::COLOR_ATTACHMENT_OUTPUT_BIT};
-    submitInfo.waitStages = waitStages;
 
     submitInfo.queueType = eagle::QueueType::GRAPHICS;
 
