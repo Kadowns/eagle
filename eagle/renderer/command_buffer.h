@@ -31,13 +31,13 @@ struct CommandBufferCreateInfo {
 };
 
 struct ImageMemoryBarrier {
-    AccessFlags srcAccessMask;
-    AccessFlags dstAccessMask;
-    ImageLayout oldLayout;
-    ImageLayout newLayout;
-    CommandQueue* srcQueue;
-    CommandQueue* dstQueue;
-    Image* image;
+    AccessFlags srcAccessMask = 0;
+    AccessFlags dstAccessMask = 0;
+    ImageLayout oldLayout = ImageLayout::UNDEFINED;
+    ImageLayout newLayout = ImageLayout::UNDEFINED;
+    CommandQueue* srcQueue = nullptr;
+    CommandQueue* dstQueue = nullptr;
+    Image* image = nullptr;
 };
 
 class CommandBuffer {

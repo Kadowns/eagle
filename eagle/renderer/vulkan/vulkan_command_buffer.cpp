@@ -212,20 +212,34 @@ void VulkanCommandBuffer::set_scissor(uint32_t w, uint32_t h, uint32_t x, uint32
 
 void VulkanCommandBuffer::pipeline_barrier(std::span<ImageMemoryBarrier> imageMemoryBarriers, PipelineStageFlags srcPipelineStages,
                                            PipelineStageFlags dstPipelineStages) {
-    VkImageMemoryBarrier imageMemoryBarrier = {};
-    imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    // We won't be changing the layout of the image
-    imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
-    imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
-    imageMemoryBarrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
-    imageMemoryBarrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
-    imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    imageMemoryBarrier.srcQueueFamilyIndex = 0;
-    imageMemoryBarrier.dstQueueFamilyIndex = 0;
 
-//    auto vkImage = (VulkanImage*)image;
+    std::vector<VkImageMemoryBarrier> nativeImageMemoryBarriers;
+    nativeImageMemoryBarriers.reserve(imageMemoryBarriers.size());
 
-//    imageMemoryBarrier.image = vkImage->native_image(m_currentFrame);
+    for (auto& imageMemoryBarrier : imageMemoryBarriers){
+        VkImageMemoryBarrier nativeImageMemoryBarrier = {};
+        nativeImageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+
+        nativeImageMemoryBarrier.oldLayout = VulkanConverter::to_vk(imageMemoryBarrier.oldLayout);
+        nativeImageMemoryBarrier.newLayout = VulkanConverter::to_vk(imageMemoryBarrier.newLayout);
+
+        nativeImageMemoryBarrier.srcAccessMask = VulkanConverter::eg_flags_to_vk_flags<AccessFlagBits>(imageMemoryBarrier.srcAccessMask);
+        nativeImageMemoryBarrier.dstAccessMask = VulkanConverter::eg_flags_to_vk_flags<AccessFlagBits>(imageMemoryBarrier.dstAccessMask);
+
+        nativeImageMemoryBarrier.srcQueueFamilyIndex = ((VulkanCommandQueue*)imageMemoryBarrier.srcQueue)->family_index();
+        nativeImageMemoryBarrier.dstQueueFamilyIndex = ((VulkanCommandQueue*)imageMemoryBarrier.dstQueue)->family_index();
+
+        auto castedImage = (VulkanImage*)imageMemoryBarrier.image;
+        nativeImageMemoryBarrier.subresourceRange.aspectMask = VulkanConverter::eg_flags_to_vk_flags<ImageAspect>(castedImage->aspects());
+        nativeImageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
+        nativeImageMemoryBarrier.subresourceRange.layerCount = castedImage->array_layers();
+        nativeImageMemoryBarrier.subresourceRange.baseMipLevel = 0;
+        nativeImageMemoryBarrier.subresourceRange.levelCount = castedImage->mip_levels();
+        nativeImageMemoryBarrier.image = castedImage->native_image(m_currentFrame);
+
+        nativeImageMemoryBarriers.push_back(nativeImageMemoryBarrier);
+    }
+
     vkCmdPipelineBarrier(
             m_currentCommandBuffer,
             VulkanConverter::eg_flags_to_vk_flags<PipelineStageFlagsBits>(srcPipelineStages),
@@ -233,7 +247,7 @@ void VulkanCommandBuffer::pipeline_barrier(std::span<ImageMemoryBarrier> imageMe
             0,
             0, nullptr,
             0, nullptr,
-            1, &imageMemoryBarrier);
+            nativeImageMemoryBarriers.size(), nativeImageMemoryBarriers.data());
 }
 
 void VulkanCommandBuffer::dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
