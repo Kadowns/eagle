@@ -18,7 +18,7 @@ struct VulkanStorageBufferCreateInfo{
     VkDevice device;
     VkPhysicalDevice physicalDevice;
     size_t frameCount;
-    VulkanQueue* queue;
+    VulkanCommandQueue* queue;
 
 };
 

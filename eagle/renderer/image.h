@@ -39,7 +39,7 @@ public:
 
     virtual ~Image() = default;
     virtual void generate_mipmaps() = 0;
-    virtual std::shared_ptr<ImageView> view(uint32_t mipLevel = 0) = 0;
+    virtual ImageView* view(uint32_t mipLevel = 0) = 0;
 
     inline uint32_t width() const { return m_createInfo.width; }
     inline uint32_t height() const { return m_createInfo.height; }

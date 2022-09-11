@@ -7,7 +7,7 @@
 
 #include <eagle/renderer/render_context.h>
 #include <eagle/renderer/vulkan/vulkan_deleter.h>
-#include <eagle/renderer/vulkan/vulkan_queue.h>
+#include <eagle/renderer/vulkan/vulkan_command_queue.h>
 #include <eagle/events/event.h>
 
 namespace eagle {
@@ -74,8 +74,6 @@ public:
 
     void present_frame(std::span<Semaphore*> waitSemaphores) override;
 
-    void submit(const CommandBufferSubmitInfo& submitInfo) override;
-
     std::shared_ptr<Shader> create_shader(const ShaderCreateInfo &shaderCreateInfo) override;
 
     std::shared_ptr<VertexBuffer> create_vertex_buffer(const VertexBufferCreateInfo &createInfo, void *data, size_t size) override;
@@ -107,6 +105,8 @@ public:
     Framebuffer* main_framebuffer() override;
 
     RenderPass* main_render_pass() override;
+
+    CommandQueue* command_queue(CommandQueueType queueType) override;
 
     virtual void debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                                 VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -170,7 +170,7 @@ protected:
     uint32_t m_currentFrame = 0;
 
     std::unique_ptr<VulkanDeleter> m_deleter;
-    std::unordered_map<QueueType, std::unique_ptr<VulkanQueue>> m_queues;
+    std::unordered_map<CommandQueueType, std::unique_ptr<VulkanCommandQueue>> m_queues;
     std::unique_ptr<VulkanFramebuffer> m_mainFramebuffer;
     std::unique_ptr<VulkanRenderPass> m_mainRenderPass;
 

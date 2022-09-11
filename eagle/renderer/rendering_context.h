@@ -52,7 +52,7 @@ public:
     virtual RenderPass* main_render_pass() = 0;
     virtual Framebuffer* main_framebuffer() = 0;
 
-    virtual GPUQueue* find_queue(QueueType type, const std::string& name = "") = 0;
+    virtual GPUQueue* find_queue(CommandQueueType type, const std::string& name = "") = 0;
 
     virtual const Properties& properties() = 0;
 

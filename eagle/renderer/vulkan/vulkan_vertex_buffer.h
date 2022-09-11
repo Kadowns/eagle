@@ -20,7 +20,7 @@ struct VulkanVertexBufferCreateInfo {
     VkDevice device;
     uint32_t frameCount;
     VkPhysicalDevice physicalDevice;
-    VulkanQueue* queue;
+    VulkanCommandQueue* queue;
 };
 
 class VulkanVertexBuffer : public VertexBuffer, public VulkanCleanable {

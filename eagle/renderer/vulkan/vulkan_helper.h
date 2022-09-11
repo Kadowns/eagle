@@ -7,7 +7,7 @@
 
 #include <eagle/renderer/vulkan/vulkan_global_definitions.h>
 #include <eagle/renderer/vulkan/vulkan_buffer.h>
-#include <eagle/renderer/vulkan/vulkan_queue.h>
+#include <eagle/renderer/vulkan/vulkan_command_queue.h>
 
 #include <vector>
 
@@ -31,10 +31,10 @@ public:
                          uint32_t mipLevels);
 
     static VkCommandBuffer
-    begin_single_time_commands(VulkanQueue* queue);
+    begin_single_time_commands(VulkanCommandQueue* queue);
 
     static void
-    end_single_time_commnds(VulkanQueue* queue, VkCommandBuffer commandBuffer);
+    end_single_time_commnds(VulkanCommandQueue* queue, VkCommandBuffer commandBuffer);
 
     static void
     create_image(VkPhysicalDevice physicalDevice, VkDevice device, uint32_t width, uint32_t height,
@@ -43,7 +43,7 @@ public:
                  VkDeviceMemory &imageMemory, VkImageCreateFlags flags = 0);
 
     static void
-    transition_image_layout(VulkanQueue* queue, VkImage image,
+    transition_image_layout(VulkanCommandQueue* queue, VkImage image,
                             VkImageLayout oldLayout, VkImageLayout newLayout,
                             VkImageSubresourceRange subresourceRange,
                             VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
@@ -54,13 +54,13 @@ public:
 
     static std::shared_ptr<VulkanBuffer>
     create_baked_buffer(VkPhysicalDevice physicalDevice, VkDevice device, VkBufferUsageFlags usageFlags,
-                        void *data, VkDeviceSize size, VulkanQueue* queue);
+                        void *data, VkDeviceSize size, VulkanCommandQueue* queue);
 
     static std::shared_ptr<VulkanBuffer>
     create_dynamic_buffer(VkPhysicalDevice physicalDevice, VkDevice device, VkBufferUsageFlagBits bufferUsage,
                           void *data, VkDeviceSize size);
 
-    static void upload_baked_buffer(std::shared_ptr<VulkanBuffer> &buffer, VulkanQueue* queue, void *data);
+    static void upload_baked_buffer(std::shared_ptr<VulkanBuffer> &buffer, VulkanCommandQueue* queue, void *data);
 
     static void upload_dynamic_buffer(std::shared_ptr<VulkanBuffer>& buffer, VkDeviceSize size, void* data);
 

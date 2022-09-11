@@ -31,15 +31,22 @@ public:
 
     VkPipelineLayout native_pipeline_layout();
 
+    VkPipelineBindPoint native_bind_point() const;
+
 private:
 
     void create_pipeline_layout();
+
+    void create_graphics_pipeline();
+
+    void create_compute_pipeline();
 
 private:
 
     VulkanShaderCreateInfo m_nativeCreateInfo;
     VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
-    VkPipeline m_graphicsPipeline = VK_NULL_HANDLE;
+    VkPipeline m_pipeline = VK_NULL_HANDLE;
+    VkPipelineBindPoint m_bindPoint;
     uint32_t m_outputAttachmentCount = 0;
     std::vector<VkVertexInputBindingDescription> m_inputBindings;
     std::vector<std::unique_ptr<VulkanDescriptorSetLayout>> m_descriptorSetLayouts;

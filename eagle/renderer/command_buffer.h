@@ -5,17 +5,17 @@
 #ifndef EAGLE_COMMANDBUFFER_H
 #define EAGLE_COMMANDBUFFER_H
 
-#include <span>
-#include "renderer_global_definitions.h"
-#include "shader.h"
-#include "compute_shader.h"
-#include "vertex_buffer.h"
-#include "index_buffer.h"
-#include "uniform_buffer.h"
-#include "descriptor_set.h"
-#include "render_target.h"
-#include "render_pass.h"
-#include "framebuffer.h"
+#include <eagle/renderer/renderer_global_definitions.h>
+#include <eagle/renderer/shader.h>
+#include <eagle/renderer/compute_shader.h>
+#include <eagle/renderer/vertex_buffer.h>
+#include <eagle/renderer/index_buffer.h>
+#include <eagle/renderer/uniform_buffer.h>
+#include <eagle/renderer/descriptor_set.h>
+#include <eagle/renderer/render_target.h>
+#include <eagle/renderer/render_pass.h>
+#include <eagle/renderer/framebuffer.h>
+#include <eagle/renderer/command_queue.h>
 
 namespace eagle {
 
@@ -27,15 +27,27 @@ enum class CommandBufferLevel {
 
 struct CommandBufferCreateInfo {
     CommandBufferLevel level = CommandBufferLevel::MASTER;
-    QueueType queueType = QueueType::GRAPHICS;
+    CommandQueue* queue = nullptr;
+};
+
+struct ImageMemoryBarrier {
+    AccessFlags srcAccessMask;
+    AccessFlags dstAccessMask;
+    ImageLayout oldLayout;
+    ImageLayout newLayout;
+    CommandQueue* srcQueue;
+    CommandQueue* dstQueue;
+    Image* image;
 };
 
 class CommandBuffer {
 public:
 
-    explicit CommandBuffer(const CommandBufferCreateInfo& createInfo) : m_createInfo(createInfo) {}
+    explicit CommandBuffer(const CommandBufferCreateInfo& createInfo);
 
-    virtual ~CommandBuffer() = default;
+    virtual ~CommandBuffer();
+
+    CommandQueue* command_queue() const;
 
     virtual void begin() = 0;
 
@@ -80,7 +92,7 @@ public:
     begin_render_pass(RenderPass* renderPass, Framebuffer* framebuffer) = 0;
 
     virtual void
-    pipeline_barrier(Image* image, PipelineStageFlags srcPipelineStages,
+    pipeline_barrier(std::span<ImageMemoryBarrier> imageMemoryBarriers, PipelineStageFlags srcPipelineStages,
                      PipelineStageFlags dstPipelineStages) = 0;
 
     virtual void

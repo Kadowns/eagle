@@ -7,18 +7,17 @@
 
 #include <eagle/renderer/renderer_global_definitions.h>
 #include <eagle/renderer/semaphore.h>
+#include <eagle/renderer/fence.h>
 #include <eagle/renderer/shader.h>
-#include <eagle/renderer/image.h>
 #include <eagle/renderer/descriptor_set.h>
+#include <eagle/renderer/image.h>
+#include <eagle/renderer/texture.h>
 #include <eagle/renderer/vertex_buffer.h>
 #include <eagle/renderer/index_buffer.h>
 #include <eagle/renderer/uniform_buffer.h>
 #include <eagle/renderer/storage_buffer.h>
 #include <eagle/renderer/command_buffer.h>
-#include <eagle/renderer/texture.h>
-#include <eagle/renderer/gpu_queue.h>
-
-#include <span>
+#include <eagle/renderer/command_queue.h>
 
 namespace eagle {
 
@@ -32,15 +31,6 @@ struct RenderContextCreateInfo {
     const char* engineName = "Unnamed Engine";
 };
 
-struct CommandBufferSubmitInfo {
-    QueueType queueType;
-    std::span<CommandBuffer*> commandBuffers;
-    std::span<Semaphore*> waitSemaphores;
-    std::span<PipelineStageFlags> waitStages;
-    std::span<Semaphore*> signalSemaphores;
-    Fence* fence = nullptr;
-};
-
 class RenderContext {
 public:
 
@@ -52,10 +42,10 @@ public:
 
     virtual bool prepare_frame(Semaphore* signalAvailableImage) = 0;
     virtual void present_frame(std::span<Semaphore*> waitSemaphores) = 0;
-    virtual void submit(const CommandBufferSubmitInfo& submitInfo) = 0;
 
     virtual RenderPass* main_render_pass() = 0;
     virtual Framebuffer* main_framebuffer() = 0;
+    virtual CommandQueue* command_queue(CommandQueueType queueType) = 0;
 
     virtual std::shared_ptr<Shader> create_shader(const ShaderCreateInfo &shaderCreateInfo) = 0;
 

@@ -36,13 +36,13 @@ set(EAGLE_HEADER
         eagle/events/window_events.h
 
         eagle/renderer/command_buffer.h
+        eagle/renderer/command_queue.h
         eagle/renderer/compute_shader.h
         eagle/renderer/descriptor_item.h
         eagle/renderer/descriptor_set.h
         eagle/renderer/descriptor_set_layout.h
         eagle/renderer/framebuffer.h
         eagle/renderer/gpu_buffer.h
-        eagle/renderer/gpu_queue.h
         eagle/renderer/image.h
         eagle/renderer/index_buffer.h
         eagle/renderer/render_pass.h
@@ -62,6 +62,7 @@ set(EAGLE_HEADER
         eagle/renderer/vulkan/vulkan_buffer.h
         eagle/renderer/vulkan/vulkan_cleaner.h
         eagle/renderer/vulkan/vulkan_command_buffer.h
+        eagle/renderer/vulkan/vulkan_command_queue.h
         eagle/renderer/vulkan/vulkan_converter.h
         eagle/renderer/vulkan/vulkan_deleter.h
         eagle/renderer/vulkan/vulkan_descriptor_set.h
@@ -73,7 +74,6 @@ set(EAGLE_HEADER
         eagle/renderer/vulkan/vulkan_helper.h
         eagle/renderer/vulkan/vulkan_image.h
         eagle/renderer/vulkan/vulkan_index_buffer.h
-        eagle/renderer/vulkan/vulkan_queue.h
         eagle/renderer/vulkan/vulkan_render_context.h
         eagle/renderer/vulkan/vulkan_render_pass.h
         eagle/renderer/vulkan/vulkan_semaphore.h
@@ -95,13 +95,17 @@ set(EAGLE_SOURCE
         eagle/memory/buffer.cpp
         eagle/events/event.cpp
 
+        eagle/renderer/command_queue.cpp
+        eagle/renderer/command_buffer.cpp
         eagle/renderer/vertex_layout.cpp
         eagle/renderer/render_context.cpp
         eagle/renderer/shader.cpp
+
         eagle/renderer/vulkan/spirv_reflect.cpp
         eagle/renderer/vulkan/vulkan_buffer.cpp
         eagle/renderer/vulkan/vulkan_cleaner.cpp
         eagle/renderer/vulkan/vulkan_command_buffer.cpp
+        eagle/renderer/vulkan/vulkan_command_queue.cpp
         eagle/renderer/vulkan/vulkan_converter.cpp
         eagle/renderer/vulkan/vulkan_deleter.cpp
         eagle/renderer/vulkan/vulkan_descriptor_set.cpp
@@ -113,7 +117,6 @@ set(EAGLE_SOURCE
         eagle/renderer/vulkan/vulkan_helper.cpp
         eagle/renderer/vulkan/vulkan_image.cpp
         eagle/renderer/vulkan/vulkan_index_buffer.cpp
-        eagle/renderer/vulkan/vulkan_queue.cpp
         eagle/renderer/vulkan/vulkan_render_context.cpp
         eagle/renderer/vulkan/vulkan_render_pass.cpp
         eagle/renderer/vulkan/vulkan_semaphore.cpp

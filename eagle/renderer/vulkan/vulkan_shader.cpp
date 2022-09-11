@@ -13,16 +13,22 @@ VulkanShader::VulkanShader(const ShaderCreateInfo &createInfo, const VulkanShade
         m_nativeCreateInfo(nativeCreateInfo),
         m_cleared(true) {
 
-    m_listener.subscribe(*m_nativeCreateInfo.on_window_resized, [this](VkExtent2D extent){
-        m_nativeCreateInfo.extent = extent;
-        cleanup_pipeline();
-        create_pipeline();
-    });
-
+    m_bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     for(auto& stageDescription : m_createInfo.shaderStages){
         if (stageDescription.stage == ShaderStage::COMPUTE) {
-            throw std::logic_error("compute shaders are not allowed on a graphics shader");
+            m_bindPoint = VK_PIPELINE_BIND_POINT_COMPUTE;
+            if (m_createInfo.shaderStages.size() > 1){
+                throw std::logic_error("compute shaders cannot be used with other shader stages");
+            }
         }
+    }
+
+    if (m_bindPoint == VK_PIPELINE_BIND_POINT_GRAPHICS){
+        m_listener.subscribe(*m_nativeCreateInfo.on_window_resized, [this](VkExtent2D extent){
+            m_nativeCreateInfo.extent = extent;
+            cleanup_pipeline();
+            create_pipeline();
+        });
     }
 
     create_pipeline_layout();
@@ -109,9 +115,42 @@ void VulkanShader::create_pipeline_layout() {
 }
 
 void VulkanShader::create_pipeline() {
-    EG_TRACE("eagle","Creating shader pipeline!");
 
+    if (m_bindPoint == VK_PIPELINE_BIND_POINT_GRAPHICS){
+        create_graphics_pipeline();
+    }
+    else {
+        create_compute_pipeline();
+    }
 
+    m_cleared = false;
+}
+
+void VulkanShader::cleanup_pipeline(){
+    if (m_cleared){
+        return;
+    }
+    vkDestroyPipeline(m_nativeCreateInfo.device, m_pipeline, nullptr);
+    m_cleared = true;
+}
+
+VkPipeline VulkanShader::native_pipeline() {
+    return m_pipeline;
+}
+
+VkPipelineLayout VulkanShader::native_pipeline_layout() {
+    return m_pipelineLayout;
+}
+
+DescriptorSetLayout* VulkanShader::descriptor_set_layout(uint32_t index) const {
+    return m_descriptorSetLayouts[index].get();
+}
+
+VkPipelineBindPoint VulkanShader::native_bind_point() const {
+    return m_bindPoint;
+}
+
+void VulkanShader::create_graphics_pipeline() {
     std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
     shaderStages.reserve(m_createInfo.shaderStages.size());
 
@@ -268,39 +307,40 @@ void VulkanShader::create_pipeline() {
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-
-    auto result = vkCreateGraphicsPipelines(m_nativeCreateInfo.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_graphicsPipeline);
-    if (result != VK_SUCCESS) {
-        throw VulkanException("failed to create graphics pipeline", result);
-    }
+    auto result = vkCreateGraphicsPipelines(m_nativeCreateInfo.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline);
 
     for (auto& shaderStage : shaderStages){
         vkDestroyShaderModule(m_nativeCreateInfo.device, shaderStage.module, nullptr);
     }
 
-    m_cleared = false;
-
-    EG_TRACE("eagle","Shader pipeline created!");
-}
-
-void VulkanShader::cleanup_pipeline(){
-    if (m_cleared){
-        return;
+    if (result != VK_SUCCESS) {
+        throw VulkanException("failed to create graphics pipeline", result);
     }
-    vkDestroyPipeline(m_nativeCreateInfo.device, m_graphicsPipeline, nullptr);
-    m_cleared = true;
 }
 
-VkPipeline VulkanShader::native_pipeline() {
-    return m_graphicsPipeline;
-}
+void VulkanShader::create_compute_pipeline() {
+    auto& stageDescription = m_createInfo.shaderStages.front();
 
-VkPipelineLayout VulkanShader::native_pipeline_layout() {
-    return m_pipelineLayout;
-}
+    VkShaderModule shaderModule = VulkanShaderUtils::create_shader_module(m_nativeCreateInfo.device, stageDescription.spirVCode);
 
-DescriptorSetLayout* VulkanShader::descriptor_set_layout(uint32_t index) const {
-    return m_descriptorSetLayouts[index].get();
+    VkPipelineShaderStageCreateInfo shaderStageCreateInfo = {};
+    shaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    shaderStageCreateInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    shaderStageCreateInfo.module = shaderModule;
+    shaderStageCreateInfo.pName = stageDescription.entryPointName.c_str();
+
+    VkComputePipelineCreateInfo computePipelineCreateInfo = {};
+    computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    computePipelineCreateInfo.layout = m_pipelineLayout;
+    computePipelineCreateInfo.stage = shaderStageCreateInfo;
+
+    auto result = vkCreateComputePipelines(m_nativeCreateInfo.device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &m_pipeline);
+
+    vkDestroyShaderModule(m_nativeCreateInfo.device, shaderModule, nullptr);
+
+    if (result != VK_SUCCESS){
+        throw VulkanException("failed to create compute pipeline", result);
+    }
 }
 
 }

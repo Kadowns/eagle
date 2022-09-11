@@ -176,7 +176,7 @@ void VulkanRenderContext::present_frame(std::span<Semaphore*> waitSemaphores) {
     presentInfo.pSwapchains = swapChains;
     presentInfo.pImageIndices = &m_currentSwapchainImage;
 
-    auto it = m_queues.find(QueueType::PRESENT);
+    auto it = m_queues.find(CommandQueueType::PRESENT);
     if (it == m_queues.end()){
         throw std::runtime_error("no present queue was found when presenting frame");
     }
@@ -195,39 +195,6 @@ void VulkanRenderContext::present_frame(std::span<Semaphore*> waitSemaphores) {
     m_currentFrame = (m_currentFrame + 1) % m_createInfo.maxFramesInFlight;
 }
 
-void VulkanRenderContext::submit(const CommandBufferSubmitInfo& submitInfo) {
-
-    auto it = m_queues.find(submitInfo.queueType);
-    if (it == m_queues.end()){
-        throw std::runtime_error("tried to submit to a queue that does not exist");
-    }
-    auto& queue = it->second;
-
-    VkSubmitInfo nativeSubmitInfo = {};
-    nativeSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-    auto waitSemaphores = detail::native_semaphores(submitInfo.waitSemaphores, m_currentFrame);
-    auto waitStages = detail::native_pipeline_stages(submitInfo.waitStages);
-    nativeSubmitInfo.waitSemaphoreCount = waitSemaphores.size();
-    nativeSubmitInfo.pWaitSemaphores = waitSemaphores.data();
-    nativeSubmitInfo.pWaitDstStageMask = waitStages.data();
-
-    auto commandBuffers = detail::native_command_buffers(submitInfo.commandBuffers, m_currentFrame);
-    nativeSubmitInfo.commandBufferCount = commandBuffers.size();
-    nativeSubmitInfo.pCommandBuffers = commandBuffers.data();
-
-    auto signalSemaphores = detail::native_semaphores(submitInfo.signalSemaphores, m_currentFrame);
-    nativeSubmitInfo.signalSemaphoreCount = signalSemaphores.size();
-    nativeSubmitInfo.pSignalSemaphores = signalSemaphores.data();
-
-    auto castedFence = (VulkanFence*)submitInfo.fence;
-    auto vkFence = castedFence->native_fence(m_currentFrame);
-
-    vkResetFences(m_device, 1, &vkFence);
-
-    queue->submit(nativeSubmitInfo, vkFence);
-}
-
 std::shared_ptr<Shader> VulkanRenderContext::create_shader(const ShaderCreateInfo &shaderCreateInfo) {
     VulkanShaderCreateInfo nativeCreateInfo = {};
     nativeCreateInfo.device = m_device;
@@ -242,7 +209,7 @@ std::shared_ptr<VertexBuffer> VulkanRenderContext::create_vertex_buffer(const Ve
     VulkanVertexBufferCreateInfo nativeCreateInfo = {};
     nativeCreateInfo.physicalDevice = m_physicalDevice;
     nativeCreateInfo.device = m_device;
-    nativeCreateInfo.queue = m_queues.at(QueueType::GRAPHICS).get();
+    nativeCreateInfo.queue = m_queues.at(CommandQueueType::GRAPHICS).get();
     nativeCreateInfo.frameCount = m_createInfo.maxFramesInFlight;
 
     auto ptr = new VulkanVertexBuffer(createInfo, nativeCreateInfo, data, size);
@@ -254,7 +221,7 @@ std::shared_ptr<IndexBuffer> VulkanRenderContext::create_index_buffer(const Inde
     nativeCreateInfo.device = m_device;
     nativeCreateInfo.physicalDevice = m_physicalDevice;
     nativeCreateInfo.frameCount = m_createInfo.maxFramesInFlight;
-    nativeCreateInfo.queue = m_queues.at(QueueType::GRAPHICS).get();
+    nativeCreateInfo.queue = m_queues.at(CommandQueueType::GRAPHICS).get();
 
     auto ptr = new VulkanIndexBuffer(createInfo, nativeCreateInfo, data, size);
     return detail::make_shared_with_deleter(ptr, m_deleter);
@@ -275,22 +242,14 @@ std::shared_ptr<StorageBuffer> VulkanRenderContext::create_storage_buffer(size_t
     createInfo.device = m_device;
     createInfo.physicalDevice = m_physicalDevice;
     createInfo.frameCount = m_createInfo.maxFramesInFlight;
-    createInfo.queue = m_queues.at(QueueType::GRAPHICS).get();
+    createInfo.queue = m_queues.at(CommandQueueType::GRAPHICS).get();
 
     auto ptr = new VulkanStorageBuffer(createInfo, size, data, usage);
     return detail::make_shared_with_deleter(ptr, m_deleter);
 }
 
 std::shared_ptr<CommandBuffer> VulkanRenderContext::create_command_buffer(const CommandBufferCreateInfo &createInfo) {
-
-    auto it = m_queues.find(createInfo.queueType);
-    if (it == m_queues.end()){
-        throw std::runtime_error("tried to create a command buffer for a queue type that is not supported");
-    }
-    auto& queue = it->second;
-
     VulkanCommandBufferCreateInfo vkCreateInfo = {};
-    vkCreateInfo.queue = m_queues.at(QueueType::GRAPHICS).get();
     vkCreateInfo.device = m_device;
     vkCreateInfo.frameCount = m_createInfo.maxFramesInFlight;
     vkCreateInfo.currentFrame = &m_currentFrame;
@@ -321,7 +280,7 @@ std::shared_ptr<Image> VulkanRenderContext::create_image(const ImageCreateInfo &
     VulkanImageCreateInfo vulkanImageCreateInfo = {};
     vulkanImageCreateInfo.device = m_device;
     vulkanImageCreateInfo.physicalDevice = m_physicalDevice;
-    vulkanImageCreateInfo.queue = m_queues.at(QueueType::GRAPHICS).get();
+    vulkanImageCreateInfo.queue = m_queues.at(CommandQueueType::GRAPHICS).get();
     vulkanImageCreateInfo.frameCount = m_createInfo.maxFramesInFlight;
 
     auto ptr = new VulkanImage(createInfo, vulkanImageCreateInfo);
@@ -332,7 +291,7 @@ std::shared_ptr<Texture> VulkanRenderContext::create_texture(const TextureCreate
     VulkanTextureCreateInfo vulkanTextureCreateInfo = {};
     vulkanTextureCreateInfo.device = m_device;
     vulkanTextureCreateInfo.physicalDevice = m_physicalDevice;
-    vulkanTextureCreateInfo.queue = m_queues.at(QueueType::GRAPHICS).get();
+    vulkanTextureCreateInfo.queue = m_queues.at(CommandQueueType::GRAPHICS).get();
     vulkanTextureCreateInfo.frameCount = m_createInfo.maxFramesInFlight;
 
     auto ptr = new VulkanTexture(createInfo, vulkanTextureCreateInfo);
@@ -381,6 +340,14 @@ Framebuffer* VulkanRenderContext::main_framebuffer() {
 
 RenderPass* VulkanRenderContext::main_render_pass() {
     return m_mainRenderPass.get();
+}
+
+CommandQueue* VulkanRenderContext::command_queue(CommandQueueType queueType) {
+    auto it = m_queues.find(queueType);
+    if (it == m_queues.end()){
+        throw std::runtime_error("requested a command queue that does not exist");
+    }
+    return it->second.get();
 }
 
 void VulkanRenderContext::debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData) {
@@ -670,23 +637,24 @@ void VulkanRenderContext::create_queues() {
     VulkanQueueCreateInfo queueCreateInfo = {};
     queueCreateInfo.device = m_device;
     queueCreateInfo.index = 0;
+    queueCreateInfo.currentFrame = &m_currentFrame;
 
     if (m_queueFamilyIndices.presentFamily.has_value()) {
         queueCreateInfo.familyIndex = m_queueFamilyIndices.presentFamily.value();
-        queueCreateInfo.type = QueueType::PRESENT;
-        m_queues.emplace(QueueType::PRESENT, std::make_unique<VulkanQueue>(queueCreateInfo));
+        queueCreateInfo.type = CommandQueueType::PRESENT;
+        m_queues.emplace(CommandQueueType::PRESENT, std::make_unique<VulkanCommandQueue>(queueCreateInfo));
     }
 
     if (m_queueFamilyIndices.graphicsFamily.has_value()) {
         queueCreateInfo.familyIndex = m_queueFamilyIndices.graphicsFamily.value();
-        queueCreateInfo.type = QueueType::GRAPHICS;
-        m_queues.emplace(QueueType::GRAPHICS, std::make_unique<VulkanQueue>(queueCreateInfo));
+        queueCreateInfo.type = CommandQueueType::GRAPHICS;
+        m_queues.emplace(CommandQueueType::GRAPHICS, std::make_unique<VulkanCommandQueue>(queueCreateInfo));
     }
 
     if (m_queueFamilyIndices.computeFamily.has_value()) {
         queueCreateInfo.familyIndex = m_queueFamilyIndices.computeFamily.value();
-        queueCreateInfo.type = QueueType::COMPUTE;
-        m_queues.emplace(QueueType::COMPUTE, std::make_unique<VulkanQueue>(queueCreateInfo));
+        queueCreateInfo.type = CommandQueueType::COMPUTE;
+        m_queues.emplace(CommandQueueType::COMPUTE, std::make_unique<VulkanCommandQueue>(queueCreateInfo));
     }
 }
 
@@ -842,7 +810,7 @@ void VulkanRenderContext::create_main_framebuffers() {
     VulkanImageCreateInfo nativeImageCreateInfo = {};
     nativeImageCreateInfo.physicalDevice = m_physicalDevice;
     nativeImageCreateInfo.device = m_device;
-    nativeImageCreateInfo.queue = m_queues.at(QueueType::GRAPHICS).get();
+    nativeImageCreateInfo.queue = m_queues.at(CommandQueueType::GRAPHICS).get();
     nativeImageCreateInfo.frameCount = m_swapchainProperties.imageCount;
 
     std::shared_ptr<VulkanImage> colorImage = std::make_shared<VulkanImage>(imageCreateInfo, nativeImageCreateInfo, swapchainImages);

@@ -42,7 +42,7 @@ VulkanImage::VulkanImage(const ImageCreateInfo &imageCreateInfo, const VulkanIma
 
     m_views.resize(m_images.size());
     for (auto& view : m_views) {
-        view = std::make_shared<VulkanImageView>(viewCreateInfo);
+        view = std::make_unique<VulkanImageView>(viewCreateInfo);
     }
 }
 
@@ -148,7 +148,7 @@ void VulkanImage::create() {
     m_views.resize(m_createInfo.mipLevels);
     for (uint32_t i = 0; i < m_views.size(); i++) {
         viewCreateInfo.subresourceRange.baseMipLevel = i;
-        m_views[i] = std::make_shared<VulkanImageView>(viewCreateInfo);
+        m_views[i] = std::make_unique<VulkanImageView>(viewCreateInfo);
     }
     EG_TRACE("eagle","Vulkan image created!");
 }
@@ -353,8 +353,8 @@ void VulkanImage::clear() {
     EG_TRACE("eagle","Vulkan image cleared!");
 }
 
-std::shared_ptr<ImageView> VulkanImage::view(uint32_t mipLevel) {
-    return m_views[mipLevel];
+ImageView* VulkanImage::view(uint32_t mipLevel) {
+    return m_views[mipLevel].get();
 }
 
 VulkanImageView::VulkanImageView(const VulkanImageViewCreateInfo& createInfo) : m_createInfo(createInfo) {

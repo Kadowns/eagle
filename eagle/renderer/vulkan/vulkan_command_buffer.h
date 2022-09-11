@@ -7,18 +7,16 @@
 
 #include <eagle/renderer/command_buffer.h>
 #include <eagle/renderer/vulkan/vulkan_shader.h>
-#include <eagle/renderer/vulkan/vulkan_queue.h>
+#include <eagle/renderer/vulkan/vulkan_command_queue.h>
 
 #include <thread>
 
 namespace eagle {
 
-class VulkanSharedCommandPool;
 
 struct VulkanCommandBufferCreateInfo {
     VkDevice device = VK_NULL_HANDLE;
     uint32_t frameCount = 0;
-    VulkanQueue* queue = nullptr;
     uint32_t* currentFrame = nullptr;
 };
 
@@ -51,7 +49,7 @@ public:
     void draw_indexed(uint32_t indicesCount, uint32_t instanceCount, uint32_t firstIndex, uint32_t vertexOffset, uint32_t firstInstance) override;
     void set_viewport(float w, float h, float x, float y, float minDepth, float maxDepth) override;
     void set_scissor(uint32_t w, uint32_t h, uint32_t x, uint32_t y) override;
-    void pipeline_barrier(Image* image, PipelineStageFlags srcPipelineStages, PipelineStageFlags dstPipelineStages) override;
+    void pipeline_barrier(std::span<ImageMemoryBarrier> imageMemoryBarriers, PipelineStageFlags srcPipelineStages, PipelineStageFlags dstPipelineStages) override;
     void dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
     VkCommandBuffer native_command_buffer(uint32_t index);
@@ -62,7 +60,7 @@ private:
 
 private:
 
-    VulkanCommandBufferCreateInfo m_vkCreateInfo;
+    VulkanCommandBufferCreateInfo m_nativeCreateInfo;
     std::vector<ThreadCommandBuffer> m_threadCommandBuffers;
     uint32_t m_currentFrame = 0;
     VkCommandBuffer m_currentCommandBuffer = VK_NULL_HANDLE;

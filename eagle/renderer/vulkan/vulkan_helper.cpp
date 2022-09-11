@@ -3,7 +3,7 @@
 //
 
 #include <eagle/renderer/vulkan/vulkan_helper.h>
-#include <eagle/renderer/vulkan/vulkan_queue.h>
+#include <eagle/renderer/vulkan/vulkan_command_queue.h>
 
 namespace eagle {
 
@@ -38,7 +38,7 @@ VulkanHelper::find_memory_type(VkPhysicalDevice physicalDevice, uint32_t typeFil
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-VkCommandBuffer VulkanHelper::begin_single_time_commands(VulkanQueue* queue) {
+VkCommandBuffer VulkanHelper::begin_single_time_commands(VulkanCommandQueue* queue) {
 
     VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
     queue->allocate(commandBuffer, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
@@ -52,7 +52,7 @@ VkCommandBuffer VulkanHelper::begin_single_time_commands(VulkanQueue* queue) {
     return commandBuffer;
 }
 
-void VulkanHelper::end_single_time_commnds(VulkanQueue* queue, VkCommandBuffer commandBuffer) {
+void VulkanHelper::end_single_time_commnds(VulkanCommandQueue* queue, VkCommandBuffer commandBuffer) {
 
     vkEndCommandBuffer(commandBuffer);
 
@@ -110,7 +110,7 @@ VulkanHelper::create_image(VkPhysicalDevice physicalDevice, VkDevice device, uin
 }
 
 void VulkanHelper::transition_image_layout(
-        VulkanQueue* queue,
+        VulkanCommandQueue* queue,
         VkImage image,
         VkImageLayout oldLayout,
         VkImageLayout newLayout,
@@ -283,7 +283,7 @@ std::shared_ptr<VulkanBuffer> VulkanHelper::create_baked_buffer(
         VkBufferUsageFlags usageFlags,
         void *data,
         VkDeviceSize size,
-        VulkanQueue* queue) {
+        VulkanCommandQueue* queue) {
 
     VulkanBufferCreateInfo stagingBufferCreateInfo = {};
     stagingBufferCreateInfo.physicalDevice = physicalDevice;
@@ -333,7 +333,7 @@ std::shared_ptr<VulkanBuffer> VulkanHelper::create_dynamic_buffer(
     return std::make_shared<VulkanBuffer>(createBufferInfo);
 }
 
-void VulkanHelper::upload_baked_buffer(std::shared_ptr<VulkanBuffer> &buffer, VulkanQueue* queue, void *data) {
+void VulkanHelper::upload_baked_buffer(std::shared_ptr<VulkanBuffer> &buffer, VulkanCommandQueue* queue, void *data) {
 
     auto& info = buffer->info();
 

@@ -16,7 +16,7 @@ struct VulkanTextureCreateInfo {
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device = VK_NULL_HANDLE;
     uint32_t frameCount = 0;
-    VulkanQueue* queue = nullptr;
+    VulkanCommandQueue* queue = nullptr;
 };
 
 class VulkanTexture : public Texture {

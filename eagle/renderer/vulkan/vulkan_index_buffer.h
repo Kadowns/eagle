@@ -19,7 +19,7 @@ struct VulkanIndexBufferCreateInfo {
     VkDevice device;
     VkPhysicalDevice physicalDevice;
     uint32_t frameCount;
-    VulkanQueue* queue;
+    VulkanCommandQueue* queue;
 };
 
 class VulkanIndexBuffer : public IndexBuffer, public VulkanCleanable {

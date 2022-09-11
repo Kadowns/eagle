@@ -4,7 +4,6 @@
 
 #include <eagle/renderer/vulkan/vulkan_command_buffer.h>
 #include <eagle/renderer/vulkan/vulkan_converter.h>
-#include <eagle/renderer/vulkan/vulkan_shared_command_pool.h>
 #include <eagle/renderer/vulkan/vulkan_shader.h>
 #include <eagle/renderer/vulkan/vulkan_vertex_buffer.h>
 #include <eagle/renderer/vulkan/vulkan_index_buffer.h>
@@ -30,21 +29,23 @@ static std::vector<VkCommandBuffer> native_command_buffers(const std::span<Comma
 
 VulkanCommandBuffer::VulkanCommandBuffer(const CommandBufferCreateInfo &createInfo,
                                          const VulkanCommandBufferCreateInfo &vkCreateInfo) :
-                                         CommandBuffer(createInfo),
-                                         m_vkCreateInfo(vkCreateInfo),
-                                         m_threadCommandBuffers(vkCreateInfo.frameCount){
+    CommandBuffer(createInfo),
+    m_nativeCreateInfo(vkCreateInfo),
+    m_threadCommandBuffers(vkCreateInfo.frameCount){
+
 }
 
 VulkanCommandBuffer::~VulkanCommandBuffer() {
+    auto castedQueue = (VulkanCommandQueue*)m_createInfo.queue;
     for (auto& threadCommandBuffer : m_threadCommandBuffers){
-        m_vkCreateInfo.queue->free(threadCommandBuffer.commandBuffer, threadCommandBuffer.threadId);
+        castedQueue->free(threadCommandBuffer.commandBuffer, threadCommandBuffer.threadId);
     }
 }
 
 void VulkanCommandBuffer::begin() {
     assert(m_createInfo.level == CommandBufferLevel::PRIMARY || m_createInfo.level == CommandBufferLevel::MASTER);
 
-    m_currentFrame = *m_vkCreateInfo.currentFrame;
+    m_currentFrame = *m_nativeCreateInfo.currentFrame;
     auto& threadCommandBuffer = prepare_command_buffer(m_currentFrame);
     m_currentCommandBuffer = threadCommandBuffer.commandBuffer;
 
@@ -59,7 +60,7 @@ void VulkanCommandBuffer::begin(RenderPass* renderPass,
                                 Framebuffer* framebuffer) {
     assert(m_createInfo.level == CommandBufferLevel::SECONDARY);
 
-    m_currentFrame = *m_vkCreateInfo.currentFrame;
+    m_currentFrame = *m_nativeCreateInfo.currentFrame;
     auto& threadCommandBuffer = prepare_command_buffer(m_currentFrame);
     m_currentCommandBuffer = threadCommandBuffer.commandBuffer;
 
@@ -128,7 +129,7 @@ void VulkanCommandBuffer::end_render_pass() {
 
 void VulkanCommandBuffer::bind_shader(Shader* shader) {
     m_boundShader = (VulkanShader*)shader;
-    vkCmdBindPipeline(m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundShader->native_pipeline());
+    vkCmdBindPipeline(m_currentCommandBuffer, m_boundShader->native_bind_point(), m_boundShader->native_pipeline());
 }
 
 void VulkanCommandBuffer::bind_vertex_buffer(VertexBuffer* vertexBuffer, uint32_t binding) {
@@ -209,7 +210,7 @@ void VulkanCommandBuffer::set_scissor(uint32_t w, uint32_t h, uint32_t x, uint32
     vkCmdSetScissor(m_currentCommandBuffer, 0, 1, &scissor);
 }
 
-void VulkanCommandBuffer::pipeline_barrier(Image* image, PipelineStageFlags srcPipelineStages,
+void VulkanCommandBuffer::pipeline_barrier(std::span<ImageMemoryBarrier> imageMemoryBarriers, PipelineStageFlags srcPipelineStages,
                                            PipelineStageFlags dstPipelineStages) {
     VkImageMemoryBarrier imageMemoryBarrier = {};
     imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -222,9 +223,9 @@ void VulkanCommandBuffer::pipeline_barrier(Image* image, PipelineStageFlags srcP
     imageMemoryBarrier.srcQueueFamilyIndex = 0;
     imageMemoryBarrier.dstQueueFamilyIndex = 0;
 
-    auto vkImage = (VulkanImage*)image;
+//    auto vkImage = (VulkanImage*)image;
 
-    imageMemoryBarrier.image = vkImage->native_image(m_currentFrame);
+//    imageMemoryBarrier.image = vkImage->native_image(m_currentFrame);
     vkCmdPipelineBarrier(
             m_currentCommandBuffer,
             VulkanConverter::eg_flags_to_vk_flags<PipelineStageFlagsBits>(srcPipelineStages),
@@ -247,16 +248,17 @@ VulkanCommandBuffer::ThreadCommandBuffer& VulkanCommandBuffer::prepare_command_b
 
     auto currentThreadId = std::this_thread::get_id();
     auto& threadCommandBuffer = m_threadCommandBuffers[frameIndex];
+    auto castedQueue = (VulkanCommandQueue*)m_createInfo.queue;
 
     if (threadCommandBuffer.threadId != currentThreadId){
 
         //free old command buffer
         if (threadCommandBuffer.commandBuffer != VK_NULL_HANDLE){
-            m_vkCreateInfo.queue->free(threadCommandBuffer.commandBuffer, threadCommandBuffer.threadId);
+            castedQueue->free(threadCommandBuffer.commandBuffer, threadCommandBuffer.threadId);
         }
 
         //allocate a new one for this thread
-        m_vkCreateInfo.queue->allocate(threadCommandBuffer.commandBuffer, VulkanConverter::to_vk(m_createInfo.level));
+        castedQueue->allocate(threadCommandBuffer.commandBuffer, VulkanConverter::to_vk(m_createInfo.level));
         threadCommandBuffer.threadId = currentThreadId;
     }
 

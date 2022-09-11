@@ -6,6 +6,7 @@
 #define EAGLE_VULKAN_QUEUE_H
 
 #include <eagle/renderer/vulkan/vulkan_global_definitions.h>
+#include <eagle/renderer/command_queue.h>
 
 #include <span>
 #include <thread>
@@ -16,10 +17,11 @@ struct VulkanQueueCreateInfo {
     VkDevice device = VK_NULL_HANDLE;
     uint32_t familyIndex = 0;
     uint32_t index = 0;
-    QueueType type = QueueType::UNDEFINED;
+    uint32_t* currentFrame = nullptr;
+    CommandQueueType type = CommandQueueType::UNDEFINED;
 };
 
-class VulkanQueue {
+class VulkanCommandQueue : public CommandQueue {
 private:
 
     struct ThreadCommandPoolCreateInfo {
@@ -45,11 +47,13 @@ private:
         std::vector<VkCommandBuffer> m_freeList;
     };
 public:
-    explicit VulkanQueue(const VulkanQueueCreateInfo& createInfo);
+    explicit VulkanCommandQueue(const VulkanQueueCreateInfo& createInfo);
+
+    void submit(std::span<CommandBufferSubmitInfo> submitInfos, Fence* fence) override;
+
+    void submit(std::span<VkSubmitInfo> submitInfos, VkFence fence);
 
     void submit(const VkSubmitInfo& submitInfo, VkFence fence);
-
-    void submit(std::span<VkSubmitInfo> submitInfo, VkFence fence);
 
     VkQueue native_queue() const;
 
@@ -57,7 +61,7 @@ public:
 
     uint32_t index() const;
 
-    QueueType type() const;
+    CommandQueueType type() const;
 
     void allocate(VkCommandBuffer& commandBuffer, VkCommandBufferLevel level);
 

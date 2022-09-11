@@ -89,7 +89,7 @@ VulkanBuffer::copy_to(void *data, VkDeviceSize size) {
     memcpy(m_mapped, data, size);
 }
 
-void VulkanBuffer::copy_buffer(VulkanQueue* queue, VulkanBuffer* src, VulkanBuffer* dst,
+void VulkanBuffer::copy_buffer(VulkanCommandQueue* queue, VulkanBuffer* src, VulkanBuffer* dst,
                                VkDeviceSize size, VkDeviceSize srcOffset, VkDeviceSize dstOffset) {
     EG_TRACE("eagle","Copying vulkan buffer");
     VkCommandBuffer commandBuffer = VulkanHelper::begin_single_time_commands(queue);

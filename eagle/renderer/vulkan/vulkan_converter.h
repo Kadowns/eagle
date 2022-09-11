@@ -84,47 +84,22 @@ public:
         return result;
     }
 
-    template<typename EG, typename VK>
-    static std::vector<EG> eg_vector_from_vk_flags(VK flags){
-        static_assert(sizeof(VK) * 8 == 32, "Only 32 bits flags are supported");
-        std::vector<EG> result;
-        uint32_t bit = 0;
-        while (bit < 32){
-            uint32_t flag = flags & (1u << bit);
-            if (flag) {
-                result.emplace_back(to_eg(static_cast<VK>(flag)));
-            }
-
-            bit++;
-        }
-        return result;
-    }
-
-    template<typename VK, typename EG>
-    static VK to_vk_flags(std::span<EG> elements) {
-        VK flags = 0;
-        for (auto &element : elements) {
-            flags |= to_vk(element);
-        }
-        return flags;
-    }
-
-    template<typename EG, typename VK>
-    static std::vector<EG> to_eg_vector(const std::span<VK>& elements){
-        std::vector<EG> result;
-        result.reserve(elements.size());
-        for (auto& element : elements){
-            result.emplace_back(to_eg(element));
-        }
-        return result;
-    }
-
     template<typename VK, typename EG>
     static std::vector<VK> to_vk_vector(const std::vector<EG>& elements){
         std::vector<VK> result;
         result.reserve(elements.size());
         for (auto& element : elements){
             result.emplace_back(to_vk(element));
+        }
+        return result;
+    }
+
+    template<typename VK, typename EG>
+    static std::vector<EG> to_eg_vector(const std::vector<VK>& elements){
+        std::vector<EG> result;
+        result.reserve(elements.size());
+        for (auto& element : elements){
+            result.emplace_back(to_eg(element));
         }
         return result;
     }

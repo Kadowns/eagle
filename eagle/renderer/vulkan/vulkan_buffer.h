@@ -6,11 +6,10 @@
 #define EAGLE_VULKANBUFFER_H
 
 #include <eagle/renderer/vulkan/vulkan_global_definitions.h>
-#include <eagle/renderer/vulkan/vulkan_shared_command_pool.h>
 
 namespace eagle {
 
-class VulkanQueue;
+class VulkanCommandQueue;
 
 struct VulkanBufferCreateInfo {
     VkPhysicalDevice physicalDevice;
@@ -39,7 +38,7 @@ public:
     inline void*           data()          { return m_mapped; }
 
     static void
-    copy_buffer(VulkanQueue* queue, VulkanBuffer* src, VulkanBuffer* dst,
+    copy_buffer(VulkanCommandQueue* queue, VulkanBuffer* src, VulkanBuffer* dst,
                 VkDeviceSize size, VkDeviceSize srcOffset, VkDeviceSize dstOffset);
 
     VkDeviceSize size() const { return m_size; }

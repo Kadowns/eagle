@@ -2,7 +2,7 @@
 // Created by Ricardo on 04/01/21.
 //
 
-#include "triangle_application.h"
+#include "compute_application.h"
 
 #include <eagle/application.h>
 #include <eagle/window.h>
@@ -32,8 +32,8 @@ void TriangleApplication::init() {
     vertexShaderDescription.spirVCode = eagle::Shader::read_spir_v_code("color.vert.spv");
 
     eagle::ShaderStageDescription fragmentShaderDescription = {};
-    fragmentShaderDescription.stage = eagle::ShaderStage::FRAGMENT;
-    fragmentShaderDescription.spirVCode = eagle::Shader::read_spir_v_code("color.frag.spv");
+    vertexShaderDescription.stage = eagle::ShaderStage::FRAGMENT;
+    vertexShaderDescription.spirVCode = eagle::Shader::read_spir_v_code("color.frag.spv");
 
     eagle::ShaderCreateInfo pipelineInfo = {};
     pipelineInfo.shaderStages = {
@@ -96,7 +96,6 @@ void TriangleApplication::init() {
 
     eagle::CommandBufferCreateInfo commandBufferCreateInfo = {};
     commandBufferCreateInfo.level = eagle::CommandBufferLevel::MASTER;
-    commandBufferCreateInfo.queue = m_renderContext->command_queue(eagle::CommandQueueType::GRAPHICS);
     m_commandBuffer = m_renderContext->create_command_buffer(commandBufferCreateInfo);
 
     m_framesInFlight = m_renderContext->create_fence();
@@ -143,6 +142,9 @@ void TriangleApplication::step() {
     eagle::CommandBuffer* commandBuffers[] = {m_commandBuffer.get()};
     submitInfo.commandBuffers = commandBuffers;
 
+    //fences to synchronize with cpu
+    submitInfo.fence = m_framesInFlight.get();
+
     //semaphores to wait for signal before starting
     //wait for color output
     eagle::PipelineStageFlags waitStages[] = {eagle::PipelineStageFlagsBits::COLOR_ATTACHMENT_OUTPUT_BIT};
@@ -151,14 +153,14 @@ void TriangleApplication::step() {
     submitInfo.waitSemaphores = waitSemaphores;
 
     //semaphores to signal when finished
-    eagle::Semaphore* renderFinishedSemaphores[] = {m_renderFinished.get()};
-    submitInfo.signalSemaphores = renderFinishedSemaphores;
+    eagle::Semaphore* signalSemaphores[] = {m_renderFinished.get()};
+    submitInfo.signalSemaphores = signalSemaphores;
 
-    m_framesInFlight->reset();
+    submitInfo.queueType = eagle::QueueType::GRAPHICS;
 
-    m_commandBuffer->command_queue()->submit(submitInfo, m_framesInFlight.get());
+    m_renderContext->submit(submitInfo);
 
-    m_renderContext->present_frame(renderFinishedSemaphores);
+    m_renderContext->present_frame(signalSemaphores);
 }
 
 TriangleApplication::~TriangleApplication() {

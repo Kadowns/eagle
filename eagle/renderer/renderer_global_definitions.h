@@ -13,13 +13,6 @@
 
 namespace eagle {
 
-enum class QueueType {
-    UNDEFINED = 0,
-    PRESENT = 1,
-    GRAPHICS = 2,
-    COMPUTE = 3
-};
-
 enum class DescriptorType {
     UNIFORM_BUFFER = 0,
     STORAGE_BUFFER = 1,
