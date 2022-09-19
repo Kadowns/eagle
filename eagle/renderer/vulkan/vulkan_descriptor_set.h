@@ -26,6 +26,9 @@ public:
     void create_descriptor_sets();
 
     void update() override;
+
+    Descriptor* operator[](uint32_t binding) override;
+
     VkDescriptorSet native_descriptor_set(uint32_t frameIndex);
 
     bool is_dirty() const override;
@@ -38,6 +41,7 @@ private:
     VulkanDescriptorSetInfo m_vkInfo;
     VkDescriptorPool m_descriptorPool;
     std::vector<VkDescriptorSet> m_descriptorSets;
+    std::unordered_map<uint32_t, Descriptor*> m_descriptors;
     std::set<uint32_t> m_dirtyDescriptors;
     bool m_cleared = true;
 

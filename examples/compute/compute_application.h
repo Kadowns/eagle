@@ -7,39 +7,37 @@
 
 #include <eagle/eagle.h>
 
-struct Color {
-    union {
-        float data[4];
-        struct {
-            float r, g, b, a;
-        };
-    };
 
-};
-
-class TriangleApplication : public eagle::ApplicationDelegate {
+class ComputeApplication : public eagle::ApplicationDelegate {
 public:
-    TriangleApplication();
-    ~TriangleApplication() override;
+    ComputeApplication();
+    ~ComputeApplication() override;
 
     void init() override;
 
     void step() override;
+private:
+
+    void submit_compute();
+
+    void submit_graphics();
+
 private:
     eagle::RenderContext* m_renderContext = nullptr;
     eagle::EventListener m_listener;
     std::shared_ptr<eagle::Fence> m_framesInFlight;
     std::shared_ptr<eagle::Semaphore> m_frameAvailable;
     std::shared_ptr<eagle::Semaphore> m_renderFinished;
-    std::shared_ptr<eagle::Shader> m_shader;
-    std::shared_ptr<eagle::VertexBuffer> m_vertexBuffer;
-    std::shared_ptr<eagle::IndexBuffer> m_indexBuffer;
-    std::shared_ptr<eagle::UniformBuffer> m_uniformBuffer;
-    std::shared_ptr<eagle::DescriptorSetLayout> m_descriptorSetLayout;
-    std::shared_ptr<eagle::DescriptorSet> m_descriptorSet;
-    std::shared_ptr<eagle::CommandBuffer> m_commandBuffer;
+    std::shared_ptr<eagle::Semaphore> m_computeFinished;
+    std::shared_ptr<eagle::Shader> m_graphicsShader;
+    std::shared_ptr<eagle::Shader> m_computeShader;
+    std::shared_ptr<eagle::Texture> m_computeTexture;
+    std::shared_ptr<eagle::StorageBuffer> m_storageBuffer;
+    std::shared_ptr<eagle::DescriptorSet> m_graphicsDescriptorSet;
+    std::shared_ptr<eagle::DescriptorSet> m_computeDescriptorSet;
+    std::shared_ptr<eagle::CommandBuffer> m_graphicsCommandBuffer;
+    std::shared_ptr<eagle::CommandBuffer> m_computeCommandBuffer;
 
-    Color m_color;
     eagle::Timer m_timer;
 };
 

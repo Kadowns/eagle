@@ -38,7 +38,9 @@ VulkanCommandBuffer::VulkanCommandBuffer(const CommandBufferCreateInfo &createIn
 VulkanCommandBuffer::~VulkanCommandBuffer() {
     auto castedQueue = (VulkanCommandQueue*)m_createInfo.queue;
     for (auto& threadCommandBuffer : m_threadCommandBuffers){
-        castedQueue->free(threadCommandBuffer.commandBuffer, threadCommandBuffer.threadId);
+        if (threadCommandBuffer.commandBuffer != VK_NULL_HANDLE){
+            castedQueue->free(threadCommandBuffer.commandBuffer, threadCommandBuffer.threadId);
+        }
     }
 }
 
@@ -161,7 +163,7 @@ void VulkanCommandBuffer::bind_descriptor_sets(DescriptorSet* descriptorSet, uin
 
     vkCmdBindDescriptorSets(
             m_currentCommandBuffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            m_boundShader->native_bind_point(),
             m_boundShader->native_pipeline_layout(),
             setIndex,
             1,

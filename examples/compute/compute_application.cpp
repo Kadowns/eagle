@@ -7,14 +7,50 @@
 #include <eagle/application.h>
 #include <eagle/window.h>
 
-TriangleApplication::TriangleApplication() {
-    EG_LOG_CREATE("triangle");
+namespace detail {
+
+struct ReleaseResourceInfo {
+    eagle::Image* image;
+    eagle::CommandBuffer* commandBuffer;
+    eagle::CommandQueue* dstQueue;
+    eagle::PipelineStageFlags srcPipelineStages;
+    eagle::PipelineStageFlags dstPipelineStages;
+};
+
+static void transfer_queue_ownership(const ReleaseResourceInfo& releaseInfo){
+    releaseInfo.commandBuffer->begin();
+    eagle::ImageMemoryBarrier imageMemoryBarrier = {};
+    imageMemoryBarrier.image = releaseInfo.image;
+
+    imageMemoryBarrier.srcQueue = releaseInfo.commandBuffer->command_queue();
+    imageMemoryBarrier.dstQueue = releaseInfo.dstQueue;
+
+    imageMemoryBarrier.srcAccessMask = 0;
+    imageMemoryBarrier.dstAccessMask = 0;
+
+    imageMemoryBarrier.oldLayout = releaseInfo.image->layout();
+    imageMemoryBarrier.newLayout = releaseInfo.image->layout();
+
+    eagle::ImageMemoryBarrier imageMemoryBarriers[] = {imageMemoryBarrier};
+
+    releaseInfo.commandBuffer->pipeline_barrier(
+            imageMemoryBarriers,
+            eagle::PipelineStageFlagsBits::TOP_OF_PIPE_BIT,
+            eagle::PipelineStageFlagsBits::COMPUTE_SHADER_BIT
+    );
+    releaseInfo.commandBuffer->end();
+}
+}
+
+
+ComputeApplication::ComputeApplication() {
+    EG_LOG_CREATE("compute");
     EG_LOG_PATTERN("[%T.%e] [%n] [%^%l%$] [%s:%#::%!()] %v");
     EG_LOG_LEVEL(spdlog::level::info);
 }
 
-void TriangleApplication::init() {
-    EG_INFO("triangle", "Triangle attached!");
+void ComputeApplication::init() {
+    EG_INFO("compute", "Triangle attached!");
     m_renderContext = eagle::Application::instance().window().render_context();
 
     m_listener.attach(&eagle::Application::instance().event_bus());
@@ -23,132 +59,251 @@ void TriangleApplication::init() {
         return false;
     });
 
-    eagle::VertexLayout vertexLayout{};
-    vertexLayout.add(0, eagle::Format::R32G32_SFLOAT);
-    vertexLayout.add(0, eagle::Format::R32G32B32A32_SFLOAT);
-
     eagle::ShaderStageDescription vertexShaderDescription = {};
     vertexShaderDescription.stage = eagle::ShaderStage::VERTEX;
     vertexShaderDescription.spirVCode = eagle::Shader::read_spir_v_code("color.vert.spv");
 
     eagle::ShaderStageDescription fragmentShaderDescription = {};
-    vertexShaderDescription.stage = eagle::ShaderStage::FRAGMENT;
-    vertexShaderDescription.spirVCode = eagle::Shader::read_spir_v_code("color.frag.spv");
+    fragmentShaderDescription.stage = eagle::ShaderStage::FRAGMENT;
+    fragmentShaderDescription.spirVCode = eagle::Shader::read_spir_v_code("color.frag.spv");
 
-    eagle::ShaderCreateInfo pipelineInfo = {};
-    pipelineInfo.shaderStages = {
+    eagle::ShaderCreateInfo graphicsPipelineInfo = {};
+    graphicsPipelineInfo.shaderStages = {
             vertexShaderDescription, fragmentShaderDescription
     };
-    pipelineInfo.renderPass = m_renderContext->main_render_pass();
-    pipelineInfo.vertexLayout = vertexLayout;
-    m_shader = m_renderContext->create_shader(pipelineInfo);
+    graphicsPipelineInfo.cullMode = eagle::CullMode::NONE;
+    graphicsPipelineInfo.renderPass = m_renderContext->main_render_pass();
+    m_graphicsShader = m_renderContext->create_shader(graphicsPipelineInfo);
 
-    struct Vertex {
-        float position[2];
-        float color[4];
+
+    eagle::ShaderStageDescription computeShaderDescription = {};
+    computeShaderDescription.stage = eagle::ShaderStage::COMPUTE;
+    computeShaderDescription.spirVCode = eagle::Shader::read_spir_v_code("compute.comp.spv");
+
+    eagle::ShaderCreateInfo computePipelineInfo = {};
+    computePipelineInfo.shaderStages = {
+            computeShaderDescription
     };
-
-    Vertex vertices[4];
-    vertices[0] = {{-1.0f, 1.0f}, {1.0f, 1.0f, 0.0f, 1.0f}};
-    vertices[1] = {{1.0f,  1.0f}, {0.0f, 1.0f, 1.0f, 1.0f}};
-    vertices[2] = {{1.0f, -1.0f}, {1.0f, 0.0f, 1.0f, 1.0f}};
-    vertices[3] = {{-1.0f, -1.0f}, {1.0f, 0.0f, 1.0f, 1.0f}};
-
-    eagle::VertexBufferCreateInfo vbCreateInfo = {};
-    vbCreateInfo.updateType = eagle::UpdateType::BAKED;
-
-    m_vertexBuffer = m_renderContext->create_vertex_buffer(vbCreateInfo, vertices, 4 * sizeof(Vertex));
-
-    uint16_t indices[6];
-    indices[0] = 0;
-    indices[1] = 1;
-    indices[2] = 2;
-
-    indices[3] = 0;
-    indices[4] = 2;
-    indices[5] = 3;
-
-    eagle::IndexBufferCreateInfo ibCreateInfo = {};
-    ibCreateInfo.indexType = eagle::IndexBufferType::UINT_16;
-    ibCreateInfo.updateType = eagle::UpdateType::BAKED;
-
-    m_indexBuffer = m_renderContext->create_index_buffer(ibCreateInfo, indices, 6 * sizeof(uint16_t));
-
-    m_color = {1.0f, 0.2f, 0.3f, 1.0f};
-    m_uniformBuffer = m_renderContext->create_uniform_buffer(sizeof(Color), m_color.data);
+    m_computeShader = m_renderContext->create_shader(computePipelineInfo);
 
 
-    eagle::DescriptorBindingDescription bindingDescription = {};
-    bindingDescription.size = sizeof(Color);
-    bindingDescription.descriptorType = eagle::DescriptorType::UNIFORM_BUFFER;
-    bindingDescription.shaderStage = eagle::ShaderStage::FRAGMENT;
+    eagle::ImageCreateInfo computeImageCreateInfo = {};
+    computeImageCreateInfo.layout = eagle::ImageLayout::SHADER_READ_ONLY_OPTIMAL;
+    computeImageCreateInfo.width = 512;
+    computeImageCreateInfo.height = 512;
+    computeImageCreateInfo.format = eagle::Format::R8G8B8A8_SNORM;
+    computeImageCreateInfo.type = eagle::ImageType::D2;
+    computeImageCreateInfo.aspects = eagle::IMAGE_ASPECT_COLOR;
+    computeImageCreateInfo.memoryProperties = eagle::MEMORY_PROPERTY_DEVICE_LOCAL;
+    computeImageCreateInfo.tiling = eagle::ImageTiling::OPTIMAL;
+    computeImageCreateInfo.usages = eagle::IMAGE_USAGE_STORAGE | eagle::IMAGE_USAGE_SAMPLED;
+    computeImageCreateInfo.owningQueue = m_renderContext->command_queue(eagle::CommandQueueType::COMPUTE);
 
-    eagle::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
-    descriptorSetLayoutCreateInfo.bindings = {bindingDescription};
+    eagle::TextureCreateInfo computeTextureCreateInfo = {};
+    computeTextureCreateInfo.filter = eagle::Filter::NEAREST;
+    computeTextureCreateInfo.imageCreateInfo = computeImageCreateInfo;
 
-    m_descriptorSetLayout = m_renderContext->create_descriptor_set_layout(descriptorSetLayoutCreateInfo);
+    m_computeTexture = m_renderContext->create_texture(computeTextureCreateInfo);
+
+    eagle::ImageDescriptorInfo graphicsImageDescriptorInfo = {};
+    graphicsImageDescriptorInfo.descriptor = m_computeTexture.get();
+    graphicsImageDescriptorInfo.binding = 0;
+    graphicsImageDescriptorInfo.layout = eagle::ImageLayout::SHADER_READ_ONLY_OPTIMAL;
 
     eagle::DescriptorSetCreateInfo descriptorSetCreateInfo = {};
-    descriptorSetCreateInfo.descriptors = {m_uniformBuffer.get()};
-    descriptorSetCreateInfo.layout = m_descriptorSetLayout.get();
+    descriptorSetCreateInfo.imageDescriptors = {graphicsImageDescriptorInfo};
+    descriptorSetCreateInfo.layout = m_graphicsShader->descriptor_set_layout(0);
 
-    m_descriptorSet = m_renderContext->create_descriptor_set(descriptorSetCreateInfo);
+    m_graphicsDescriptorSet = m_renderContext->create_descriptor_set(descriptorSetCreateInfo);
+
+    eagle::ImageDescriptorInfo computeImageDescriptorInfo = {};
+    computeImageDescriptorInfo.descriptor = m_computeTexture.get();
+    computeImageDescriptorInfo.binding = 0;
+    computeImageDescriptorInfo.layout = eagle::ImageLayout::GENERAL;
+
+    eagle::DescriptorSetCreateInfo computeDescriptorSet = {};
+    computeDescriptorSet.imageDescriptors = {computeImageDescriptorInfo};
+    computeDescriptorSet.layout = m_computeShader->descriptor_set_layout(0);
+
+    m_computeDescriptorSet = m_renderContext->create_descriptor_set(computeDescriptorSet);
 
     eagle::CommandBufferCreateInfo commandBufferCreateInfo = {};
     commandBufferCreateInfo.level = eagle::CommandBufferLevel::MASTER;
-    m_commandBuffer = m_renderContext->create_command_buffer(commandBufferCreateInfo);
+
+    commandBufferCreateInfo.queue = m_renderContext->command_queue(eagle::CommandQueueType::GRAPHICS);
+    m_graphicsCommandBuffer = m_renderContext->create_command_buffer(commandBufferCreateInfo);
+
+    commandBufferCreateInfo.queue = m_renderContext->command_queue(eagle::CommandQueueType::COMPUTE);
+    m_computeCommandBuffer = m_renderContext->create_command_buffer(commandBufferCreateInfo);
 
     m_framesInFlight = m_renderContext->create_fence();
     m_renderFinished = m_renderContext->create_semaphore();
     m_frameAvailable = m_renderContext->create_semaphore();
+    m_computeFinished = m_renderContext->create_semaphore();
 
     m_timer.start();
 }
 
-void TriangleApplication::step() {
+void ComputeApplication::step() {
 
     m_timer.update();
-
-    auto time = m_timer.time();
-
-    m_color.r = abs(sinf(time));
-    m_color.g = abs(cosf(time * 0.5f));
-    m_color.b = abs(acosf(time * 0.25f));
-
-    m_uniformBuffer->write(m_color);
-    m_uniformBuffer->flush();
 
     m_framesInFlight->wait();
 
     if (!m_renderContext->prepare_frame(m_frameAvailable.get())){
-        EG_WARNING("triangle", "Failed to prepare frame, skipping");
+        EG_WARNING("compute", "Failed to prepare frame, skipping");
         return;
     }
 
-    m_commandBuffer->begin();
-    m_commandBuffer->begin_render_pass(m_renderContext->main_render_pass(), m_renderContext->main_framebuffer());
-    m_commandBuffer->bind_shader(m_shader.get());
-    m_commandBuffer->bind_descriptor_sets(m_descriptorSet.get(), 0);
-    m_commandBuffer->bind_vertex_buffer(m_vertexBuffer.get(), 0);
-    m_commandBuffer->bind_index_buffer(m_indexBuffer.get());
-    m_commandBuffer->draw_indexed(6, 1, 0, 0, 0);
-    m_commandBuffer->end_render_pass();
-    m_commandBuffer->end();
+    submit_compute();
+    submit_graphics();
 
+    eagle::Semaphore* waitSemaphores[] = {m_renderFinished.get()};
+    m_renderContext->present_frame(waitSemaphores);
+}
+
+ComputeApplication::~ComputeApplication() {
+    m_listener.destroy();
+}
+
+void ComputeApplication::submit_compute() {
+
+    m_computeCommandBuffer->begin();
+
+    //acquire ownership
+    {
+        eagle::ImageMemoryBarrier imageOwnershipAcquireBarrier = {};
+        imageOwnershipAcquireBarrier.image = m_computeTexture->image();
+
+        imageOwnershipAcquireBarrier.srcQueue = m_renderContext->command_queue(eagle::CommandQueueType::GRAPHICS);
+        imageOwnershipAcquireBarrier.dstQueue = m_renderContext->command_queue(eagle::CommandQueueType::COMPUTE);
+
+        imageOwnershipAcquireBarrier.srcAccessMask = 0;
+        imageOwnershipAcquireBarrier.dstAccessMask = eagle::AccessFlagBits::SHADER_WRITE_BIT;
+
+        imageOwnershipAcquireBarrier.oldLayout = eagle::ImageLayout::UNDEFINED;
+        imageOwnershipAcquireBarrier.newLayout = eagle::ImageLayout::GENERAL;
+
+        eagle::ImageMemoryBarrier imageOwnershipAcquireBarriers[] = {imageOwnershipAcquireBarrier};
+
+        m_computeCommandBuffer->pipeline_barrier(
+                imageOwnershipAcquireBarriers,
+                eagle::PipelineStageFlagsBits::TOP_OF_PIPE_BIT,
+                eagle::PipelineStageFlagsBits::COMPUTE_SHADER_BIT
+        );
+    }
+
+
+    m_computeCommandBuffer->bind_shader(m_computeShader.get());
+    m_computeCommandBuffer->bind_descriptor_sets(m_computeDescriptorSet.get(), 0);
+    m_computeCommandBuffer->dispatch(m_computeTexture->image()->width(), m_computeTexture->image()->height(), 1);
+
+    {
+        eagle::ImageMemoryBarrier imageMemoryBarrier = {};
+        imageMemoryBarrier.image = m_computeTexture->image();
+
+        imageMemoryBarrier.srcQueue = m_renderContext->command_queue(eagle::CommandQueueType::COMPUTE);
+        imageMemoryBarrier.dstQueue = m_renderContext->command_queue(eagle::CommandQueueType::GRAPHICS);
+
+        imageMemoryBarrier.srcAccessMask = eagle::AccessFlagBits::SHADER_WRITE_BIT;
+        imageMemoryBarrier.dstAccessMask = 0;
+
+        imageMemoryBarrier.oldLayout = eagle::ImageLayout::GENERAL;
+        imageMemoryBarrier.newLayout = eagle::ImageLayout::SHADER_READ_ONLY_OPTIMAL;
+
+        eagle::ImageMemoryBarrier imageMemoryBarriers[] = {imageMemoryBarrier};
+
+        m_computeCommandBuffer->pipeline_barrier(
+                imageMemoryBarriers,
+                eagle::PipelineStageFlagsBits::COMPUTE_SHADER_BIT,
+                eagle::PipelineStageFlagsBits::BOTTOM_OF_PIPE_BIT
+        );
+    }
+
+    m_computeCommandBuffer->end();
+
+    eagle::CommandBufferSubmitInfo submitInfo = {};
+    eagle::CommandBuffer* commandBuffers[] = {m_computeCommandBuffer.get()};
+    submitInfo.commandBuffers = commandBuffers;
+
+//    eagle::Semaphore* waitSemaphores[] = {m_renderFinished.get()};
+//    eagle::PipelineStageFlags waitStages[] {eagle::PipelineStageFlagsBits::COMPUTE_SHADER_BIT};
+//    submitInfo.waitSemaphores = waitSemaphores;
+//    submitInfo.waitStages = waitStages;
+
+    eagle::Semaphore* signalSemaphores[] = {m_computeFinished.get()};
+    submitInfo.signalSemaphores = signalSemaphores;
+
+    m_computeCommandBuffer->command_queue()->submit(submitInfo, nullptr);
+}
+
+void ComputeApplication::submit_graphics() {
+    m_graphicsCommandBuffer->begin();
+
+    {
+        eagle::ImageMemoryBarrier imageMemoryBarrier = {};
+        imageMemoryBarrier.image = m_computeTexture->image();
+
+        imageMemoryBarrier.srcQueue = m_renderContext->command_queue(eagle::CommandQueueType::COMPUTE);
+        imageMemoryBarrier.dstQueue = m_renderContext->command_queue(eagle::CommandQueueType::GRAPHICS);
+
+        imageMemoryBarrier.srcAccessMask = 0;
+        imageMemoryBarrier.dstAccessMask = eagle::AccessFlagBits::SHADER_READ_BIT;
+
+        imageMemoryBarrier.oldLayout = eagle::ImageLayout::GENERAL;
+        imageMemoryBarrier.newLayout = eagle::ImageLayout::SHADER_READ_ONLY_OPTIMAL;
+
+        eagle::ImageMemoryBarrier imageMemoryBarriers[] = {imageMemoryBarrier};
+
+        m_graphicsCommandBuffer->pipeline_barrier(
+                imageMemoryBarriers,
+                eagle::PipelineStageFlagsBits::BOTTOM_OF_PIPE_BIT,
+                eagle::PipelineStageFlagsBits::FRAGMENT_SHADER_BIT
+        );
+    }
+
+    m_graphicsCommandBuffer->begin_render_pass(m_renderContext->main_render_pass(), m_renderContext->main_framebuffer());
+
+    m_graphicsCommandBuffer->bind_shader(m_graphicsShader.get());
+    m_graphicsCommandBuffer->bind_descriptor_sets(m_graphicsDescriptorSet.get(), 0);
+    m_graphicsCommandBuffer->draw(3);
+
+    m_graphicsCommandBuffer->end_render_pass();
+
+    {
+        eagle::ImageMemoryBarrier imageMemoryBarrier = {};
+        imageMemoryBarrier.image = m_computeTexture->image();
+        imageMemoryBarrier.srcQueue = m_renderContext->command_queue(eagle::CommandQueueType::GRAPHICS);
+        imageMemoryBarrier.dstQueue = m_renderContext->command_queue(eagle::CommandQueueType::COMPUTE);
+
+        imageMemoryBarrier.srcAccessMask = eagle::AccessFlagBits::SHADER_READ_BIT;
+        imageMemoryBarrier.dstAccessMask = 0;
+
+        imageMemoryBarrier.oldLayout = eagle::ImageLayout::UNDEFINED;
+        imageMemoryBarrier.newLayout = eagle::ImageLayout::GENERAL;
+
+        eagle::ImageMemoryBarrier imageMemoryBarriers[] = {imageMemoryBarrier};
+
+        m_graphicsCommandBuffer->pipeline_barrier(
+                imageMemoryBarriers,
+                eagle::PipelineStageFlagsBits::FRAGMENT_SHADER_BIT,
+                eagle::PipelineStageFlagsBits::BOTTOM_OF_PIPE_BIT
+        );
+    }
+
+    m_graphicsCommandBuffer->end();
 
     eagle::CommandBufferSubmitInfo submitInfo = {};
 
     //command buffers to execute
-    eagle::CommandBuffer* commandBuffers[] = {m_commandBuffer.get()};
+    eagle::CommandBuffer* commandBuffers[] = {m_graphicsCommandBuffer.get()};
     submitInfo.commandBuffers = commandBuffers;
-
-    //fences to synchronize with cpu
-    submitInfo.fence = m_framesInFlight.get();
 
     //semaphores to wait for signal before starting
     //wait for color output
-    eagle::PipelineStageFlags waitStages[] = {eagle::PipelineStageFlagsBits::COLOR_ATTACHMENT_OUTPUT_BIT};
-    eagle::Semaphore* waitSemaphores[] = {m_frameAvailable.get()};
+    eagle::PipelineStageFlags waitStages[] = {eagle::PipelineStageFlagsBits::TOP_OF_PIPE_BIT, eagle::PipelineStageFlagsBits::COLOR_ATTACHMENT_OUTPUT_BIT};
+    eagle::Semaphore* waitSemaphores[] = {m_computeFinished.get(), m_frameAvailable.get()};
+
     submitInfo.waitStages = waitStages;
     submitInfo.waitSemaphores = waitSemaphores;
 
@@ -156,14 +311,7 @@ void TriangleApplication::step() {
     eagle::Semaphore* signalSemaphores[] = {m_renderFinished.get()};
     submitInfo.signalSemaphores = signalSemaphores;
 
-    submitInfo.queueType = eagle::QueueType::GRAPHICS;
-
-    m_renderContext->submit(submitInfo);
-
-    m_renderContext->present_frame(signalSemaphores);
-}
-
-TriangleApplication::~TriangleApplication() {
-    m_listener.destroy();
+    m_framesInFlight->reset();
+    m_graphicsCommandBuffer->command_queue()->submit(submitInfo, m_framesInFlight.get());
 }
 

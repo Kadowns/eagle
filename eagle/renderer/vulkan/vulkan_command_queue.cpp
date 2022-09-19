@@ -123,29 +123,53 @@ void VulkanCommandQueue::submit(std::span<CommandBufferSubmitInfo> submitInfos, 
     std::vector<VkSubmitInfo> nativeSubmitInfos;
     nativeSubmitInfos.reserve(submitInfos.size());
 
+    // We need this so we can keep our vectors alive outside our for loop
+    struct SubmitInfoContent {
+        std::vector<VkSemaphore> waitSemaphores;
+        std::vector<VkPipelineStageFlags> waitStages;
+        std::vector<VkCommandBuffer> commandBuffers;
+        std::vector<VkSemaphore> signalSemaphores;
+    };
+    std::vector<SubmitInfoContent> submitInfoContents;
+    submitInfoContents.reserve(submitInfos.size());
+
+
     auto currentFrame = *m_createInfo.currentFrame;
 
     for (auto& submitInfo : submitInfos){
+        SubmitInfoContent submitInfoContent = {};
         VkSubmitInfo nativeSubmitInfo = {};
         nativeSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        auto waitSemaphores = detail::native_semaphores(submitInfo.waitSemaphores, currentFrame);
-        auto waitStages = detail::native_pipeline_stages(submitInfo.waitStages);
-        nativeSubmitInfo.waitSemaphoreCount = waitSemaphores.size();
-        nativeSubmitInfo.pWaitSemaphores = waitSemaphores.data();
-        nativeSubmitInfo.pWaitDstStageMask = waitStages.data();
 
-        auto commandBuffers = detail::native_command_buffers(submitInfo.commandBuffers, currentFrame);
-        nativeSubmitInfo.commandBufferCount = commandBuffers.size();
-        nativeSubmitInfo.pCommandBuffers = commandBuffers.data();
+        submitInfoContent.waitSemaphores = detail::native_semaphores(submitInfo.waitSemaphores, currentFrame);
+        submitInfoContent.waitStages = detail::native_pipeline_stages(submitInfo.waitStages);
 
-        auto signalSemaphores = detail::native_semaphores(submitInfo.signalSemaphores, currentFrame);
-        nativeSubmitInfo.signalSemaphoreCount = signalSemaphores.size();
-        nativeSubmitInfo.pSignalSemaphores = signalSemaphores.data();
-        nativeSubmitInfos.push_back(nativeSubmitInfo);
+        nativeSubmitInfo.waitSemaphoreCount = submitInfoContent.waitSemaphores.size();
+        nativeSubmitInfo.pWaitSemaphores = submitInfoContent.waitSemaphores.data();
+        nativeSubmitInfo.pWaitDstStageMask = submitInfoContent.waitStages.data();
+
+        submitInfoContent.commandBuffers = detail::native_command_buffers(submitInfo.commandBuffers, currentFrame);
+        nativeSubmitInfo.commandBufferCount = submitInfoContent.commandBuffers.size();
+        nativeSubmitInfo.pCommandBuffers = submitInfoContent.commandBuffers.data();
+
+        submitInfoContent.signalSemaphores = detail::native_semaphores(submitInfo.signalSemaphores, currentFrame);
+        nativeSubmitInfo.signalSemaphoreCount = submitInfoContent.signalSemaphores.size();
+        nativeSubmitInfo.pSignalSemaphores = submitInfoContent.signalSemaphores.data();
+
+        //if we do not keep them alive in the content vector
+        //all our native vectors will be destroyed as soon as we move out
+        //of this loop scope
+        submitInfoContents.emplace_back(std::move(submitInfoContent));
+
+        nativeSubmitInfos.emplace_back(nativeSubmitInfo);
     }
 
-    auto castedFence = (VulkanFence*)fence;
-    auto nativeFence = castedFence->native_fence(currentFrame);
+    VkFence nativeFence = VK_NULL_HANDLE;
+
+    if (fence) {
+        auto castedFence = (VulkanFence*)fence;
+        nativeFence = castedFence->native_fence(currentFrame);
+    }
 
     submit(nativeSubmitInfos, nativeFence);
 }

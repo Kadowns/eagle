@@ -3,12 +3,26 @@
 #include <eagle/renderer/vulkan/vulkan_exception.h>
 #include <eagle/renderer/vulkan/vulkan_descriptor_set.h>
 #include <eagle/renderer/vulkan/vulkan_image.h>
+#include <sstream>
 
 namespace eagle {
 
 VulkanDescriptorSet::VulkanDescriptorSet(DescriptorSetCreateInfo info, VulkanDescriptorSetInfo vkInfo) :
     DescriptorSet(std::move(info)),
     m_vkInfo(vkInfo) {
+
+    auto add_bindings = [this](const auto& descriptorInfoContainer) {
+        for (auto& descriptorInfo : descriptorInfoContainer) {
+            auto [it, inserted] = m_descriptors.emplace(descriptorInfo.binding, descriptorInfo.descriptor);
+            if (!inserted) {
+                throw std::logic_error("multiple descriptors with same binding is not allowed");
+            }
+        }
+    };
+
+    add_bindings(m_createInfo.bufferDescriptors);
+    add_bindings(m_createInfo.imageDescriptors);
+
     create_descriptor_sets();
     if (valid()){
         flush_all();
@@ -23,7 +37,7 @@ void VulkanDescriptorSet::create_descriptor_sets() {
 
     if (!m_cleared) return;
 
-    auto nativeDescriptorSetLayout = (VulkanDescriptorSetLayout*)m_info.layout;
+    auto nativeDescriptorSetLayout = (VulkanDescriptorSetLayout*)m_createInfo.layout;
     auto layoutBindings = nativeDescriptorSetLayout->native_bindings();
 
     std::vector<VkDescriptorPoolSize> poolSizes = {};
@@ -61,9 +75,15 @@ void VulkanDescriptorSet::create_descriptor_sets() {
 }
 
 bool VulkanDescriptorSet::valid() const {
-    return !m_info.descriptors.empty() && std::all_of(m_info.descriptors.begin(), m_info.descriptors.end(), [](Descriptor* descriptor){
-        return descriptor != nullptr;
-    });
+    if (m_descriptors.empty()){
+        return false;
+    }
+    for (auto[binding, descriptor] : m_descriptors){
+        if (!descriptor){
+            return false;
+        }
+    }
+    return true;
 }
 
 
@@ -73,27 +93,23 @@ bool VulkanDescriptorSet::is_dirty() const {
 
 void VulkanDescriptorSet::flush(uint32_t index) {
 
-    auto nativeDescriptorSetLayout = (VulkanDescriptorSetLayout*)m_info.layout;
+    auto nativeDescriptorSetLayout = (VulkanDescriptorSetLayout*)m_createInfo.layout;
 
     std::vector<VkDescriptorSetLayoutBinding> descriptorBindings = nativeDescriptorSetLayout->native_bindings();
     std::vector<VkDescriptorBufferInfo> bufferInfos;
     std::vector<VkDescriptorImageInfo> imageInfos;
-
-    //foreach descriptor item in descriptor set
-    for (auto descriptor : m_info.descriptors){
-        switch (descriptor->type()){
-
+    for (auto& bufferDescriptor : m_createInfo.bufferDescriptors){
+        switch (bufferDescriptor.descriptor->type()){
             case DescriptorType::UNIFORM_BUFFER:{
-                auto buffer = (VulkanUniformBuffer*)descriptor;
                 VkDescriptorBufferInfo bufferInfo = {};
+                auto buffer = (VulkanUniformBuffer*)bufferDescriptor.descriptor;
                 bufferInfo.buffer = buffer->buffers()[index]->native_buffer();
                 bufferInfo.offset = 0;
                 bufferInfo.range = buffer->size();
-                bufferInfos.push_back(bufferInfo);
                 break;
             }
             case DescriptorType::STORAGE_BUFFER:{
-                auto buffer = (VulkanStorageBuffer*)descriptor;
+                auto buffer = (VulkanStorageBuffer*)bufferDescriptor.descriptor;
                 VkDescriptorBufferInfo bufferInfo = {};
                 bufferInfo.buffer = buffer->get_buffers()[index]->native_buffer();
                 bufferInfo.offset = 0;
@@ -101,31 +117,38 @@ void VulkanDescriptorSet::flush(uint32_t index) {
                 bufferInfos.push_back(bufferInfo);
                 break;
             }
+            default: throw std::logic_error("an image descriptor was added to a buffer descriptor slot");
+        }
+    }
+
+    for (auto& imageDescriptor : m_createInfo.imageDescriptors){
+        switch (imageDescriptor.descriptor->type()){
             case DescriptorType::SAMPLED_IMAGE:{
-                auto view = (VulkanImageView*)descriptor;
+                auto view = (VulkanImageView*)imageDescriptor.descriptor;
                 VkDescriptorImageInfo imageInfo = {};
-                imageInfo.imageLayout = VulkanConverter::to_vk(view->image().layout());
+                imageInfo.imageLayout = VulkanConverter::to_vk(imageDescriptor.layout);
                 imageInfo.imageView = view->native_image_view(index);
                 imageInfos.push_back(imageInfo);
                 break;
             }
             case DescriptorType::STORAGE_IMAGE:{
-                auto view = (VulkanImageView*)descriptor;
+                auto view = (VulkanImageView*)imageDescriptor.descriptor;
                 VkDescriptorImageInfo imageInfo = {};
-                imageInfo.imageLayout = VulkanConverter::to_vk(view->image().layout());
+                imageInfo.imageLayout = VulkanConverter::to_vk(imageDescriptor.layout);
                 imageInfo.imageView = view->native_image_view(index);
                 imageInfos.push_back(imageInfo);
                 break;
             }
             case DescriptorType::COMBINED_IMAGE_SAMPLER:{
-                auto texture = (VulkanTexture*)descriptor;
+                auto texture = (VulkanTexture*)imageDescriptor.descriptor;
                 VkDescriptorImageInfo imageInfo = {};
-                imageInfo.imageLayout = VulkanConverter::to_vk(texture->native_image()->layout());
+                imageInfo.imageLayout = VulkanConverter::to_vk(imageDescriptor.layout);
                 imageInfo.imageView = texture->native_image()->native_view()->native_image_view(index);
                 imageInfo.sampler = texture->sampler();
                 imageInfos.push_back(imageInfo);
                 break;
             }
+            default: throw std::logic_error("a buffer descriptor was added to an image descriptor slot");
         }
     }
 
@@ -193,6 +216,16 @@ void VulkanDescriptorSet::flush_all() {
 
 VkDescriptorSet VulkanDescriptorSet::native_descriptor_set(uint32_t frameIndex) {
     return m_descriptorSets[frameIndex];
+}
+
+Descriptor* VulkanDescriptorSet::operator[](uint32_t binding) {
+    auto it = m_descriptors.find(binding);
+    if (it == m_descriptors.end()){
+        std::ostringstream oss;
+        oss << "no descriptor found at binding " << binding;
+        throw std::logic_error(oss.str());
+    }
+    return it->second;
 }
 
 }

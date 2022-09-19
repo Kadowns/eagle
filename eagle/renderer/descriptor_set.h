@@ -13,20 +13,35 @@
 
 namespace eagle {
 
+struct DescriptorInfo {
+    Descriptor* descriptor = nullptr;
+    uint32_t binding = ~0u;
+};
+
+struct BufferDescriptorInfo : DescriptorInfo {
+    size_t size = ~0u;
+    size_t offset = 0;
+};
+
+struct ImageDescriptorInfo : DescriptorInfo {
+    ImageLayout layout;
+};
+
 struct DescriptorSetCreateInfo {
     DescriptorSetLayout* layout;
-    std::vector<Descriptor*> descriptors;
+    std::vector<BufferDescriptorInfo> bufferDescriptors;
+    std::vector<ImageDescriptorInfo> imageDescriptors;
 };
 
 class DescriptorSet {
 public:
-    explicit DescriptorSet(DescriptorSetCreateInfo info) : m_info(std::move(info)) {}
+    explicit DescriptorSet(DescriptorSetCreateInfo info) : m_createInfo(std::move(info)) {}
     virtual ~DescriptorSet() = default;
     virtual void update() = 0;
-    size_t size() const { return m_info.descriptors.size(); }
-    Descriptor* operator[](size_t binding) { return m_info.descriptors[binding]; }
+    virtual Descriptor* operator[](uint32_t binding) = 0;
+    size_t size() const { return m_createInfo.bufferDescriptors.size() + m_createInfo.imageDescriptors.size(); }
 protected:
-    DescriptorSetCreateInfo m_info;
+    DescriptorSetCreateInfo m_createInfo;
 
 };
 

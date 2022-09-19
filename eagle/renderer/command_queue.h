@@ -13,6 +13,7 @@ namespace eagle {
 class Semaphore;
 class Fence;
 class CommandBuffer;
+class Image;
 
 enum class CommandQueueType {
     UNDEFINED = 0,
@@ -22,7 +23,6 @@ enum class CommandQueueType {
 };
 
 struct CommandBufferSubmitInfo {
-    CommandQueueType queueType;
     std::span<CommandBuffer*> commandBuffers;
     std::span<Semaphore*> waitSemaphores;
     std::span<PipelineStageFlags> waitStages;
@@ -31,6 +31,8 @@ struct CommandBufferSubmitInfo {
 
 class CommandQueue {
 public:
+
+    void release_ownership(CommandQueue* newOwner, Image* image, PipelineStageFlags srcStage, PipelineStageFlags dstStage)
 
     void submit(const CommandBufferSubmitInfo& submitInfo, Fence* fence);
 

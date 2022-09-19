@@ -126,7 +126,7 @@ void VulkanImage::create() {
         } else if (m_createInfo.layout != ImageLayout::UNDEFINED){
 
             VulkanHelper::transition_image_layout(
-                    m_nativeCreateInfo.queue,
+                    (VulkanCommandQueue*)m_createInfo.owningQueue,
                     m_images[i],
                     VK_IMAGE_LAYOUT_UNDEFINED,
                     VulkanConverter::to_vk(m_createInfo.layout),
@@ -155,6 +155,8 @@ void VulkanImage::create() {
 
 void VulkanImage::copy_buffer_data_to_image(VkImageSubresourceRange subresourceRange, uint32_t index) {
 
+    auto queue = (VulkanCommandQueue*)m_createInfo.owningQueue;
+
     VulkanBufferCreateInfo bufferInfo = {};
     bufferInfo.physicalDevice = m_nativeCreateInfo.physicalDevice;
     bufferInfo.device = m_nativeCreateInfo.device;
@@ -166,7 +168,7 @@ void VulkanImage::copy_buffer_data_to_image(VkImageSubresourceRange subresourceR
     auto stagingBuffer = std::make_shared<VulkanBuffer>(bufferInfo);
 
     VulkanHelper::transition_image_layout(
-            m_nativeCreateInfo.queue,
+            queue,
             m_images[index],
             VK_IMAGE_LAYOUT_UNDEFINED,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -175,7 +177,7 @@ void VulkanImage::copy_buffer_data_to_image(VkImageSubresourceRange subresourceR
             VK_PIPELINE_STAGE_TRANSFER_BIT
     );
 
-    VkCommandBuffer commandBuffer = VulkanHelper::begin_single_time_commands(m_nativeCreateInfo.queue);
+    VkCommandBuffer commandBuffer = VulkanHelper::begin_single_time_commands(queue);
 
     VkDeviceSize faceSize = m_createInfo.width * m_createInfo.height * format_size(m_createInfo.format);
     VkDeviceSize bufferOffset = 0;
@@ -211,10 +213,10 @@ void VulkanImage::copy_buffer_data_to_image(VkImageSubresourceRange subresourceR
             copyRegions.data()
     );
 
-    VulkanHelper::end_single_time_commnds(m_nativeCreateInfo.queue, commandBuffer);
+    VulkanHelper::end_single_time_commnds(queue, commandBuffer);
 
     VulkanHelper::transition_image_layout(
-            m_nativeCreateInfo.queue,
+            queue,
             m_images[index],
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             VulkanConverter::to_vk(m_createInfo.layout),
@@ -225,6 +227,8 @@ void VulkanImage::copy_buffer_data_to_image(VkImageSubresourceRange subresourceR
 }
 
 void VulkanImage::generate_mipmaps() {
+
+    auto queue = (VulkanCommandQueue*)m_createInfo.owningQueue;
 
     for (auto image : m_images){
 
@@ -238,7 +242,7 @@ void VulkanImage::generate_mipmaps() {
             subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 
             VulkanHelper::transition_image_layout(
-                    m_nativeCreateInfo.queue,
+                    queue,
                     image,
                     VK_IMAGE_LAYOUT_UNDEFINED,
                     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -246,7 +250,7 @@ void VulkanImage::generate_mipmaps() {
             );
         }
 
-        VkCommandBuffer commandBuffer = VulkanHelper::begin_single_time_commands(m_nativeCreateInfo.queue);
+        VkCommandBuffer commandBuffer = VulkanHelper::begin_single_time_commands(queue);
 
         VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -324,7 +328,7 @@ void VulkanImage::generate_mipmaps() {
                              1, &barrier);
 
 
-        VulkanHelper::end_single_time_commnds(m_nativeCreateInfo.queue, commandBuffer);
+        VulkanHelper::end_single_time_commnds(queue, commandBuffer);
     }
 }
 

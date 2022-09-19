@@ -19,7 +19,6 @@ struct VulkanImageCreateInfo {
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device = VK_NULL_HANDLE;
     uint32_t frameCount = 0;
-    VulkanCommandQueue* queue = nullptr;
 };
 
 class VulkanImage;

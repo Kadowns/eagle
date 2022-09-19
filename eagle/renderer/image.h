@@ -10,6 +10,8 @@
 
 namespace eagle {
 
+class CommandQueue;
+
 struct ImageCreateInfo {
     uint32_t width, height;
     uint32_t mipLevels = 1, arrayLayers = 1;
@@ -21,6 +23,7 @@ struct ImageCreateInfo {
     ImageUsageFlags usages;
     MemoryPropertyFlags memoryProperties = {MEMORY_PROPERTY_DEVICE_LOCAL};
     ImageAspectFlags aspects;
+    CommandQueue* owningQueue = nullptr;
 };
 
 class Image;

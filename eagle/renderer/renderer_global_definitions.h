@@ -26,11 +26,6 @@ enum class UpdateType {
     DYNAMIC = 1,
 };
 
-enum TextureUsage {
-    READ,
-    STORAGE
-};
-
 enum class ShaderStage {
     INVALID = 0,
     VERTEX = 1,

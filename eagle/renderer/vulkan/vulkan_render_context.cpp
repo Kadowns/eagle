@@ -280,7 +280,6 @@ std::shared_ptr<Image> VulkanRenderContext::create_image(const ImageCreateInfo &
     VulkanImageCreateInfo vulkanImageCreateInfo = {};
     vulkanImageCreateInfo.device = m_device;
     vulkanImageCreateInfo.physicalDevice = m_physicalDevice;
-    vulkanImageCreateInfo.queue = m_queues.at(CommandQueueType::GRAPHICS).get();
     vulkanImageCreateInfo.frameCount = m_createInfo.maxFramesInFlight;
 
     auto ptr = new VulkanImage(createInfo, vulkanImageCreateInfo);
@@ -806,11 +805,11 @@ void VulkanRenderContext::create_main_framebuffers() {
     imageCreateInfo.format = VulkanConverter::to_eg(m_swapchainProperties.surfaceFormat.format);
     imageCreateInfo.aspects = {IMAGE_ASPECT_COLOR};
     imageCreateInfo.usages = {IMAGE_USAGE_COLOR_ATTACHMENT};
+    imageCreateInfo.owningQueue = m_queues.at(CommandQueueType::GRAPHICS).get();
 
     VulkanImageCreateInfo nativeImageCreateInfo = {};
     nativeImageCreateInfo.physicalDevice = m_physicalDevice;
     nativeImageCreateInfo.device = m_device;
-    nativeImageCreateInfo.queue = m_queues.at(CommandQueueType::GRAPHICS).get();
     nativeImageCreateInfo.frameCount = m_swapchainProperties.imageCount;
 
     std::shared_ptr<VulkanImage> colorImage = std::make_shared<VulkanImage>(imageCreateInfo, nativeImageCreateInfo, swapchainImages);

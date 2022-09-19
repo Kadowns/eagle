@@ -92,8 +92,7 @@ public:
     begin_render_pass(RenderPass* renderPass, Framebuffer* framebuffer) = 0;
 
     virtual void
-    pipeline_barrier(std::span<ImageMemoryBarrier> imageMemoryBarriers, PipelineStageFlags srcPipelineStages,
-                     PipelineStageFlags dstPipelineStages) = 0;
+    pipeline_barrier(std::span<ImageMemoryBarrier> imageMemoryBarriers, PipelineStageFlags srcPipelineStages, PipelineStageFlags dstPipelineStages) = 0;
 
     virtual void
     dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
