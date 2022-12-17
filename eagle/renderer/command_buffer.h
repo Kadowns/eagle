@@ -38,6 +38,7 @@ struct ImageMemoryBarrier {
     CommandQueue* srcQueue = nullptr;
     CommandQueue* dstQueue = nullptr;
     Image* image = nullptr;
+    bool allFrames = false;
 };
 
 class CommandBuffer {

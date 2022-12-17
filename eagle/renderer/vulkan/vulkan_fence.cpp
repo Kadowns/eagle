@@ -8,27 +8,21 @@
 
 namespace eagle {
 
-VulkanFence::VulkanFence(const VulkanFenceCreateInfo& createInfo) : m_createInfo(createInfo) {
+VulkanFence::VulkanFence(const VulkanFenceCreateInfo& createInfo) : m_createInfo(createInfo), m_currentFence(VK_NULL_HANDLE) {
 
-    VkFenceCreateInfo fenceCreateInfo = {};
-    fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-    m_fences.resize(m_createInfo.frameCount);
-    for (auto& fence : m_fences){
-        vkCreateFence(m_createInfo.device, &fenceCreateInfo, nullptr, &fence);
-    }
 }
 
 VulkanFence::~VulkanFence() {
-    for (auto& fence : m_fences){
-        vkDestroyFence(m_createInfo.device, fence, nullptr);
-    }
+
 }
 
 bool VulkanFence::wait(std::chrono::milliseconds timeout) {
 
-    auto result = vkWaitForFences(m_createInfo.device, 1, &m_fences[*m_createInfo.currentFrame], VK_TRUE, timeout.count());
+    if (!m_currentFence){
+        return true;
+    }
+
+    auto result = vkWaitForFences(m_createInfo.device, 1, &m_currentFence, VK_TRUE, timeout.count());
     if (result == VK_SUCCESS){
         return true;
     }
@@ -38,15 +32,12 @@ bool VulkanFence::wait(std::chrono::milliseconds timeout) {
     throw VulkanException("failed to wait for fences", result);
 }
 
-void VulkanFence::reset() {
-    auto result = vkResetFences(m_createInfo.device, 1, &m_fences[*m_createInfo.currentFrame]);
-    if (result != VK_SUCCESS){
-        throw VulkanException("failed to reset fences", result);
-    }
+void VulkanFence::acquire(VkFence fence) {
+    m_currentFence = fence;
 }
 
-VkFence VulkanFence::native_fence(size_t index) {
-    return m_fences[index];
+VkFence VulkanFence::current_fence() {
+    return m_currentFence;
 }
 
 }

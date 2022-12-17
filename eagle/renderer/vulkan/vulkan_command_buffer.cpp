@@ -15,12 +15,12 @@ namespace eagle {
 
 namespace detail{
 
-static std::vector<VkCommandBuffer> native_command_buffers(const std::span<CommandBuffer*>& commandBuffers, uint32_t frameIndex){
+static std::vector<VkCommandBuffer> native_command_buffers(const std::span<CommandBuffer*>& commandBuffers){
     std::vector<VkCommandBuffer> result;
     result.reserve(commandBuffers.size());
     for (auto commandBuffer : commandBuffers){
         auto castedCommandBuffer = (VulkanCommandBuffer*)commandBuffer;
-        result.push_back(castedCommandBuffer->native_command_buffer(frameIndex));
+        result.push_back(castedCommandBuffer->current_command_buffer());
     }
     return result;
 }
@@ -30,17 +30,14 @@ static std::vector<VkCommandBuffer> native_command_buffers(const std::span<Comma
 VulkanCommandBuffer::VulkanCommandBuffer(const CommandBufferCreateInfo &createInfo,
                                          const VulkanCommandBufferCreateInfo &vkCreateInfo) :
     CommandBuffer(createInfo),
-    m_nativeCreateInfo(vkCreateInfo),
-    m_threadCommandBuffers(vkCreateInfo.frameCount){
+    m_nativeCreateInfo(vkCreateInfo){
 
 }
 
 VulkanCommandBuffer::~VulkanCommandBuffer() {
     auto castedQueue = (VulkanCommandQueue*)m_createInfo.queue;
-    for (auto& threadCommandBuffer : m_threadCommandBuffers){
-        if (threadCommandBuffer.commandBuffer != VK_NULL_HANDLE){
-            castedQueue->free(threadCommandBuffer.commandBuffer, threadCommandBuffer.threadId);
-        }
+    if (m_currentCommandBuffer != VK_NULL_HANDLE) {
+        castedQueue->free(m_currentCommandBuffer, m_currentThreadId);
     }
 }
 
@@ -48,8 +45,7 @@ void VulkanCommandBuffer::begin() {
     assert(m_createInfo.level == CommandBufferLevel::PRIMARY || m_createInfo.level == CommandBufferLevel::MASTER);
 
     m_currentFrame = *m_nativeCreateInfo.currentFrame;
-    auto& threadCommandBuffer = prepare_command_buffer(m_currentFrame);
-    m_currentCommandBuffer = threadCommandBuffer.commandBuffer;
+    prepare_command_buffer();
 
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -63,8 +59,7 @@ void VulkanCommandBuffer::begin(RenderPass* renderPass,
     assert(m_createInfo.level == CommandBufferLevel::SECONDARY);
 
     m_currentFrame = *m_nativeCreateInfo.currentFrame;
-    auto& threadCommandBuffer = prepare_command_buffer(m_currentFrame);
-    m_currentCommandBuffer = threadCommandBuffer.commandBuffer;
+    prepare_command_buffer();
 
     auto vrp = (VulkanRenderPass*)renderPass;
     auto vfb = (VulkanFramebuffer*)framebuffer;
@@ -86,12 +81,11 @@ void VulkanCommandBuffer::begin(RenderPass* renderPass,
 void VulkanCommandBuffer::end() {
     vkEndCommandBuffer(m_currentCommandBuffer);
     m_boundShader = nullptr;
-    m_currentCommandBuffer = VK_NULL_HANDLE;
 }
 
 void VulkanCommandBuffer::execute_commands(const std::span<CommandBuffer*>& commandBuffers) {
     assert(m_createInfo.level == CommandBufferLevel::PRIMARY);
-    auto nativeCommandBuffers = detail::native_command_buffers(commandBuffers, m_currentFrame);
+    auto nativeCommandBuffers = detail::native_command_buffers(commandBuffers);
 
     vkCmdExecuteCommands(
             m_currentCommandBuffer,
@@ -219,27 +213,30 @@ void VulkanCommandBuffer::pipeline_barrier(std::span<ImageMemoryBarrier> imageMe
     nativeImageMemoryBarriers.reserve(imageMemoryBarriers.size());
 
     for (auto& imageMemoryBarrier : imageMemoryBarriers){
-        VkImageMemoryBarrier nativeImageMemoryBarrier = {};
-        nativeImageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-
-        nativeImageMemoryBarrier.oldLayout = VulkanConverter::to_vk(imageMemoryBarrier.oldLayout);
-        nativeImageMemoryBarrier.newLayout = VulkanConverter::to_vk(imageMemoryBarrier.newLayout);
-
-        nativeImageMemoryBarrier.srcAccessMask = VulkanConverter::eg_flags_to_vk_flags<AccessFlagBits>(imageMemoryBarrier.srcAccessMask);
-        nativeImageMemoryBarrier.dstAccessMask = VulkanConverter::eg_flags_to_vk_flags<AccessFlagBits>(imageMemoryBarrier.dstAccessMask);
-
-        nativeImageMemoryBarrier.srcQueueFamilyIndex = ((VulkanCommandQueue*)imageMemoryBarrier.srcQueue)->family_index();
-        nativeImageMemoryBarrier.dstQueueFamilyIndex = ((VulkanCommandQueue*)imageMemoryBarrier.dstQueue)->family_index();
-
         auto castedImage = (VulkanImage*)imageMemoryBarrier.image;
-        nativeImageMemoryBarrier.subresourceRange.aspectMask = VulkanConverter::eg_flags_to_vk_flags<ImageAspect>(castedImage->aspects());
-        nativeImageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
-        nativeImageMemoryBarrier.subresourceRange.layerCount = castedImage->array_layers();
-        nativeImageMemoryBarrier.subresourceRange.baseMipLevel = 0;
-        nativeImageMemoryBarrier.subresourceRange.levelCount = castedImage->mip_levels();
-        nativeImageMemoryBarrier.image = castedImage->native_image(m_currentFrame);
 
-        nativeImageMemoryBarriers.push_back(nativeImageMemoryBarrier);
+        for (int i = 0; (i < castedImage->frame_count() && imageMemoryBarrier.allFrames) || i < 1; i++){
+            VkImageMemoryBarrier nativeImageMemoryBarrier = {};
+            nativeImageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+
+            nativeImageMemoryBarrier.oldLayout = VulkanConverter::to_vk(imageMemoryBarrier.oldLayout);
+            nativeImageMemoryBarrier.newLayout = VulkanConverter::to_vk(imageMemoryBarrier.newLayout);
+
+            nativeImageMemoryBarrier.srcAccessMask = VulkanConverter::eg_flags_to_vk_flags<AccessFlagBits>(imageMemoryBarrier.srcAccessMask);
+            nativeImageMemoryBarrier.dstAccessMask = VulkanConverter::eg_flags_to_vk_flags<AccessFlagBits>(imageMemoryBarrier.dstAccessMask);
+
+            nativeImageMemoryBarrier.srcQueueFamilyIndex = ((VulkanCommandQueue*)imageMemoryBarrier.srcQueue)->family_index();
+            nativeImageMemoryBarrier.dstQueueFamilyIndex = ((VulkanCommandQueue*)imageMemoryBarrier.dstQueue)->family_index();
+
+            nativeImageMemoryBarrier.subresourceRange.aspectMask = VulkanConverter::eg_flags_to_vk_flags<ImageAspect>(castedImage->aspects());
+            nativeImageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
+            nativeImageMemoryBarrier.subresourceRange.layerCount = castedImage->array_layers();
+            nativeImageMemoryBarrier.subresourceRange.baseMipLevel = 0;
+            nativeImageMemoryBarrier.subresourceRange.levelCount = castedImage->mip_levels();
+            nativeImageMemoryBarrier.image = castedImage->native_image(imageMemoryBarrier.allFrames ? i : m_currentFrame);
+
+            nativeImageMemoryBarriers.push_back(nativeImageMemoryBarrier);
+        }
     }
 
     vkCmdPipelineBarrier(
@@ -256,28 +253,21 @@ void VulkanCommandBuffer::dispatch(uint32_t groupCountX, uint32_t groupCountY, u
     vkCmdDispatch(m_currentCommandBuffer, groupCountX, groupCountY, groupCountZ);
 }
 
-VkCommandBuffer VulkanCommandBuffer::native_command_buffer(uint32_t index) {
-    return m_threadCommandBuffers[index].commandBuffer;
+VkCommandBuffer VulkanCommandBuffer::current_command_buffer() {
+    return m_currentCommandBuffer;
 }
 
-VulkanCommandBuffer::ThreadCommandBuffer& VulkanCommandBuffer::prepare_command_buffer(uint32_t frameIndex) {
+void VulkanCommandBuffer::prepare_command_buffer() {
 
-    auto currentThreadId = std::this_thread::get_id();
-    auto& threadCommandBuffer = m_threadCommandBuffers[frameIndex];
     auto castedQueue = (VulkanCommandQueue*)m_createInfo.queue;
 
-    if (threadCommandBuffer.threadId != currentThreadId){
-
-        //free old command buffer
-        if (threadCommandBuffer.commandBuffer != VK_NULL_HANDLE){
-            castedQueue->free(threadCommandBuffer.commandBuffer, threadCommandBuffer.threadId);
-        }
-
-        //allocate a new one for this thread
-        castedQueue->allocate(threadCommandBuffer.commandBuffer, VulkanConverter::to_vk(m_createInfo.level));
-        threadCommandBuffer.threadId = currentThreadId;
+    //free old command buffer
+    if (m_currentCommandBuffer){
+        castedQueue->free(m_currentCommandBuffer, m_currentThreadId);
     }
 
-    return threadCommandBuffer;
+    //allocate a new one for this thread
+    castedQueue->allocate(m_currentCommandBuffer, VulkanConverter::to_vk(m_createInfo.level));
+    m_currentThreadId = std::this_thread::get_id();
 }
 }

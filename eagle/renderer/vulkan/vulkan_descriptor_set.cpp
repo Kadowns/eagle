@@ -106,6 +106,7 @@ void VulkanDescriptorSet::flush(uint32_t index) {
                 bufferInfo.buffer = buffer->buffers()[index]->native_buffer();
                 bufferInfo.offset = 0;
                 bufferInfo.range = buffer->size();
+                bufferInfos.push_back(bufferInfo);
                 break;
             }
             case DescriptorType::STORAGE_BUFFER:{

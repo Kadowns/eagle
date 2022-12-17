@@ -23,13 +23,13 @@ static std::vector<VkSemaphore> native_semaphores(const std::span<Semaphore*> se
     return nativeSemaphores;
 }
 
-static std::vector<VkCommandBuffer> native_command_buffers(const std::span<CommandBuffer*>& commandBuffers, uint32_t frameIndex) {
+static std::vector<VkCommandBuffer> native_command_buffers(const std::span<CommandBuffer*>& commandBuffers) {
     std::vector<VkCommandBuffer> result;
     result.reserve(commandBuffers.size());
 
     for (auto commandBuffer : commandBuffers) {
         auto castedCommandBuffer = (VulkanCommandBuffer*)commandBuffer;
-        result.push_back(castedCommandBuffer->native_command_buffer(frameIndex));
+        result.push_back(castedCommandBuffer->current_command_buffer());
     }
 
     return result;
@@ -45,6 +45,41 @@ static std::vector<VkPipelineStageFlags> native_pipeline_stages(const std::span<
 
     return result;
 }
+}
+
+VulkanCommandQueue::FencePool::FencePool(VkDevice device) : m_device(device) {
+
+}
+
+VulkanCommandQueue::FencePool::~FencePool() {
+    for (auto fence : m_fences){
+        vkDestroyFence(m_device, fence, nullptr);
+    }
+}
+
+VkFence VulkanCommandQueue::FencePool::allocate() {
+    VkFence fence = VK_NULL_HANDLE;
+    if (m_fences.empty()){
+
+        VkFenceCreateInfo fenceCreateInfo = {};
+        fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+        auto result = vkCreateFence(m_device, &fenceCreateInfo, nullptr, &fence);
+        if (result != VK_SUCCESS) {
+            throw VulkanException("failed to create a fence", result);
+        }
+
+        return fence;
+    }
+
+    fence = m_fences.back();
+    m_fences.pop_back();
+    return fence;
+}
+
+void VulkanCommandQueue::FencePool::free(VkFence fence) {
+    m_fences.emplace_back(fence);
 }
 
 VulkanCommandQueue::ThreadCommandPool::ThreadCommandPool(const VulkanCommandQueue::ThreadCommandPoolCreateInfo& createInfo) :
@@ -103,6 +138,11 @@ VkCommandBuffer VulkanCommandQueue::ThreadCommandPool::allocate(VkCommandBufferL
 
 void VulkanCommandQueue::ThreadCommandPool::free(VkCommandBuffer& commandBuffer) {
     m_freeList.emplace_back(commandBuffer);
+    commandBuffer = VK_NULL_HANDLE;
+}
+
+void VulkanCommandQueue::ThreadCommandPool::mark_as_pending(VkCommandBuffer& commandBuffer) {
+    m_pendingCommandBuffers.insert(commandBuffer);
 }
 
 void VulkanCommandQueue::ThreadCommandPool::clear_cache() {
@@ -114,7 +154,7 @@ void VulkanCommandQueue::ThreadCommandPool::clear_cache() {
 }
 
 VulkanCommandQueue::VulkanCommandQueue(const VulkanQueueCreateInfo& createInfo) :
-        m_createInfo(createInfo) {
+        m_createInfo(createInfo), m_fencePool(createInfo.device) {
     vkGetDeviceQueue(m_createInfo.device, m_createInfo.familyIndex, m_createInfo.index, &m_queue);
 }
 
@@ -123,7 +163,7 @@ void VulkanCommandQueue::submit(std::span<CommandBufferSubmitInfo> submitInfos, 
     std::vector<VkSubmitInfo> nativeSubmitInfos;
     nativeSubmitInfos.reserve(submitInfos.size());
 
-    // We need this so we can keep our vectors alive outside our for loop
+    // We need this so we can keep our vectors alive outside our conversion loop
     struct SubmitInfoContent {
         std::vector<VkSemaphore> waitSemaphores;
         std::vector<VkPipelineStageFlags> waitStages;
@@ -148,7 +188,7 @@ void VulkanCommandQueue::submit(std::span<CommandBufferSubmitInfo> submitInfos, 
         nativeSubmitInfo.pWaitSemaphores = submitInfoContent.waitSemaphores.data();
         nativeSubmitInfo.pWaitDstStageMask = submitInfoContent.waitStages.data();
 
-        submitInfoContent.commandBuffers = detail::native_command_buffers(submitInfo.commandBuffers, currentFrame);
+        submitInfoContent.commandBuffers = detail::native_command_buffers(submitInfo.commandBuffers);
         nativeSubmitInfo.commandBufferCount = submitInfoContent.commandBuffers.size();
         nativeSubmitInfo.pCommandBuffers = submitInfoContent.commandBuffers.data();
 
@@ -164,27 +204,38 @@ void VulkanCommandQueue::submit(std::span<CommandBufferSubmitInfo> submitInfos, 
         nativeSubmitInfos.emplace_back(nativeSubmitInfo);
     }
 
-    VkFence nativeFence = VK_NULL_HANDLE;
-
-    if (fence) {
-        auto castedFence = (VulkanFence*)fence;
-        nativeFence = castedFence->native_fence(currentFrame);
-    }
-
-    submit(nativeSubmitInfos, nativeFence);
+    submit(nativeSubmitInfos, (VulkanFence*)fence);
 }
 
-void VulkanCommandQueue::submit(const VkSubmitInfo& submitInfo, VkFence fence) {
+void VulkanCommandQueue::idle() {
+    vkQueueWaitIdle(m_queue);
+}
+
+void VulkanCommandQueue::submit(const VkSubmitInfo& submitInfo, VulkanFence* fence) {
     VkSubmitInfo submitInfos[] = {submitInfo};
     submit(submitInfos, fence);
 }
 
-void VulkanCommandQueue::submit(std::span<VkSubmitInfo> submitInfo, VkFence fence) {
+void VulkanCommandQueue::submit(std::span<VkSubmitInfo> submitInfos, VulkanFence* fence) {
 
-    auto result = vkQueueSubmit(m_queue, submitInfo.size(), submitInfo.data(), fence);
+    auto nativeFence = m_fencePool.allocate();
+
+    vkResetFences(m_createInfo.device, 1, &nativeFence);
+
+    if (fence){
+        fence->acquire(nativeFence);
+    }
+
+    auto result = vkQueueSubmit(m_queue, submitInfos.size(), submitInfos.data(), nativeFence);
     if (result != VK_SUCCESS) {
         throw VulkanException("failed to submit to queue", result);
     }
+
+    std::set<VkCommandBuffer> commandBuffers;
+    for (auto& submitInfo : submitInfos) {
+        commandBuffers.insert(submitInfo.pCommandBuffers, submitInfo.pCommandBuffers + submitInfo.commandBufferCount);
+    }
+    m_pendingSubmissions.emplace(nativeFence, std::move(commandBuffers));
 }
 
 VkQueue VulkanCommandQueue::native_queue() const {
@@ -206,6 +257,8 @@ CommandQueueType VulkanCommandQueue::type() const {
 void VulkanCommandQueue::allocate(VkCommandBuffer& commandBuffer, VkCommandBufferLevel level) {
     std::lock_guard<std::mutex> lock(m_mutex);
 
+    check_pending_submissions();
+
     auto threadId = std::this_thread::get_id();
 
     auto it = m_threadCommandPools.find(threadId);
@@ -223,13 +276,56 @@ void VulkanCommandQueue::allocate(VkCommandBuffer& commandBuffer, VkCommandBuffe
 void VulkanCommandQueue::free(VkCommandBuffer& commandBuffer, const std::thread::id& threadId) {
     std::lock_guard<std::mutex> lock(m_mutex);
 
+    check_pending_submissions();
+
     auto it = m_threadCommandPools.find(threadId);
     if (it == m_threadCommandPools.end()){
         throw std::logic_error("tried to free a command buffer on a thread that does not allocate a command pool");
     }
 
+    //check if it is in pending state
+    for (auto& [fence, commandBuffers] : m_pendingSubmissions){
+
+        if (commandBuffers.find(commandBuffer) == commandBuffers.end()){
+            //it was not present in this submission, try the next one
+            continue;
+        }
+
+        //it IS in pending state, only free it when its submission actually ends
+        m_commandBuffersToFree[fence].emplace_back(std::make_pair(commandBuffer, threadId));
+        return;
+    }
+
     auto& threadCommandPool = it->second;
     threadCommandPool->free(commandBuffer);
 }
+
+void VulkanCommandQueue::check_pending_submissions() {
+    auto pendingSubmissions = m_pendingSubmissions;
+    for (auto& [fence, commandBuffers] : pendingSubmissions) {
+
+        auto result = vkWaitForFences(m_createInfo.device, 1, &fence, VK_TRUE, 0);
+
+        if (result == VK_SUCCESS){
+
+            //we will only free command buffers which were actually freed during the time that they were in pending state
+            auto& commandBuffersToFree = m_commandBuffersToFree[fence];
+            for (auto& [commandBuffer, threadId] : commandBuffersToFree){
+                m_threadCommandPools.at(threadId)->free(commandBuffer);
+            }
+
+            m_fencePool.free(fence);
+            m_pendingSubmissions.erase(fence);
+            m_commandBuffersToFree.erase(fence);
+            continue;
+        }
+        if (result == VK_TIMEOUT){
+            continue;
+        }
+        throw VulkanException("failed to wait for fences", result);
+    }
+
+}
+
 
 }

@@ -52,18 +52,18 @@ public:
     void pipeline_barrier(std::span<ImageMemoryBarrier> imageMemoryBarriers, PipelineStageFlags srcPipelineStages, PipelineStageFlags dstPipelineStages) override;
     void dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
-    VkCommandBuffer native_command_buffer(uint32_t index);
+    VkCommandBuffer current_command_buffer();
 
 private:
 
-    ThreadCommandBuffer& prepare_command_buffer(uint32_t frameIndex);
+    void prepare_command_buffer();
 
 private:
 
     VulkanCommandBufferCreateInfo m_nativeCreateInfo;
-    std::vector<ThreadCommandBuffer> m_threadCommandBuffers;
     uint32_t m_currentFrame = 0;
     VkCommandBuffer m_currentCommandBuffer = VK_NULL_HANDLE;
+    std::thread::id m_currentThreadId;
     VulkanShader* m_boundShader = nullptr;
 };
 

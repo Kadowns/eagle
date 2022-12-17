@@ -22,18 +22,6 @@ static std::vector<VkSemaphore> native_semaphores(const std::span<Semaphore*> se
     return nativeSemaphores;
 }
 
-static std::vector<VkCommandBuffer> native_command_buffers(const std::span<CommandBuffer*>& commandBuffers, uint32_t frameIndex) {
-    std::vector<VkCommandBuffer> result;
-    result.reserve(commandBuffers.size());
-
-    for (auto commandBuffer : commandBuffers) {
-        auto castedCommandBuffer = (VulkanCommandBuffer*)commandBuffer;
-        result.push_back(castedCommandBuffer->native_command_buffer(frameIndex));
-    }
-
-    return result;
-}
-
 static std::vector<VkPipelineStageFlags> native_pipeline_stages(const std::span<PipelineStageFlags>& pipelineStages){
     std::vector<VkPipelineStageFlags> result;
     result.reserve(pipelineStages.size());
@@ -317,9 +305,7 @@ std::shared_ptr<RenderPass> VulkanRenderContext::create_render_pass(RenderPassCr
 
 std::shared_ptr<Fence> VulkanRenderContext::create_fence() {
     VulkanFenceCreateInfo fenceCreateInfo = {};
-    fenceCreateInfo.frameCount = m_createInfo.maxFramesInFlight;
     fenceCreateInfo.device = m_device;
-    fenceCreateInfo.currentFrame = &m_currentFrame;
     auto ptr = new VulkanFence(fenceCreateInfo);
     return detail::make_shared_with_deleter(ptr, m_deleter);
 }

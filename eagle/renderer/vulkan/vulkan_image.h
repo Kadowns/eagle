@@ -66,6 +66,7 @@ public:
     inline VkImage& native_image(size_t index) { return m_images[index % m_nativeCreateInfo.frameCount]; }
     inline VkDeviceMemory& native_memory(size_t index) { return m_memories[index % m_nativeCreateInfo.frameCount]; }
     inline VulkanImageView* native_view(uint32_t mipLevel = 0) { return m_views[mipLevel].get(); }
+    inline size_t frame_count() const { return m_nativeCreateInfo.frameCount; }
 
 protected:
     void on_resize() override;

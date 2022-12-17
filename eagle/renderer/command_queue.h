@@ -32,11 +32,11 @@ struct CommandBufferSubmitInfo {
 class CommandQueue {
 public:
 
-    void release_ownership(CommandQueue* newOwner, Image* image, PipelineStageFlags srcStage, PipelineStageFlags dstStage)
-
     void submit(const CommandBufferSubmitInfo& submitInfo, Fence* fence);
 
     virtual void submit(std::span<CommandBufferSubmitInfo> submitInfos, Fence* fence) = 0;
+
+    virtual void idle() = 0;
 
 };
 

@@ -63,7 +63,7 @@ void VulkanHelper::end_single_time_commnds(VulkanCommandQueue* queue, VkCommandB
 
     queue->submit(submitInfo, VK_NULL_HANDLE);
 
-    vkQueueWaitIdle(queue->native_queue());
+    queue->idle();
 
     queue->free(commandBuffer);
 }
