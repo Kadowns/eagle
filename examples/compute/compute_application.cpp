@@ -121,11 +121,11 @@ void ComputeApplication::init() {
     computeImageDescriptorInfo.binding = 0;
     computeImageDescriptorInfo.layout = eagle::ImageLayout::GENERAL;
 
-    eagle::DescriptorSetCreateInfo computeDescriptorSet = {};
-    computeDescriptorSet.imageDescriptors = {computeImageDescriptorInfo};
-    computeDescriptorSet.layout = m_computeShader->descriptor_set_layout(0);
+    eagle::DescriptorSetCreateInfo computeDescriptorSetInfo = {};
+    computeDescriptorSetInfo.imageDescriptors = {computeImageDescriptorInfo};
+    computeDescriptorSetInfo.layout = m_computeShader->descriptor_set_layout(0);
 
-    m_computeDescriptorSet = m_renderContext->create_descriptor_set(computeDescriptorSet);
+    m_computeDescriptorSet = m_renderContext->create_descriptor_set(computeDescriptorSetInfo);
 
     eagle::CommandBufferCreateInfo commandBufferCreateInfo = {};
     commandBufferCreateInfo.level = eagle::CommandBufferLevel::MASTER;
@@ -135,6 +135,42 @@ void ComputeApplication::init() {
 
     commandBufferCreateInfo.queue = m_renderContext->command_queue(eagle::CommandQueueType::COMPUTE);
     m_computeCommandBuffer = m_renderContext->create_command_buffer(commandBufferCreateInfo);
+
+
+    //release image from graphics to compute
+    {
+        m_graphicsCommandBuffer->begin();
+
+        eagle::ImageMemoryBarrier imageMemoryBarrier = {};
+        imageMemoryBarrier.image = m_computeTexture->image();
+        imageMemoryBarrier.allFrames = true;
+        imageMemoryBarrier.srcQueue = m_renderContext->command_queue(eagle::CommandQueueType::GRAPHICS);
+        imageMemoryBarrier.dstQueue = m_renderContext->command_queue(eagle::CommandQueueType::COMPUTE);
+
+        imageMemoryBarrier.srcAccessMask = eagle::AccessFlagBits::SHADER_READ_BIT;
+        imageMemoryBarrier.dstAccessMask = 0;
+
+        imageMemoryBarrier.oldLayout = eagle::ImageLayout::UNDEFINED;
+        imageMemoryBarrier.newLayout = eagle::ImageLayout::GENERAL;
+
+        eagle::ImageMemoryBarrier imageMemoryBarriers[] = {imageMemoryBarrier};
+
+        m_graphicsCommandBuffer->pipeline_barrier(
+                imageMemoryBarriers,
+                eagle::PipelineStageFlagsBits::FRAGMENT_SHADER_BIT,
+                eagle::PipelineStageFlagsBits::BOTTOM_OF_PIPE_BIT
+        );
+
+        m_graphicsCommandBuffer->end();
+
+        eagle::CommandBufferSubmitInfo submitInfo = {};
+        eagle::CommandBuffer* commandBuffers[] = {m_graphicsCommandBuffer.get()};
+        submitInfo.commandBuffers = commandBuffers;
+
+
+        m_graphicsCommandBuffer->command_queue()->submit(submitInfo, nullptr);
+        m_graphicsCommandBuffer->command_queue()->idle();
+    }
 
     m_framesInFlight = m_renderContext->create_fence();
     m_renderFinished = m_renderContext->create_semaphore();
@@ -233,8 +269,8 @@ void ComputeApplication::submit_compute() {
 
     eagle::Semaphore* signalSemaphores[] = {m_computeFinished.get()};
     submitInfo.signalSemaphores = signalSemaphores;
-
     m_computeCommandBuffer->command_queue()->submit(submitInfo, nullptr);
+
 }
 
 void ComputeApplication::submit_graphics() {
@@ -289,6 +325,7 @@ void ComputeApplication::submit_graphics() {
                 eagle::PipelineStageFlagsBits::FRAGMENT_SHADER_BIT,
                 eagle::PipelineStageFlagsBits::BOTTOM_OF_PIPE_BIT
         );
+
     }
 
     m_graphicsCommandBuffer->end();
@@ -311,7 +348,6 @@ void ComputeApplication::submit_graphics() {
     eagle::Semaphore* signalSemaphores[] = {m_renderFinished.get()};
     submitInfo.signalSemaphores = signalSemaphores;
 
-    m_framesInFlight->reset();
     m_graphicsCommandBuffer->command_queue()->submit(submitInfo, m_framesInFlight.get());
 }
 

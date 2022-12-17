@@ -88,8 +88,13 @@ void TriangleApplication::init() {
 
     m_descriptorSetLayout = m_renderContext->create_descriptor_set_layout(descriptorSetLayoutCreateInfo);
 
+    eagle::BufferDescriptorInfo bufferDescriptorInfo = {};
+    bufferDescriptorInfo.size = m_uniformBuffer->size();
+    bufferDescriptorInfo.binding = 0;
+    bufferDescriptorInfo.descriptor = m_uniformBuffer.get();
+
     eagle::DescriptorSetCreateInfo descriptorSetCreateInfo = {};
-    descriptorSetCreateInfo.descriptors = {m_uniformBuffer.get()};
+    descriptorSetCreateInfo.bufferDescriptors = {bufferDescriptorInfo};
     descriptorSetCreateInfo.layout = m_descriptorSetLayout.get();
 
     m_descriptorSet = m_renderContext->create_descriptor_set(descriptorSetCreateInfo);
