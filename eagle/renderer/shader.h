@@ -39,6 +39,8 @@ public:
 
     virtual DescriptorSetLayout* descriptor_set_layout(uint32_t index) const = 0;
 
+    virtual size_t descriptor_set_layout_count() const = 0;
+
     static std::vector<uint32_t> read_spir_v_code(const std::string& filename);
 
 protected:

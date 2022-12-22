@@ -343,4 +343,8 @@ void VulkanShader::create_compute_pipeline() {
     }
 }
 
+size_t VulkanShader::descriptor_set_layout_count() const {
+    return m_descriptorSetLayouts.size();
+}
+
 }

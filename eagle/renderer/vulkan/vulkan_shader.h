@@ -27,6 +27,8 @@ public:
 
     DescriptorSetLayout* descriptor_set_layout(uint32_t index) const override;
 
+    size_t descriptor_set_layout_count() const override;
+
     VkPipeline native_pipeline();
 
     VkPipelineLayout native_pipeline_layout();
